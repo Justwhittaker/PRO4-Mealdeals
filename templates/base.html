@@ -18,7 +18,7 @@
     {% block corecss %}
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     {% endblock %}
 
@@ -26,7 +26,7 @@
     {% endblock %}
 
     {% block corejs %}
-    <script src="https://kit.fontawesome.com/e9c73d7092.js" crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/cb686f92e0.js" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
         integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
         crossorigin="anonymous"></script>
@@ -47,28 +47,13 @@
 <body>
     <header class="container-fluid fixed-top">
         <div id="topnav" class="row bg-white pt-lg-2 d-none d-lg-flex">
-            <div class="col-12 col-lg-4 my-auto py-1 py-lg-0 text-center text-lg-left">
+            <div class="col-12 col-lg-3 my-auto py-1 py-lg-0 text-center text-lg-left">
                 <a href="{% url 'home' %}" class="nav-link main-logo-link">
                     <h1 class="logo-font text-red my-0"><strong>Meals</strong>Deals</h1>
                 </a>
             </div>
         </div>
-        <div>
-            <form method="GET" action="">
-                <div class="input-group w-100">
-                    <input class="form-control border border-black rounded=0" type="text" name="q"
-                        placeholder="Search deals here">
-                    <div class="input-group-append">
-                        <button class="form-control btn btn-black border border rounded=0" type="submit">
-                            <span class="icon">
-                                <i class="fas fa-search"></i>
-                            </span>
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="col-12 col-lg-4 my-auto py-1 py-lg-0">
+        <div class="col-12 col-lg-3 my-auto py-1 py-lg-0">
             <ul class="list-inline list-unstyled text-center tect-lg-right my-0">
                 <li class="list-inline-item dropdown">
                     <a class="text-black nav-link" href="" id="user-options" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -100,6 +85,23 @@
                 </li>
             </ul>
         </div>
+                      
+        <div class="row bg-white">
+            <form method="GET" action="">
+                <div class="input-group w-100">
+                    <input class="form-control border border-black rounded=0" type="text" name="q"
+                        placeholder="Search deals here">
+                    <div class="input-group-append">
+                        <button class="form-control btn btn-black border border rounded=0" type="submit">
+                            <span class="icon">
+                                <i class="fas fa-search"></i>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+         </header>    
         <div class="row bg-white">
             <nav class="navbar navbar-expand-lg navbar-light w-100">
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main_nav" aria-controls="false" aria-label="Toggle navigation">
@@ -107,7 +109,9 @@
                 </button>
             </nav>
         </div>
-    </header>
+        
+        
+
 
     {% if messages %}
     <div class="message-container">
