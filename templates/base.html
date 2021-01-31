@@ -108,11 +108,6 @@
         </div>
 
     </header>
-
-
-
-
-
     {% if messages %}
     <div class="message-container">
 
@@ -123,8 +118,112 @@
 
     {% endblock %}
 
-    {% block content %}
-    {% endblock %}
+    {% block content %} {% endblock %}
+      <!-- Footer 
+        FAQ = Href link to FAQ
+        Social = Href to socail links
+        Settings = setup settings and change language
+        Copyright = Copyright expression-->
+
+      <footer
+        class="bg-light text-center text-sm-left"
+        style="font: 1.5em SpicyRice;"
+      >
+        <!-- Grid container -->
+        <div class="footer">
+          <!--Grid row-->
+          <div class="row">
+            <!--Grid column-->
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+              <ul class="list-unstyled mb-0">
+                <li>
+                  <a
+                    href=""
+                    class="text-dark text-uppercase"
+                    ><h4>FAQ</h4></a
+                  >
+                </li>
+              </ul>
+            </div>
+            <!--Grid column-->
+
+            <!--Grid column-->
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+              <ul class="list-unstyled">
+                <li>
+                  <a
+                    href="https://www.termsfeed.com/live/e5380f1c-d3d7-4d9e-910d-64ab3cfe499a"
+                    target="_blank"
+                    class="hvr-glow text-dark social"
+                    ><h4>User agreement</h4></a
+                  >
+                </li>
+              </ul>
+            </div>
+            <!--Grid column-->
+
+            <!--Grid column-->
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+              <ul class="list-unstyled mb-0">
+                <li>
+                  <a href="" class="text-dark social"
+                    ><h4>Privacy Policy</h4></a
+                  >
+                </li>
+              </ul>
+            </div>
+            <!--Grid column-->
+
+            <!--Grid column-->
+            <div class="col-lg-3 col-md-6 mb-4 mb-md-0">
+              <h5 class="text-uppercase social">Connect</h5>
+              <ul class="list-inline social-links">
+                <li class="list-inline-item">
+                  <a
+                    href="https://www.facebook.com/"
+                    class="hvr-glow"
+                    target="_blank"
+                  >
+                    <i class="fa fa-facebook" aria-hidden="true"></i
+                    ><span class="sr-only">facebook</span></a
+                  >
+                </li>
+                <li class="list-inline-item">
+                  <a
+                    href="https://twitter.com/?lang=en"
+                    class="hvr-glow"
+                    target="_blank"
+                  >
+                    <i class="fa fa-twitter" aria-hidden="true"></i
+                    ><span class="sr-only">twitter</span></a
+                  >
+                </li>
+                <li class="list-inline-item">
+                  <a
+                    href="https://www.instagram.com/"
+                    class="hvr-glow"
+                    target="_blank"
+                  >
+                    <i class="fa fa-instagram" aria-hidden="true"></i
+                    ><span class="sr-only">instagram</span></a
+                  >
+                </li>
+              </ul>
+            </div>
+            <!--Grid column-->
+          </div>
+          <!--Grid row-->
+        </div>
+        <!-- Grid container -->
+
+        <!-- Copyright -->
+        <div class="text-center p-3" id="copyright">
+          © 2020 Copyright:
+          <a class="text-dark">all rights reserved RecipeCloud</a>
+        </div>
+        <!-- Copyright -->
+      </footer>
+ 
 
     {% block postloadjs %}
     {% endblock %}
