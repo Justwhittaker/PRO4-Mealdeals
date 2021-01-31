@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<li class="list-inline-item">
+    <a class="text-black nav-link" href="" id="user-request" aria-expanded="false">
+        <div class="text-center">
+            <div><i class="fas fa-tools"></i></div>
+            <p class="my=0">Marketing Gurus</p>
+        </div>
+    </a>
+</li>
+<li class="list-inline-item dropdown">
+    <a class="text-black nav-link" href="" id="user-options" data-toggle="dropdown" aria-haspopup="true"
+        aria-expanded="false">
+        <div class="text-center">
+            <div><i class="fas fa-user fa-lg"></i></div>
+            <p class="my=0">Restuaranteurs</p>
+        </div>
+    </a>
+    <div class="dropdown-menu border-0" aria-labelledby="user-options">
+        {% if request.user.is_authenticated %}
+        {% if request.user.is_superuser %}
+        <a href="" class="dropdown-item">Site management</a>
+        {% endif %}
+        <a href="" class="dropdown-item">My profile</a>
+        <a href="}" class="dropdown-item">Logout</a>
+        {% else %}
+        <a href="" class="dropdown-item">Register</a>
+        <a href="" class="dropdown-item">Login</a>
+        {% endif%}
+    </div>
+</li>
+<li class="list-inline-item">
+    <a class="text-black nav-link" href="" id="about" aria-expanded="false">
+        <div class="text-center">
+            <div><i class="fas fa-bullhorn"></i></div>
+            <p class="my=0">About Us</p>
+        </div>
+    </a>
+</li>

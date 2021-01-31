@@ -46,17 +46,28 @@
 
 <body>
     <header class="container-fluid fixed-top">
-        <div id="topnav" class="row bg-white pt-lg-2 d-none d-lg-flex">
-            <div class="col-12 col-lg-3 my-auto py-1 py-lg-0 text-center text-lg-left">
-                <a href="{% url 'home' %}" class="nav-link main-logo-link">
-                    <h1 class="logo-font text-red my-0"><strong>Meals</strong>Deals</h1>
-                </a>
-            </div>
-        </div>
         <div class="col-12 col-lg-3 my-auto py-1 py-lg-0">
-            <ul class="list-inline list-unstyled text-center tect-lg-right my-0">
+            <ul class="list-inline list-unstyled text-center text-lg-right my-0">
+                <li class="list-inline-item">
+                    <div id="topnav" class="row bg-white pt-lg-2 d-none d-lg-flex"> 
+                        <div class="col-12 col-lg-3 my-auto py-1 py-lg-0 text-center text-lg-left">
+                            <a href="{% url 'home' %}" class="nav-link main-logo-link">
+                                <h1 class="logo-font text-red my-0"><strong>Meals</strong>Deals</h1>
+                            </a>
+                        </div>
+                    </div>
+                </li>
+                <li class="list-inline-item">
+                    <a class="text-black nav-link" href="" id="user-request" aria-expanded="false">
+                        <div class="text-center">
+                            <div><i class="fas fa-tools"></i></div>
+                            <p class="my=0">Marketing Gurus</p>
+                        </div>
+                    </a>
+                </li>
                 <li class="list-inline-item dropdown">
-                    <a class="text-black nav-link" href="" id="user-options" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <a class="text-black nav-link" href="" id="user-options" data-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
                         <div class="text-center">
                             <div><i class="fas fa-user fa-lg"></i></div>
                             <p class="my=0">Restuaranteurs</p>
@@ -64,58 +75,47 @@
                     </a>
                     <div class="dropdown-menu border-0" aria-labelledby="user-options">
                         {% if request.user.is_authenticated %}
-                            {% if request.user.is_superuser %}
-                            <a href="" class="dropdown-item">Site management</a>
-                            {% endif %}
-                            <a href="" class="dropdown-item">My profile</a>
-                            <a href="}" class="dropdown-item">Logout</a>
+                        {% if request.user.is_superuser %}
+                        <a href="" class="dropdown-item">Site management</a>
+                        {% endif %}
+                        <a href="" class="dropdown-item">My profile</a>
+                        <a href="}" class="dropdown-item">Logout</a>
                         {% else %}
-                            <a href="" class="dropdown-item">Register</a>                                
-                            <a href="" class="dropdown-item">Login</a>                                
+                        <a href="" class="dropdown-item">Register</a>
+                        <a href="" class="dropdown-item">Login</a>
                         {% endif%}
-                    </div>  
+                    </div>
                 </li>
                 <li class="list-inline-item">
-                    <a class="text-black nav-link" href="" id="user-request" aria-expanded="false">
+                    <a class="text-black nav-link" href="" id="about" aria-expanded="false">
                         <div class="text-center">
-                            <div><i class="fas fa-first-aid"></i></div>
-                            <p class="my=0">Help</p>
+                            <div><i class="fas fa-bullhorn"></i></div>
+                            <p class="my=0">About Us</p>
                         </div>
                     </a>
                 </li>
             </ul>
         </div>
-                      
-        <div class="row bg-white">
-            <form method="GET" action="">
-                <div class="input-group w-100">
-                    <input class="form-control border border-black rounded=0" type="text" name="q"
-                        placeholder="Search deals here">
-                    <div class="input-group-append">
-                        <button class="form-control btn btn-black border border rounded=0" type="submit">
-                            <span class="icon">
-                                <i class="fas fa-search"></i>
-                            </span>
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-         </header>    
         <div class="row bg-white">
             <nav class="navbar navbar-expand-lg navbar-light w-100">
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main_nav" aria-controls="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main_nav"
+                    aria-controls="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+                {% include 'includes/mobile_top_header.html' %}
+                {% include 'includes/main_nav.html' %}
             </nav>
         </div>
-        
-        
+
+    </header>
+
+
+
 
 
     {% if messages %}
     <div class="message-container">
-    
+
     </div>
     {% endif %}
 
