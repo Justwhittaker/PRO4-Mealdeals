@@ -48,6 +48,24 @@ body {
     border: black 1px solid !important;
 }
 
+/* footer styling*/
+.footer {
+    font-family: 'Oswald';
+    padding: 5px;
+  min-width: 100%;
+  max-width: 100%;
+  background: #ffffff;
+  height: auto;
+  text-align: center;
+}
+
+/* copyright styling*/
+#copyright {
+    font-family: 'Oswald';
+  background-color: rgb(197, 20, 20);
+  padding: 5%;
+}
+
 /* -------------------------------- Media Queries */
 
 /* Slightly larger container on xl screens */
