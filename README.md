@@ -377,6 +377,7 @@ https://www.w3schools.com/bootstrap4/bootstrap_navbar.asp
 
 2. Django Basics <br>
 https://docs.djangoproject.com/en/3.1/intro/tutorial01/<br>
+https://www.ordinarycoders.com/blog/article/build-a-django-contact-form-with-email-backend<br>
 
 
 3. Python research <br>
