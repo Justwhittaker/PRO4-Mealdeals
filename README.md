@@ -378,6 +378,8 @@ https://www.w3schools.com/bootstrap4/bootstrap_navbar.asp
 2. Django Basics <br>
 https://docs.djangoproject.com/en/3.1/intro/tutorial01/<br>
 https://www.ordinarycoders.com/blog/article/build-a-django-contact-form-with-email-backend<br>
+https://stackoverflow.com/questions/21938028/how-can-i-get-a-favicon-to-show-up-in-my-django-app<br>
+https://www.geeksforgeeks.org/python-uploading-images-in-django/<br>
 
 
 3. Python research <br>
@@ -389,11 +391,9 @@ https://www.ordinarycoders.com/blog/article/build-a-django-contact-form-with-ema
 http://karma-runner.github.io/5.0/dev/git-commit-msg.html
 
 5. Dependencies <br>
-    1. PyMongo <br>
+    1. Django <br>
     2. JQuery (html js middleware) <br>
-    The project uses JQuery to simplify DOM manipulation. <br>
     3. bootstrap <br>
-    4. dnspython
 
 6. Other platforms <br>
 https://policymaker.io/privacy-policy-ready/ <br>
@@ -405,7 +405,6 @@ https://favicon.io/favicon-generator/ <br>
 * **AudreyLL88** for her very inspiring ReadME
 * **Code Institute Slack community** for the technical and emotional support
 * **Code Institute Tutors** Cormac, Tim, Sam, Johann and Milkos were fantastic help
-* **Carl Lubbe**, for all the assistance and help with guidence and UX
 * **Alishia Whittaker**, for the Graphic design and stock images from Canva and your support through all my studies
 
 **Site for educational purposes only!**

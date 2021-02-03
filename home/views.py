@@ -9,4 +9,8 @@ def index(request):
 
 
 def privacy(request):
-    return render(request, 'templates/privacy_policy.html')
+    return render(request, 'home/privacy_policy.html')
+
+
+def about(request):
+    return render(request, 'home/about.html')
