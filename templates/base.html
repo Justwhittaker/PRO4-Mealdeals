@@ -20,11 +20,7 @@
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
-      <link
-      rel="icon"
-      type="image/ico"
-      href=""
-    />
+       <link rel="shortcut icon" type="image/png" href="{% static 'media/img/favicon.png' %}"/>
     {% endblock %}
 
     {% block extra_css %}
@@ -57,6 +53,7 @@
                     <div id="topnav" class="row bg-white pt-lg-2 d-none d-lg-flex"> 
                         <div class="col-12 col-lg-3 my-auto py-1 py-lg-0 text-center text-lg-left">
                             <a href="{% url 'home' %}" class="nav-link main-logo-link">
+                                <img src="{% static 'media/img/logo.jpg' %}" alt="">
                                 <h1 class="logo-font text-red my-0"><strong>Meals</strong>Deals</h1>
                             </a>
                         </div>
@@ -105,7 +102,7 @@
         <div class="row bg-white">
             <nav class="navbar navbar-expand-lg navbar-light w-100">
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main_nav"
-                    aria-controls="false" aria-label="Toggle navigation">
+                    aria-controls="main_nav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 {% include 'includes/mobile_top_header.html' %}
@@ -127,7 +124,7 @@
     {% block content %} {% endblock %}
       <!-- Footer 
         FAQ = Href link to FAQ
-        Social = Href to socail links
+        Social = Href to social links
         Settings = setup settings and change language
         Copyright = Copyright expression-->
 
