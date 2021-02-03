@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+{% load static %}
+
+{% block page_header %}
+    <div class="container header-container">
+        <div class="row">
+            <div class="col"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block content %}
+<div>
+    <h1>Marketing Gurus</h1>
+    <h4>Send us your deal and we will help you launch it</h4>
+    <p>
+        Please complete the form below to reach our marketing gurus<br>
+        Please fill as much infomation as you can for us to assist you<br>
+        One of our Gurus will contact you directly via email
+    </p>
+    <form method="POST">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit" value="Submit">SUBMIT</button>
+    </form>
+</div>
+
+{% endblock %}
+

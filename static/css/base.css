@@ -54,6 +54,7 @@ body {
 @media (min-width: 1200px) {
   .container {
     max-width: 80%;
+    margin-bottom: 10px;
   }
 }
 
@@ -65,9 +66,18 @@ body {
         right: 0;
         left: 0;
         z-index: 1030;
+        margin-bottom: 10px;
     }
 
     .header-container {
         padding-top: 164px;
+        margin-bottom: 10px;
+    }
+}
+
+/* push down container for mobile or small tablet use */
+@media (min-width: 300px) {
+  .header-container {
+        padding-top: 90px;
     }
 }
