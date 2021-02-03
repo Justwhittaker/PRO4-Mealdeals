@@ -375,19 +375,12 @@ https://getbootstrap.com/docs/4.3/components/dropdowns/<br>
 https://www.w3schools.com/bootstrap/bootstrap_ref_css_images.asp <br>
 https://www.w3schools.com/bootstrap4/bootstrap_navbar.asp
 
-2. MongoDB <br>
-https://cloud.mongodb.com/ <br>
-https://towardsdatascience.com/using-mongodb-with-python-bcb26bf25d5d#9c71<br>
-https://www.w3schools.com/python/python_mongodb_query.asp<br>
-https://docs.mongodb.com/manual/reference/bson-types/<br>
-https://towardsdatascience.com/using-mongodb-with-python-bcb26bf25d5d#9c71<br>
-https://www.w3schools.com/python/gloss_python_date.asp<br>
-https://www.w3schools.com/python/python_mongodb_update.asp<br>
-https://www.codementor.io/@arpitbhayani/fast-and-efficient-pagination-in-mongodb-9095flbqr<br>
+2. Django Basics <br>
+https://docs.djangoproject.com/en/3.1/intro/tutorial01/<br>
 
 
 3. Python research <br>
-    1. CodeInstitute Python Funadementals <br>
+    1. CodeInstitute Django Fundamentals <br>
     2. https://randomkeygen.com/ <br>
     3. Docstring conventions - https://www.python.org/dev/peps/pep-0257/ <br>
 
@@ -403,6 +396,7 @@ http://karma-runner.github.io/5.0/dev/git-commit-msg.html
 
 6. Other platforms <br>
 https://policymaker.io/privacy-policy-ready/ <br>
+https://favicon.io/favicon-generator/ <br>
 
 **Many thanks to:**
 

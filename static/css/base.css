@@ -12,7 +12,11 @@ body {
 }
 
 .logo_pic {
-    src: url(media/img/logo.jpg);
+    height: 5rem;
+    width: 5rem;
+    position: relative;
+  border-radius: 1em;
+  margin-top: 3px;
 }
 
 /* from Bulma */
@@ -24,7 +28,7 @@ body {
     width: 1.5rem;
 }
 
-.logo-font {
+.logo_font {
     text-transform: uppercase;
 }
 
@@ -36,8 +40,8 @@ body {
     color: black;
 }
 
-text.red {
-    color: red;
+.text_red {
+    color: rgb(197, 20, 20) !important;
 }
 
 .border-black {
