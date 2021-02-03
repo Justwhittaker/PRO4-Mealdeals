@@ -20,6 +20,11 @@
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
+      <link
+      rel="icon"
+      type="image/ico"
+      href=""
+    />
     {% endblock %}
 
     {% block extra_css %}
@@ -46,9 +51,9 @@
 
 <body>
     <header class="container-fluid fixed-top">
-        <div class="col-12 col-lg-3 my-auto py-1 py-lg-0">
+        <div class="float-right d-none d-lg-flex">
             <ul class="list-inline list-unstyled text-center text-lg-right my-0">
-                <li class="list-inline-item">
+                <li class="logo_pic list-inline-item">
                     <div id="topnav" class="row bg-white pt-lg-2 d-none d-lg-flex"> 
                         <div class="col-12 col-lg-3 my-auto py-1 py-lg-0 text-center text-lg-left">
                             <a href="{% url 'home' %}" class="nav-link main-logo-link">
@@ -58,6 +63,7 @@
                     </div>
                 </li>
                 <li class="list-inline-item">
+                    
                     <a class="text-black nav-link" href="" id="user-request" aria-expanded="false">
                         <div class="text-center">
                             <div><i class="fas fa-tools"></i></div>
@@ -79,10 +85,10 @@
                         <a href="" class="dropdown-item">Site management</a>
                         {% endif %}
                         <a href="" class="dropdown-item">My profile</a>
-                        <a href="}" class="dropdown-item">Logout</a>
+                        <a href="{% url 'account_logout' %}" class="dropdown-item">Logout</a>
                         {% else %}
-                        <a href="" class="dropdown-item">Register</a>
-                        <a href="" class="dropdown-item">Login</a>
+                        <a href="{% url 'account_signup' %}" class="dropdown-item">Register</a>
+                        <a href="{% url 'account_login' %}" class="dropdown-item">Login</a>
                         {% endif%}
                     </div>
                 </li>
@@ -218,8 +224,8 @@
 
         <!-- Copyright -->
         <div class="text-center p-3" id="copyright">
-          © 2020 Copyright:
-          <a class="text-dark">all rights reserved RecipeCloud</a>
+          © 2021 Copyright:
+          <a class="text-dark">all rights reserved MealDeals</a>
         </div>
         <!-- Copyright -->
       </footer>

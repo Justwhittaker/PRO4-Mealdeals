@@ -11,6 +11,10 @@ body {
     font-family: 'Oswald';
 }
 
+.logo_pic {
+    src: url(media/img/logo.jpg);
+}
+
 /* from Bulma */
 .icon {
     align-items: center;

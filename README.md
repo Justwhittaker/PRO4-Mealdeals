@@ -1,6 +1,6 @@
-# Recipe Cloud #
+# Mealdeals #
 
-![logo](static/img/logoCloud.png)
+![logo](media/img/logo.jpg)
 
 ## Contents ##
 ---
