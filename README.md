@@ -398,6 +398,7 @@ http://karma-runner.github.io/5.0/dev/git-commit-msg.html
 6. Other platforms <br>
 https://policymaker.io/privacy-policy-ready/ <br>
 https://favicon.io/favicon-generator/ <br>
+https://devcenter.heroku.com/articles/heroku-postgresql#connecting-in-python<br>
 
 **Many thanks to:**
 
