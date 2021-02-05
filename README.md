@@ -1,6 +1,6 @@
 # Mealdeals #
 
-![logo](media/img/logo.jpg)
+![logo](static/media/img/logo.jpg)
 
 ## Contents ##
 ---
