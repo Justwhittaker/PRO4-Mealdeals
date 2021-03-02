@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.db.models.functions import Lower
 
 from .models import Deal, Category
-from .forms import ProductForm
+from .forms import DealForm
 
 # Create your views here.
 
