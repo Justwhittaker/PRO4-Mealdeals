@@ -3,5 +3,25 @@ from .models import deal, category
 
 # Register your models here.
 
-admin.site.register(deal)
-admin.site.register(category)
+
+class deal_admin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'category',
+        'price',
+        'rating',
+        'image',
+    )
+
+    ordering = ('name',)
+
+
+class category_admin(admin.ModelAdmin):
+    list_display = (
+        'friendly_name',
+        'name',
+    )
+
+
+admin.site.register(deal, deal_admin)
+admin.site.register(category, category_admin)
