@@ -19,7 +19,8 @@ def all_deals(request):
                                "You did not enter any search critria!")
                 return redirect(reverse('home'))
 
-            queries = Q(name__icontains=query) | Q(category__icontains=query)
+            queries = Q(category__name__icontains=query) | Q(
+                restaurant_name__icontains=query) | Q(name__icontains=query)
             deals = deals.filter(queries)
 
     context = {

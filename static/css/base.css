@@ -100,13 +100,12 @@ body {
     }
 }
 
+/* -------------------------------- deal display cards */
 
 /* deal border styling*/
 .deal_card {
   width: 100%;
   margin: 50px;
-  margin-top: 150px;
-  margin-right: 55px;
   border: 30px;
   border-width: 3px;
   border-style: solid;
