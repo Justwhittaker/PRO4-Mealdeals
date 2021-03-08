@@ -1,6 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, reverse, get_object_or_404
+from django.contrib import messages
 from .models import deal
-from django.views.generic import ListView
+from django.db.models import Q
 # Create your views here.
 
 
@@ -8,9 +9,22 @@ def all_deals(request):
     """ A view to show all products, including sorting and search queries """
 
     deals = deal.objects.all()
+    query = None
+
+    if request.GET:
+        if 'q' in request.GET:
+            query = request.GET['q']
+            if not query:
+                messages.error(request,
+                               "You did not enter any search critria!")
+                return redirect(reverse('home'))
+
+            queries = Q(name__icontains=query) | Q(category__icontains=query)
+            deals = deals.filter(queries)
 
     context = {
         'deals': deals,
+        'search_term': query,
     }
 
     return render(request, 'home/index.html', context)
