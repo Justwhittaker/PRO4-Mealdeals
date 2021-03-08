@@ -99,3 +99,28 @@ body {
         padding-top: 90px;
     }
 }
+
+
+/* deal border styling*/
+.deal_card {
+  width: 100%;
+  margin: 50px;
+  margin-top: 150px;
+  margin-right: 55px;
+  border: 30px;
+  border-width: 3px;
+  border-style: solid;
+  text-align: left;
+  background-position: center;
+  background-size: cover;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+/* deal image styling*/
+.card_img {
+  max-width: 15em;
+  max-height: 15em;
+  border-radius: 10px;
+  background-size: cover;
+}

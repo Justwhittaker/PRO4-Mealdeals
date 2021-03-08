@@ -6,10 +6,11 @@ from .models import deal, category
 
 class deal_admin(admin.ModelAdmin):
     list_display = (
+        'restaurant_name',
+        'address',
         'name',
         'category',
         'price',
-        'rating',
         'image',
     )
 

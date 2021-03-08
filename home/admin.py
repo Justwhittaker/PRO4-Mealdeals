@@ -8,10 +8,10 @@ from .models import deal, category
 
 class deal_admin(admin.ModelAdmin):
     list_display = (
+        'restaurant_name',
         'name',
         'category',
         'price',
-        'rating',
         'image',
     )
 

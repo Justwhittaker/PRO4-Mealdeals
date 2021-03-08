@@ -22,10 +22,11 @@ class deal(models.Model):
     category = models.ForeignKey('Category',
                                  null=True, blank=True,
                                  on_delete=models.SET_NULL)
+    restaurant_name = models.CharField(max_length=254)
+    address = models.CharField(max_length=254)
     name = models.CharField(max_length=254)
     description = models.TextField()
     price = models.DecimalField(max_digits=6, decimal_places=2)
-    rating = models.DecimalField(max_digits=6, decimal_places=2, blank=True)
     image = models.ImageField(blank=True)
 
     def __str__(self):

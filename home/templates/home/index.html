@@ -38,16 +38,33 @@
 </div>
 <!--Trending Deals on the site-->
   <div class="container">
-        <div class="row">
-            <div class="col">
-                {{ deal }}
+            
+                {% for deal in deals %}
+                        <div class="row">
+
+                <div class="col-sm-6 col-md-4">
+                <div class="deal_card">
+                <img 
+            src="{{ deal.image }}"
+            class="card_img card-img-top"
+            alt="Card image cap"
+          />
+          <div class="card-body">
+                {{ deal.restaurant_name }}  <br>
+                {{ deal.name }}  <br>
+                {{ deal.category }}  <br>
+                {{ deal.price }}
+                <br>
                 <a
               href=""
               class="btn btn-primary"
               >Go to Deal</a
             >
             </div>
+            </div>
+            </div>
         </div>
     </div>
+    {% endfor %}
 {% endblock %}
 </html>
