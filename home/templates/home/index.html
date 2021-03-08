@@ -14,7 +14,7 @@
 {% block content %}
 <div class="container">
     <div class="row">
-        <div class="col-7 col-md-6">
+        <div class="col-7 col-md-6 d-none d-lg-flex">
             <h1 class="display-4 text-warning">
                 Thousands of deals all over the world
             </h1>
@@ -37,7 +37,50 @@
     </div>
 </div>
 <!--Trending Deals on the site-->
-<div class="container">
+
+<div id="demo" class="carousel slide" data-ride="carousel">
+
+    <!-- Indicators -->
+    <ul class="carousel-indicators">
+        <li data-target="#demo" data-slide-to="0" class="active"></li>
+    </ul>
+
+    <!-- The slideshow -->
+    <div class="carousel-inner">
+        {% for deal in deals|slice:":3" %}
+
+        {% if forloop.first %}
+        <div class="active item">
+            <div class="col-sm-6 col-md-4">
+                <div class="deal_card">
+                    <img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" />
+                    <div class="card-body mb-3">
+                        {{ deal.restaurant_name }} <br>
+                        {{ deal.name }} <br>
+                        {{ deal.category }} <br>
+                        {{ deal.price }}
+                        <br>
+                        <a href="" class="btn btn-primary">Go to Deal</a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+        <div class="item">
+    {% endif %}
+            
+            {% endfor %}
+        </div>
+    </div>
+    <!-- Left and right controls -->
+    <a class="carousel-control-prev" href="#demo" data-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </a>
+    <a class="carousel-control-next" href="#demo" data-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </a>
+</div>
+
+<!-- <div class="container">
     <div class="row">
         {% for deal in deals %}
         <div class="col-sm-6 col-md-4">
@@ -55,8 +98,8 @@
         </div>
         {% endfor %}
     </div>
-</div>
+</div>-->
 
-{% endblock %}
+{% endblock %} 
 
 </html>
