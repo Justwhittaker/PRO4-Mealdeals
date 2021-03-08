@@ -110,15 +110,15 @@ body {
   border-width: 3px;
   border-style: solid;
   text-align: left;
-  background-position: center;
-  background-size: cover;
   padding: 20px;
   border-radius: 10px;
 }
 
 /* deal image styling*/
 .card_img {
+  min-width: 15em;
   max-width: 15em;
+  min-height: 15em;
   max-height: 15em;
   border-radius: 10px;
   background-size: cover;
