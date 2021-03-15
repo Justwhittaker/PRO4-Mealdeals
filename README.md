@@ -30,51 +30,64 @@
 <a name="project-goals"></a>
 ### Project Goals ###
 
-The are many places on the internet to find recipes but their are not many that allow you to add your own recipes to swap and share 
+This website is designed so that restaurants can have a space to advertise thier deals, and bring foot traffic through thier doors 
 
-The **goal** for this project is to to recreate a neighbourhood profile where friends, neighbours and relatives can swap and share their favourite recipes, simply and easily.<br>
-A safe space to find inspiration with the items already in their fridge.
+The **goal** for this project is to allow restaurants the ability to advertise their restaurant and thier ideas on a platform which is not social media. <br>
+The website also gives the restaurants the access to change thier deals without any hassle, but mist important it is a place where the restaurants are charged <br>
+a flat rate for monthly subscribions instead of being "charged per voucher" bought and have a portion of their hard earned profit put towards bringing in people.
 
 <a name="user-goals"></a>
 ### User Goals ###
 
 For the UX on this project I wanted to create a simple and user friendly site. My target audience is young and mature adults. <br>
-The site also allows for Profeesional Chefs to share some of thier awards winning recipes but also for the student to swap their 
-quick fixes even grandmas can leave their family recipes down for everyone to enjoy!!
+The site also allows for restaurant customers to find good and decent deals in thier area!!
 
-* **Testing his/her/their Cooking abilites** with **quick searches** within the **Category** they are looking for.
-* **Being excited** to find new recipes and **share** their own.
-* Get a **inspiration** for cooking out of the box.
-* **Keep adding more and more recipes** to the website **again & again**.
-* **List their own Recipes** and **favourite** recipes to go to **time & again**
+#### Clients ####
+* **View specific deals** with **quick searches** within the **Category and area** they are looking for, instead of searching through all the deals.
+* **Being excited** to find new deals and **share** these deals with their friends.
+* **Veiw** the full list of deals on the home page
+* **Find company info** from the deal such as name of restaurant, address, telephone number, website
+* **View individual deal Info** from the deal such as T&C's, price, and end time for the promotion 
+
+#### Restaurant Management Profiles ####
+* Easily **Register & Create** a Profile, having a restaurant specific profile.
+* Easily **Login or Logout** access to account infomation
+* Easily **recover my password** in case I forget it.
+* Recieve **an Email confirmation** to verify that my account registeration was successful.
+* **Easily** pay for the subscribtion costs on signing up
+* **Receive** and email confirmation of purchase to keep for records and accounting.
+* **Add, Edit and Delete** Company infomation as needed in a **personalized User profile**
+* **Add, Edit and Delete** Deals periodicaly
+
 
 <a name="user-stories"></a>
 ### User Stories ### 
 
-* The **user** wants an **attractive website** with a **non-distracting** background.
-* The **user** wants to see **clear instructions** on how to add recipes to the website.
-* The **user** wants there to be a **search box** so that the user can quickly identify **recipes**.
-* The **user** wants to be able to **search** categories or ingredients.
-* The **user** wants to be **challenged** in his/her/their **skills**.
-* The **user** wants to know the **difficulty** of the recipe before **deciding**.
-* The **user** wants to start **finding recipes immedaitely**. 
-* The **user** wants to see the **latest recipes** added.
-* The **user** wants a **conveint sized recipes box** to be able to read the recipe clearfully.
-* The **user** wants to know the **recipe** details such as **ingredients, method and cooking instructions**
-* The **user** wants to **have the possibility** of thier **own profile** where their recipes come up first.
-* The **user** wants to **have the possibility** of **favorites** where their best recipes are **saved for later**.
-* The **user** wants to **know** if **their recipe has been submitted**.
-* The **user** wants to **easily add their own recipe** to the website.
-* The **user** wants to **have the possibility** to **upload pictures**.
-* The **user** wants to get a maximum of advantage of the **recipe cloud**.
+* The **user Clients** wants an **attractive website** with a **non-distracting** background.
+* The **user Clients** wants to see **clear instructions** on how to drill down into further infomation on deals within the website.
+* The **user Clients** wants there to be a **search box** so that the user can quickly identify **deals**.
+* The **user Clients** wants to be able to **sort by** categories or restaurant name.
+* The **user Clients** wants to start **finding deals immedaitely**. 
+* The **user Clients** wants to see the **latest deals** added.
+* The **user Clients** wants a **conveint sized deal box** to be able to read the Deal clearfully.
+* The **user Clients** wants to know the **recipe** details such as **ingredients, method and cooking instructions**
+* The **user Clients** wants to get a maximum of advantage of the **Mealdeals cloud**.
+
+* The **user Admin** wants to know the **time period** of the deal before **deciding** on continuing with the specific deal.
+* The **user Admin** wants to **have the possibility** of thier **own profile** where their deals come up first.
+* The **user Admin** wants to **know** if **their recipe has been submitted**.
+* The **user Admin** wants to know the **deals** details such as **name of restaurant, address, telephone number, website**
+* The **user Admin** wants to **easily add, edit and delete their own Deals** on the website.
+* The **user Admin** wants to **have the possibility** to **upload pictures**.
+
 
 <a name="requirements"></a>
 
 ### Research ###
 
-* When developing this **website**, I kept in mind that the aesthetic should be inspired by similar Recipe hubs on the internet. 
+* When developing this **website**, I kept in mind that the aesthetic should be inspired by similar Deal and coupon hubs on the internet. 
 * I tried to create a **simple and easy feel** to for a cleaner approach for the landing page.
-* I checked **previously made recipe websites** such as [**foodnetwork.co.uk**](https://foodnetwork.co.uk/) and used **my own experience** as a trained chef.
+* I checked **previously made coupon websites** such as [**groupon.ie**](https://www.groupon.ie//) and used **my own experience** as a trained chef and restauranteur.
 
 <a name="design-choices"></a>
 
@@ -86,7 +99,7 @@ quick fixes even grandmas can leave their family recipes down for everyone to en
 ### Fonts ###
 
 * The **landing page** is using the classic website **Google Fonts** **#** for the H1 and H3. 
-* I paired it with the **Google Fonts** **Eczar & SpicyRice** for readability.
+* I paired it with the **Google Fonts** **Crimson & Oswald** for readability.
 * I kept the **SpicyRice** font for **better user experience**
 
 <a name="icons"></a>
@@ -95,13 +108,12 @@ quick fixes even grandmas can leave their family recipes down for everyone to en
 
 * The **Favicon** used on the website are provided by [**Canva**](https://canva.com/) and called by using url_for.
 * The **image** used for the **landing page** is a created **image** from the image bank [**Canva**](https://canva.com/). 
-* Extra **background images** (https://google.com/) with a simple research with the keyword **cooking and baking**.
 
 <a name="colors"></a>
 
 ### Colors ###
 
-* The **color scheme** used for the website is a sleek **recipe website palette** composed of a combination of **black and whites** for the **title** and a **classic light teal** for calming affect for the **logo** on the **a sky blue with neon type writing** .
+* The **color scheme** used for the website is a sleek **deal website palette** composed of a combination of **Red and whites** for the **title** and a **dark burgandy red** for a hungary affect for the **logo** on the **a white background** .
  
 ![Inspiration](static/img/foodnetwork.png)
 
