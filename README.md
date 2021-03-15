@@ -48,7 +48,7 @@ The site also allows for restaurant customers to find good and decent deals in t
 * **Veiw** the full list of deals on the home page
 * **Find company info** from the deal such as name of restaurant, address, telephone number, website
 * **View individual deal Info** from the deal such as T&C's, price, and end time for the promotion 
-
+<br>&nbsp
 #### Restaurant Management Profiles ####
 * Easily **Register & Create** a Profile, having a restaurant specific profile.
 * Easily **Login or Logout** access to account infomation
@@ -89,6 +89,10 @@ The site also allows for restaurant customers to find good and decent deals in t
 * I tried to create a **simple and easy feel** to for a cleaner approach for the landing page.
 * I checked **previously made coupon websites** such as [**groupon.ie**](https://www.groupon.ie//) and used **my own experience** as a trained chef and restauranteur.
 
+![Research](media/readme/Groupon.png)
+![Research](media/readme/first_table.png)
+![Research](media/readme/dealy.png)
+
 <a name="design-choices"></a>
 
 ### Design Choices ###
@@ -100,7 +104,7 @@ The site also allows for restaurant customers to find good and decent deals in t
 
 * The **landing page** is using the classic website **Google Fonts** **#** for the H1 and H3. 
 * I paired it with the **Google Fonts** **Crimson & Oswald** for readability.
-* I kept the **SpicyRice** font for **better user experience**
+* I kept the **Oswald** font for **better user experience**
 
 <a name="icons"></a>
 
@@ -113,9 +117,11 @@ The site also allows for restaurant customers to find good and decent deals in t
 
 ### Colors ###
 
-* The **color scheme** used for the website is a sleek **deal website palette** composed of a combination of **Red and whites** for the **title** and a **dark burgandy red** for a hungary affect for the **logo** on the **a white background** .
- 
-![Inspiration](static/img/foodnetwork.png)
+* The **color scheme** used for the website is a sleek **deal website palette** composed of a combination of **Red and whites** 
+* For the **title** and the **logo** I used a **dark burgandy red** on the **a white background**.
+* I specifically chose these colors as Red is a colour at stimulates appetite in humans, but I wanted it a dark red as I still wanted to convey a relaxed atmosphere.
+
+![Inspiration](media/readme/eat_drink_deals.png)
 
 <a name="wireframing"></a>
 
@@ -134,15 +140,19 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 * I added an easy link to **upload** videos.
 
 ### Landing Page ###
-!["Wireframe LandingPage"](static/img/RCwireFrame1.png)
-### Recipe Menu ###
-!["Wireframe RecipeMenu"](static/img/RCwireFrame2.png)
-### Video Page ###
-!["Wireframe VideoPage"](static/img/RCwireFrame3.png)
-### Add User Page ###
-!["Wireframe AddUser"](static/img/RCwireFrame4.png)
-### Add Recipe Page ###
-!["Wireframe AddRecipe"](static/img/RCwireFrame5.png)
+!["Wireframe LandingPage"](media/readme/MealdealsWireframe.png)
+### Search results ###
+!["Wireframe SearchLandingPage"](media/readme/MealdealsWireframe1.png)
+### Deal Page ###
+!["Wireframe Deal"](media/readme/MealdealsWireframe2.png)
+### Registeration Page ###
+!["Wireframe Registeration"](media/readme/MealdealsWireframe3.png)
+### Registeration Payment Page ###
+!["Wireframe Payment Page"](media/readme/MealdealsWireframe4.png)
+### Add deal profile Page ###
+!["Wireframe profile"](media/readme/MealdealsWireframe5.png)
+### Contact us Page ###
+!["Wireframe profile"](media/readme/MealdealsWireframe6.png)
 
 
 <a name="features"></a>
