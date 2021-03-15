@@ -33,7 +33,7 @@
 This website is designed so that restaurants can have a space to advertise thier deals, and bring foot traffic through thier doors 
 
 The **goal** for this project is to allow restaurants the ability to advertise their restaurant and thier ideas on a platform which is not social media. <br>
-The website also gives the restaurants the access to change thier deals without any hassle, but mist important it is a place where the restaurants are charged <br>
+The website also gives the restaurants the access to change thier deals without any hassle, but most important it is a place where the restaurants are charged
 a flat rate for monthly subscribions instead of being "charged per voucher" bought and have a portion of their hard earned profit put towards bringing in people.
 
 <a name="user-goals"></a>
@@ -43,7 +43,7 @@ For the UX on this project I wanted to create a simple and user friendly site. M
 The site also allows for restaurant customers to find good and decent deals in thier area!!
 
 #### Clients ####
-* **View specific deals** with **quick searches** within the **Category and area** they are looking for, instead of searching through all the deals.
+* **View specific deals** with **quick searches** within the **Category and Area** they are looking for, instead of searching through all the deals.
 * **Being excited** to find new deals and **share** these deals with their friends.
 * **Veiw** the full list of deals on the home page
 * **Find company info** from the deal such as name of restaurant, address, telephone number, website
@@ -63,22 +63,22 @@ The site also allows for restaurant customers to find good and decent deals in t
 <a name="user-stories"></a>
 ### User Stories ### 
 
-* The **user Clients** wants an **attractive website** with a **non-distracting** background.
-* The **user Clients** wants to see **clear instructions** on how to drill down into further infomation on deals within the website.
-* The **user Clients** wants there to be a **search box** so that the user can quickly identify **deals**.
-* The **user Clients** wants to be able to **sort by** categories or restaurant name.
-* The **user Clients** wants to start **finding deals immedaitely**. 
-* The **user Clients** wants to see the **latest deals** added.
-* The **user Clients** wants a **conveint sized deal box** to be able to read the Deal clearfully.
-* The **user Clients** wants to know the **recipe** details such as **ingredients, method and cooking instructions**
-* The **user Clients** wants to get a maximum of advantage of the **Mealdeals cloud**.
-
-* The **user Admin** wants to know the **time period** of the deal before **deciding** on continuing with the specific deal.
-* The **user Admin** wants to **have the possibility** of thier **own profile** where their deals come up first.
-* The **user Admin** wants to **know** if **their recipe has been submitted**.
-* The **user Admin** wants to know the **deals** details such as **name of restaurant, address, telephone number, website**
-* The **user Admin** wants to **easily add, edit and delete their own Deals** on the website.
-* The **user Admin** wants to **have the possibility** to **upload pictures**.
+* The **Clients user** wants an **attractive website** with a **non-distracting** background.
+* The **Clients user** wants to see **clear instructions** on how to drill down into further infomation on deals within the website.
+* The **Clients user** wants there to be a **search box** so that the user can quickly identify **deals**.
+* The **Clients user** wants to be able to **sort by** categories or restaurant name.
+* The **Clients user** wants to start **finding deals immedaitely**. 
+* The **Clients user** wants to see the **latest deals** added.
+* The **Clients user** wants a **conveint sized deal box** to be able to read the Deal clearfully.
+* The **Clients user** wants to know the **Deals** details such as **T&C's, price, and end time** for the promotion.
+* The **Clients user** wants to get a maximum of advantage of the **Mealdeals cloud**.
+<br>
+* The **Admin user** wants to know the **time period** of the deal before **deciding** on continuing with the specific deal.
+* The **Admin user** wants to **have the possibility** of thier **own profile** where their deals come up first.
+* The **Admin user** wants to **know** if **their Deals has been submitted**.
+* The **Admin user** wants to know the **deals** details such as **name of restaurant, address, telephone number, website**
+* The **Admin user** wants to **easily add, edit and delete their own Deals** on the website.
+* The **Admin user** wants to **have the possibility** to **upload pictures**.
 
 
 <a name="requirements"></a>
@@ -136,7 +136,7 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 * Herewith the **wireframe** and I pushed a few changes for better readability and engagement:
 * I added **a jumbotron hero image** on the landing page.
 * I added **a full-screen background image** on all the other pages.
-* I used a **form** to allow for the user to add & edit recipes.
+* I used a **form** to allow for the user to add & edit Deals.
 * I added an easy link to **upload** videos.
 
 ### Landing Page ###
