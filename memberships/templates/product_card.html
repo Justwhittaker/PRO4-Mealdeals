@@ -1,0 +1,21 @@
+{% load static products %}
+<div class="card-header text-center">
+    <h3>{{ product.name }}</h3>
+</div>
+<div class="product-img-wrap">
+    <img class="card-img-top" src="{{ MEDIA_URL }}{{ product.image }}" alt="Image for {{ product.name }}">
+</div>
+<div class="card-body">
+    <div class="card-text product-description">{{ product.description }}</div>
+    <div class="card-text price">
+        {{ product.price | format_price }}
+    </div>
+    <div class="card-text product-features">
+        <h4 class="card-title">Included Features</h4>
+        <ul class="card-text">
+            {% for feature in product.get_features_display_list %}
+                <li>{{ feature }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
