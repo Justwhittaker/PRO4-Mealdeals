@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block main_content %}
+{% block content %}
     <div class="card-deck products">
         {% for product in products %}
             <div class="card">
-                {% include '_partials/product_card.html' with product=product %}
+                {% include 'templates/product_card.html' with product=product %}
                 <div class="card-footer">
                     <form method="post" action="{% url 'checkout' pk=product.pk %}">
                         {% csrf_token %}
@@ -23,6 +23,5 @@
             </div>
         {% endfor %}
     </div>
-    <script type="text/javascript" src="{% static 'js/utils.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/products.js' %}"></script>
 {% endblock %}
