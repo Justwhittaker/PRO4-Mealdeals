@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'deals_display',
     'contact_us',
     'client_profile',
-    'subscribe',
+    'memberships',
 ]
 
 MIDDLEWARE = [
