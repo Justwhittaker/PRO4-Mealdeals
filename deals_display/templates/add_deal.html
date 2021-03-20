@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block page_header %}
+<div class="container header-container">
+    <div class="row">
+        <div class="col"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %} <div class="row">
+            {% for deal in deals %}
+            <div class="col-sm-6 col-md-4">
+                <blockquote>
+                    <label>{{ deal.name }}</label>
+                    <div class="">
+                        <div class="deal_card">
+                            <img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" />
+                            <div class="card-body mb-3">
+                                {{ deal.restaurant_name }} <br>
+                                {{ deal.name }} <br>
+                                {{ deal.category }} <br>
+                                {{ deal.price }}
+                                <br>
+                                <a href="" class="btn btn-primary">Go to Deal</a>
+                            </div>
+                        </div>
+                    </div>
+                </blockquote>
+            </div>
+            {% endfor %}
+        </div>
+  
+
+
+{% endblock %}
