@@ -6,7 +6,7 @@ from django.db.models import Q
 
 
 def all_deals(request):
-    """ A view to show all products, including sorting and search queries """
+    """ A view to show all deals, including sorting and search queries """
 
     deals = deal.objects.all()
     query = None
