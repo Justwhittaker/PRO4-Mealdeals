@@ -110,18 +110,18 @@ LOGIN_REDIRECT_URL = '/'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 # if 'DATABASE_URL' in os.environ:
-DATABASES = {
-        'default': dj_database_url.parse('postgres://pzfbwjdufzqgnz:af038e6751c9466ea26348415cbeddee5c8ca270719376d1e243c9fdd8fd6724@ec2-54-220-35-19.eu-west-1.compute.amazonaws.com:5432/d3h8hgpt09au74')
+if 'DATABASE_URL' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
     }
-#     print("USING POSTGRES")
-# else:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#         }
-#     }
-#     print("USING SQLITE")
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
+
 # DATABASES = {
 #     "default": {
 #         "ENGINE": "django.db.backends.postgresql_psycopg2",
