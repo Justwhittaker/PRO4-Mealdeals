@@ -8,4 +8,5 @@ def all_products(request):
     owned_product = False
     if hasattr(request.user, 'profile') and request.user.profile.product_level:
         owned_product = request.user.profile.product_level
-    return render(request, "products.html", {"products": products, 'owned_product': owned_product})
+    return render(request, "products.html", {"products": products,
+                                             'owned_product': owned_product})
