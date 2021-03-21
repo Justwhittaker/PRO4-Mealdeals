@@ -5,5 +5,5 @@ urlpatterns = [
     path('', views.all_deals, name="home"),
     path('privacy/', views.privacy, name="privacy"),
     path('about/', views.about, name="about"),
-    path('deals_display/', views.deals_display, name="deals_display"),
+    path('<deal_id>/', views.deals_display, name="deals_display"),
 ]

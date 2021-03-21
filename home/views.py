@@ -44,10 +44,10 @@ def about(request):
     return render(request, 'home/about.html')
 
 
-def deals_display(request):
+def deals_display(request, deal_id):
     """ A view to show individual deal details """
 
-    deals = deal.objects._id()
+    deals = get_object_or_404(deal, pk=deal_id)
 
     context = {
         'deals': deals,

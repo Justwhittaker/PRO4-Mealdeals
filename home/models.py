@@ -27,7 +27,7 @@ class deal(models.Model):
     address = models.CharField(max_length=254)
     website_address = models.CharField(max_length=254)
     name = models.CharField(max_length=254)
-    description = models.TextField()
+    description = models.TextField(max_length=2054)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     image = models.ImageField(blank=True)
 

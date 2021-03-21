@@ -12,30 +12,30 @@
 {% endblock %}
 
 {% block content %} 
-
- <div class="row">
-            {% for deal in deals %}
-            <div class="col-sm-6 col-md-4">
-                <blockquote>
-                    <label>{{ deal.name }}</label>
-                    <div class="">
-                        <div class="deal_card">
-                            <img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" />
-                            <div class="card-body mb-3">
-                                {{ deal.restaurant_name }} <br>
-                                {{ deal.name }} <br>
-                                {{ deal.category }} <br>
-                                {{ deal.price }}
-                                <br>
-                                <a href="{% url 'deals_display' %}" class="btn btn-primary">Go to Deal</a>
-                            </div>
-                        </div>
-                    </div>
-                </blockquote>
+<div class="overlay"></div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12 col-md-6 col-lg-4 offset-lg-2">
+                <div class="image-container my-5">
+                        <a href="{{ deal.image.url }}" target="_blank">
+                             <img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" />
+                        </a>
+                </div>
             </div>
-            {% endfor %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="product-details-container mb-5 mt-md-5">
+                    <p class="mb-0">{{ deal.restaurant_name }}</p>
+                    <p class="mb-0">{{ deal.name }}</p>
+                    <p class="mt-3">{{ deal.category }}</p>
+                    <p class="lead mb-0 text-left font-weight-bold">${{ deal.price  }}</p>
+                    <p class="mt-3">{{ deal.address }}</p>
+                    <p class="mt-3">{{ deal.website }}</p>
+                    <p class="mt-3">{{ deal.number_phone }}</p>
+                    <p class="mb-0">{{ deal.discription }}</p>
+                </div>
+            </div>
         </div>
-  
-
+        <a href="{% url 'home' %}" class="btn btn-primary">Go back</a>
+    </div>
 
 {% endblock %}
