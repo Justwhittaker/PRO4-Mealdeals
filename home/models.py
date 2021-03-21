@@ -19,11 +19,13 @@ class category(models.Model):
 
 
 class deal(models.Model):
-    paginate_by = 2
     category = models.ForeignKey('Category',
                                  null=True, blank=True,
                                  on_delete=models.SET_NULL)
     restaurant_name = models.CharField(max_length=254)
+    number_phone = models.CharField(max_length=48)
+    address = models.CharField(max_length=254)
+    website_address = models.CharField(max_length=254)
     name = models.CharField(max_length=254)
     description = models.TextField()
     price = models.DecimalField(max_digits=6, decimal_places=2)

@@ -71,13 +71,3 @@ def deal_detail(request, product_id):
 
     return render(request, 'deals_display/deal_detail.html', context)
 
-
-def add_deal(request):
-    """ Add a deal to the landing page """
-    form = DealForm()
-    template = 'deals_display/add_deal.html'
-    context = {
-        'form': form,
-    }
-
-    return render(request, template, context)

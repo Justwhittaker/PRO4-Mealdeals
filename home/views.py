@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, reverse
+from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.contrib import messages
 from .models import deal
 from django.db.models import Q
@@ -42,3 +42,15 @@ def privacy(request):
 
 def about(request):
     return render(request, 'home/about.html')
+
+
+def deals_display(request):
+    """ A view to show individual deal details """
+
+    deals = deal.objects._id()
+
+    context = {
+        'deals': deals,
+    }
+
+    return render(request, 'home/deal_detail.html', context)

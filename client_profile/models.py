@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class Category(models.Model):
+class category(models.Model):
 
     class Meta:
         verbose_name_plural = 'Categories'
@@ -16,7 +16,7 @@ class Category(models.Model):
         return self.friendly_name
 
 
-class Deal(models.Model):
+class deal(models.Model):
     category = models.ForeignKey('Category',
                                  null=True,
                                  blank=True, on_delete=models.SET_NULL)

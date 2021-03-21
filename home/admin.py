@@ -7,6 +7,9 @@ from .models import deal, category
 class deal_admin(admin.ModelAdmin):
     list_display = (
         'restaurant_name',
+        'address',
+        'website_address',
+        'number_phone',
         'name',
         'category',
         'price',
