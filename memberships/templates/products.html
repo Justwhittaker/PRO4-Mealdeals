@@ -3,7 +3,7 @@
 {% extends 'base.html' %}
 {% block content %}
     <div class="card-deck products">
-        {% for memberships in membership %}
+        {% for MembershipTier in memberships %}
             <div class="card">
                 {% include 'templates/product_card.html' with product=product %}
                 <div class="card-footer">

@@ -11,7 +11,7 @@ from .forms import DealForm
 def client_deals(request):
     """ A veiw to show the specific clients delas in thier profile"""
 
-    deals = Deal.objects.all()
+    deals = deal.objects.all()
     query = None
     categories = None
     sort = None
@@ -30,7 +30,7 @@ def client_deals(request):
         if 'category' in request.GET:
             categories = request.GET['category'].split(',')
             deals = deals.filter(category__name__in=categories)
-            categories = Category.objects.filter(name__in=categories)
+            categories = category.objects.filter(name__in=categories)
 
         if 'q' in request.GET:
             query = request.GET['q']

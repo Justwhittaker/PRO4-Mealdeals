@@ -1,74 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
-          {% extends "base.html" %} {% block content %}
 
-          <!-- Background  -->
-  <!-- <div
-    id="#"
-    class="p-5 text-center bg-image"
-    style="height: 400px;"
-     src="{{ url_for('static', filename='./img/#') }}"
-  > -->
-    <div class="#" style="background-color: rgba(70, 99, 226, 0.774);">
-      <div class="d-flex justify-content-center align-items-center h-100">
-        <div class="#">
-          <!-- logo -->
-          <h1 class="mb-3">Profile</h1>
-        </div>
-      </div>
-    </div>
+{% extends "base.html" %}
+{% load static %}
 
-  <!--Examples of Recipes on the site-->
-  <div class="container">
+{% block page_header %}
+<div class="container header-container">
     <div class="row">
-      {% for deal in mealdeals %}
-
-      <div class="col-sm-6 col-md-4 col-lg-4">
-        <div class="deal_card">
-          <img
-            src="{{ deal.upload_pic}}"
-            class="card_img card-img-top"
-            alt="Card image cap"
-          />
-          <div class="card-body">
-            <h5 class="card-title">{{ deal.deal_name }}</h5>
-             <h5 class="card-title">{{ deal.created_by }}</h5>
-            <p class="card-text">
-            Address &nbsp;&nbsp; {{ deal.address }} Minutes<br />
-            Category &nbsp;&nbsp; {{ deal.category }} Minutes<br />
-            Serves &nbsp;&nbsp; {{ deal.serves }} People <br />
-            Discription <br />
-            <ul>
-                {% for discription in deal.discription %}
-                <li>{{discription}}</li>
-                {% endfor %}
-            </ul>
-            Contact Details <br />
-            <ul>
-                {% for contact in deal.contact %}
-                <li>{{contact}}</li>
-                {% endfor %}
-            </ul>
-            <br />
-            Valid until &nbsp;&nbsp; {{ deal.valid }} <br />
-          </p>
-           <a href="{{ url_for ('get_recipe', recipe_id=recipe._id) }}" class="btn btn-primary">Go to Recipe</a>
- <a
-            href="{{ url_for('edit_deal', deal_id=deal._id) }}"
-            class="btn btn-warning"
-            >Edit</a
-          >
-          <a
-            href="{{ url_for('delete_deal', deal_id=deal._id) }}"
-            class="btn btn-danger"
-            >Delete</a
-          >
-          </div>
-        </div>
-      </div>
-      {% endfor %}
+        <div class="col"></div>
     </div>
-  </div>
-<!-- {{ pagination.info }} {{ pagination.links }} -->
- {% endblock %}
-</html>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="#" style="background-color: rgba(70, 99, 226, 0.774);"></div>
+<div class="d-flex justify-content-center align-items-center h-100">
+    <div class="#">
+        <h1 class="mb-3">Profile</h1>
+    </div>
+</div>
+<div class="row">
+    <div>
+        <a href="{% url 'add_deal' %}" class="btn btn-primary">Add a new Deal</a>
+    </div>
+</div>
+<div class="row">
+    {% for deal in deals %}
+    <div class="col-sm-6 col-md-4">
+        <blockquote>
+            <label>{{ deal.name }}</label>
+            <div class="">
+                <div class="deal_card">
+                    <img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" />
+                    <div class="card-body mb-3">
+                        {{ deal.restaurant_name }} <br>
+                        {{ deal.name }} <br>
+                        {{ deal.category }} <br>
+                        {{ deal.price }}
+                        <br>
+                        <a href="{% url 'deals_display' deal.id %}" class="btn btn-primary">Go to Deal</a>
+                        <a href="{ url 'edit_deal', deal_id=deal._id }" class="btn btn-warning">Edit</a>
+                        <a href="{ url 'delete_deal', deal_id=deal._id }" class="btn btn-danger">Delete</a>
+                    </div>
+                </div>
+            </div>
+        </blockquote>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
