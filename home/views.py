@@ -52,5 +52,5 @@ def deals_display(request, deal_id):
     context = {
         'deals': deals,
     }
-
+   
     return render(request, 'home/deal_detail.html', context)
