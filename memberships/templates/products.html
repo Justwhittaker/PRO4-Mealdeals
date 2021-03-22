@@ -3,11 +3,11 @@
 {% extends 'base.html' %}
 {% block content %}
     <div class="card-deck products">
-        {% for MembershipTier in memberships %}
+        {% for membershiptier in memberships %}
             <div class="card">
-                {% include 'templates/product_card.html' with product=product %}
+                {% include 'templates/product_card.html' with membershiptier=MembershipTier %}
                 <div class="card-footer">
-                    <form method="post" action="{% url 'checkout' pk=product.pk %}">
+                    <form method="post" action="{% url 'checkout' pk=MembershipTier.pk %}">
                         {% csrf_token %}
                         <div class="input-group">
                         <span class="input-group-btn">
@@ -21,5 +21,5 @@
             </div>
         {% endfor %}
     </div>
-
 {% endblock %}
+

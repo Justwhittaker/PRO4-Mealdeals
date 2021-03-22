@@ -395,7 +395,8 @@ https://mdbootstrap.com/docs/standard/forms/input-fields/<br>
 https://getbootstrap.com/docs/4.3/components/card/<br>
 https://getbootstrap.com/docs/4.3/components/dropdowns/<br>
 https://www.w3schools.com/bootstrap/bootstrap_ref_css_images.asp <br>
-https://www.w3schools.com/bootstrap4/bootstrap_navbar.asp
+https://www.w3schools.com/bootstrap4/bootstrap_navbar.asp <br>
+https://stackoverflow.com/questions/10099422/flushing-footer-to-bottom-of-the-page-twitter-bootstrap#:~:text=The%20simplest%20technique%20is%20probably,the%20footer%20to%20the%20bottom.
 
 2. Django Basics <br>
 https://docs.djangoproject.com/en/3.1/intro/tutorial01/<br>

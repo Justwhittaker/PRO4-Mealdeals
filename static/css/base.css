@@ -9,10 +9,11 @@ body {
     height: calc(100vh -164px);
     color: black;
     font-family: 'Oswald';
+      margin-bottom: 60px;
+
 }
 
 .nav_border {
-    overflow: hidden;
     background-color: white;
 }
 
@@ -69,7 +70,16 @@ body {
     font-family: 'Oswald';
   background-color: rgb(197, 20, 20);
   padding: 5%;
+  bottom: 0;
 }
+
+/* -------------------------------- about page */
+
+.about {
+    padding: 2%;
+}
+
+
 
 /* -------------------------------- Media Queries */
 
