@@ -28,6 +28,7 @@ urlpatterns = [
     path('', include('home.urls')),
     path("contact_us/", include('contact_us.urls')),
     path('client_profile/', include('client_profile.urls')),
+    path('checkout/', include('checkout.urls')),
     path('favicon.ico', RedirectView.as_view(
                                              url=staticfiles_storage.url
                                              ('media/img/favicon.png'))),
