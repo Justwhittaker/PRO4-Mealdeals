@@ -79,8 +79,6 @@ body {
     padding: 2%;
 }
 
-
-
 /* -------------------------------- Media Queries */
 
 /* Slightly larger container on xl screens */
@@ -145,4 +143,10 @@ body {
     padding-right: 20%;
     padding-top: 10%;
     padding-bottom: 5%;
+}
+
+/* -------------------------------- deal display cards */
+.product_card {
+    padding: 20px;
+    margin-top: 15%;
 }

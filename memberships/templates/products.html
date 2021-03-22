@@ -2,24 +2,32 @@
 
 {% extends 'base.html' %}
 {% block content %}
-    <div class="card-deck products">
-        {% for membershiptier in memberships %}
-            <div class="card">
-                {% include 'templates/product_card.html' with membershiptier=MembershipTier %}
-                <div class="card-footer">
-                    <form method="post" action="{% url 'checkout' pk=MembershipTier.pk %}">
-                        {% csrf_token %}
-                        <div class="input-group">
-                        <span class="input-group-btn">
-                      
-                            <button class="btn btn-default" type="submit">Checkout</button>
-                     
-                        </span>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-{% endblock %}
+<div class="card-deck products flex-grow-1">
+    {% for product in products %}
+    <div class="card product_card">
 
+        <div class="card-header text-center">
+            <h3>{{ product.name }}</h3>
+        </div>
+        <div class="card-body">
+            <div class="card-text product-description">{{ product.description }}</div>
+            <div class="card-text price">
+                {{ product.price }}
+            </div>
+        </div>
+        <div class="card-footer">
+            <form method="post" action="#">
+                {% csrf_token %}
+                <div class="input-group">
+                    <span class="input-group-btn">
+
+                        <button class="btn btn-success" type="submit">Secure Checkout</button>
+
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
