@@ -138,3 +138,11 @@ body {
   max-height: 20em;
 }
 
+/* -------------------------------- deal display cards */
+
+.private_pol {
+    padding-left: 20%;
+    padding-right: 20%;
+    padding-top: 10%;
+    padding-bottom: 5%;
+}
