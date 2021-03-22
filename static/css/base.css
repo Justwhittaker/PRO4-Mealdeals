@@ -11,6 +11,11 @@ body {
     font-family: 'Oswald';
 }
 
+.nav_border {
+    overflow: hidden;
+    background-color: white;
+}
+
 .logo_pic {
     height: 5rem;
     width: 5rem;
