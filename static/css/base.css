@@ -116,6 +116,11 @@ body {
 /* -------------------------------- deal display cards */
 
 /* deal border styling*/
+
+.deal_body {
+    padding: 3%;
+}
+
 .deal_card {
   width: 100%;
   border: 30px;
