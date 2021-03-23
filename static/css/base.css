@@ -151,6 +151,7 @@ body {
 }
 
 /* -------------------------------- deal display cards */
+
 .product_card {
     padding: 8%;
     padding-bottom: 5%;
@@ -158,4 +159,11 @@ body {
 
 .product_inner_card {
     padding: 7%;
+}
+
+/* -------------------------------- deal display cards */
+
+.contact_form {
+    padding-left: 20%;
+    padding-right: 20%;
 }
