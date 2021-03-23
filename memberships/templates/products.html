@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-
+<html style="height:100%;" lang="en">
 {% extends 'base.html' %}
 {% block content %}
-<div class="card-deck products flex-grow-1">
-    {% for product in products %}
-    <div class="card product_card">
+<body class="d-flex flex-column h-100">
 
-        <div class="card-header text-center">
+<div class="card-deck product_card flex-grow-1">
+    {% for product in products %}
+    <div class="card product_inner_card ">
+        <div class="card-header text-center" style="color: rgb(197, 20, 20);">
             <h3>{{ product.name }}</h3>
         </div>
         <div class="card-body">
@@ -16,7 +17,7 @@
             </div>
         </div>
         <div class="card-footer">
-            <form method="post" action="#">
+            <form method="post" action="{% url 'checkout' %}">
                 {% csrf_token %}
                 <div class="input-group">
                     <span class="input-group-btn">
@@ -30,4 +31,7 @@
     </div>
     {% endfor %}
 </div>
+    
+</body>
 {% endblock %}
+</html>
