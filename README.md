@@ -1,7 +1,10 @@
+---
 # Mealdeals #
+---
 
 ![logo](static/media/img/logo.jpg)
 
+---
 ## Contents ##
 ---
 
@@ -14,7 +17,10 @@
         * [Fonts](#fonts)
         * [Icons](#icons)
         * [Colors](#colors)
-* [Wireframing](#wireframing)
+* [Structure](#structure)
+    * [Page Structure](#page_structure)
+    * [Database and schema](*db_schema)
+    * [Wireframing](#wireframing)
 * [Features](#features)
     * [Features that have been developed](#developed)
     * [Features that will be implemented in the future](#implemented)
@@ -24,11 +30,16 @@
 * [Deployment](#deployment)
 * [Credit](#credits)
 
+---
+---
 <a name="User-Experience"></a>
 ## UX (User Experience) ##
 ---
+---
+
 <a name="project-goals"></a>
 ### Project Goals ###
+---
 
 This website is designed so that restaurants can have a space to advertise thier deals, and bring foot traffic through thier doors 
 
@@ -36,11 +47,23 @@ The **goal** for this project is to allow restaurants the ability to advertise t
 The website also gives the restaurants the access to change thier deals without any hassle, but most important it is a place where the restaurants are charged
 a flat rate for monthly subscribions instead of being "charged per voucher" bought and have a portion of their hard earned profit put towards bringing in people.
 
+---
 <a name="user-goals"></a>
 ### User Goals ###
+---
 
 For the UX on this project I wanted to create a simple and user friendly site. My target audience is young and mature adults. <br>
 The site also allows for restaurant customers to find good and decent deals in thier area!!
+
+#### Scope ####
+* An Eye catching landing page
+* Mass-displaying all or filtered deals. Lines of relatively small images, with option to click and view or like
+* Search, filter and sort deals.
+* Detailed profile for restauranteurs on top of the simple registration.
+* Dedicated page for uploading new deals
+* Checkout with card payment.
+* Full page Deal view including the Name of the restaurant, address and contact details as well as the Deal description, price and valid till, options.
+* Legal framework is also included, with links to privacy policies and FAQs, as well as corporate info in the about us section of the website.
 
 #### Clients ####
 * **View specific deals** with **quick searches** within the **Category and Area** they are looking for, instead of searching through all the deals.
@@ -48,7 +71,9 @@ The site also allows for restaurant customers to find good and decent deals in t
 * **Veiw** the full list of deals on the home page
 * **Find company info** from the deal such as name of restaurant, address, telephone number, website
 * **View individual deal Info** from the deal such as T&C's, price, and end time for the promotion 
-<br>&nbsp
+* **Contact us** for expert marketing advise and we will design any deals for you at a small fee.
+<br>
+
 #### Restaurant Management Profiles ####
 * Easily **Register & Create** a Profile, having a restaurant specific profile.
 * Easily **Login or Logout** access to account infomation
@@ -59,9 +84,18 @@ The site also allows for restaurant customers to find good and decent deals in t
 * **Add, Edit and Delete** Company infomation as needed in a **personalized User profile**
 * **Add, Edit and Delete** Deals periodicaly
 
+#### Out of Scope topics ####
+* order processing after checkout and the bag was excluded, as one of the steps in the payment journey.
+* Potential further features:
 
+    * Coupon code for promotions,
+    * Discount for multi-buys.
+* Marketing the site itself and utilising advertising opportunities within the site is out of scope, therefore the links to social media sites are home based links.
+
+---
 <a name="user-stories"></a>
 ### User Stories ### 
+---
 
 * The **Clients user** wants an **attractive website** with a **non-distracting** background.
 * The **Clients user** wants to see **clear instructions** on how to drill down into further infomation on deals within the website.
@@ -80,10 +114,10 @@ The site also allows for restaurant customers to find good and decent deals in t
 * The **Admin user** wants to **easily add, edit and delete their own Deals** on the website.
 * The **Admin user** wants to **have the possibility** to **upload pictures**.
 
-
+---
 <a name="requirements"></a>
-
 ### Research ###
+---
 
 * When developing this **website**, I kept in mind that the aesthetic should be inspired by similar Deal and coupon hubs on the internet. 
 * I tried to create a **simple and easy feel** to for a cleaner approach for the landing page.
@@ -93,13 +127,12 @@ The site also allows for restaurant customers to find good and decent deals in t
 ![Research](media/readme/first_table.png)
 ![Research](media/readme/dealy.png)
 
+---
 <a name="design-choices"></a>
-
 ### Design Choices ###
 ---
 
 <a name="fonts"></a>
-
 ### Fonts ###
 
 * The **landing page** is using the classic website **Google Fonts** **#** for the H1 and H3. 
@@ -107,25 +140,57 @@ The site also allows for restaurant customers to find good and decent deals in t
 * I kept the **Oswald** font for **better user experience**
 
 <a name="icons"></a>
-
 ### Icons and Images ###
 
 * The **Favicon** used on the website are provided by [**Canva**](https://canva.com/) and called by using url_for.
 * The **image** used for the **landing page** is a created **image** from the image bank [**Canva**](https://canva.com/). 
 
 <a name="colors"></a>
-
 ### Colors ###
 
 * The **color scheme** used for the website is a sleek **deal website palette** composed of a combination of **Red and whites** 
 * For the **title** and the **logo** I used a **dark burgandy red** on the **a white background**.
 * I specifically chose these colors as Red is a colour at stimulates appetite in humans, but I wanted it a dark red as I still wanted to convey a relaxed atmosphere.
 
+---
+---
+<a name="structure"></a>
+## Structure ##
+---
+---
+
+<a name="page_structure"></a>
+### Page Structure ###
+---
+
+#### Filtering and browsing ####
+There are two types of users and I wanted to give clear path to start using the site with Call To Action for both groups. Potential deal shoppers are directed to the Search & browsing, while potential restuaranteurs are shown an eye-catchy banner with a popping CTA button.
+
+#### Home page ####
+Many similar sites (competitors) are trying to showcase wide range of services and options, therefore loosing focus and probably loosing potential subscriptions and users by not inviting them to further explore the site. My clear goal here is to lead users to check out more deals.
+
+#### Detailed view ####
+Clicking on any of the deals on the home page brings the user to the deal details page, displaying all the available information about each deal. 
+
+#### Potential contributors ####
+Potential contributors have a flow of action to fully utilize the page and achieve their goals. They have a strictly limited access to the part of the database that concerns their artwork and therefore can perform CRUD operations.
+
+* Create new entry: upload image and provide details
+* Read (Display) entries - the detailed view with personal information
+* Update entries - making changes to their existing records
+* Delete entries – delete items from the database 
+
+
+---
+<a name="db_schema"></a>
+### Database and schema ###
+---
+
 ![Inspiration](media/readme/eat_drink_deals.png)
 
+---
 <a name="wireframing"></a>
-
-## Wireframing ##
+### Wireframing ###
 ---
 For **wireframing** I used the tool [**Balsamiq**](https://balsamiq.com/).
 
