@@ -32,8 +32,9 @@
     * [Features that will be implemented in the future](#implemented)
 * [Technologies](#technologies)
 * [Testing](#testing)
-* [Issues](#issues)
-* [Deployment](#deployment)
+    * [Responsiveness](#Responsiveness)
+* [Troubleshooting](#issues)
+* [Deployment](#deploy)
 * [Credit](#credits)
 
 ---
@@ -205,7 +206,6 @@ I put quite some effort into designing the database structure and schema. It was
 
 <a name="schemas"></a>
 #### Schemas ####
----
 
 The steps and outcome was as follows (note that the final structure differs at several points, because I had to adjust on multiple occasions):
 
@@ -225,7 +225,6 @@ Indentifying Relationships
 
 <a name="db"></a>
 #### Database ####
----
 
 Deals more understandable for other developers. 
 
@@ -282,12 +281,11 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 ### Contact us Page ###
 !["Wireframe profile"](media/readme/MealdealsWireframe6.png)
 
-<a name="design"></a>
-## Features ## 
-
+---
 ---
 <a name="features"></a>
 ## Features ## 
+---
 ---
 
 <a name="developed"></a>
@@ -357,8 +355,10 @@ Even though the design is responsive, because of the obvious reasons, a service 
 * [MongoDB](https://cloud.mongodb.com/)
 
 ---
+---
 <a name="testing"></a>
 ## Testing ##
+---
 ---
 Validation, manual unit, cross browser/cross device, accessibility, travis, coverage, this app has a dash of everything test related. See the separate [TESTING.md](TESTING.md) file for the details.
 
@@ -447,8 +447,11 @@ Validation, manual unit, cross browser/cross device, accessibility, travis, cove
     * Also I have added a button for the user tochange mind and go back to profile. <br>
     * add_recipe and the edit_recipe pages was responsive and working as expected<br>
 
-<a name="issues"></a>
-## Issues ##
+---
+---
+<a name="Troubleshooting"></a>
+## Troubleshooting ##
+---
 ---
 
 **During development**
@@ -491,33 +494,21 @@ and used this website to assist me Docstring conventions - https://www.python.or
 
 ![Docstring](static/img/docstring.png)
 
+---
+---
+<a name="deploy"></a>
 ## Deployment ##
 ---
-**RecipeCloud** was developed on **GitPod**, using **GitHub** to host the repository and deployed on **GitHub Pages**.
-**Heroku** made the deployment extremely painless:
+---
 
-* Connect to [**Heroku**](https://dashboard.heroku.com/apps)
-* Click new/ **create new APP**
-* Add the new app name and choose a region, In my case **Europe**
-* While the app is being generated you will need to **Config Vars** by going to **settings**
-* Config vars change the way your app behaves. In addition to creating your own, some add-ons come with their own
-* In **Config vars** you need to add the **ID,PORT,MONGODB_NAME,MONGO_URI,SECRET_KEY**
-* Now to **Deploy** find deployment method choose **GitHub** sign into your GitHub.
-* Selected the repository **JustWhittaker/PRO3-RecipeCloud**
-* In the **GitHub Pages** I selected **Master Branch** and **/root** in the dropdown menu and clicked **Save**
-* Click on **"Automatic Deploys"** below 
-* I waited 2 minutes.
-* **The website is now live on https://recipe-cloud-pro.herokuapp.com/**.
 
-**Cloning** No issues:
 
-* Why do we is it important to be able to clone successfully first **Collaboration** with team members if you are working in a scrum and secondly **Assist** other developers to use my main project to grow their own version.
-* In my repository **JustWhittaker/PRO3-RecipeCloud**, click on the **"Code** green button, **copy in clipboard the HTTPS link**, open your **IDE** and look through my files.
-* The link : **https://github.com/JustWhittaker/PRO3-RecipeCloud.git**
 
+---
 ---
 <a name="credits"></a>
 ## Credits ##
+---
 ---
 
 **Text Credits:**
@@ -563,7 +554,7 @@ https://devcenter.heroku.com/articles/heroku-postgresql#connecting-in-python<br>
 **Many thanks to:**
 
 * My mentor **Ignatius Ukwuoma** for his patience and kindness
-* **AudreyLL88** for her very inspiring ReadME
+* **AudreyLL88** and **Malia** for thier very inspiring ReadME
 * **Code Institute Slack community** for the technical and emotional support
 * **Code Institute Tutors** Cormac, Jo, Mike, Tim, Sam, Johann and Milkos were fantastic help
 * **Alishia Whittaker**, for the Graphic design and stock images from Canva and your support through all my studies
