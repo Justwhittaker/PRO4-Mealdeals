@@ -2,9 +2,11 @@
 <html style="height:100%;" lang="en">
 {% extends 'base.html' %}
 {% block content %}
+
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
 <body class="d-flex flex-column h-100">
 
-<div class="card-deck product_card flex-grow-1">
+<div class="container card-deck product_card flex-grow-1">
     {% for product in products %}
     <div class="card product_inner_card ">
         <div class="card-header text-center" style="color: rgb(197, 20, 20);">
@@ -33,5 +35,6 @@
 </div>
     
 </body>
+</div>
 {% endblock %}
 </html>

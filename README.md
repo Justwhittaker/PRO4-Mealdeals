@@ -333,8 +333,10 @@ Even though the design is responsive, because of the obvious reasons, a service 
 ![CheckoutPage](static/img/home_page_response.png)
 
 ---
+---
 <a name="technologies"></a>
 ## Technologies used ##
+---
 ---
 
 * [HTML](https://developer.mozilla.org/en-US/docs/Web/HTML)

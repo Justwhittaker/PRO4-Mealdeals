@@ -20,6 +20,8 @@ from django.conf.urls.static import static
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.views.generic.base import RedirectView
 
+from memberships import views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,6 +31,9 @@ urlpatterns = [
     path("contact_us/", include('contact_us.urls')),
     path('client_profile/', include('client_profile.urls')),
     path('checkout/', include('checkout.urls')),
+    path('auth/', include('django.contrib.auth.urls')),
+    path('auth/signup', views.SignUp.as_view(), name='signup'),
+    path('auth/settings', views.settings, name='settings'),
     path('favicon.ico', RedirectView.as_view(
                                              url=staticfiles_storage.url
                                              ('media/img/favicon.png'))),
