@@ -88,15 +88,14 @@
                         {% if request.user.is_superuser %}
                         <a href="" class="dropdown-item">Site management</a>
                         {% endif %}
-                         <a href="{% url 'profile' %}" class="dropdown-item">My profile</a>
-                        <a class="p-2 text-dark" href="{% url 'settings' %}">Settings</a>
-                        <a class="dropdown-item p-2 text-dark" href="{% url 'logout' %}">Log Out</a>
+                        <a class="dropdown-item" href="{% url 'products' %}" >Subscriptions</a>
+                        <a class="dropdown-item" href="{% url 'profile' %}" >My profile</a>
+                        <a class="dropdown-item" href="{% url 'logout' %}">Log Out</a>
                         {% else %}
-                        <a href="{% url 'products' %}" class="dropdown-item">Subscriptions</a>
-                        <a class="p-2 text-dark" href="{% url 'login' %}">Log In</a>
+                        <a class="dropdown-item" href="{% url 'login' %}">Log In</a>
                         {% endif %}
                         {% if user.is_authenticated == False %}
-                        <a class="btn btn-outline-primary" href="{% url 'signup' %}">Sign up</a>
+                        <a class="dropdown-item" href="{% url 'signup' %}">Sign up</a>
                         {% endif %}
                         
                         

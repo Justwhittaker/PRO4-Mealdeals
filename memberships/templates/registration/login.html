@@ -1,14 +1,21 @@
 <!DOCTYPE html>
-
 {% extends 'base.html' %}
+{% block content %}
+<div class="container login">
+<h1>Login</h1>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Login</button>
+</form>
+</div>
 
 
-    {% load i18n %}
+    <!-- {% load i18n %}
 {% load account socialaccount %}
 
 {% block head_title %}{% trans "Sign In" %}{% endblock %}
 
-{% block content %}
 <div class="container">
 <h1>{% trans "Sign In" %}</h1>
 
@@ -46,5 +53,5 @@ for a {{ site_name }} account and sign in below:{% endblocktrans %}</p>
   <button class="primaryAction" type="submit">{% trans "Sign In" %}</button>
 </form>
 
-</div>
+</div> -->
 {% endblock %}

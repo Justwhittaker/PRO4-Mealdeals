@@ -65,7 +65,7 @@ body {
   text-align: center;
 }
 
-/* copyright styling*/
+/* --------------------------------- copyright styling*/
 #copyright {
     font-family: 'Oswald';
   background-color: rgb(197, 20, 20);
@@ -77,6 +77,20 @@ body {
 
 .about {
     padding: 2%;
+    font-family: 'Oswald';
+}
+
+/* -------------------------------- Signup page */
+
+.signup {
+    padding: 9%;
+    font-family: 'Oswald';
+}
+
+/* -------------------------------- Login page */
+
+.login {
+    padding: 20%;
 }
 
 /* -------------------------------- Media Queries */
