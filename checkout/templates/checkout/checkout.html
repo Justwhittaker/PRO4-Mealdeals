@@ -28,22 +28,24 @@
 
         <div class="row">
             <div class="col-12 col-lg-6 order-lg-last mb-5">
-                <p class="text-muted">Order Summary ({{ product.name }})</p>
+                {% for product in products %}
+                <p class="text-muted">Order Summary</p>
                 <div class="row">
                     <div class="col-7 offset-2">
-                        <p class="mb-1 mt-0 small text-muted">Item</p>
+                        <p class="mb-1 mt-0 small text-muted">Item {{ product.name }}</p>
                     </div>
                     <div class="col-3 text-right">
-                        <p class="mb-1 mt-0 small text-muted">Subtotal</p>
+                        <p class="mb-1 mt-0 small text-muted">Subtotal {{ product.price }}</p>
                     </div>
                 </div>
                 
                 <hr class="my-0">
                 <div class="row text-black text-right">
                     <div class="col-7 offset-2">
-                        <p class="my-0">Order Total:</p>
+                        <p class="my-0">Order Total: €{{ product.price }}</p>
                     </div>
                 </div>
+                 {% endfor %}
             </div>
             <div class="col-12 col-lg-6">
                 <p class="text-muted">Please fill out the form below to complete your order</p>
@@ -66,7 +68,7 @@
 
                         <div class="form-check form-check-inline float-right mr-0">
 							{% if user.is_authenticated %}
-								<label class="form-check-label" for="id-save-info">Save this delivery information to my profile</label>
+								<label class="form-check-label" for="id-save-info">Save this information to my profile</label>
                                 <input class="form-check-input ml-2 mr-0" type="checkbox" id="id-save-info" name="save-info" checked>
 							{% else %}
 								<label class="form-check-label" for="id-save-info">
@@ -86,7 +88,7 @@
                     </fieldset>
 
                     <div class="submit-button text-right mt-5 mb-2">
-						<button id="submit-button" class="btn btn-black rounded-0">
+						<button id="checkout" class="btn btn-black rounded-0">
 							<span class="font-weight-bold">Complete Order</span>
 							<span class="icon">
 								<i class="fas fa-lock"></i>
@@ -96,11 +98,22 @@
 							<span class="icon">
 								<i class="fas fa-exclamation-circle"></i>
 							</span>
-							<span>Your card will be charged <strong>${{ order_total|floatformat:2 }}</strong></span>
+							<span>Your card will be charged <strong>€{{ order_total|floatformat:2 }}</strong></span>
 						</p>
 					</div>
                 </form>
             </div>
         </div>
     </div>
+    <body>
+  <form id="payment-form">
+    <div id="card-element">
+      <!-- Elements will create input elements here -->
+    </div>
+
+    <!-- We'll put the error messages in this element -->
+    <div id="card-element-errors" role="alert"></div>
+    <button type="submit">Subscribe</button>
+  </form>
+</body>
 {% endblock %}

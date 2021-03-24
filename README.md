@@ -19,8 +19,14 @@
         * [Colors](#colors)
 * [Structure](#structure)
     * [Page Structure](#page_structure)
+        * [Home Page](#home_page)
+        * [Browsing](#browsing)
+        * [Detailed View](#detailed_view)
     * [Database and schema](*db_schema)
+        * [Schemas](*schemas)
+        * [Database](*db)
     * [Wireframing](#wireframing)
+    * [Design and Layout](#design)
 * [Features](#features)
     * [Features that have been developed](#developed)
     * [Features that will be implemented in the future](#implemented)
@@ -127,6 +133,10 @@ The site also allows for restaurant customers to find good and decent deals in t
 ![Research](media/readme/first_table.png)
 ![Research](media/readme/dealy.png)
 
+Product:
+
+![Inspiration](media/readme/eat_drink_deals.png)
+
 ---
 <a name="design-choices"></a>
 ### Design Choices ###
@@ -163,13 +173,19 @@ The site also allows for restaurant customers to find good and decent deals in t
 ### Page Structure ###
 ---
 
-#### Filtering and browsing ####
+<a name="home_page"></a>
+#### Home page ####
+
 There are two types of users and I wanted to give clear path to start using the site with Call To Action for both groups. Potential deal shoppers are directed to the Search & browsing, while potential restuaranteurs are shown an eye-catchy banner with a popping CTA button.
 
-#### Home page ####
+<a name="browsing"></a>
+#### Browsing ####
+
 Many similar sites (competitors) are trying to showcase wide range of services and options, therefore loosing focus and probably loosing potential subscriptions and users by not inviting them to further explore the site. My clear goal here is to lead users to check out more deals.
 
+<a name="detailed_view"></a>
 #### Detailed view ####
+
 Clicking on any of the deals on the home page brings the user to the deal details page, displaying all the available information about each deal. 
 
 #### Potential contributors ####
@@ -185,8 +201,55 @@ Potential contributors have a flow of action to fully utilize the page and achie
 <a name="db_schema"></a>
 ### Database and schema ###
 ---
+I put quite some effort into designing the database structure and schema. It was a difficult activity for me as I have never really done this before (the schema for my previous Flask based project with Code Institute was rather very simple).
 
-![Inspiration](media/readme/eat_drink_deals.png)
+<a name="schemas"></a>
+#### Schemas ####
+---
+
+The steps and outcome was as follows (note that the final structure differs at several points, because I had to adjust on multiple occasions):
+
+Indentifying Entities:
+* User
+* Restaurant User
+* Deal
+* Deal Image
+* Deal Discription
+* Prices
+* Contact Details to make bookings such as Address, Phone Number and Websites
+* Subscriptions
+
+Indentifying Relationships
+* Deal_ID = Categories = Restaurant = Subscriptions
+
+
+<a name="db"></a>
+#### Database ####
+---
+
+Deals more understandable for other developers. 
+
+Attributes:
+* Deal Name
+* Description
+* Restaurant Name
+* Image
+* Category
+* Deal_ID 
+* Price
+* Address
+* Contact details
+* Wedsite
+* Date uploaded
+
+Categories:
+* Italian
+* South African
+* Irish
+* British
+* Morroccan
+* Greek
+* Spainish
 
 ---
 <a name="wireframing"></a>
@@ -219,7 +282,10 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 ### Contact us Page ###
 !["Wireframe profile"](media/readme/MealdealsWireframe6.png)
 
+<a name="design"></a>
+## Features ## 
 
+---
 <a name="features"></a>
 ## Features ## 
 ---
@@ -247,9 +313,31 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 * **Feature 2** - **Comment box** and **messages notifications** below the recipes for users to interact with each other.
 * **Feature 3** - **Favorites** for user to quickly reference recipes they enjoyed or still want to Experiment with.
 * **Feature 4** - **Input Videos** to the website.
+---
+<a name="design"></a>
+## Design ##
+---
+Even though the design is responsive, because of the obvious reasons, a service like this is less likely to be used on small mobile devices. Therefore only desktop versions of the different design elements are shown here.
 
+#### Landing page: ####
+![landingPage](static/img/home_page_response.png)
+
+#### Deal Detail page: ####
+![DealPage](static/img/home_page_response.png)
+
+#### Profile page: ####
+![ProfilePage](static/img/home_page_response.png)
+
+#### Membership page: ####
+![MembershipPage](static/img/home_page_response.png)
+
+#### Checkout page: ####
+![CheckoutPage](static/img/home_page_response.png)
+
+---
 <a name="technologies"></a>
 ## Technologies used ##
+---
 
 * [HTML](https://developer.mozilla.org/en-US/docs/Web/HTML)
 * [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS)
@@ -268,30 +356,11 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 * [Canva](https://canva.com)
 * [MongoDB](https://cloud.mongodb.com/)
 
+---
 <a name="testing"></a>
-
 ## Testing ##
 ---
-
-*I used **pep8online.com** to test my Python code validator with no issues - http://pep8online.com/checkresult
-![pep8](static/img/pep8_test.png)
-* I tested the python code with **Python Debugger** - https://realpython.com/python-debugging-pdb/
-![pdb](static/img/pdb_debugger.png)
-* Also used this **Automated Testing** to test my flask applications - https://www.patricksoftwareblog.com/unit-testing-a-flask-application
-![test_flask](static/img/test_flask.png)
-* I used **Pylint** to lint my code by Linting my python code - http://pylint.pycqa.org/en/latest/
-![test_Pylint](static/img/pylint.png)
-* I tested the responsiveness of the website by using the [**Google Chrome Developer Tool**](https://developers.google.com/web/tools/chrome-devtools) as well as the plug-in **Unicorn Revealer** to control my overflow and the website [**Am I Responsive**](http://ami.responsivedesign.is/). 
-![AmIresponsive](static/img/amIresponsive.png)
-* I also tested my website on **different browsers and real devices** : **Iphone 6s, Ipad Pro 12", Ipad Mini, Google Chrome, Safari, Mozilla Firefox and Samsung A70.**
-* I used a first **dirty version** of this project on **Gitpod** and **refactored** my code **step by step** to remove any **useless classes**
-* I tested my CSS file and my HTML files using [**CSS Validator**](https://jigsaw.w3.org/css-validator/) and [**HTML Validator**](https://validator.w3.org/) then fixed the issues needed to be fixed.
-![test_Html](static/img/errors_val_w3.png)
-![test_CSS](static/img/errors_val_w3_css.png)
-* I tested every **functions** of my script.js using multiple **console.log** and checking for **errors** in the **Google Chrome console**.
-* I passed my deployed app through **Lighthouse** with the follwoing results
-![lighthouse](static/img/lighthouse.png)
-* All pages passed the HTML,CSS and Python validator final test with no major issues.
+Validation, manual unit, cross browser/cross device, accessibility, travis, coverage, this app has a dash of everything test related. See the separate [TESTING.md](TESTING.md) file for the details.
 
 **Responsiveness**
 
@@ -446,6 +515,7 @@ and used this website to assist me Docstring conventions - https://www.python.or
 * In my repository **JustWhittaker/PRO3-RecipeCloud**, click on the **"Code** green button, **copy in clipboard the HTTPS link**, open your **IDE** and look through my files.
 * The link : **https://github.com/JustWhittaker/PRO3-RecipeCloud.git**
 
+---
 <a name="credits"></a>
 ## Credits ##
 ---
@@ -454,21 +524,23 @@ and used this website to assist me Docstring conventions - https://www.python.or
 
 * All text content has been written by Justin Whittaker.
 
+* This project is heavily based on the Django Framework provided by Code Institute.
+
 I received inspiration and technical knowledge for this project from the following platforms
 1. Bootstrap <br>
-https://mdbootstrap.com/docs/standard/forms/input-fields/<br>
-https://getbootstrap.com/docs/4.3/components/card/<br>
-https://getbootstrap.com/docs/4.3/components/dropdowns/<br>
-https://www.w3schools.com/bootstrap/bootstrap_ref_css_images.asp <br>
-https://www.w3schools.com/bootstrap4/bootstrap_navbar.asp <br>
-https://stackoverflow.com/questions/10099422/flushing-footer-to-bottom-of-the-page-twitter-bootstrap#:~:text=The%20simplest%20technique%20is%20probably,the%20footer%20to%20the%20bottom.
+* https://mdbootstrap.com/docs/standard/forms/input-fields/<br>
+* https://getbootstrap.com/docs/4.3/components/card/<br>
+* https://getbootstrap.com/docs/4.3/components/dropdowns/<br>
+* https://www.w3schools.com/bootstrap/bootstrap_ref_css_images.asp <br>
+* https://www.w3schools.com/bootstrap4/bootstrap_navbar.asp <br>
+* https://stackoverflow.com/questions/10099422/flushing-footer-to-bottom-of-the-page-twitter-bootstrap#:~:text=The%20simplest%20technique%20is%20probably,the%20footer%20to%20the%20bottom.
 
 2. Django Basics <br>
-https://docs.djangoproject.com/en/3.1/intro/tutorial01/<br>
-https://www.ordinarycoders.com/blog/article/build-a-django-contact-form-with-email-backend<br>
-https://stackoverflow.com/questions/21938028/how-can-i-get-a-favicon-to-show-up-in-my-django-app<br>
-https://www.geeksforgeeks.org/python-uploading-images-in-django/<br>
-https://stackoverflow.com/questions/36665889/collectstatic-error-while-deploying-django-app-to-heroku
+* https://docs.djangoproject.com/en/3.1/intro/tutorial01/<br>
+* https://www.ordinarycoders.com/blog/article/build-a-django-contact-form-with-email-backend<br>
+* https://stackoverflow.com/questions/21938028/how-can-i-get-a-favicon-to-show-up-in-my-django-app<br>
+* https://www.geeksforgeeks.org/python-uploading-images-in-django/<br>
+* https://stackoverflow.com/questions/36665889/collectstatic-error-while-deploying-django-app-to-heroku
 
 3. Python research <br>
     1. CodeInstitute Django Fundamentals <br>
@@ -493,7 +565,7 @@ https://devcenter.heroku.com/articles/heroku-postgresql#connecting-in-python<br>
 * My mentor **Ignatius Ukwuoma** for his patience and kindness
 * **AudreyLL88** for her very inspiring ReadME
 * **Code Institute Slack community** for the technical and emotional support
-* **Code Institute Tutors** Cormac, Tim, Sam, Johann and Milkos were fantastic help
+* **Code Institute Tutors** Cormac, Jo, Mike, Tim, Sam, Johann and Milkos were fantastic help
 * **Alishia Whittaker**, for the Graphic design and stock images from Canva and your support through all my studies
 
 **Site for educational purposes only!**
