@@ -34,6 +34,10 @@ urlpatterns = [
     path('auth/', include('django.contrib.auth.urls')),
     path('auth/signup', views.SignUp.as_view(), name='signup'),
     path('auth/settings', views.settings, name='settings'),
+    path('join', views.join, name='join'),
+    path('checkout', views.checkout, name='checkout'),
+    path('success', views.success, name='success'),
+    path('cancel', views.cancel, name='cancel'),
     path('favicon.ico', RedirectView.as_view(
                                              url=staticfiles_storage.url
                                              ('media/img/favicon.png'))),

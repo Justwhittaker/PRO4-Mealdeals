@@ -90,7 +90,25 @@ body {
 /* -------------------------------- Login page */
 
 .login {
-    padding: 20%;
+    padding: 9%;
+    font-family: 'Oswald';
+}
+
+/* -------------------------------- Join page */
+
+.join_style {
+    padding: 12%;
+    padding-top: 20%;
+    margin-top: 10em;
+    font-family: 'Oswald';
+}
+
+
+/* -------------------------------- Checkout page */
+
+.checkout {
+    padding: 9%;
+    font-family: 'Oswald';
 }
 
 /* -------------------------------- Media Queries */

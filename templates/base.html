@@ -39,6 +39,7 @@
         crossorigin="anonymous"></script>
     <!-- Stripe -->
     <script src="https://js.stripe.com/v3/"></script>
+    
 
     {% endblock %}
 
@@ -88,7 +89,7 @@
                         {% if request.user.is_superuser %}
                         <a href="" class="dropdown-item">Site management</a>
                         {% endif %}
-                        <a class="dropdown-item" href="{% url 'products' %}" >Subscriptions</a>
+                        <a class="dropdown-item" href="{% url 'join' %}" >Subscriptions</a>
                         <a class="dropdown-item" href="{% url 'profile' %}" >My profile</a>
                         <a class="dropdown-item" href="{% url 'logout' %}">Log Out</a>
                         {% else %}

@@ -10,6 +10,9 @@ class Customer(models.Model):
     cancel_at_period_end = models.BooleanField(default=False)
     membership = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
 
 class MembershipTier(models.Model):
     """
