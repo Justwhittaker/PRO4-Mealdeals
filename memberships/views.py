@@ -61,13 +61,13 @@ def checkout(request):
     if request.method == 'POST':
         pass
     else:
-        membership = 'monthly'
-        final_dollar = 20
-        membership_id = 'price_1IYfthIFzPFZzgCPFbLoedwj'
+        membership = 'registration'
+        final_dollar = 10
+        membership_id = 'price_1IYh7eIFzPFZzgCPKsuPzfdG'
         if request.method == 'GET' and 'membership' in request.GET:
             if request.GET['membership'] == 'monthly':
                 membership = 'monthly'
-                membership_id = 'price_1IYfthIFzPFZzgCPFbLoedwj'
+                membership_id = 'price_1IYh7eIFzPFZzgCP0jB4Ldjx'
                 final_dollar = 20
 
         # Create Strip Checkout
