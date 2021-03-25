@@ -9,7 +9,8 @@ class ContactForm(forms.Form):
     restaurant_name = forms.CharField(max_length=200)
     email_address = forms.EmailField(max_length=200)
     phone_number = forms.CharField(max_length=45)
-    deal_description = forms.CharField(widget=forms.Textarea, max_length=2000)
+    deal_description = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 5, 'cols': 80}), max_length=1500)
 
     def __init__(self, *args, **kwargs):
         """

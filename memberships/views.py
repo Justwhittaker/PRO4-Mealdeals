@@ -6,11 +6,13 @@ from .forms import CustomSignupForm
 from django.urls import reverse_lazy
 from django.views import generic
 from django.contrib.auth import authenticate, login
+from django.conf import settings
 
 import stripe
 import os
 
-STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', '')
+# stripe.api_key = settings.STRIPE_SECRET_KEY
+stripe.api_key = 'pk_test_51I9BnOIFzPFZzgCPco3JakcxMvcGpwP5AYfRK1zdVJajM6LOuA57tqI4h2wd6Bxg8NC3egFwWndvYPAlJsAdJbax00mvKkqXib'
 
 # Create your views here.
 
@@ -85,7 +87,8 @@ def checkout(request):
             cancel_url='http://127.0.0.1:8000/cancel',
         )
 
-        return render(request, 'membership/checkout.html', {'final_dollar': final_dollar, 'session_id': session.id})
+        return render(request, 'membership/checkout.html', {
+            'final_dollar': final_dollar, 'session_id': session.id})
 
 
 class SignUp(generic.CreateView):

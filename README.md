@@ -497,6 +497,7 @@ I received inspiration and technical knowledge for this project from the followi
 * https://stackoverflow.com/questions/21938028/how-can-i-get-a-favicon-to-show-up-in-my-django-app<br>
 * https://www.geeksforgeeks.org/python-uploading-images-in-django/<br>
 * https://stackoverflow.com/questions/36665889/collectstatic-error-while-deploying-django-app-to-heroku
+* https://stackoverflow.com/questions/34384544/how-to-resize-django-textarea
 
 3. Python research <br>
     1. CodeInstitute Django Fundamentals <br>
