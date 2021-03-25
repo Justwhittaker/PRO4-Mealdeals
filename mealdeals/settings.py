@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     'contact_us',
     'client_profile',
     'memberships',
-    'checkout',
 
     # Other
     'crispy_forms',
@@ -196,8 +195,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Stripe
 STRIPE_CURRENCY = 'eur'
-STRIPE_PUBLIC_KEY = ('pk_test_51I9BnOIFzPFZzgCPco3JakcxMvcGpwP5AYfRK1zdVJajM6LOuA57tqI4h2wd6Bxg8NC3egFwWndvYPAlJsAdJbax00mvKkqXib')
-# STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
-# STRIPE_WH_SECRET = os.getenv('STRIPE_WH_SECRET', '')
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', '')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
+STRIPE_WH_SECRET = os.getenv('STRIPE_WH_SECRET', '')
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

@@ -27,10 +27,6 @@ def all_products(request):
 
 
 @login_required
-def settings(request):
-    return render(request, 'registration/settings.html')
-
-
 def join(request):
     return render(request, 'membership/join.html')
 
@@ -94,6 +90,7 @@ def checkout(request):
 class SignUp(generic.CreateView):
     form_class = CustomSignupForm
     success_url = reverse_lazy('home')
+
     template_name = 'registration/signup.html'
 
     def form_valid(self, form):
@@ -101,5 +98,13 @@ class SignUp(generic.CreateView):
         username, password = form.cleaned_data.get(
             'username'), form.cleaned_data.get('password1')
         new_user = authenticate(username=username, password=password)
+        # restaurant_name, street_address1, town_or_city = form.cleaned_data.get(
+        #     'restaurant_name'), form.cleaned_data.get(
+        #     'street_address1'), form.cleaned_data.get(
+        #     'town_or_city'),
+        # county, street_address2, postcode = form.cleaned_data.get(
+        #     'county'), form.cleaned_data.get(
+        #     'street_address2'), form.cleaned_data.get(
+        #     'postcode'),
         login(self.request, new_user)
         return valid
