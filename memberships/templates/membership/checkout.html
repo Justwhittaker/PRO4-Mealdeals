@@ -10,19 +10,17 @@
         <ul class="list-group mb-3">
           <li class="list-group-item d-flex justify-content-between lh-condensed">
             <div>
-              <h6 class="my-0">Mealdeals</h6>
-              <small class="text-muted">{{ membership | title }}</small>
+              <h6 class="my-0">Mealdeals membership</h6>
+              <small>{{ membership }}</small>
             </div>
           </li>
           <li class="list-group-item d-flex justify-content-between">
             <span>Total (EUR)</span>
-            <strong>${{ final_dollar }}</strong>
+            <strong>€ {{ final_dollar }}</strong>
           </li>
         </ul>
 
         <div class="text-center pt-3">
-
-          <script src="https://js.stripe.com/v3/"></script>
 
             <button id="checkout-button" data-secret="{{ session_id }}">
               Checkout

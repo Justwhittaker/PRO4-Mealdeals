@@ -12,7 +12,7 @@ import stripe
 import os
 
 # stripe.api_key = settings.STRIPE_SECRET_KEY
-stripe.api_key = 'pk_test_51I9BnOIFzPFZzgCPco3JakcxMvcGpwP5AYfRK1zdVJajM6LOuA57tqI4h2wd6Bxg8NC3egFwWndvYPAlJsAdJbax00mvKkqXib'
+stripe.api_key = 'sk_test_51I9BnOIFzPFZzgCPlXnvCkzhPtXAjqnidnmc0VzkIEE1ZMpDmmLdXpBcLByLZ9syPvWFsG7oWq4I2s6OU4Vqbkdx00RIMhQFV1'
 
 # Create your views here.
 
@@ -62,11 +62,11 @@ def checkout(request):
     else:
         membership = 'registration'
         final_dollar = 10
-        membership_id = 'price_1IYh7eIFzPFZzgCPKsuPzfdG'
+        membership_id = 'price_1IVa1QIFzPFZzgCPg3G1E1Md'
         if request.method == 'GET' and 'membership' in request.GET:
             if request.GET['membership'] == 'monthly':
                 membership = 'monthly'
-                membership_id = 'price_1IYh7eIFzPFZzgCP0jB4Ldjx'
+                membership_id = 'price_1IYfthIFzPFZzgCPFbLoedwj'
                 final_dollar = 20
 
         # Create Strip Checkout
@@ -98,13 +98,13 @@ class SignUp(generic.CreateView):
         username, password = form.cleaned_data.get(
             'username'), form.cleaned_data.get('password1')
         new_user = authenticate(username=username, password=password)
-        # restaurant_name, street_address1, town_or_city = form.cleaned_data.get(
-        #     'restaurant_name'), form.cleaned_data.get(
-        #     'street_address1'), form.cleaned_data.get(
-        #     'town_or_city'),
-        # county, street_address2, postcode = form.cleaned_data.get(
-        #     'county'), form.cleaned_data.get(
-        #     'street_address2'), form.cleaned_data.get(
-        #     'postcode'),
+        restaurant_name, street_address1, town_or_city = form.cleaned_data.get(
+            'restaurant_name'), form.cleaned_data.get(
+            'street_address1'), form.cleaned_data.get(
+            'town_or_city'),
+        county, street_address2, postcode = form.cleaned_data.get(
+            'county'), form.cleaned_data.get(
+            'street_address2'), form.cleaned_data.get(
+            'postcode'),
         login(self.request, new_user)
         return valid
