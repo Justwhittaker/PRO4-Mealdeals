@@ -57,20 +57,28 @@ body {
 /* footer styling*/
 .footer {
     font-family: 'Oswald';
-    padding: 5px;
-  min-width: 100%;
-  max-width: 100%;
   background: #ffffff;
-  height: auto;
+  height: 15%;
   text-align: center;
+  margin-left: 1%;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+
 }
 
 /* --------------------------------- copyright styling*/
 #copyright {
     font-family: 'Oswald';
   background-color: rgb(197, 20, 20);
-  padding: 5%;
   bottom: 0;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 6%;
+  text-align: center;
 }
 
 /* -------------------------------- about page */
@@ -151,6 +159,7 @@ body {
 
 .deal_body {
     padding: 3%;
+    margin-bottom: 10em;
 }
 
 .deal_card {
@@ -163,7 +172,7 @@ body {
   text-align: left;
   padding: 20px;
   border-radius: 10px;
-  font-family: 'Oswald'
+  font-family: 'Oswald';
 }
 
 /* deal image styling*/
