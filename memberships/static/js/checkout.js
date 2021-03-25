@@ -1,4 +1,4 @@
-var stripe = Stripe('STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', '',)');
+var stripe = Stripe(os.getenv('STRIPE_PUBLIC_KEY'));
 
 var checkoutButton = document.getElementById('checkout-button');
 
