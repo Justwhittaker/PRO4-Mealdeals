@@ -56,29 +56,18 @@ body {
 
 /* footer styling*/
 .footer {
-    font-family: 'Oswald';
+  font-family: 'Oswald';
   background: #ffffff;
   height: 15%;
   text-align: center;
   margin-left: 1%;
-  position: fixed;
+  position: sticky;
+  position: -webkit-sticky;
   left: 0;
   bottom: 0;
   width: 100%;
+  margin-bottom: auto;
 
-}
-
-/* --------------------------------- copyright styling*/
-#copyright {
-    font-family: 'Oswald';
-  background-color: rgb(197, 20, 20);
-  bottom: 0;
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 6%;
-  text-align: center;
 }
 
 /* -------------------------------- about page */
@@ -159,30 +148,49 @@ body {
 
 .deal_body {
     padding: 3%;
-    margin-bottom: 10em;
 }
 
 .deal_card {
   width: 100%;
   border: 30px;
-  border-width: 3px;
-  margin-bottom: 10px;
+  border-width: 1px;
   margin-top: 10px;
   border-style: solid;
   text-align: left;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 2px;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   font-family: 'Oswald';
 }
 
 /* deal image styling*/
 .card_img {
-  border-radius: 10px;
+  border-radius: 2px;
   background-size: cover;
-  max-height: 20em;
+  max-height: 15em;
+
 }
 
-/* -------------------------------- deal display cards */
+
+.deal_detail{
+    padding: 7%;
+    
+}
+.card_img_detail {
+  border-radius: 2px;
+  background-size: cover;
+  max-height: 30em;
+  max-width: 30em;
+
+}
+.return_deals{
+ 
+    position: absolute;
+  right: 0;
+}
+
+
+/* -------------------------------- Private Policy */
 
 .private_pol {
     padding-left: 20%;
@@ -191,21 +199,12 @@ body {
     padding-bottom: 5%;
 }
 
-/* -------------------------------- deal display cards */
 
-.product_card {
-    padding: 8%;
-    padding-bottom: 5%;
-}
-
-.product_inner_card {
-    padding: 7%;
-}
-
-/* -------------------------------- deal display cards */
+/* -------------------------------- contact form */
 
 .contact_form {
     padding-left: 20%;
     padding-right: 20%;
-    margin-bottom: 30%;
+    padding-bottom: 4.1%;
 }
+
