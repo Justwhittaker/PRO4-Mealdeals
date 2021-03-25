@@ -1,4 +1,4 @@
-var stripe = Stripe('pk_test_51I9BnOIFzPFZzgCPco3JakcxMvcGpwP5AYfRK1zdVJajM6LOuA57tqI4h2wd6Bxg8NC3egFwWndvYPAlJsAdJbax00mvKkqXib');
+var stripe = Stripe('STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', '',)');
 
 var checkoutButton = document.getElementById('checkout-button');
 

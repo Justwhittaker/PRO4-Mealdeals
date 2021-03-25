@@ -8,8 +8,9 @@ from django.views import generic
 from django.contrib.auth import authenticate, login
 
 import stripe
+import os
 
-stripe.api_key = 'pk_test_51I9BnOIFzPFZzgCPco3JakcxMvcGpwP5AYfRK1zdVJajM6LOuA57tqI4h2wd6Bxg8NC3egFwWndvYPAlJsAdJbax00mvKkqXib'
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', '')
 
 # Create your views here.
 
