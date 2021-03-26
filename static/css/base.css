@@ -105,8 +105,10 @@ body {
 /* -------------------------------- Checkout page */
 
 .checkout {
-    padding: 9%;
+    padding: 10%;
+    margin-top: 9em;
     font-family: 'Oswald';
+    margin-bottom: 7em;
 }
 
 /* -------------------------------- Media Queries */
