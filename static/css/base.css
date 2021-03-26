@@ -94,10 +94,11 @@ body {
 /* -------------------------------- Join page */
 
 .join_style {
-    padding: 12%;
+    padding: 20%;
     padding-top: 20%;
     margin-top: 10em;
     font-family: 'Oswald';
+    margin-bottom: 7em;
 }
 
 
