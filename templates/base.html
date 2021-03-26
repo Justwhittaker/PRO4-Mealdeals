@@ -87,7 +87,7 @@
                     <div class="dropdown-menu border-0" aria-labelledby="user-options">
                         {% if request.user.is_authenticated %}
                         {% if request.user.is_superuser %}
-                        <a href="" class="dropdown-item">Site management</a>
+                        <a href="{% url 'profile' %}" class="dropdown-item">Site management</a>
                         {% endif %}
                         <a class="dropdown-item" href="{% url 'join' %}" >Subscriptions</a>
                         <a class="dropdown-item" href="{% url 'profile' %}" >My profile</a>

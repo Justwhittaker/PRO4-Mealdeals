@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import MembershipTier, Customer
+from .models import Customer
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from .forms import CustomSignupForm
@@ -98,13 +98,5 @@ class SignUp(generic.CreateView):
         username, password = form.cleaned_data.get(
             'username'), form.cleaned_data.get('password1')
         new_user = authenticate(username=username, password=password)
-        restaurant_name, street_address1, town_or_city = form.cleaned_data.get(
-            'restaurant_name'), form.cleaned_data.get(
-            'street_address1'), form.cleaned_data.get(
-            'town_or_city'),
-        county, street_address2, postcode = form.cleaned_data.get(
-            'county'), form.cleaned_data.get(
-            'street_address2'), form.cleaned_data.get(
-            'postcode'),
         login(self.request, new_user)
         return valid

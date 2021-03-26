@@ -1,6 +1,11 @@
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.db.models import Q
 from django.db.models.functions import Lower
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .models import UserProfile
+from .forms import UserProfileForm
 
 from .models import deal, category
 from .forms import DealForm
@@ -13,44 +18,68 @@ def client_deals(request):
 
     deals = deal.objects.all()
     query = None
-    categories = None
-    sort = None
 
     if request.GET:
-        if 'sort' in request.GET:
-            sortkey = request.GET['sort']
-        sort = sortkey
-        if sortkey == 'name':
-            sortkey = 'lower_name'
-            deals == deals.annotate(lower_name=Lower('name'))
-        if sortkey == 'category':
-            sortkey = 'category_name'
-        deals = deals.order_by(sortkey)
-
-        if 'category' in request.GET:
-            categories = request.GET['category'].split(',')
-            deals = deals.filter(category__name__in=categories)
-            categories = category.objects.filter(name__in=categories)
-
         if 'q' in request.GET:
             query = request.GET['q']
             if not query:
-                messages.error(request, "You didn't enter any search criteria!")
-                return redirect(reverse('index.html'))
+                messages.error(request,
+                               "You did not enter any search critria!")
+                return redirect(reverse('home'))
 
-            queries = Q(name__icontains=query) | Q(description__icontains=query)
+            queries = Q(category__name__icontains=query) | Q(
+                restaurant_name__icontains=query) | Q(name__icontains=query)
             deals = deals.filter(queries)
-
-    current_sorting = f'{sort}_{deals}'
 
     context = {
         'deals': deals,
         'search_term': query,
-        'current_categories': categories,
-        'current_sorting': current_sorting,
     }
 
-    return render(request, 'client_profile/client_profile.html', context)
+    return render(request, 'profile.html', context)
+
+
+@login_required
+def profile(request):
+    """ Display the user's profile. """
+    profile = get_object_or_404(UserProfile, user=request.user)
+
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully')
+        else:
+            messages.error(request, 'Update failed. Please ensure the form is valid.')
+    else:
+        form = UserProfileForm(instance=profile)
+    orders = profile.orders.all()
+
+    template = 'signup_profile.html'
+    context = {
+        'form': form,
+        'orders': orders,
+        'on_profile_page': True
+    }
+
+    return render(request, template, context)
+
+
+# def order_history(request, order_number):
+#     order = get_object_or_404(Order, order_number=order_number)
+
+#     messages.info(request, (
+#         f'This is a past confirmation for order number {order_number}. '
+#         'A confirmation email was sent on the order date.'
+#     ))
+
+#     template = '#'
+#     context = {
+#         'order': order,
+#         'from_profile': True,
+#     }
+
+#     return render(request, template, context)
 
 
 def deal_detail(request, deal_id):
@@ -68,9 +97,11 @@ def deal_detail(request, deal_id):
 def add_deal(request):
     """ Add a deal """
     form = DealForm()
-    template = 'client_profile/add_deal.html'
+    template = 'add_deal.html'
     context = {
         'form': form,
     }
 
     return render(request, template, context)
+
+

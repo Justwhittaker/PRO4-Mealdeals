@@ -5,21 +5,10 @@ from django.contrib.auth.models import User
 
 class CustomSignupForm(UserCreationForm):
     email = forms.EmailField(max_length=255, required=True)
-    restaurant_name = forms.CharField(max_length=100)
-    phone_number = forms.CharField(max_length=20)
-    postcode = forms.CharField(max_length=20)
-    town_or_city = forms.CharField(max_length=40)
-    street_address1 = forms.CharField(max_length=80)
-    street_address2 = forms.CharField(max_length=80)
-    county = forms.CharField(max_length=80)
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'password1', 'password2',
-                  'restaurant_name', 'phone_number',
-                  'street_address1', 'street_address2',
-                  'town_or_city', 'postcode',
-                  'county',)
+        fields = ('username', 'email', 'password1', 'password2')
 
     def __init__(self, *args, **kwargs):
         """
@@ -32,13 +21,6 @@ class CustomSignupForm(UserCreationForm):
             'email': 'Email Address',
             'password1': 'Password',
             'password2': 'Resubmit Password',
-            'restaurant_name': 'Restaurant Name',
-            'phone_number': 'Phone Number',
-            'town_or_city': 'Town or City',
-            'street_address1': 'Street Address 1',
-            'street_address2': 'Street Address 2',
-            'county': 'County',
-            'postcode': 'Postal Code',
         }
 
         self.fields['username'].widget.attrs['autofocus'] = True

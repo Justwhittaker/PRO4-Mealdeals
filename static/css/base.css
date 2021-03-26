@@ -163,29 +163,27 @@ body {
   font-family: 'Oswald';
 }
 
+.deal_detail{
+    padding: 7%;
+}
+
 /* deal image styling*/
+
 .card_img {
   border-radius: 2px;
   background-size: cover;
   max-height: 15em;
-
 }
 
-
-.deal_detail{
-    padding: 7%;
-    
-}
 .card_img_detail {
   border-radius: 2px;
   background-size: cover;
   max-height: 30em;
   max-width: 30em;
-
 }
+
 .return_deals{
- 
-    position: absolute;
+  position: absolute;
   right: 0;
 }
 

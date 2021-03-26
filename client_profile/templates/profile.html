@@ -24,28 +24,30 @@
         <a href="{% url 'add_deal' %}" class="btn btn-primary">Add a new Deal</a>
     </div>
 </div>
-<div class="row">
+<div class="deal_body row">
     {% for deal in deals %}
     <div class="col-sm-6 col-md-4">
         <blockquote>
-            <label>{{ deal.name }}</label>
-            <div class="">
-                <div class="deal_card">
-                    <img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" />
-                    <div class="card-body mb-3">
-                        {{ deal.restaurant_name }} <br>
-                        {{ deal.name }} <br>
-                        {{ deal.category }} <br>
-                        {{ deal.price }}
-                        <br>
+            <div class="deal_card">
+                            <h2><strong>{{ deal.name }}</strong></h2>
+                            <img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" />
+                            <div class="card-body mb-3">
+                                <h3>{{ deal.restaurant_name }}</h3> <br>
+                                <h4>€{{ deal.price }}</h4> <br>
+                                {{ deal.name }} <br>
+                                {{ deal.category }} <br>
+                                
+                                <br>
+                                <a href="{% url 'deals_display' deal.id %}" class="btn btn-primary">Go to Deal</a>
+
                         <a href="{% url 'deals_display' deal.id %}" class="btn btn-primary">Go to Deal</a>
                         <a href="{ url 'edit_deal', deal_id=deal._id }" class="btn btn-warning">Edit</a>
                         <a href="{ url 'delete_deal', deal_id=deal._id }" class="btn btn-danger">Delete</a>
                     </div>
                 </div>
-            </div>
+
         </blockquote>
     </div>
     {% endfor %}
-</div>
+</div> 
 {% endblock %}
