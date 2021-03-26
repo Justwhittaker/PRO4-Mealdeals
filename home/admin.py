@@ -14,6 +14,7 @@ class deal_admin(admin.ModelAdmin):
         'category',
         'price',
         'image',
+        'author',
     )
 
     ordering = ('name',)

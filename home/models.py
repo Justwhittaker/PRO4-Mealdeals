@@ -1,4 +1,5 @@
 from django.db import models
+from client_profile.models import UserProfile
 
 # Create your models here.
 
@@ -30,6 +31,9 @@ class deal(models.Model):
     description = models.TextField(max_length=2054)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     image = models.ImageField(blank=True)
+    author = models.ForeignKey(UserProfile,
+                               on_delete=models.CASCADE,
+                               null=True, blank=True)
 
     def __str__(self):
         return self.name

@@ -13,55 +13,61 @@
 
 {% block content %}
 <div class="overlay">
-<div class="container d-flex justify-content-center align-items-center h-100">
     <div class="row">
         <div class="col">
             <hr>
             <h2 class="logo-font mb-4">My Profile</h2>
+            <h3>Welcome Back, </h3>
             <hr>
         </div>
     </div>
     <div class="row">
-        <div class="col-12 col-lg-6">
-            <p class="text-muted">Profile Information</p>
-            <form class="mt-3" action="{% url 'profile' %}" method="POST" id="profile-update-form">
-                {% csrf_token %}
-                {{ form|crispy }}
-                <button class="btn btn-black rounded-0 text-uppercase float-right">Update Information</button>
-            </form>
+        <div>
+            <a href="{% url 'add_deal' %}" class="btn btn-primary">Add a new Deal</a>
         </div>
     </div>
-    <div class="deal_body row">
-    <div class="col-sm-6 col-md-4">
-        <blockquote>
-            <div class="deal_card">
+    <div class="container d-flex">
+        <div class="row">
+            <div class="#">
+                <p class="text-muted">Profile Information</p>
+                <form class="mt-3" action="{% url 'profile' %}" method="POST" id="profile-update-form">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button class="btn btn-black rounded-0 text-uppercase float-right">Update Information</button>
+                </form>
+            </div>
+        </div>
+        <div class="deal_body row">
+            <div class="#">
                 <p class="text-muted">Deals Information</p>
-                {{ deals }}    
-                <h2><strong>{{ deal.name }}</strong></h2>
-                            <img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" />
-                            <div class="card-body mb-3">
-                                <h3>{{ deal.restaurant_name }}</h3> <br>
-                                <h4>€{{ deal.price }}</h4> <br>
-                                {{ deal.name }} <br>
-                                {{ deal.category }} <br>
-                                
-                                <br>
-                                <a href="#" class="btn btn-primary">Go to Deal</a>
-
-                        <a href="#" class="btn btn-primary">Go to Deal</a>
-                        <a href="#" class="btn btn-warning">Edit</a>
-                        <a href="#" class="btn btn-danger">Delete</a>
-                    </div>
+                <div class="deal_history table-responsive">
+                    <table class="table table-sm table-borderless">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Deal Name</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for deal in deals %}
+                            <tr>
+                                <td>
+                                    <a href="#"></a>
+                                </td>
+                                <td><img src="{{ deals.image.url }}" class="card-img-top" alt="Card image cap" /></td>
+                                <td> {{ deals.name }} </td>
+                                <td>€{{ deals.price }}</td>
+                            </tr>
+                            <a href="#" class="btn btn-primary">Go to Deal</a>
+                            <a href="#" class="btn btn-warning">Edit</a>
+                            <a href="#" class="btn btn-danger">Delete</a>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-
-        </blockquote>
-    </div>
-</div> 
-</div>
-<div class="row">
-    <div>
-        <a href="{% url 'add_deal' %}" class="btn btn-primary">Add a new Deal</a>
+            </div>
+        </div>
     </div>
 </div>
-
-{% endblock %}
+    {% endblock %}

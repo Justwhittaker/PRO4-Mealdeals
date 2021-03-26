@@ -492,12 +492,14 @@ I received inspiration and technical knowledge for this project from the followi
 * https://stackoverflow.com/questions/10099422/flushing-footer-to-bottom-of-the-page-twitter-bootstrap#:~:text=The%20simplest%20technique%20is%20probably,the%20footer%20to%20the%20bottom.
 
 2. Django Basics <br>
+* https://docs.djangoproject.com/en/1.11/contents/
 * https://docs.djangoproject.com/en/3.1/intro/tutorial01/<br>
 * https://www.ordinarycoders.com/blog/article/build-a-django-contact-form-with-email-backend<br>
 * https://stackoverflow.com/questions/21938028/how-can-i-get-a-favicon-to-show-up-in-my-django-app<br>
 * https://www.geeksforgeeks.org/python-uploading-images-in-django/<br>
 * https://stackoverflow.com/questions/36665889/collectstatic-error-while-deploying-django-app-to-heroku
 * https://stackoverflow.com/questions/34384544/how-to-resize-django-textarea
+* https://simpleisbetterthancomplex.com/tutorial/2016/07/26/how-to-reset-migrations.html
 
 3. Python research <br>
     1. CodeInstitute Django Fundamentals <br>
