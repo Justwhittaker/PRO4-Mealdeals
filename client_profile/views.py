@@ -1,6 +1,4 @@
-from django.shortcuts import render, redirect, reverse, get_object_or_404
-from django.db.models import Q
-from django.db.models.functions import Lower
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -26,7 +24,7 @@ def profile(request):
     else:
         form = UserProfileForm(instance=profile)
         # deals = profile.deal.all()
-    
+
     author = UserProfile.objects.get(user=request.user)
     deals = Deal.objects.filter(author=author)
 
@@ -66,7 +64,6 @@ def add_deal(request):
         #             'phone_number': profile.default_phone_number,
         #         })
 
-    
     template = 'add_deal.html'
     context = {
         'form': form, }
