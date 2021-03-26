@@ -7,8 +7,8 @@ from django.contrib.auth.decorators import login_required
 from .models import UserProfile
 from .forms import UserProfileForm
 
-from .models import deal, category
-from .forms import DealForm
+from .models import deal, category, UserProfile
+from .forms import DealForm, UserProfileForm
 
 # Create your views here.
 
@@ -53,12 +53,11 @@ def profile(request):
             messages.error(request, 'Update failed. Please ensure the form is valid.')
     else:
         form = UserProfileForm(instance=profile)
-    orders = profile.orders.all()
+        # deals = profile.deal.all()
 
-    template = 'signup_profile.html'
+    template = 'profile.html'
     context = {
         'form': form,
-        'orders': orders,
         'on_profile_page': True
     }
 
@@ -82,16 +81,16 @@ def profile(request):
 #     return render(request, template, context)
 
 
-def deal_detail(request, deal_id):
-    """ A view to show individual deal details """
+# def deal_detail(request, deal_id):
+#     """ A view to show individual deal details """
 
-    deals = get_object_or_404(Deal, pk=deal_id)
+#     deals = get_object_or_404(Deal, pk=deal_id)
 
-    context = {
-        'deals': deals,
-    }
+#     context = {
+#         'deals': deals,
+#     }
 
-    return render(request, 'client_profile/deal_detail.html', context)
+#     return render(request, 'membership/deal_detail.html', context)
 
 
 def add_deal(request):
