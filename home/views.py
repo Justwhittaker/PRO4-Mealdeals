@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.contrib import messages
-from .models import deal
+from .models import Deal
 from django.db.models import Q
 # Create your views here.
 
@@ -8,7 +8,7 @@ from django.db.models import Q
 def all_deals(request):
     """ A view to show all deals, including sorting and search queries """
 
-    deals = deal.objects.all()
+    deals = Deal.objects.all()
     query = None
 
     if request.GET:
@@ -47,7 +47,7 @@ def about(request):
 def deals_display(request, deal_id):
     """ A view to show individual deal details """
 
-    deals = get_object_or_404(deal, pk=deal_id)
+    deals = get_object_or_404(Deal, pk=deal_id)
 
     context = {
         'deals': deals,

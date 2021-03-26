@@ -4,7 +4,7 @@ from client_profile.models import UserProfile
 # Create your models here.
 
 
-class category(models.Model):
+class Category(models.Model):
 
     class Meta:
         verbose_name_plural = 'Categories'
@@ -19,7 +19,7 @@ class category(models.Model):
         return self.friendly_name
 
 
-class deal(models.Model):
+class Deal(models.Model):
     category = models.ForeignKey('Category',
                                  null=True, blank=True,
                                  on_delete=models.SET_NULL)

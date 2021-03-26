@@ -7,34 +7,7 @@ from django.contrib.auth.decorators import login_required
 
 from .models import UserProfile
 from .forms import DealForm, UserProfileForm
-
-# Create your views here.
-
-
-def client_deals(request):
-    """ A veiw to show the specific clients delas in thier profile"""
-
-    deals = deal.objects.all()
-    query = None
-
-    if request.GET:
-        if 'q' in request.GET:
-            query = request.GET['q']
-            if not query:
-                messages.error(request,
-                               "You did not enter any search critria!")
-                return redirect(reverse('home'))
-
-            queries = Q(category__name__icontains=query) | Q(
-                restaurant_name__icontains=query) | Q(name__icontains=query)
-            deals = deals.filter(queries)
-
-    context = {
-        'deals': deals,
-        'search_term': query,
-    }
-
-    return render(request, 'profile.html', context)
+from home.models import Deal
 
 
 @login_required
@@ -53,10 +26,14 @@ def profile(request):
     else:
         form = UserProfileForm(instance=profile)
         # deals = profile.deal.all()
+    
+    author = UserProfile.objects.get(user=request.user)
+    deals = Deal.objects.filter(author=author)
 
     template = 'profile.html'
     context = {
         'form': form,
+        'deals': deals,
         'on_profile_page': True
     }
 
@@ -69,30 +46,26 @@ def add_deal(request):
         form = DealForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
-            product.author = request.UserProfile
+            product.author = UserProfile.objects.get(user=request.user)
             product.save()
             messages.success(request,
                              'Congratulations'
                              'you have Successfully added a Deal!')
-            return redirect(reverse('profile', args=[product.id]))
+            return redirect('profile')
         else:
             messages.error(request,
                            'Failed to add product'
                            'Please ensure the form is valid.')
     else:
         form = DealForm()
-    # if DealForm.is_valid():
-    #     deal = DealForm.save(commit=False)
-    #     deal.save()
-    #     if request.user.is_authenticated:
-    #         try:
-    #             profile = UserProfile.objects.get(user=request.user)
-    #             order_form = UserProfileForm(initial={
-    #                 'email': profile.user.email,
-    #                 'phone_number': profile.default_phone_number,
-    #             })
-    # else:
-    #     messages.error(request, 'Deal failed. Please ensure the form is valid.')
+
+        # if request.user.is_authenticated:
+        #     profile = UserProfile.objects.get(user=request.user)
+        #     form = DealForm(initial={
+        #             'email': profile.user.email,
+        #             'phone_number': profile.default_phone_number,
+        #         })
+
     
     template = 'add_deal.html'
     context = {

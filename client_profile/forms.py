@@ -1,17 +1,17 @@
 from django import forms
 from .models import UserProfile
-from home.models import deal, category
+from home.models import Deal, Category
 
 
 class DealForm(forms.ModelForm):
 
     class Meta:
-        model = deal
+        model = Deal
         fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        categories = category.objects.all()
+        categories = Category.objects.all()
         friendly_names = [(c.id, c.get_friendly_name()) for c in categories]
 
         self.fields['category'].choices = friendly_names
