@@ -25,7 +25,7 @@ body {
   margin-top: 3px;
 }
 
-/* from Bulma */
+/* ------------------------ from Bulma */
 .icon {
     align-items: center;
     display: inline-flex;
@@ -54,7 +54,7 @@ body {
     border: black 1px solid !important;
 }
 
-/* footer styling*/
+/* --------------------------------- footer styling*/
 .footer {
   font-family: 'Oswald';
   background: #ffffff;
@@ -114,6 +114,23 @@ body {
     margin-bottom: 7em;
 }
 
+/* -------------------------------- Profile page */
+
+.add_deal {
+    font-family: 'Oswald';
+    float: 'right';
+    padding: 15px;
+}
+
+.profile_page {
+    font-family: 'Oswald';
+}
+
+.add_deal_btn{
+    font-family: 'Oswald';
+    padding: 15px;
+}
+
 /* -------------------------------- Media Queries */
 
 /* Slightly larger container on xl screens */
@@ -124,7 +141,7 @@ body {
   }
 }
 
-/* fixed top navbar only on medium and up */
+/* -------------------------- fixed top navbar only on medium and up */
 @media (min-width: 992px) {
     .fixed-top-desktop-only {
         position: fixed;
@@ -141,7 +158,7 @@ body {
     }
 }
 
-/* push down container for mobile or small tablet use */
+/* -------------- push down container for mobile or small tablet use */
 @media (min-width: 300px) {
   .header-container {
         padding-top: 90px;
@@ -149,8 +166,6 @@ body {
 }
 
 /* -------------------------------- deal display cards */
-
-/* deal border styling*/
 
 .deal_body {
     padding: 3%;
@@ -173,7 +188,7 @@ body {
    margin: 5em;
 }
 
-/* deal image styling*/
+/* ------------------------------ deal image styling*/
 
 .card_img {
   border-radius: 2px;
@@ -193,6 +208,10 @@ body {
   right: 0;
 }
 
+.card-img-profile{
+    max-width: 10em;
+    max-height: 10em;
+}
 
 /* -------------------------------- Private Policy */
 
@@ -203,7 +222,6 @@ body {
     padding-bottom: 5%;
 }
 
-
 /* -------------------------------- contact form */
 
 .contact_form {
@@ -211,4 +229,5 @@ body {
     padding-right: 20%;
     padding-bottom: 4.1%;
 }
+
 
