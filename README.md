@@ -325,15 +325,18 @@ Even though the design is responsive, because of the obvious reasons, a service 
 ![DealPage](media/readme/.jpg)
 
 #### Sign up page: ####
-![ProfilePage](media/readme/signup.jpg)
+![signup](media/readme/signup.jpg)
 
 #### Log In page: ####
-![ProfilePage](media/readme/login.jpg)
+![login](media/readme/login.jpg)
 
 #### NavBar Dropdown: ####
-![ProfilePage](media/readme/dropdownNav.jpg)
-![ProfilePage](media/readme/dropdownNav2.jpg)
-![ProfilePage](media/readme/dropdownNavSuper.jpg)
+* Before Login or Sign Up
+![NavBar](media/readme/dropdownNav.jpg)
+* Client Logged in successfully
+![NavBar](media/readme/dropdownNav2.jpg)
+* IF SuperUser 
+![NavBar](media/readme/dropdownNavSuper.jpg)
 
 #### Membership page: ####
 ![MembershipPage](media/readme/members.jpg)
@@ -342,31 +345,38 @@ Even though the design is responsive, because of the obvious reasons, a service 
 ![CheckoutPage](media/readme/cart.jpg)
 
 #### Stripe page: ####
-![ProfilePage](media/readme/stripe.jpg)
+![Stripe](media/readme/stripe.jpg)
 
 #### Profile page: ####
 ![ProfilePage](media/readme/.jpg)
 
 #### Add a Deal page: ####
-![ProfilePage](media/readme/addDeal.jpg)
+![addDeal](media/readme/addDeal.jpg)
+![addDeal](media/readme/addDeal2.jpg)
 
 #### Edit a Deal page: ####
-![ProfilePage](media/readme/editDeal.jpg)
-![ProfilePage](media/readme/editDeal2.jpg)
+![editDeal](media/readme/editDeal.jpg)
+![editDeal](media/readme/editDeal2.jpg)
 
 #### Delete message: ####
-![ProfilePage](media/readme/delete.jpg)
+![delete](media/readme/delete.jpg)
 
 #### Marketing Gurus page: ####
-![ProfilePage](media/readme/contactus.jpg)
+![contactus](media/readme/contactus.jpg)
 
 #### About Us page: ####
-![ProfilePage](media/readme/about.jpg)
+![about](media/readme/about.jpg)
 
 #### Privacy Policy page: ####
-![ProfilePage](media/readme/privatepol.jpg)
+![privatepol](media/readme/privatepol.jpg)
 
+#### Terms & Conditions page: ####
+![T&C's](media/readme/tandc.jpg)
 
+#### Social Links: ####
+![social](media/readme/fb.jpg)
+![social](media/readme/insta.jpg)
+![social](media/readme/tweet.jpg)
 
 ---
 ---
