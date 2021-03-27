@@ -23,10 +23,12 @@ def profile(request):
                            'Update failed. Please ensure the form is valid.')
     else:
         form = UserProfileForm(instance=profile)
-        # deals = profile.deal.all()
-
-    author = UserProfile.objects.get(user=request.user)
-    deals = Deal.objects.filter(author=author)
+   
+        if not request.user.is_superuser:
+            author = UserProfile.objects.get(user=request.user)
+            deals = Deal.objects.filter(author=author)
+        else:
+            deals = Deal.objects.all()
 
     template = 'profile.html'
     context = {

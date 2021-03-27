@@ -39,7 +39,7 @@
 <!--Trending Deals on the site-->
         <div class="deal_body row">
             {% for deal in deals %}
-            <div class="col-sm-6 col-md-4">
+            <div class="col-sm-6 col-md-4 col-lg-3">
                 <blockquote>
                     <div>
                         <div class="deal_card">
@@ -53,6 +53,7 @@
                                 
                                 <br>
                                 <a href="{% url 'deals_display' deal.id %}" class="btn btn-primary">Go to Deal</a>
+                                
                             </div>
                         </div>
                     </div>
