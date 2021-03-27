@@ -79,7 +79,7 @@ def edit_deal(request, deal_id):
     product = get_object_or_404(Deal, pk=deal_id)
     
     if request.method == 'POST':
-        form = DealForm(request.POST, request.FILES, instance=Deal)
+        form = DealForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
             messages.success(request, 'Successfully updated product!')
@@ -88,7 +88,7 @@ def edit_deal(request, deal_id):
             messages.error(request, 'Failed to update product.'
                            ' Please ensure the form is valid.')
     else:
-        form = DealForm(instance=Deal)
+        form = DealForm(instance=product)
         messages.info(request, f'You are editing {Deal.name}')
 
     template = 'edit_deal.html'
