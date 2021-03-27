@@ -319,19 +319,54 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 Even though the design is responsive, because of the obvious reasons, a service like this is less likely to be used on small mobile devices. Therefore only desktop versions of the different design elements are shown here.
 
 #### Landing page: ####
-![landingPage](static/img/home_page_response.png)
+![landingPage](media/readme/.jpg)
 
 #### Deal Detail page: ####
-![DealPage](static/img/home_page_response.png)
+![DealPage](media/readme/.jpg)
 
-#### Profile page: ####
-![ProfilePage](static/img/home_page_response.png)
+#### Sign up page: ####
+![ProfilePage](media/readme/signup.jpg)
+
+#### Log In page: ####
+![ProfilePage](media/readme/login.jpg)
+
+#### NavBar Dropdown: ####
+![ProfilePage](media/readme/dropdownNav.jpg)
+![ProfilePage](media/readme/dropdownNav2.jpg)
+![ProfilePage](media/readme/dropdownNavSuper.jpg)
 
 #### Membership page: ####
-![MembershipPage](static/img/home_page_response.png)
+![MembershipPage](media/readme/members.jpg)
 
 #### Checkout page: ####
-![CheckoutPage](static/img/home_page_response.png)
+![CheckoutPage](media/readme/cart.jpg)
+
+#### Stripe page: ####
+![ProfilePage](media/readme/stripe.jpg)
+
+#### Profile page: ####
+![ProfilePage](media/readme/.jpg)
+
+#### Add a Deal page: ####
+![ProfilePage](media/readme/addDeal.jpg)
+
+#### Edit a Deal page: ####
+![ProfilePage](media/readme/editDeal.jpg)
+![ProfilePage](media/readme/editDeal2.jpg)
+
+#### Delete message: ####
+![ProfilePage](media/readme/delete.jpg)
+
+#### Marketing Gurus page: ####
+![ProfilePage](media/readme/contactus.jpg)
+
+#### About Us page: ####
+![ProfilePage](media/readme/about.jpg)
+
+#### Privacy Policy page: ####
+![ProfilePage](media/readme/privatepol.jpg)
+
+
 
 ---
 ---

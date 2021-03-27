@@ -1,12 +1,10 @@
 from django.shortcuts import render, redirect
-from .models import Customer
+from .models import Customer, MembershipTier
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
 from .forms import CustomSignupForm
 from django.urls import reverse_lazy
 from django.views import generic
 from django.contrib.auth import authenticate, login
-from django.conf import settings
 
 import stripe
 import os
