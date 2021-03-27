@@ -5,6 +5,7 @@
 ![logo](static/media/img/logo.jpg)
 
 ---
+<a name="contents"></a>
 ## Contents ##
 ---
 
@@ -466,8 +467,157 @@ As I had afew learning curves by using Django frameworks there was alot of errro
 ---
 ---
 
-deployment here
+This application can be run locally or deployed to a live environment. Directions are provided for deploying to Heroku.
 
+### Requirements ###
+If any of the following are unfamiliar, please click on their associated links as they are necessary when setting the environmental variables required to run this application:
+
+* an IDE such as GITPOD - a tool to help develop software
+* PIP - coordinates python installation packages
+* python 3 - Python is a programming language that lets you work more quickly and integrate your systems more effectively.
+* git - version control system for code source
+* a gmail accoount with less secure app access turned on use this link after you are signed into the gmail account - allows system to send email notifications such as password reset and user registration links
+* a stripe account - used to securely collect payments, testing API's level is fine unless you want collect payments for real
+* AWS-S3 (Amazon Web Services - Simple Storage Storage Account) - web based cloud storage service for online backup of website assets
+* S3 Bucket - a cloud storage resource which is similar to file folders on a computer's hard drive
+
+## Local ##
+
+1. Save a copy of the github repository located at https://github.com/Justwhittaker/PRO4-Mealdeals - master by clicking the 'download.zip' button at the top of the page and extracting the zip  file to your chosen folder. If you have Git installed on your system, you can clone the repository with the following command:
+
+$ git clone https://github.com/Justwhittaker/PRO4-Mealdeals.git - master
+
+2. Open your preferred IDE, then open a terminal session in the unzip folder or cd to the correct location.
+
+3. Set up a virtual environment via this command in the terminal session:
+
+    * python3 manage.py
+    * NOTE: The python prefix of this command and other steps below assumes you are working with a mac and pycharm's IDE. Your command may differ, such as python 
+        * -m .venv venv ... or py manage.py ... or .\manage.py ...
+
+4. Activate the .venv with the command:
+
+    * .venv\Scripts\activate
+    * Again this command may differ depending on your operating system, please check the Python Documentation on virtual environments for further instructions.
+
+5. If needed, Upgrade pip locally with:
+
+    * pip install --upgrade pip
+
+6. Install all required modules with the command:
+
+    * pip install -r requirements.txt
+
+7. Create a new file at the base ms4_challenge directory level called env.py:
+
+    * touch env.py
+
+8. Copy the following into the env.py file:
+
+    * import os
+
+    * os.environ.setdefault('HOSTNAME', '<your value>')
+    * os.environ.setdefault('STRIPE_PUBLISHABLE', '<your value>')
+    * os.environ.setdefault('STRIPE_SECRET', '<your value>')
+    * os.environ.setdefault('SECRET_KEY', '<your value>')
+    * os.environ.setdefault('AWS_STORAGE_BUCKET_NAME', '<your value>')
+    * os.environ.setdefault('AWS_S3_REGION_NAME', '<your value>')
+    * os.environ.setdefault('AWS_ACCESS_KEY_ID', '<your value>')
+    * os.environ.setdefault('AWS_SECRET_ACCESS_KEY', '<your value>')
+    * os.environ.setdefault('EMAIL_USER', '<your value>')
+    * os.environ.setdefault('EMAIL_PASS', '<your value>')
+
+9. Replace with the values from your own accounts
+
+    * HOSTNAME - should be the local address for the site when running within your own IDE.
+    * STRIPE_PUBLISHABLE - From Developer's API on (stripe dashboard)[https://dashboard.stripe.com/test/apikeys]
+    * STRIPE_SECRET - From Developer's API on (stripe dashboard)[https://dashboard.stripe.com/test/apikeys]
+    * SECRET_KEY -is a django key a long random string of bytes. For example, copy the output of this to your config:
+    * python -c 'import os; print(os.urandom(16))'
+    * AWS_STORAGE_BUCKET_NAME - can be found on your bucket dashboard
+    * AWS_S3_REGION_NAME - can be found your bucket dashboard , note, the interface has some textual description prefacing the region, the region is after the closing parenthesis descriptor. For Example EU, Ireland and UK
+
+10. Set up the databases by running the following management command in your terminal:
+
+    * python manage.py migrate
+    * If you restarted your machine to activate your environment variables, do not forget to reactivate your virtual environment with the command used at step 4.
+
+11. Create the superuser so you can have access to the django admin, follow the steps necessary to set up the username, email and password by running the following management command in your terminal:
+
+    * python manage.py createsuperuser
+
+12. Preload products and tags. To match starter projects and user profile tags to the original concept, run the following commands from your IDE's terminal:
+
+    * python manage.py loaddata servicelevel.json
+    * python manage.py loaddata tag.json
+13. Start your server by running the following management command in your terminal:
+
+    * python manage.py runserver
+
+14. If you make changes to CSS or Javascript files, be sure to run the management command to collect the static files so they are pulled into the AWS storage:
+
+    * python manage.py collectstatic
+
+
+### Heroku ###
+To run this application in a cloud environment to allow visibility to external users, you can deploy the code to Heroku. If you wish to do the same, follow the steps below. Please note this section assumes you have succeeded at running the application in your local environment first.
+
+1. Login to Heroku and set up a new app with a unique name (something like <yourname>-challenger)
+
+2. On the Resources tab, in the Add-ons field type Heroku Postgres select the default Hobby Dev - Free tier, then click the Provision button: 
+
+
+Heroku Postgres This will provision a Postgres Database for you and automatically add a DATABASE_URL Config var.
+
+3. Go to the Settings tab, click Reveal Config Vars and copy the DATABASE_URL value into your local memory.
+
+4. In your IDE, open the env.py file add the following line to the file and paste in your DATABASE_URL value:
+
+    * os.environ.setdefault('DATABASE_URL','<your DATABASE_URL value>')
+
+5. In heroku for your newly created app, go back to the Settings tab, and click Reveal Config Vars. This time you will be copying the values from your env.py file into heroku. Make sure you load following:
+
+6. Because this is a new database, you will to set up the databases by running the following management command in your terminal:
+
+    * python manage.py migrate
+
+    * If you restarted your machine to activate your environment variables, do not forget to reactivate your virtual environment with the command used at step 4.
+
+7. Create the superuser for the postgres database so you can have access to the django admin, follow the steps necessary to set up the username, email and password by running the following management command in your terminal:
+
+    * python manage.py createsuperuser
+
+8. Preload products and tags. To match starter projects and user profile tags to the original concept, run the following commands from your IDE's terminal:
+
+    * python manage.py loaddata servicelevel.json
+    * python manage.py loaddata tag.json
+
+9. In the event packages have been updated, it's best to re-create the requirements.txt file using the terminal command prompt:
+
+    * pip freeze > requirements.txt
+
+10. Create a Procfile:
+
+    * echo web: gunicorn ms4_challenger.wsgi:application > Procfile
+
+11. Add the files if they changed and push to git hub:
+
+    * git commit add Procfile
+    * git commit add requirements.txt
+    * git commit-m 'getting ready to deploy to heroku'
+    * git push -u origin
+
+12. From the heroku dashboard of your newly created application, click on the "Deploy" tab, then scroll down to the "Deployment method" section and select GitHub.
+
+13. Use the github linking and type in the name of the repository ex:) ms4_challenger and click the search button. Then connect the heroku app to the desired GitHub repository.
+
+14. On the Deployment Tab, scroll a bit further down to the "Manual Deploy" section, select the master branch then click "Deploy Branch".
+
+15. If you have errors, look at the logs for your application, most common errors are forgetting to add the hostname and disabling collectstatic.
+
+16. Once your application is running, you may want to update the Deployment method from Manual to Automatic.
+
+[Back To Table of Contents](#content)
 
 ---
 ---
@@ -477,6 +627,8 @@ deployment here
 ---
 
 **Text Credits:**
+
+No website can be created without the community resources found on the web. Searching stackoverflow and GeeksfoGeeks and reading blog about triumphs and fails has helped create this site. A special shout out for the articles that solved specific issues vs syntax questions can be found in the acknowledgements section.
 
 * All text content has been written by Justin Whittaker.
 
@@ -500,6 +652,7 @@ I received inspiration and technical knowledge for this project from the followi
 * https://stackoverflow.com/questions/36665889/collectstatic-error-while-deploying-django-app-to-heroku
 * https://stackoverflow.com/questions/34384544/how-to-resize-django-textarea
 * https://simpleisbetterthancomplex.com/tutorial/2016/07/26/how-to-reset-migrations.html
+* https://stackoverflow.com/questions/15454008/how-to-reset-db-in-django-i-get-a-command-reset-not-found-error/15454063
 
 3. Python research <br>
     1. CodeInstitute Django Fundamentals <br>
@@ -515,9 +668,11 @@ http://karma-runner.github.io/5.0/dev/git-commit-msg.html
     3. bootstrap <br>
 
 6. Other platforms <br>
-https://policymaker.io/privacy-policy-ready/ <br>
-https://favicon.io/favicon-generator/ <br>
-https://devcenter.heroku.com/articles/heroku-postgresql#connecting-in-python<br>
+* https://policymaker.io/privacy-policy-ready/ <br>
+* https://favicon.io/favicon-generator/ <br>
+* https://devcenter.heroku.com/articles/heroku-postgresql#connecting-in-python<br>
+* https://medium.com/analytics-vidhya/how-to-build-a-django-membership-site-with-payment-integration-part-1-163552292aed
+* https://medium.com/analytics-vidhya/django-and-stripe-subscriptions-part-2-8ddd406458a9
 
 **Many thanks to:**
 

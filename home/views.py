@@ -44,6 +44,10 @@ def about(request):
     return render(request, 'home/about.html')
 
 
+def faq(request):
+    return render(request, 'home/faq.html')
+
+
 def deals_display(request, deal_id):
     """ A view to show individual deal details """
 
