@@ -69,3 +69,38 @@ def add_deal(request):
         'form': form, }
 
     return render(request, template, context)
+
+
+@login_required
+def edit_deal(request, deal_id):
+    """ Edit a product in the store """
+    product = get_object_or_404(Deal, pk=deal_id)
+    if request.method == 'POST':
+        form = DealForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Successfully updated product!')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Failed to update product.'
+                           ' Please ensure the form is valid.')
+    else:
+        form = DealForm(instance=Deal)
+        messages.info(request, f'You are editing {Deal.name}')
+
+    template = 'edit_deal.html'
+    context = {
+        'form': form,
+    }
+
+    return render(request, template, context)
+
+
+@login_required
+def delete_deal(request, deal_id):
+    """ Delete a deal from the store """
+
+    product = get_object_or_404(Deal, pk=deal_id)
+    product.delete()
+    messages.success(request, 'Deal deleted!')
+    return redirect('profile')
