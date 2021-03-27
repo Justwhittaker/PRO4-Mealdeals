@@ -1,13 +1,14 @@
 **During development**
+As I had afew learning curves by using Django frameworks there was alot of errros I needed to work through and understand, I wanted to document a lot of my learning opportunities through this project.
 
-* I had a major issue with my MongoDB file whilst setting up the database because of this issue: <br>
+* I had a major issue with my Admin Sqlite DB file whilst setting up the database because of this issue: <br>
 
 **Issues**
 
 I did not understand what was going on as my form was good and allowing me to add into the fields,<br> however when I submitted it was not sending it to the
 database and saving it in the collections?
 
-![RecipeForm](static/img/upload_recipe.png)
+![Db](media/errors/db.jpg)
 
 * To understand the error I went thorugh the code again and fixed it by creating "action" in the form to allow the method to "POST", later refactoring "input" to "add_recipes" for simplified reading<br>
 * Then I refactored the code for one value such as ingredient & instruction, this name creates an array. This solved the issue for multiple variables to be added into the Database and when called listing all items in the array, and not seperating the values out as individual strings. <br>
