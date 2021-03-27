@@ -352,10 +352,66 @@ Even though the design is responsive, because of the obvious reasons, a service 
 * [Font-Awesome](https://fontawesome.com/icons?d=gallery)
 * [Google fonts](https://fonts.google.com/)
 * [Git](https://git-scm.com/)
-* [PNGtree](https://PNGtree.com/)
-* [Flask](https://pypi.org/project/Flask/)
+* [Balsamiq](https://balsamiq.com/)
+* [Heroku](www.heroku.com)
+* [django-extensions 3.1.1](https://pypi.org/project/django-extensions/)
 * [Canva](https://canva.com)
-* [MongoDB](https://cloud.mongodb.com/)
+* [pip3](https://pip.pypa.io/en/stable/installing/)
+
+**Framework & Extensions**
+
+* dj-database-url - allows use of environment variable for database connections
+* bootstrap 4 - a mobile friendly CSS framework based on a responsive grid system. Provides out of the box UI components such as navigation menu bar, carousels, and cards.
+* django-bootstrap4 - Bootstrap 4 integration for Django
+* django-crispy-forms - Allows style and HTML control of Django template form displays
+* django-forms-bootstrap - allows further customization of bootstrap forms within Django framework
+* stripe - A python library to talk to Stripe's API
+* boto3- allows Python to talk to AWS SDK so you can store data in S3 buckets
+* coverage - measures and analyzes code coverage of python code
+* django-storages - a collection of custom storage backends with django to work with * boto3 and AWS S3.
+* django-multiselectfield - allows checkbox display of multi selects for django
+* graphviz -used to create graphics from Python
+* django-extensions - collection of management commands for django, used for validating templates, and graphics for models
+* gunicorn - Python WSGI HTTP Server for UNIX so you can host your application
+* pillow -Python Imaging Library to help store imagery into a database
+* psycopg2 - PostgreSQL database adapter for the Python
+* python-dateutil - extends python datetime
+* pytz - world timezone calculations
+
+
+**APIs**
+
+    * AWS S3 Bucket - allows seamless uploading of user files to cloud storage using application credentials
+    * stripe - payment platform to validate and accept credit card payments securely
+    * ratings - home grown Django Rest Framework api that accepts ratings from users and sends back an average rating for a given entry
+
+### Defensive Programming ###
+
+Sites with ownership rules and roles opens a site up to hacking especially if your users are savvy and notice url parameters correlate to database object manipulation. Django is pretty good allowing you to hook in login required for views associated with CRUD options, and form validation is top notch if you definite it yourself.
+
+**Additional Security Checks**
+
+1. Users cannot Delete or Update other's submissions. The Deal Delete and Deal Update views check for Entry Id's to prevent logged in users from guessing the ID of a peer's login
+2. Users cannot Update or Delete others' deals. 
+3. Users cannot Update profiles for other users. The Profile Update view checks the user's id against the logged in user's id before allowing updates.
+4. Users cannot Update User Information for other users. The User Update view checks the user's id against the logged in user's id before allowing updates.
+5. Users cannot Checkout and enter a payment unless they are logged in and payments cannot be attributed to other profiles.
+6. Changing passwords requires sending registered email link and does not auto log in a user. While it's annoying to have to wait for a password reset email, then to login after setting it, this step prevents users from taking account ownership over if they manipulate a password reset for their account and attempt to hack another's and it leads to better retention of the password.
+
+**Custom Validation**
+
+1. User Registration and User information Updates
+    * Emails and user names are unique to the system, the same user name cannot be used by another person likewise for the email address.
+    * Users must be 10 years or older to set up profile (-3 calendar days are permitted to account for 2 leap years)
+2. Challenges
+    * Challenge end dates must be in the future for creation and updates
+    * Creation and Updates check current service level of user for submission types and features before allowing a user to create a new challenge.
+    * Before Creation, account limit is checked in case user is sharing account or has another tab open and exceeded limit in that manner
+3. Submissions
+    * Before Creation and Update, dates are checked to ensure user hasn't left a window open hoping to beat time limit
+    * File size limits are checked before a user successfully uploads a file
+4. Account Management
+    * when a user updates their username or email, the system is crosschecked for uniqueness of values
 
 ---
 ---
@@ -426,7 +482,7 @@ Validation, manual unit, cross browser/cross device, accessibility, travis, cove
         4. **Easily Delete any recipes** if the recipe does not prescribe to the user agreement and is no longer allowed on the website. <br>
     * Admin page was responsive and working as expected<br>
 
-**Add recipes & Edit Recipes**
+**Add Deals & Edit Deals**
 
 ![Add Recipes](static/img/add_recipes.png) 
 ![Edit Recipes](static/img/edit_recipes.png) 

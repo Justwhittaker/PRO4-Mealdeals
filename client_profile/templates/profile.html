@@ -49,7 +49,11 @@
                         <tbody>
                             {% for deal in deals %}
                             <tr>
+                            {% if request.user.is_authenticated %}
+                                {% if request.user.is_superuser %} 
                                 <td> {{ deal.restaurant_name }} </td>
+                                {% endif %} 
+                                {% endif %} 
                                 <td><img src="{{ deal.image.url }}" class="card-img-top card-img-profile"
                                         alt="Card image cap" /></td>
                                 <td> {{ deal.name }} </td>

@@ -75,10 +75,11 @@ def add_deal(request):
 
 @login_required
 def edit_deal(request, deal_id):
-    """ Edit a product in the store """
+    """ Edit a deals in the profile """
     product = get_object_or_404(Deal, pk=deal_id)
+    
     if request.method == 'POST':
-        form = DealForm(request.POST, request.FILES, instance=product)
+        form = DealForm(request.POST, request.FILES, instance=Deal)
         if form.is_valid():
             form.save()
             messages.success(request, 'Successfully updated product!')
