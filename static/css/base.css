@@ -70,6 +70,13 @@ body {
 
 }
 
+/*--------------------------------- Search bar */
+
+.search_bar{
+    padding: 3%;
+    font-family: 'Oswald';
+}
+
 /* -------------------------------- about page */
 
 .about {
@@ -124,6 +131,7 @@ body {
 
 .profile_page {
     font-family: 'Oswald';
+    width: 100%;
 }
 
 .add_deal_btn{
@@ -160,20 +168,32 @@ body {
 
 /* -------------- push down container for mobile or small tablet use */
 @media (min-width: 300px) {
-  .header-container {
+     .header-container {
         padding-top: 90px;
     }
-}
 
+     .mobile_nav {
+      padding-left: 400px;
+  }
+
+}
 /* -------------------------------- deal display cards */
 
 .deal_body {
-    padding: 3%;
+    padding: 10%;
+    padding-top: 3%;
+    padding-bottom: 3%;
+
+}
+
+.deal_history {
+    width: 400px;
 }
 
 .deal_card {
   width: 100%;
   border: 30px;
+  height: 660px;
   border-width: 1px;
   margin-top: 10px;
   border-style: solid;
@@ -194,6 +214,7 @@ body {
   border-radius: 2px;
   background-size: cover;
   max-height: 15em;
+  height: 15em;
 }
 
 .card_img_detail {

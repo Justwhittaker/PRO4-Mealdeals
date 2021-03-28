@@ -23,8 +23,8 @@ def contact(request):
 
             try:
                 send_mail(subject, message,
-                          'just.whittaker@gmail.com',
-                          ['just.whittaker@gmail.com'])
+                          'mealdealsireland@gmail.com',
+                          ['mealdealsireland@gmail.com'])
             except BadHeaderError:
                 return HttpResponse('Invalid header found')
             return redirect("contact.html")

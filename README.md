@@ -294,23 +294,23 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 
 * **Responsiveness** on all screen sizes.
 * **large title** for attractiveness and engagement.
-* **Suggested recipes** on landing page as an introduction.
-* **User login/logout** so that users can keep a tally of their own recipes added and videos uploaded.
-* **Input Recipes** to the website.
-* **Edit Recipes** to the website.
-* **Search Recipes** on the Website.
+* **Suggested Deals** on landing page as an introduction.
+* **User login/logout** so that users can keep a tally of their own Deals added and videos uploaded.
+* **Input Deals** to the website.
+* **Edit Deals** to the website.
+* **Search Deals** on the Website.
 * **Instructions** so that the user can grasp the concept immedaitely.
-* **Immedaite** recipes with Easy and simple instructions to make the recipe.
-* **Download success** notation when recipe has successfully saved to the database
-* **upload picture** with the recipe to give people a sense of what can be acheived with their recipe.
-* **upload video** allows users to upload videos of themselves creating a recipe.
+* **Immedaite** Deals with Easy and simple instructions to make the Deals.
+* **Download success** notation when Deals has successfully saved to the database
+* **upload picture** with the Deals to give people a sense of what can be acheived with their Deals.
+* **upload video** allows users to upload videos of themselves creating a Deals.
 
 <a name="implemented"></a>
 ### Future implemented features ###
 
-* **Feature 1** - **Rating system** for others to be able to rate the recipe success.
-* **Feature 2** - **Comment box** and **messages notifications** below the recipes for users to interact with each other.
-* **Feature 3** - **Favorites** for user to quickly reference recipes they enjoyed or still want to Experiment with.
+* **Feature 1** - **Rating system** for others to be able to rate the Deals success.
+* **Feature 2** - **Comment box** and **messages notifications** below the Deals for users to interact with each other.
+* **Feature 3** - **Favorites** for user to quickly reference Deals they enjoyed or still want to Experiment with.
 * **Feature 4** - **Input Videos** to the website.
 ---
 <a name="design"></a>
@@ -319,10 +319,13 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 Even though the design is responsive, because of the obvious reasons, a service like this is less likely to be used on small mobile devices. Therefore only desktop versions of the different design elements are shown here.
 
 #### Landing page: ####
-![landingPage](media/readme/.jpg)
+![landingPage](static/media/readme_media/landing.jpg)
+
+#### Search Bar: ####
+![Search Bar](static/media/readme_media/search.jpg)
 
 #### Deal Detail page: ####
-![DealPage](media/readme/.jpg)
+![DealPage](static/media/readme_media/deal_detail.jpg)
 
 #### Sign up page: ####
 ![signup](media/readme/signup.jpg)
@@ -348,7 +351,7 @@ Even though the design is responsive, because of the obvious reasons, a service 
 ![Stripe](media/readme/stripe.jpg)
 
 #### Profile page: ####
-![ProfilePage](media/readme/.jpg)
+![ProfilePage](static/media/readme_media/profile.jpg)
 
 #### Add a Deal page: ####
 ![addDeal](media/readme/addDeal.jpg)
@@ -447,15 +450,9 @@ Sites with ownership rules and roles opens a site up to hacking especially if yo
 
 1. User Registration and User information Updates
     * Emails and user names are unique to the system, the same user name cannot be used by another person likewise for the email address.
-    * Users must be 10 years or older to set up profile (-3 calendar days are permitted to account for 2 leap years)
-2. Challenges
-    * Challenge end dates must be in the future for creation and updates
-    * Creation and Updates check current service level of user for submission types and features before allowing a user to create a new challenge.
-    * Before Creation, account limit is checked in case user is sharing account or has another tab open and exceeded limit in that manner
-3. Submissions
-    * Before Creation and Update, dates are checked to ensure user hasn't left a window open hoping to beat time limit
-    * File size limits are checked before a user successfully uploads a file
-4. Account Management
+2. Deals
+    * Deals end dates must be in the future for creation and updates
+3. Account Management
     * when a user updates their username or email, the system is crosschecked for uniqueness of values
 
 ---
@@ -473,84 +470,74 @@ Validation, manual unit, cross browser/cross device, accessibility, travis, cove
 
     * I used **Bootstrap** as well as **flexbox and custom CSS media queries** to ensure that the website didn't break on all screen sizes.
 
-![landingPage](static/img/home_page_response.png)
-![landingPage](static/img/home_page_response2.png)
-
 **Landing Page**
 
-![landingPage](static/img/home_page.png)
-![landingPage](static/img/home_page_footer.png)
+![landingPage](static/media/readme_media/landing_response.jpg)
+![landingPage](static/media/readme_media/landing_response2.jpg)
 
 * **Implementation** 
 
-    * I wanted to keep it clean and neat with the landing page displaying the newest and latest recipes.<br>
+    * I wanted to keep it clean and neat with the landing page displaying the newest and latest deals.<br>
     * The UI has been created in HTML5 and CSS3 and by using bootstrap all tiles are responsive on all screen sizes.<br>
-    * As stated above, I wanted to recreate a neighbourhood profile where friends, neighbours and relatives can swap and share their favourite recipes, simply and easily<br>
-    * User does not have to register if they just want to veiw recipes all recipes are free.<br>
+    * User does not have to register if they just want to veiw deals all deals are free to veiw.<br>
     * Landing page was responsive and working as expected<br>
 
 **Add register**
 
-![Recipes](static/img/register.png) 
+![landingPage](static/media/readme_media/signup_response.jpg)
+ 
 
 * **Implementation**
 
-    * To start adding your own recipes you would need to register.<br>
+    * To start adding your own Deals you would need to register.<br>
     * Once registered you would have to log in<br>
     * User is informed if registeration is successful if flash message appears "user successfully added" else flashes "user name already used"<br>
     * Register and Log-in page was responsive and working as expected<br>
 
-**Profile for normal users**
+**Profile for members and admin**
 
-![Profile](static/img/profile.png) 
-![Profile](static/img/profile_display.png) 
+![Profile](static/media/readme_media/profile_response.jpg) 
+![Profile](static/media/readme_media/profile_response2.jpg) 
 
 * **Implementation**
 
     * This is where the real fun begins, as a user you can <br>
-        1. Thier **own profile** where their recipes come up first. <br>
-        2. **Easily Add and Edit their own recipes** to the website. <br>
+        1. Thier **own deals** where their deals come up first. <br>
+        2. **Easily Add and Edit their own delas** to the website. <br>
         3. **Have the possibility** to **upload pictures** <br>
-        4. **Easily Delete their own recipes** if they no longer want to be on the website. <br>
+        4. **Easily Delete their own deals** if they no longer want to be on the website. <br>
     * Profile page was responsive and working as expected<br>
-
-**Profile for Admin**
-
-![Profile](static/img/profile_admin.png) 
-
-* **Implementation**
-
-    * This is where the Admin can see the listings page<br>
-        1. Admin also has thier **own profile** where their recipes come up first. <br>
-        2. From Listings Admin can **Easily Add and Edit all recipes** on the website. <br>
+     * This is where the Admin can see all the listings page<br>
+        1. Admin also has thier **own profile** where their Deals come up first. <br>
+        2. From Listings Admin can **Easily Add and Edit all Deals** on the website. <br>
         3. **Have the possibility** to edit **upload pictures** which do not subscribe to the user agreement on the page <br>
-        4. **Easily Delete any recipes** if the recipe does not prescribe to the user agreement and is no longer allowed on the website. <br>
-    * Admin page was responsive and working as expected<br>
+        4. **Easily Delete any Deals** if the deals does not prescribe to the user agreement and is no longer allowed on the website. <br>
+
 
 **Add Deals & Edit Deals**
 
-![Add Recipes](static/img/add_recipes.png) 
-![Edit Recipes](static/img/edit_recipes.png) 
+![Add Deals](static/media/readme_media/add_response.jpg) 
+![Edit Deals](static/media/readme_media/edit_response.jpg) 
 
 * **Implementation**
 
-    * Both the add_recipe and the edit_recipe, have the same framework and based on the same template. <br>
-    * edit_recipe does however pulls all the values from the DB so that User is aware what recipe they are editing <br>
+    * Both the add_deals and the edit_deals, have the same framework and based on the same template. <br>
+    * edit_deals does however pulls all the values from the DB so that User is aware what deal they are editing <br>
 
     * This is the second step of the **CRUD** functionality, users can Add or edit the following: <br>
-        1. Recipe name <br>
-        2. Category <br>
-        3. Prep time <br>
-        4. Cooking Time <br>
-        5. Difficulty <br>
-        6. Serves <br>
-        7. Ingredients <br>
-        8. Add ingredient fields (add more then one or extra fields) <br>
-        9. Instructions <br>
-        10. Add Instructions fields (add more then one or extra fields)<br>
+        1. Restaurant name
+        2. Category 
+        3. Number
+        4. Address 
+        5. Website 
+        6. Deals name 
+        7. Description 
+        8. Price
+        9. Image
+        10. User
 
-    * Also I have added a button for the user tochange mind and go back to profile. <br>
-    * add_recipe and the edit_recipe pages was responsive and working as expected<br>
+    * Also I have added a button for the user to change mind and go back to profile. <br>
+    * add_deals and the edit_deals pages was responsive and working as expected<br>
 
 ---
 ---

@@ -5,13 +5,14 @@ from django.contrib.auth.decorators import login_required
 from .models import UserProfile
 from .forms import DealForm, UserProfileForm
 from home.models import Deal
+# from memberships.models import Customer
 
 
 @login_required
 def profile(request):
     """ Display the user's profile. """
     profile = get_object_or_404(UserProfile, user=request.user)
-
+    # membership = get_object_or_404(Customer, membership=request.membership)
     if request.method == 'POST':
         form = UserProfileForm(request.POST, instance=profile)
         if form.is_valid():
@@ -22,10 +23,10 @@ def profile(request):
                            'Update failed. Please ensure the form is valid.')
     else:
         form = UserProfileForm(instance=profile)
-   
         if not request.user.is_superuser:
             author = UserProfile.objects.get(user=request.user)
             deals = Deal.objects.filter(author=author)
+            # membership = Customer.membership.boolean(True)
         else:
             deals = Deal.objects.all()
 

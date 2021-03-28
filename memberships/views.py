@@ -15,15 +15,6 @@ stripe.api_key = 'sk_test_51I9BnOIFzPFZzgCPlXnvCkzhPtXAjqnidnmc0VzkIEE1ZMpDmmLdX
 # Create your views here.
 
 
-def all_products(request):
-    products = MembershipTier.objects.all().order_by('price')
-    owned_product = False
-    if hasattr(request.user, 'profile') and request.user.profile.product_level:
-        owned_product = request.user.profile.product_level
-    return render(request, "products.html", {"products": products,
-                                             'owned_product': owned_product})
-
-
 @login_required
 def join(request):
     return render(request, 'membership/join.html')
@@ -59,8 +50,8 @@ def checkout(request):
         pass
     else:
         membership = 'registration'
-        final_dollar = 10
-        membership_id = 'price_1IVa1QIFzPFZzgCPg3G1E1Md'
+        final_dollar = 5
+        membership_id = 'price_1IZfNQIFzPFZzgCPOBsfCVDj'
         if request.method == 'GET' and 'membership' in request.GET:
             if request.GET['membership'] == 'monthly':
                 membership = 'monthly'
@@ -77,8 +68,8 @@ def checkout(request):
             }],
             mode='subscription',
             allow_promotion_codes=True,
-            success_url='http://127.0.0.1:8000/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='http://127.0.0.1:8000/cancel',
+            success_url='https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/cancel',
         )
 
         return render(request, 'membership/checkout.html', {
@@ -98,3 +89,8 @@ class SignUp(generic.CreateView):
         new_user = authenticate(username=username, password=password)
         login(self.request, new_user)
         return valid
+
+
+def cache_checkout_data(request):
+    return render(request,)
+

@@ -14,3 +14,11 @@ checkoutButton.addEventListener('click', function() {
     // using `result.error.message`.
   });
 });
+
+//   const sessionID = "{{ session_id }}";
+
+//   document.getElementById('checkoutButton').addEventListener('click' (evt), => {
+//     evt.preventDefault();
+//     stripe.redirectToCheckout({sessionId: sessionID});
+//   });
+

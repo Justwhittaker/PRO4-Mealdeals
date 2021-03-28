@@ -10,6 +10,7 @@ class UserProfile(models.Model):
     information and deals history
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # is_subscribed = models.BooleanField(default=False)
     default_restaurant_name = models.CharField(max_length=120, blank=True)
     default_phone_number = models.CharField(max_length=20, blank=True)
     default_street_address1 = models.CharField(max_length=80, blank=True)
@@ -20,6 +21,12 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+
+# @cached_property
+# def has_active_subscription(self):
+#  """Checks if a user has an active subscription."""
+# return subscriber_has_active_subscription(self)
 
 
 @receiver(post_save, sender=User)
