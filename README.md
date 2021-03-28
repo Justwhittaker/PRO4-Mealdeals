@@ -49,11 +49,11 @@
 ### Project Goals ###
 ---
 
-This website is designed so that restaurants can have a space to advertise thier deals, and bring foot traffic through thier doors 
+This website is designed so that restaurants can have a space to advertise their deals, and bring foot traffic through their doors 
 
-The **goal** for this project is to allow restaurants the ability to advertise their restaurant and thier ideas on a platform which is not social media. <br>
-The website also gives the restaurants the access to change thier deals without any hassle, but most important it is a place where the restaurants are charged
-a flat rate for monthly subscribions instead of being "charged per voucher" bought and have a portion of their hard earned profit put towards bringing in people.
+The **goal** for this project is to allow restaurants the ability to advertise their restaurant and their ideas on a platform which is not social media. <br>
+The website also gives the restaurants the access to change their deals without any hassle, but most important it is a place where the restaurants are charged
+a flat rate for monthly subscriptions instead of being "charged per voucher" bought and have a portion of their hard earned profit put towards bringing in people.
 
 ---
 <a name="user-goals"></a>
@@ -61,13 +61,13 @@ a flat rate for monthly subscribions instead of being "charged per voucher" boug
 ---
 
 For the UX on this project I wanted to create a simple and user friendly site. My target audience is young and mature adults. <br>
-The site also allows for restaurant customers to find good and decent deals in thier area!!
+The site also allows for restaurant customers to find good and decent deals in their area!!
 
 #### Scope ####
 * An Eye catching landing page
 * Mass-displaying all or filtered deals. Lines of relatively small images, with option to click and view or like
 * Search, filter and sort deals.
-* Detailed profile for restauranteurs on top of the simple registration.
+* Detailed profile for restaurateurs on top of the simple registration.
 * Dedicated page for uploading new deals
 * Checkout with card payment.
 * Full page Deal view including the Name of the restaurant, address and contact details as well as the Deal description, price and valid till, options.
@@ -76,21 +76,21 @@ The site also allows for restaurant customers to find good and decent deals in t
 #### Clients ####
 * **View specific deals** with **quick searches** within the **Category and Area** they are looking for, instead of searching through all the deals.
 * **Being excited** to find new deals and **share** these deals with their friends.
-* **Veiw** the full list of deals on the home page
+* **View** the full list of deals on the home page
 * **Find company info** from the deal such as name of restaurant, address, telephone number, website
 * **View individual deal Info** from the deal such as T&C's, price, and end time for the promotion 
-* **Contact us** for expert marketing advise and we will design any deals for you at a small fee.
+* **Contact us** for expert marketing advice and we will design any deals for you at a small fee.
 <br>
 
 #### Restaurant Management Profiles ####
 * Easily **Register & Create** a Profile, having a restaurant specific profile.
-* Easily **Login or Logout** access to account infomation
+* Easily **Login or Logout** access to account information
 * Easily **recover my password** in case I forget it.
-* Recieve **an Email confirmation** to verify that my account registeration was successful.
-* **Easily** pay for the subscribtion costs on signing up
+* Receive **an Email confirmation** to verify that my account registration was successful.
+* **Easily** pay for the subscription costs on signing up
 * **Receive** and email confirmation of purchase to keep for records and accounting.
-* **Add, Edit and Delete** Company infomation as needed in a **personalized User profile**
-* **Add, Edit and Delete** Deals periodicaly
+* **Add, Edit and Delete** Company information as needed in a **personalized User profile**
+* **Add, Edit and Delete** Deals periodically
 
 #### Out of Scope topics ####
 * order processing after checkout and the bag was excluded, as one of the steps in the payment journey.
@@ -106,17 +106,17 @@ The site also allows for restaurant customers to find good and decent deals in t
 ---
 
 * The **Clients user** wants an **attractive website** with a **non-distracting** background.
-* The **Clients user** wants to see **clear instructions** on how to drill down into further infomation on deals within the website.
+* The **Clients user** wants to see **clear instructions** on how to drill down into further information on deals within the website.
 * The **Clients user** wants there to be a **search box** so that the user can quickly identify **deals**.
 * The **Clients user** wants to be able to **sort by** categories or restaurant name.
-* The **Clients user** wants to start **finding deals immedaitely**. 
+* The **Clients user** wants to start **finding deals immediately**. 
 * The **Clients user** wants to see the **latest deals** added.
-* The **Clients user** wants a **conveint sized deal box** to be able to read the Deal clearfully.
+* The **Clients user** wants a **convenient sized deal box** to be able to read the Deal clearfully.
 * The **Clients user** wants to know the **Deals** details such as **T&C's, price, and end time** for the promotion.
 * The **Clients user** wants to get a maximum of advantage of the **Mealdeals cloud**.
 <br>
 * The **Admin user** wants to know the **time period** of the deal before **deciding** on continuing with the specific deal.
-* The **Admin user** wants to **have the possibility** of thier **own profile** where their deals come up first.
+* The **Admin user** wants to **have the possibility** of their **own profile** where their deals come up first.
 * The **Admin user** wants to **know** if **their Deals has been submitted**.
 * The **Admin user** wants to know the **deals** details such as **name of restaurant, address, telephone number, website**
 * The **Admin user** wants to **easily add, edit and delete their own Deals** on the website.
@@ -129,7 +129,7 @@ The site also allows for restaurant customers to find good and decent deals in t
 
 * When developing this **website**, I kept in mind that the aesthetic should be inspired by similar Deal and coupon hubs on the internet. 
 * I tried to create a **simple and easy feel** to for a cleaner approach for the landing page.
-* I checked **previously made coupon websites** such as [**groupon.ie**](https://www.groupon.ie//) and used **my own experience** as a trained chef and restauranteur.
+* I checked **previously made coupon websites** such as [**groupon.ie**](https://www.groupon.ie//) and used **my own experience** as a trained chef and restaurateur.
 
 ![Research](media/readme/Groupon.png)
 ![Research](media/readme/first_table.png)
@@ -161,8 +161,8 @@ Product:
 ### Colors ###
 
 * The **color scheme** used for the website is a sleek **deal website palette** composed of a combination of **Red and whites** 
-* For the **title** and the **logo** I used a **dark burgandy red** on the **a white background**.
-* I specifically chose these colors as Red is a colour at stimulates appetite in humans, but I wanted it a dark red as I still wanted to convey a relaxed atmosphere.
+* For the **title** and the **logo** I used a **dark burgundy red** on the **a white background**.
+* I specifically chose these colors as Red is a colour that stimulates appetite in humans, but I wanted it a dark red as I still wanted to convey a relaxed atmosphere.
 
 ---
 ---
@@ -178,12 +178,12 @@ Product:
 <a name="home_page"></a>
 #### Home page ####
 
-There are two types of users and I wanted to give clear path to start using the site with Call To Action for both groups. Potential deal shoppers are directed to the Search & browsing, while potential restuaranteurs are shown an eye-catchy banner with a popping CTA button.
+There are two types of users and I wanted to give a clear path to start using the site with Call To Action for both groups. Potential deal shoppers are directed to the Search & browsing, while potential restuaranteurs are shown an eye-catchy banner with a popping CTA button.
 
 <a name="browsing"></a>
 #### Browsing ####
 
-Many similar sites (competitors) are trying to showcase wide range of services and options, therefore loosing focus and probably loosing potential subscriptions and users by not inviting them to further explore the site. My clear goal here is to lead users to check out more deals.
+Many similar sites (competitors) are trying to showcase a wide range of services and options, therefore losing focus and probably losing potential subscriptions and users by not inviting them to further explore the site. My clear goal here is to lead users to check out more deals.
 
 <a name="detailed_view"></a>
 #### Detailed view ####
@@ -210,24 +210,24 @@ I put quite some effort into designing the database structure and schema. It was
 
 The steps and outcome was as follows (note that the final structure differs at several points, because I had to adjust on multiple occasions):
 
-Indentifying Entities:
+Identifying Entities:
 * User
 * Restaurant User
 * Deal
 * Deal Image
-* Deal Discription
+* Deal Description
 * Prices
 * Contact Details to make bookings such as Address, Phone Number and Websites
 * Subscriptions
 
-Indentifying Relationships
+Identifying Relationships
 * Deal_ID = Categories = Restaurant = Subscriptions
 
 
 <a name="db"></a>
 #### Database ####
 
-Deals more understandable for other developers. 
+Deals are more understandable for other developers. 
 
 Attributes:
 * Deal Name
@@ -249,7 +249,7 @@ Categories:
 * British
 * Morroccan
 * Greek
-* Spainish
+* Spanish
 
 ---
 <a name="wireframing"></a>
@@ -273,9 +273,9 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 !["Wireframe SearchLandingPage"](media/readme/MealdealsWireframe1.png)
 ### Deal Page ###
 !["Wireframe Deal"](media/readme/MealdealsWireframe2.png)
-### Registeration Page ###
-!["Wireframe Registeration"](media/readme/MealdealsWireframe3.png)
-### Registeration Payment Page ###
+### Registration Page ###
+!["Wireframe registration"](media/readme/MealdealsWireframe3.png)
+### Registration Payment Page ###
 !["Wireframe Payment Page"](media/readme/MealdealsWireframe4.png)
 ### Add deal profile Page ###
 !["Wireframe profile"](media/readme/MealdealsWireframe5.png)
@@ -299,10 +299,10 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 * **Input Deals** to the website.
 * **Edit Deals** to the website.
 * **Search Deals** on the Website.
-* **Instructions** so that the user can grasp the concept immedaitely.
-* **Immedaite** Deals with Easy and simple instructions to make the Deals.
+* **Instructions** so that the user can grasp the concept immediately.
+* **Immediate** Deals with Easy and simple instructions to make the Deals.
 * **Download success** notation when Deals has successfully saved to the database
-* **upload picture** with the Deals to give people a sense of what can be acheived with their Deals.
+* **upload picture** with the Deals to give people a sense of what can be achieved with their Deals.
 * **upload video** allows users to upload videos of themselves creating a Deals.
 
 <a name="implemented"></a>
@@ -310,7 +310,7 @@ href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 
 * **Feature 1** - **Rating system** for others to be able to rate the Deals success.
 * **Feature 2** - **Comment box** and **messages notifications** below the Deals for users to interact with each other.
-* **Feature 3** - **Favorites** for user to quickly reference Deals they enjoyed or still want to Experiment with.
+* **Feature 3** - **Favorites** for Users to quickly reference Deals they enjoyed or still want to Experiment with.
 * **Feature 4** - **Input Videos** to the website.
 ---
 <a name="design"></a>
@@ -435,7 +435,7 @@ Even though the design is responsive, because of the obvious reasons, a service 
 
 ### Defensive Programming ###
 
-Sites with ownership rules and roles opens a site up to hacking especially if your users are savvy and notice url parameters correlate to database object manipulation. Django is pretty good allowing you to hook in login required for views associated with CRUD options, and form validation is top notch if you definite it yourself.
+Sites with ownership rules and roles opens a site up to hacking especially if your users are savvy and notice url parameters correlate to database object manipulation. Django is pretty good, allowing you to hook in login required for views associated with CRUD options, and form validation is top notch if you define it yourself.
 
 **Additional Security Checks**
 
@@ -444,16 +444,16 @@ Sites with ownership rules and roles opens a site up to hacking especially if yo
 3. Users cannot Update profiles for other users. The Profile Update view checks the user's id against the logged in user's id before allowing updates.
 4. Users cannot Update User Information for other users. The User Update view checks the user's id against the logged in user's id before allowing updates.
 5. Users cannot Checkout and enter a payment unless they are logged in and payments cannot be attributed to other profiles.
-6. Changing passwords requires sending registered email link and does not auto log in a user. While it's annoying to have to wait for a password reset email, then to login after setting it, this step prevents users from taking account ownership over if they manipulate a password reset for their account and attempt to hack another's and it leads to better retention of the password.
+6. Changing passwords requires sending a registered email link and does not auto log in a user. While it's annoying to have to wait for a password reset email, then to login after setting it, this step prevents users from taking account ownership over if they manipulate a password reset for their account and attempt to hack another's and it leads to better retention of the password.
 
 **Custom Validation**
 
 1. User Registration and User information Updates
-    * Emails and user names are unique to the system, the same user name cannot be used by another person likewise for the email address.
+    * Emails and usernames are unique to the system, the same user name cannot be used by another person likewise for the email address.
 2. Deals
     * Deals end dates must be in the future for creation and updates
 3. Account Management
-    * when a user updates their username or email, the system is crosschecked for uniqueness of values
+    * when a user updates their username or email, the system is cross checked for uniqueness of values
 
 ---
 ---
@@ -479,7 +479,7 @@ Validation, manual unit, cross browser/cross device, accessibility, travis, cove
 
     * I wanted to keep it clean and neat with the landing page displaying the newest and latest deals.<br>
     * The UI has been created in HTML5 and CSS3 and by using bootstrap all tiles are responsive on all screen sizes.<br>
-    * User does not have to register if they just want to veiw deals all deals are free to veiw.<br>
+    * User does not have to register if they just want to View deals all deals are free to View.<br>
     * Landing page was responsive and working as expected<br>
 
 **Add register**
@@ -491,7 +491,7 @@ Validation, manual unit, cross browser/cross device, accessibility, travis, cove
 
     * To start adding your own Deals you would need to register.<br>
     * Once registered you would have to log in<br>
-    * User is informed if registeration is successful if flash message appears "user successfully added" else flashes "user name already used"<br>
+    * User is informed if registration is successful if flash message appears "user successfully added" else flashes "user name already used"<br>
     * Register and Log-in page was responsive and working as expected<br>
 
 **Profile for members and admin**
@@ -502,16 +502,16 @@ Validation, manual unit, cross browser/cross device, accessibility, travis, cove
 * **Implementation**
 
     * This is where the real fun begins, as a user you can <br>
-        1. Thier **own deals** where their deals come up first. <br>
+        1. Their **own deals** where their deals come up first. <br>
         2. **Easily Add and Edit their own delas** to the website. <br>
         3. **Have the possibility** to **upload pictures** <br>
         4. **Easily Delete their own deals** if they no longer want to be on the website. <br>
     * Profile page was responsive and working as expected<br>
      * This is where the Admin can see all the listings page<br>
-        1. Admin also has thier **own profile** where their Deals come up first. <br>
+        1. Admin also has their **own profile** where their Deals come up first. <br>
         2. From Listings Admin can **Easily Add and Edit all Deals** on the website. <br>
         3. **Have the possibility** to edit **upload pictures** which do not subscribe to the user agreement on the page <br>
-        4. **Easily Delete any Deals** if the deals does not prescribe to the user agreement and is no longer allowed on the website. <br>
+        4. **Easily Delete any Deals** if the deal does not prescribe to the user agreement and is no longer allowed on the website. <br>
 
 
 **Add Deals & Edit Deals**
@@ -536,7 +536,7 @@ Validation, manual unit, cross browser/cross device, accessibility, travis, cove
         9. Image
         10. User
 
-    * Also I have added a button for the user to change mind and go back to profile. <br>
+    * Also I have added a button for the user to change their mind and go back to profile. <br>
     * add_deals and the edit_deals pages was responsive and working as expected<br>
 
 ---
@@ -546,7 +546,7 @@ Validation, manual unit, cross browser/cross device, accessibility, travis, cove
 ---
 ---
 
-As I had afew learning curves by using Django frameworks there was alot of errros I needed to work through and understand, I wanted to document a lot of my learning opportunities through this project. See the separate [ERRORS.md](Errors.md) file for the details.
+As I had a few learning curves by using Django frameworks there were a lot of errors I needed to work through and understand, I wanted to document a lot of my learning opportunities through this project. See the separate [ERRORS.md](Errors.md) file for the details.
 
 ---
 ---
@@ -564,7 +564,7 @@ If any of the following are unfamiliar, please click on their associated links a
 * PIP - coordinates python installation packages
 * python 3 - Python is a programming language that lets you work more quickly and integrate your systems more effectively.
 * git - version control system for code source
-* a gmail accoount with less secure app access turned on use this link after you are signed into the gmail account - allows system to send email notifications such as password reset and user registration links
+* a gmail account with less secure app access turned on use this link after you are signed into the gmail account - allows system to send email notifications such as password reset and user registration links
 * a stripe account - used to securely collect payments, testing API's level is fine unless you want collect payments for real
 * AWS-S3 (Amazon Web Services - Simple Storage Storage Account) - web based cloud storage service for online backup of website assets
 * S3 Bucket - a cloud storage resource which is similar to file folders on a computer's hard drive
@@ -596,7 +596,7 @@ $ git clone https://github.com/Justwhittaker/PRO4-Mealdeals.git - master
 
     * pip install -r requirements.txt
 
-7. Create a new file at the base ms4_challenge directory level called env.py:
+7. Create a new file at the base mealdeals directory level called env.py:
 
     * touch env.py
 
@@ -620,15 +620,15 @@ $ git clone https://github.com/Justwhittaker/PRO4-Mealdeals.git - master
     * HOSTNAME - should be the local address for the site when running within your own IDE.
     * STRIPE_PUBLISHABLE - From Developer's API on (stripe dashboard)[https://dashboard.stripe.com/test/apikeys]
     * STRIPE_SECRET - From Developer's API on (stripe dashboard)[https://dashboard.stripe.com/test/apikeys]
-    * SECRET_KEY -is a django key a long random string of bytes. For example, copy the output of this to your config:
+    * SECRET_KEY -is a django key, a long random string of bytes. For example, copy the output of this to your config:
     * python -c 'import os; print(os.urandom(16))'
     * AWS_STORAGE_BUCKET_NAME - can be found on your bucket dashboard
-    * AWS_S3_REGION_NAME - can be found your bucket dashboard , note, the interface has some textual description prefacing the region, the region is after the closing parenthesis descriptor. For Example EU, Ireland and UK
+    * AWS_S3_REGION_NAME - can be found on your bucket dashboard , note, the interface has some textual description prefacing the region, the region is after the closing parenthesis descriptor. For Example EU, Ireland and UK
 
 10. Set up the databases by running the following management command in your terminal:
 
     * python manage.py migrate
-    * If you restarted your machine to activate your environment variables, do not forget to reactivate your virtual environment with the command used at step 4.
+    * If you restart your machine to activate your environment variables, do not forget to reactivate your virtual environment with the command used at step 4.
 
 11. Create the superuser so you can have access to the django admin, follow the steps necessary to set up the username, email and password by running the following management command in your terminal:
 
@@ -650,7 +650,7 @@ $ git clone https://github.com/Justwhittaker/PRO4-Mealdeals.git - master
 ### Heroku ###
 To run this application in a cloud environment to allow visibility to external users, you can deploy the code to Heroku. If you wish to do the same, follow the steps below. Please note this section assumes you have succeeded at running the application in your local environment first.
 
-1. Login to Heroku and set up a new app with a unique name (something like <yourname>-challenger)
+1. Login to Heroku and set up a new app with a unique name (something like <yourname>-mealdeals-PRO4)
 
 2. On the Resources tab, in the Add-ons field type Heroku Postgres select the default Hobby Dev - Free tier, then click the Provision button: 
 
@@ -669,7 +669,7 @@ Heroku Postgres This will provision a Postgres Database for you and automaticall
 
     * python manage.py migrate
 
-    * If you restarted your machine to activate your environment variables, do not forget to reactivate your virtual environment with the command used at step 4.
+    * If you restart your machine to activate your environment variables, do not forget to reactivate your virtual environment with the command used at step 4.
 
 7. Create the superuser for the postgres database so you can have access to the django admin, follow the steps necessary to set up the username, email and password by running the following management command in your terminal:
 
@@ -686,7 +686,7 @@ Heroku Postgres This will provision a Postgres Database for you and automaticall
 
 10. Create a Procfile:
 
-    * echo web: gunicorn ms4_challenger.wsgi:application > Procfile
+    * echo web: gunicorn PRO4-Mealdeals.wsgi:application > Procfile
 
 11. Add the files if they changed and push to git hub:
 
@@ -697,7 +697,7 @@ Heroku Postgres This will provision a Postgres Database for you and automaticall
 
 12. From the heroku dashboard of your newly created application, click on the "Deploy" tab, then scroll down to the "Deployment method" section and select GitHub.
 
-13. Use the github linking and type in the name of the repository ex:) ms4_challenger and click the search button. Then connect the heroku app to the desired GitHub repository.
+13. Use the github linking and type in the name of the repository ex:) PRO4-Mealdeals and click the search button. Then connect the heroku app to the desired GitHub repository.
 
 14. On the Deployment Tab, scroll a bit further down to the "Manual Deploy" section, select the master branch then click "Deploy Branch".
 
@@ -716,7 +716,7 @@ Heroku Postgres This will provision a Postgres Database for you and automaticall
 
 **Text Credits:**
 
-No website can be created without the community resources found on the web. Searching stackoverflow and GeeksfoGeeks and reading blog about triumphs and fails has helped create this site. A special shout out for the articles that solved specific issues vs syntax questions can be found in the acknowledgements section.
+No website can be created without the community resources found on the web. Searching stackoverflow and GeeksfoGeeks and reading blogs has helped create this site. A special note for the articles that solved specific issues vs syntax questions can be found in the acknowledgements section.
 
 * All text content has been written by Justin Whittaker.
 
@@ -765,7 +765,7 @@ http://karma-runner.github.io/5.0/dev/git-commit-msg.html
 **Many thanks to:**
 
 * My mentor **Ignatius Ukwuoma** for his patience and kindness
-* **AudreyLL88** and **Malia** for thier very inspiring ReadME
+* **AudreyLL88** and **Malia** for their very inspiring ReadME
 * **Code Institute Slack community** for the technical and emotional support
 * **Code Institute Tutors** Cormac, Jo, Mike, Tim, Sam, Johann and Milkos were fantastic help
 * **Alishia Whittaker**, for the Graphic design and stock images from Canva and your support through all my studies
