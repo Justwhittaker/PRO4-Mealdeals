@@ -20,14 +20,7 @@
             <h3>Welcome Back, {{ user }}</h3>
             <hr>
             {% if request.user.is_authenticated %}
-            {% if request.user.has_active_subscription %}
                 <a href="{% url 'add_deal' %}" class="btn btn-success">Add a new Deal</a>
-            {% else %} 
-                <a href="{% url 'join' %}" class="btn btn-warning">To add a deal Upgrade to Premium Content!</a>
-            {% endif %}
-            {% if request.user.is_superuser %}
-                <a href="{% url 'add_deal' %}" class="btn btn-success">Add a new Deal</a>
-            {% endif %}
             {% endif %}
         </div>
     </div>

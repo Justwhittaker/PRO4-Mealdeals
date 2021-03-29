@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Customer, MembershipTier
+from .models import Customer
 from django.contrib.auth.decorators import login_required
 from .forms import CustomSignupForm
 from django.urls import reverse_lazy
@@ -18,6 +18,9 @@ stripe.api_key = 'sk_test_51I9BnOIFzPFZzgCPlXnvCkzhPtXAjqnidnmc0VzkIEE1ZMpDmmLdX
 @login_required
 def join(request):
     return render(request, 'membership/join.html')
+
+def settings(request):
+    return render(request, 'registration/settings.html')
 
 
 def success(request):
@@ -42,7 +45,7 @@ def checkout(request):
 
     try:
         if request.user.customer.membership:
-            return redirect('settings')
+            return redirect('profile')
     except Customer.DoesNotExist:
         pass
 

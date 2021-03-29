@@ -251,4 +251,15 @@ body {
     padding-bottom: 4.1%;
 }
 
+/*-------------------------------- Stripe Success/cancel page */
 
+.pricing-header {
+    padding: 10%;
+    margin-top: 9em;
+    font-family: 'Oswald';
+    margin-bottom: 7em;
+}
+
+.pricing_detail{
+    margin-bottom: 18em;
+}

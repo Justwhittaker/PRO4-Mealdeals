@@ -5,14 +5,19 @@ from django.contrib.auth.decorators import login_required
 from .models import UserProfile
 from .forms import DealForm, UserProfileForm
 from home.models import Deal
-# from memberships.models import Customer
+from memberships.models import Customer
 
 
 @login_required
 def profile(request):
+    """ Display the user's profile if signed up else user must subscribe. """
+    try:
+        if request.user.customer.membership:
+            pass
+    except Customer.DoesNotExist:
+        return redirect('join')
     """ Display the user's profile. """
     profile = get_object_or_404(UserProfile, user=request.user)
-    # membership = get_object_or_404(Customer, membership=request.membership)
     if request.method == 'POST':
         form = UserProfileForm(request.POST, instance=profile)
         if form.is_valid():
@@ -26,7 +31,6 @@ def profile(request):
         if not request.user.is_superuser:
             author = UserProfile.objects.get(user=request.user)
             deals = Deal.objects.filter(author=author)
-            # membership = Customer.membership.boolean(True)
         else:
             deals = Deal.objects.all()
 
