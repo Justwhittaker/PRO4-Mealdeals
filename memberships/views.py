@@ -19,6 +19,7 @@ stripe.api_key = 'sk_test_51I9BnOIFzPFZzgCPlXnvCkzhPtXAjqnidnmc0VzkIEE1ZMpDmmLdX
 def join(request):
     return render(request, 'membership/join.html')
 
+
 def settings(request):
     return render(request, 'registration/settings.html')
 
@@ -92,8 +93,3 @@ class SignUp(generic.CreateView):
         new_user = authenticate(username=username, password=password)
         login(self.request, new_user)
         return valid
-
-
-def cache_checkout_data(request):
-    return render(request,)
-

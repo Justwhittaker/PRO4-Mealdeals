@@ -16,10 +16,10 @@
     <div class="row">
         <div class="col-7 col-md-6 d-none d-lg-flex">
             <ul>
-            <h1 class="display-4 text-warning">
-                EAT OUT FOR LESS!
-            </h1>
-            <h4>Gourmet restaurants in your city.</h4>
+                <h1 class="display-4 text-warning">
+                    EAT OUT FOR LESS!
+                </h1>
+                <h4>Gourmet restaurants in your city.</h4>
             </ul>
         </div>
     </div>
@@ -40,28 +40,28 @@
     </div>
 </div>
 <!--Trending Deals on the site-->
-        <div class="deal_body row">
-            {% for deal in deals %}
-            <div class="col-sm-6 col-md-4 col-lg-3">
-                <blockquote>
-                    <div>
-                        <div class="deal_card">
-                            <h2><strong>{{ deal.name }}</strong></h2>
-                            <img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" />
-                            <div class="card-body mb-3">
-                                <h3>{{ deal.restaurant_name }}</h3> <br>
-                                <h4>€{{ deal.price }}</h4> <br>
-                                {{ deal.name }} <br>
-                                {{ deal.category }} <br>
-                                
-                                <br>
-                                <a href="{% url 'deals_display' deal.id %}" class="btn btn-primary">Go to Deal</a>
-                                
-                            </div>
-                        </div>
+<div class="deal_body row">
+    {% for deal in deals %}
+    <div class="col-sm-6 col-md-4 col-lg-3">
+        <blockquote>
+            <div>
+                <div class="deal_card">
+                    <h2><strong>{{ deal.name }}</strong></h2>
+                    <img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" />
+                    <div class="card-body mb-3">
+                        <h3>{{ deal.restaurant_name }}</h3> <br>
+                        <h4>€{{ deal.price }}</h4> <br>
+                        {{ deal.name }} <br>
+                        {{ deal.category }} <br>
+
+                        <br>
+                        <a href="{% url 'deals_display' deal.id %}" class="btn btn-primary">Go to Deal</a>
+
                     </div>
-                </blockquote>
+                </div>
             </div>
-            {% endfor %}
-        </div>
+        </blockquote>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}
