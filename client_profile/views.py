@@ -63,13 +63,6 @@ def add_deal(request):
     else:
         form = DealForm()
 
-        # if request.user.is_authenticated:
-        #     profile = UserProfile.objects.get(user=request.user)
-        #     form = DealForm(initial={
-        #             'email': profile.user.email,
-        #             'phone_number': profile.default_phone_number,
-        #         })
-
     template = 'add_deal.html'
     context = {
         'form': form, }
@@ -81,7 +74,7 @@ def add_deal(request):
 def edit_deal(request, deal_id):
     """ Edit a deals in the profile """
     product = get_object_or_404(Deal, pk=deal_id)
-    
+
     if request.method == 'POST':
         form = DealForm(request.POST, request.FILES, instance=product)
         if form.is_valid():

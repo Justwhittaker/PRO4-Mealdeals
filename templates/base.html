@@ -39,7 +39,7 @@
         crossorigin="anonymous"></script>
     <!-- Stripe -->
     <script src="https://js.stripe.com/v3/"></script>
-    
+
 
     {% endblock %}
 
@@ -89,8 +89,8 @@
                         {% if request.user.is_superuser %}
                         <a href="{% url 'profile' %}" class="dropdown-item">Site management</a>
                         {% endif %}
-                        <a class="dropdown-item" href="{% url 'join' %}" >Subscriptions</a>
-                        <a class="dropdown-item" href="{% url 'profile' %}" >My profile</a>
+                        <a class="dropdown-item" href="{% url 'join' %}">Subscriptions</a>
+                        <a class="dropdown-item" href="{% url 'profile' %}">My profile</a>
                         <a class="dropdown-item" href="{% url 'logout' %}">Log Out</a>
                         {% else %}
                         <a class="dropdown-item" href="{% url 'login' %}">Log In</a>
@@ -98,9 +98,9 @@
                         {% if user.is_authenticated == False %}
                         <a class="dropdown-item" href="{% url 'signup' %}">Sign up</a>
                         {% endif %}
-                        
-                        
-                       
+
+
+
                     </div>
                 </li>
                 <li class="list-inline-item">
@@ -217,10 +217,10 @@
                 <!--Grid column-->
             </div>
             <!--Grid row-->
-        <!-- Copyright -->
+            <!-- Copyright -->
             <div class="text-center p-3" style="font-family: 'Oswald'; background-color: rgb(197, 20, 20);">
-            © 2021 Copyright:
-            <a class="text-dark">all rights reserved <strong>Meal</strong>Deals</a>
+                © 2021 Copyright:
+                <a class="text-dark">all rights reserved <strong>Meal</strong>Deals</a>
             </div>
         </div>
         <!-- Copyright -->

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="en">
 
 {% extends "base.html" %}
 {% load static %}
@@ -20,7 +21,7 @@
             <h3>Welcome Back, {{ user }}</h3>
             <hr>
             {% if request.user.is_authenticated %}
-                <a href="{% url 'add_deal' %}" class="btn btn-success">Add a new Deal</a>
+            <a href="{% url 'add_deal' %}" class="btn btn-success">Add a new Deal</a>
             {% endif %}
         </div>
     </div>
@@ -48,19 +49,19 @@
                         <tbody>
                             {% for deal in deals %}
                             <tr>
-                            {% if request.user.is_authenticated %}
-                                {% if request.user.is_superuser %} 
+                                {% if request.user.is_authenticated %}
+                                {% if request.user.is_superuser %}
                                 <th>Restaurant Name</th>
                                 <td> {{ deal.restaurant_name }} </td>
-                                {% endif %} 
-                                {% endif %} 
+                                {% endif %}
+                                {% endif %}
                                 <td><img src="{{ deal.image.url }}" class="card-img-top card-img-profile"
                                         alt="Card image cap" /></td>
                                 <td> {{ deal.name }} </td>
                                 <td>€{{ deal.price }}</td>
                                 <td><a href="{% url 'deals_display' deal.id %}" class="btn btn-primary">Go to Deal</a>
-                                <a href="{% url 'edit_deal' deal.id %}" class="btn btn-warning">Edit</a>
-                                <a href="{% url 'delete_deal' deal.id %}" class="btn btn-danger">Delete</a></td>
+                                    <a href="{% url 'edit_deal' deal.id %}" class="btn btn-warning">Edit</a>
+                                    <a href="{% url 'delete_deal' deal.id %}" class="btn btn-danger">Delete</a></td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -71,3 +72,5 @@
     </div>
 </div>
 {% endblock %}
+
+</html>
