@@ -66,7 +66,7 @@ The site also allows for restaurant customers to find good and decent deals in t
 #### Scope ####
 * An Eye catching landing page
 * Mass-displaying all or filtered deals. Lines of relatively small images, with option to click and view or like
-* Search, filter and sort deals.
+* Search deals.
 * Detailed profile for restaurateurs on top of the simple registration.
 * Dedicated page for uploading new deals
 * Checkout with card payment.
@@ -85,7 +85,6 @@ The site also allows for restaurant customers to find good and decent deals in t
 #### Restaurant Management Profiles ####
 * Easily **Register & Create** a Profile, having a restaurant specific profile.
 * Easily **Login or Logout** access to account information
-* Easily **recover my password** in case I forget it.
 * Receive **an Email confirmation** to verify that my account registration was successful.
 * **Easily** pay for the subscription costs on signing up
 * **Receive** and email confirmation of purchase to keep for records and accounting.
@@ -98,13 +97,17 @@ The site also allows for restaurant customers to find good and decent deals in t
 
     * Coupon code for promotions,
     * Discount for multi-buys.
-* Marketing the site itself and utilising advertising opportunities within the site is out of scope, therefore the links to social media sites are home based links.
+    * Easily **recover my password** in case I forget it.
+    * filter and sort deals.
+
+* Marketing the site itself and utilising advertising opportunities within the site is out of scope, therefore the links to social media sites are simple structured profiles without any posts or content.
 
 ---
 <a name="user-stories"></a>
 ### User Stories ### 
 ---
 
+**Client user**
 * The **Clients user** wants an **attractive website** with a **non-distracting** background.
 * The **Clients user** wants to see **clear instructions** on how to drill down into further information on deals within the website.
 * The **Clients user** wants there to be a **search box** so that the user can quickly identify **deals**.
@@ -114,7 +117,8 @@ The site also allows for restaurant customers to find good and decent deals in t
 * The **Clients user** wants a **convenient sized deal box** to be able to read the Deal clearfully.
 * The **Clients user** wants to know the **Deals** details such as **T&C's, price, and end time** for the promotion.
 * The **Clients user** wants to get a maximum of advantage of the **Mealdeals cloud**.
-<br>
+
+**Admin user**
 * The **Admin user** wants to know the **time period** of the deal before **deciding** on continuing with the specific deal.
 * The **Admin user** wants to **have the possibility** of their **own profile** where their deals come up first.
 * The **Admin user** wants to **know** if **their Deals has been submitted**.
@@ -154,7 +158,7 @@ Product:
 <a name="icons"></a>
 ### Icons and Images ###
 
-* The **Favicon** used on the website are provided by [**Canva**](https://canva.com/) and called by using url_for.
+* The **Favicon** used on the website are provided by [**Canva**](https://canva.com/) and called by using url_for function.
 * The **image** used for the **landing page** is a created **image** from the image bank [**Canva**](https://canva.com/). 
 
 <a name="colors"></a>
@@ -183,7 +187,7 @@ There are two types of users and I wanted to give a clear path to start using th
 <a name="browsing"></a>
 #### Browsing ####
 
-Many similar sites (competitors) are trying to showcase a wide range of services and options, therefore losing focus and probably losing potential subscriptions and users by not inviting them to further explore the site. My clear goal here is to lead users to check out more deals.
+Many similar sites (competitors) are trying to showcase a wide range of services and options, therefore losing focus and probably losing potential subscriptions and users by not inviting them to further explore the site. My clear goal here is to lead users to check out more deals for dining and eating out.
 
 <a name="detailed_view"></a>
 #### Detailed view ####
@@ -267,10 +271,9 @@ Please follow the link to find the preview [here]
 href = https://balsamiq.cloud/srsmfvs/pt96bgn/r7C4D
 
 * Herewith the **wireframe** and I pushed a few changes for better readability and engagement:
-* I added **a jumbotron hero image** on the landing page.
-* I added **a full-screen background image** on all the other pages.
+
 * I used a **form** to allow for the user to add & edit Deals.
-* I added an easy link to **upload** videos.
+* I added an easy link to **upload** pictures.
 
 ### Landing Page ###
 !["Wireframe LandingPage"](media/readme/MealdealsWireframe.png)
@@ -406,7 +409,8 @@ Even though the design is responsive, because of the obvious reasons, a service 
 * [Google fonts](https://fonts.google.com/)
 * [Git](https://git-scm.com/)
 * [Balsamiq](https://balsamiq.com/)
-* [Heroku](www.heroku.com)
+* [dbdiagram](https://dbdiagram.io/)
+* [Heroku](https://www.heroku.com/)
 * [django-extensions 3.1.1](https://pypi.org/project/django-extensions/)
 * [Canva](https://canva.com)
 * [pip3](https://pip.pypa.io/en/stable/installing/)
@@ -428,15 +432,12 @@ Even though the design is responsive, because of the obvious reasons, a service 
 * gunicorn - Python WSGI HTTP Server for UNIX so you can host your application
 * pillow -Python Imaging Library to help store imagery into a database
 * psycopg2 - PostgreSQL database adapter for the Python
-* python-dateutil - extends python datetime
-* pytz - world timezone calculations
-
 
 **APIs**
 
-    * AWS S3 Bucket - allows seamless uploading of user files to cloud storage using application credentials
-    * stripe - payment platform to validate and accept credit card payments securely
-    * ratings - home grown Django Rest Framework api that accepts ratings from users and sends back an average rating for a given entry
+* AWS S3 Bucket - allows seamless uploading of user files to cloud storage using application credentials
+* stripe - payment platform to validate and accept credit card payments securely
+
 
 ### Defensive Programming ###
 
@@ -508,7 +509,7 @@ Validation, manual unit, cross browser/cross device, accessibility, travis, cove
 
     * This is where the real fun begins, as a user you can <br>
         1. Their **own deals** where their deals come up first. <br>
-        2. **Easily Add and Edit their own delas** to the website. <br>
+        2. **Easily Add and Edit their own deals** to the website. <br>
         3. **Have the possibility** to **upload pictures** <br>
         4. **Easily Delete their own deals** if they no longer want to be on the website. <br>
     * Profile page was responsive and working as expected<br>
@@ -639,10 +640,10 @@ $ git clone https://github.com/Justwhittaker/PRO4-Mealdeals.git - master
 
     * python manage.py createsuperuser
 
-12. Preload products and tags. To match starter projects and user profile tags to the original concept, run the following commands from your IDE's terminal:
+12. Preload products. To match starter projects and user profile tags to the original concept, run the following commands from your IDE's terminal:
 
-    * python manage.py loaddata servicelevel.json
-    * python manage.py loaddata tag.json
+    * python manage.py loaddata db.json
+
 13. Start your server by running the following management command in your terminal:
 
     * python manage.py runserver
@@ -682,9 +683,8 @@ Heroku Postgres This will provision a Postgres Database for you and automaticall
 
 8. Preload products and tags. To match starter projects and user profile tags to the original concept, run the following commands from your IDE's terminal:
 
-    * python manage.py loaddata servicelevel.json
-    * python manage.py loaddata tag.json
-
+    * python manage.py loaddata db.json
+ 
 9. In the event packages have been updated, it's best to re-create the requirements.txt file using the terminal command prompt:
 
     * pip freeze > requirements.txt
@@ -709,8 +709,6 @@ Heroku Postgres This will provision a Postgres Database for you and automaticall
 15. If you have errors, look at the logs for your application, most common errors are forgetting to add the hostname and disabling collectstatic.
 
 16. Once your application is running, you may want to update the Deployment method from Manual to Automatic.
-
-[Back To Table of Contents](#content)
 
 ---
 ---
@@ -772,7 +770,7 @@ http://karma-runner.github.io/5.0/dev/git-commit-msg.html
 * My mentor **Ignatius Ukwuoma** for his patience and kindness
 * **AudreyLL88** and **Malia** for their very inspiring ReadME
 * **Code Institute Slack community** for the technical and emotional support
-* **Code Institute Tutors** Cormac, Jo, Mike, Tim, Sam, Johann and Milkos were fantastic help
+* **Code Institute Rockstar Tutors** Cormac, Jo, Mike, Tim, Sam, Johann and Milkos were fantastic help
 * **Alishia Whittaker**, for the Graphic design and stock images from Canva and your support through all my studies
 
 **Site for educational purposes only!**
