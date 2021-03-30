@@ -19,6 +19,7 @@ def profile(request):
     """ Display the user's profile. """
     profile = get_object_or_404(UserProfile, user=request.user)
     if request.method == 'POST':
+        deals = Deal.objects.all()
         form = UserProfileForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
@@ -31,8 +32,6 @@ def profile(request):
         if not request.user.is_superuser:
             author = UserProfile.objects.get(user=request.user)
             deals = Deal.objects.filter(author=author)
-        else:
-            deals = Deal.objects.all()
 
     template = 'profile.html'
     context = {
