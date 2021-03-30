@@ -117,37 +117,17 @@ LOGOUT_REDIRECT_URL = '/'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-# if 'DATABASE_URL' in os.environ:
-DATABASES = {
+if 'DATABASE_URL' in os.environ:
+    DATABASES = {
         'default': dj_database_url.parse('postgres://betporpucukcli:9b1b15b5fe2e531b5d650172129e9a5f41e1f8d6069609be3dd1a1723a4e8eeb@ec2-34-252-251-16.eu-west-1.compute.amazonaws.com:5432/dc11g510am7otc')
     }
-# else:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#         }
-#     }
-# DATABASE_URL['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
-# DATABASE_URL = os.environ['DATABASE_URL']
-
-# conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql_psycopg2",
-#         "NAME": os.getenv("DB_NAME"),
-#         "USER": os.getenv("DB_USER"),
-#         "PASSWORD": os.getenv("DB_PASSWORD"),
-#         "HOST": os.getenv("DB_HOST"),
-#         "PORT": os.getenv("DB_PORT")
-#     }
-# }
-
-# DATABASES['default'] = dj_database_url.config(
-#                         conn_max_age=600, ssl_require=True)
-
-
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
