@@ -2,7 +2,7 @@ from django import forms
 from .models import UserProfile
 from home.models import Deal, Category
 
-
+# created in deal form using the logic from the code institute boutique-ado tutorial
 class DealForm(forms.ModelForm):
 
     class Meta:
