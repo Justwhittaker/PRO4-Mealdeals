@@ -6,7 +6,7 @@ html {
 }
 
 body {
-    height: calc(100vh -164px);
+    height: calc(100vh - 164px);
     color: black;
     font-family: 'Oswald';
       margin-bottom: 60px;
@@ -125,7 +125,6 @@ body {
 
 .add_deal {
     font-family: 'Oswald';
-    float: 'right';
     padding: 15px;
 }
 

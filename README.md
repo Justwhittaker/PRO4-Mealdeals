@@ -5,7 +5,6 @@
 ![logo](static/media/img/logo.jpg)
 
 ---
-<a name="contents"></a>
 ## Contents ##
 ---
 
