@@ -93,3 +93,6 @@ class SignUp(generic.CreateView):
         new_user = authenticate(username=username, password=password)
         login(self.request, new_user)
         return valid
+
+def cache_checkout_data(request):
+    return render(request,)
