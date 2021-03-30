@@ -2,9 +2,14 @@ from django import forms
 from .models import UserProfile
 from home.models import Deal, Category
 
-# created in deal form using the logic from the code institute boutique-ado tutorial
-class DealForm(forms.ModelForm):
+"""
+created in deal form using the logic
+from the CI boutique-ado tutorial
+"""
+""" Form to create fields for Deals adding and editing"""
 
+
+class DealForm(forms.ModelForm):
     class Meta:
         model = Deal
         fields = '__all__'
@@ -19,7 +24,9 @@ class DealForm(forms.ModelForm):
             field.widget.attrs['class'] = 'border-black rounded-0'
 
 
+
 class UserProfileForm(forms.ModelForm):
+    """ Form to create fields for Profile adding and editing"""
     class Meta:
         model = UserProfile
         exclude = ('user',)

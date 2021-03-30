@@ -1,11 +1,17 @@
 from django.db import models
 from client_profile.models import UserProfile
 
-# Created my models by using the logic from the Boutique ado project on code institute tutorial 
+"""
+Created my models by using the logic from 
+the Boutique ado project on CI tutorial
+"""
 
 
 class Category(models.Model):
-
+    """
+    A Category model for maintaining default
+    information and deals info history
+    """
     class Meta:
         verbose_name_plural = 'Categories'
 
@@ -20,6 +26,10 @@ class Category(models.Model):
 
 
 class Deal(models.Model):
+    """
+    A deal model for maintaining default
+    information and deals info history
+    """
     category = models.ForeignKey('Category',
                                  null=True, blank=True,
                                  on_delete=models.SET_NULL)

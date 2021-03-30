@@ -4,10 +4,8 @@ from django.http import HttpResponse
 from django.core.mail import send_mail, BadHeaderError
 
 
-# Create your views here.
-
-
 def contact(request):
+    """ Display the contact us form. """
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():

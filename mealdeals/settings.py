@@ -203,7 +203,7 @@ if 'USE_AWS' in os.environ:
 # Stripe
 STRIPE_CURRENCY = 'eur'
 STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', '')
-STRIPE_SECRET_KEY = 'sk_test_51I9BnOIFzPFZzgCPlXnvCkzhPtXAjqnidnmc0VzkIEE1ZMpDmmLdXpBcLByLZ9syPvWFsG7oWq4I2s6OU4Vqbkdx00RIMhQFV1'
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
 STRIPE_WH_SECRET = os.getenv('STRIPE_WH_SECRET', '')
 
 

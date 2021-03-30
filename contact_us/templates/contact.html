@@ -9,7 +9,7 @@
     </div>
 </div>
 {% endblock %}
-
+<!-- Contact us form html -->
 {% block content %}
 <div class="contact_form">
     <h1>Marketing Gurus</h1>
@@ -19,6 +19,7 @@
         Please fill as much infomation as you can for us to assist you<br>
         One of our Gurus will contact you directly via email
     </p>
+    <!-- POST method to send email to admin -->
     <form method="POST">
         {% csrf_token %}
         {{form.as_p}}

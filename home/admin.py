@@ -1,7 +1,6 @@
 from django.contrib import admin
 from .models import Deal, Category
-
-# Register your models here.
+"""Ensure that deals and categories are saved to the DB"""
 
 
 class deal_admin(admin.ModelAdmin):

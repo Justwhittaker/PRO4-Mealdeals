@@ -4,7 +4,12 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 
 
-"""Created my models by using the logic from the Boutique ado project on code institute tutorial"""
+"""
+Created my models by using the logic from
+the Boutique ado project on CI tutorial
+"""
+
+
 class UserProfile(models.Model):
     """
     A user profile model for maintaining default

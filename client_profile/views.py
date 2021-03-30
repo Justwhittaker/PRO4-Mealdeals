@@ -18,8 +18,8 @@ def profile(request):
         return redirect('join')
     """ Display the user's profile. """
     profile = get_object_or_404(UserProfile, user=request.user)
+    deals = Deal.objects.all()
     if request.method == 'POST':
-        deals = Deal.objects.all()
         form = UserProfileForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()

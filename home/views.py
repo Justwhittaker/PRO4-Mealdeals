@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.contrib import messages
 from .models import Deal
 from django.db.models import Q
-# Create your views here.
 
 
 def all_deals(request):
@@ -37,14 +36,17 @@ def index(request):
 
 
 def privacy(request):
+    """view to return Privacy page"""
     return render(request, 'home/privacy_policy.html')
 
 
 def about(request):
+    """view to return About page"""
     return render(request, 'home/about.html')
 
 
 def faq(request):
+    """view to return FAQ page"""
     return render(request, 'home/faq.html')
 
 

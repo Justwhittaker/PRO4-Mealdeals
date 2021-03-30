@@ -4,6 +4,7 @@ from django import forms
 
 
 class ContactForm(forms.Form):
+    """ Form to create fields for Contacting admin """
     first_name = forms.CharField(max_length=45)
     last_name = forms.CharField(max_length=45)
     restaurant_name = forms.CharField(max_length=200)
