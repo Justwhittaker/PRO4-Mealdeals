@@ -49,7 +49,7 @@
             <div>
                 <div class="deal_card">
                     <h2><strong>{{ deal.name }}</strong></h2>
-                    <img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" />
+                    <a href="{% url 'deals_display' deal.id %}"><img src="{{ deal.image.url }}" class="card_img card-img-top" alt="Card image cap" /></a>
                     <div class="card-body mb-3">
                         <h3>{{ deal.restaurant_name }}</h3> <br>
                         <h4>€{{ deal.price }}</h4> <br>
