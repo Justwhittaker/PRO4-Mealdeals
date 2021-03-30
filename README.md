@@ -223,6 +223,11 @@ Identifying Entities:
 Identifying Relationships
 * Deal_ID = Categories = Restaurant = Subscriptions
 
+For **data schema** I used the tool [**dbdiagram.io**](https://dbdiagram.io/home).
+
+href = https://dbdiagram.io/d/6062e5dbecb54e10c33de7ed
+
+![DBSchema](media/readme/dataschema.jpg)
 
 <a name="db"></a>
 #### Database ####
