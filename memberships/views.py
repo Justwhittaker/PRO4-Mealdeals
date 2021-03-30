@@ -17,6 +17,7 @@ stripe.api_key = 'sk_test_51I9BnOIFzPFZzgCPlXnvCkzhPtXAjqnidnmc0VzkIEE1ZMpDmmLdX
 
 @login_required
 def join(request):
+    """view to return Join page"""
     return render(request, 'membership/join.html')
 
 
@@ -25,6 +26,7 @@ def settings(request):
 
 
 def success(request):
+    """view to Success index page"""
     if request.method == 'GET' and 'session_id' in request.GET:
         session = stripe.checkout.Session.retrieve(request.GET['session_id'],)
         customer = Customer()
@@ -38,12 +40,13 @@ def success(request):
 
 
 def cancel(request):
+    """view to return Cancel page"""
     return render(request, 'membership/cancel.html')
 
 
 @login_required
 def checkout(request):
-
+    """ Display the checkout if not signed up for the user to subscribe. """
     try:
         if request.user.customer.membership:
             return redirect('profile')
@@ -53,6 +56,7 @@ def checkout(request):
     if request.method == 'POST':
         pass
     else:
+        """Create Strip payment amount from the product ids stored in stripe""" 
         membership = 'registration'
         final_dollar = 2
         membership_id = 'price_1Iae8BIFzPFZzgCPlrmTpzZ2'
@@ -62,7 +66,7 @@ def checkout(request):
                 membership_id = 'price_1IYfthIFzPFZzgCPFbLoedwj'
                 final_dollar = 20
 
-        # Create Strip Checkout
+        """Create Strip Checkout""" 
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             customer_email=request.user.email,
@@ -81,6 +85,7 @@ def checkout(request):
 
 
 class SignUp(generic.CreateView):
+    """ Display the Sign Up form for the user to subscribe. """
     form_class = CustomSignupForm
     success_url = reverse_lazy('home')
 
@@ -93,6 +98,7 @@ class SignUp(generic.CreateView):
         new_user = authenticate(username=username, password=password)
         login(self.request, new_user)
         return valid
+
 
 def cache_checkout_data(request):
     return render(request,)

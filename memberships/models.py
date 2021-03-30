@@ -4,11 +4,18 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import User
 
-# Created my models by using the logic from the Boutique ado project on code institute tutorial
-# Customer class was a concept created using the logic medium.com, listed in my credits
+"""
+Created my models by using the logic 
+from the CI Boutique ado tutorial
+"""
+"""
+Customer class was a concept created 
+using the logic medium.com, listed in my credits
+"""
 
-#Customer class to hold my Customer infomation 
+
 class Customer(models.Model):
+    """Customer class to hold my Customer infomation """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     stripeid = models.CharField(max_length=255)
     stripe_subscription_id = models.CharField(max_length=255)

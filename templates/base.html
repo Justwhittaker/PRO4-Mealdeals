@@ -50,9 +50,11 @@
 </head>
 
 <body>
+    <!-- navbar main header -->
     <header class="container-fluid fixed-top nav_border mobile_nav">
-        <div class="float-left my-auto py-1 py-lg-0 text-center text-lg-left" href="{% url 'home' %}"><img
-                class="logo_pic" src="{% static 'media/img/logo.jpg' %}" alt=""></div>
+        <!--Grid image-->
+        <div class="float-left my-auto py-1 py-lg-0 text-center text-lg-left"><img
+                class="logo_pic" href="{% url 'home' %}" src="{% static 'media/img/logo.jpg' %}" alt=""></div>
         <div class="float-right d-none d-lg-flex">
 
             <ul class="list-inline list-unstyled text-center text-lg-right my-0">
@@ -60,13 +62,14 @@
                     <div id="topnav">
 
                         <div class="col-12 col-lg-3 my-auto py-1 py-lg-0 text-center text-lg-left">
-
+                            <!--Grid column-->
                             <a href="{% url 'home' %}" class="nav-link main-logo-link">
                                 <h1 class="logo_font text_red my=0"><strong>Meal</strong>Deals</h1>
                             </a>
                         </div>
                     </div>
                 </li>
+                <!--Grid column-->
                 <li class="list-inline-item">
                     <a class="text-black nav-link" href="{% url 'contact_us' %}" id="user-request"
                         aria-expanded="false">
@@ -76,6 +79,7 @@
                         </div>
                     </a>
                 </li>
+                <!--Grid column-->
                 <li class="list-inline-item dropdown">
                     <a class="text-black nav-link" href="#" id="user-options" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">
@@ -84,6 +88,7 @@
                             <p class="my=0">Restuaranteurs</p>
                         </div>
                     </a>
+                    <!-- Dropdown for members only -->
                     <div class="dropdown-menu border-0" aria-labelledby="user-options">
                         {% if request.user.is_authenticated %}
                         {% if request.user.is_superuser %}
@@ -98,11 +103,9 @@
                         {% if user.is_authenticated == False %}
                         <a class="dropdown-item" href="{% url 'signup' %}">Sign up</a>
                         {% endif %}
-
-
-
                     </div>
                 </li>
+                <!--Grid column-->
                 <li class="list-inline-item">
                     <a class="text-black nav-link" href="{% url 'about' %}" id="about" aria-expanded="false">
                         <div class="text-center">
@@ -114,6 +117,7 @@
             </ul>
         </div>
         <div class="row bg-white">
+            <!-- toggler button -->
             <nav class="navbar navbar-expand-lg navbar-light w-100">
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-nav"
                     aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
@@ -123,6 +127,7 @@
             </nav>
         </div>
     </header>
+    <!-- Message containers -->
     {% if messages %}
     <div class="message-container">
         {% for message in messages %}
