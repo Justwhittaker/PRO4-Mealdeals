@@ -45,7 +45,7 @@ def profile(request):
 
 def add_deal(request):
     """ Add a deal """
-    if request.method == 'POST':
+    if request.method == 'POST': 
         form = DealForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
@@ -72,10 +72,10 @@ def add_deal(request):
 @login_required
 def edit_deal(request, deal_id):
     """ Edit a deals in the profile """
-    product = get_object_or_404(Deal, pk=deal_id)
+    deal = get_object_or_404(Deal, pk=deal_id)
 
     if request.method == 'POST':
-        form = DealForm(request.POST, request.FILES, instance=product)
+        form = DealForm(request.POST, request.FILES, instance=deal)
         if form.is_valid():
             form.save()
             messages.success(request, 'Successfully updated product!')
@@ -84,8 +84,8 @@ def edit_deal(request, deal_id):
             messages.error(request, 'Failed to update product.'
                            ' Please ensure the form is valid.')
     else:
-        form = DealForm(instance=product)
-        messages.info(request, f'You are editing {Deal.name}')
+        form = DealForm(instance=deal)
+        messages.info(request, f'You are editing {deal}')
 
     template = 'edit_deal.html'
     context = {

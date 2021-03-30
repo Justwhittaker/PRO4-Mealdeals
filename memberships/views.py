@@ -5,14 +5,11 @@ from .forms import CustomSignupForm
 from django.urls import reverse_lazy
 from django.views import generic
 from django.contrib.auth import authenticate, login
+from mealdeals import settings
 
 import stripe
-import os
 
-# stripe.api_key = settings.STRIPE_SECRET_KEY
-stripe.api_key = 'sk_test_51I9BnOIFzPFZzgCPlXnvCkzhPtXAjqnidnmc0VzkIEE1ZMpDmmLdXpBcLByLZ9syPvWFsG7oWq4I2s6OU4Vqbkdx00RIMhQFV1'
-
-# Create your views here.
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 @login_required
@@ -76,8 +73,8 @@ def checkout(request):
             }],
             mode='subscription',
             allow_promotion_codes=True,
-            success_url='https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url='https://https://mealdeals-pro.herokuapp.com/cancel',
+            success_url='{% url "success/success?session_id={CHECKOUT_SESSION_ID}"%}',
+            cancel_url='{% url "cancel" %}',
         )
 
         return render(request, 'membership/checkout.html', {

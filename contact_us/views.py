@@ -21,11 +21,11 @@ def contact(request):
 
             try:
                 send_mail(subject, message,
-                          'mealdealsireland@gmail.com',
+                          'just.whittaker@gmail.com',
                           ['mealdealsireland@gmail.com'])
             except BadHeaderError:
                 return HttpResponse('Invalid header found')
-            return redirect("contact.html")
+            return redirect("home")
 
     form = ContactForm()
     return render(request, "contact.html", {'form': form})
