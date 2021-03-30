@@ -74,7 +74,7 @@ def checkout(request):
             mode='subscription',
             allow_promotion_codes=True,
             success_url='https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url="{% url 'cancel' %}",
+            cancel_url='https://https://mealdeals-pro.herokuapp.com/memberships/cancel',
         )
 
         return render(request, 'membership/checkout.html', {
