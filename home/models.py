@@ -1,7 +1,7 @@
 from django.db import models
 from client_profile.models import UserProfile
 
-# Create your models here.
+# Created my models by using the logic from the Boutique ado project on code institute tutorial 
 
 
 class Category(models.Model):

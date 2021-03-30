@@ -23,6 +23,7 @@
             </ul>
         </div>
     </div>
+    <!-- search bar -->
     <div class="row bg-white">
         <form method="GET" action="{% url 'home' %}">
             <div class="input-group w-100">
@@ -41,6 +42,7 @@
 </div>
 <!--Trending Deals on the site-->
 <div class="deal_body row">
+    <!-- for loop to call the deals saved to the db -->
     {% for deal in deals %}
     <div class="col-sm-6 col-md-4 col-lg-3">
         <blockquote>
@@ -53,7 +55,7 @@
                         <h4>€{{ deal.price }}</h4> <br>
                         {{ deal.name }} <br>
                         {{ deal.category }} <br>
-
+                        <!-- link to move to the deal detail page for user to see more info about the deal -->
                         <br>
                         <a href="{% url 'deals_display' deal.id %}" class="btn btn-primary">Go to Deal</a>
 

@@ -12,18 +12,21 @@
 {% endblock %}
 
 {% block content %}
-
+<!-- Page to veiw the deal in detail -->
 <body class="d-flex flex-column h-100">
     <div class="container-fluid flex-grow-1 deal_detail">
         <div class="row">
             <div class="col-12 col-md-6 col-lg-4 offset-lg-2">
                 <div class="image-container my-5">
+                    <!-- bring the deal id from the db -->
                     <h2><strong>{{ deals }}</strong></h2>
+                    <!-- deal image block -->
                     <a href="{{ deals.image.url }}" target="_blank">
                         <img src="{{ deals.image.url }}" class="card_img_detail card-img-top" alt="Card image cap" />
                     </a>
                 </div>
             </div>
+            <!-- all the deal details including decription and contact info -->
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="product-details-container mb-5 mt-md-5">
                     <h2>
@@ -38,6 +41,7 @@
                     <p class="mt-3">{{ deals.number_phone }}</p>
                     <p class="mb-0">{{ deals.description }}</p>
                 </div>
+                <!-- return back to home page -->
                 <a href="{% url 'home' %}" class="return_deals btn btn-primary">Go back</a>
             </div>
         </div>
