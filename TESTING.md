@@ -8,13 +8,8 @@
     * [Validation Testing](#ValidationTesting)
     * [Unit Testing](#UnitTesting)
     * [Cross Browser/Cross Device Verification](#CrossBrowser)
-    * [Accessibility Testing](#AccessibilityTesting)
-    * [Automated Testing](#AutomatedTesting)
-    * [alignItems](#alignItems)
-    * [Members](#Members)
     * [Python Tests](#PythonTests)
-    * [Defect Tracking](#DefectTracking)
-    * [Noteworthy Bugs](#NoteworthyBugs)
+    * [Troubleshooting](#Troubleshooting)
     * [Outstanding Defects](#OutstandingDefects)
 
 ---
@@ -22,8 +17,7 @@
 <a name="Testing"></a>
 ## Testing ##
 ---
-Jasmine Tests
-Travis
+
 ---
 
 <a name="ValidationTesting"></a>
@@ -31,9 +25,9 @@ Travis
 ---
 * [**CSS Validator**](https://jigsaw.w3.org/css-validator/) - Note, any error associated with root: Imported style sheets are not checked in direct input and file upload modes were ignored.
 * [**HTML Validator**](https://jigsaw.w3.org/css-validator/) - validation of HTML with Django is pretty useless as all {{}} bracketed values raise errors. I ran only a few files through the validator and instead relied heavily upon gitpod's IDE to identify mismatched tags and closing Django directives.
-* django-extensions - used for validating templates from the command line python manage.py validate_templates
-* JavaScript Validator Note any errors for let, variables set in other .js files, and constants were ignored. I also used a more ES6 friendly checker and there were no errors for main.js
-* GitPod IDE - Gitpod has inline validation for many file types. Python, CSS, HTML, DJANGO files were continuously tested for validity when using this IDE.
+* [**django-extensions**](https://pypi.org/project/django-extensions/) - used for validating templates from the command line python manage.py validate_templates
+* [**JavaScript Validator**](https://beautifytools.com/javascript-validator.php) Note any errors for let, variables set in other .js files, and constants were ignored. 
+* [**GitPod IDE**](https://gitpod.io/) - Gitpod has inline validation for many file types. Python, CSS, HTML, DJANGO files were continuously tested for validity when using this IDE.
 
 
 ---
@@ -42,6 +36,7 @@ Travis
 ### Unit Testing ###
 ---
 
+As core functionality and features were delivered I attempted to create python tests to ensure functionality was not lost. I got behind after a point, but made up ground at the end to get some coverage of all models, forms and views.
 
 ---
 
@@ -49,49 +44,35 @@ Travis
 ### Cross Browser/Cross Device Verification ###
 ---
 
+To verify that the application is functional and looks pleasant across various operating systems and device sizes
+These tests are light on the functionality with more attention being paid to the layout and console logs:
 
+Operating systems and screen sizes is as follows:
 
----
+INSERT THE TEST results
 
-<a name="AccessibilityTesting"></a>
-### Accessibility Testing ###
----
-
-
-
----
-
-<a name="AutomatedTesting"></a>
-### Automated Testing ###
----
 
 
 ---
 
-<a name="alignItems"></a>
-### alignItems ###
+<a name="PythonTests"></a>
+### Python Tests ###
 ---
 
+Tests were written for Django views, forms, models. These files are located in each application specific /test folders and named in the following manner:
 
+* test_forms.py - for tests concerning forms
+* test_models.py - for tests concerning models
+* test_views.py - for tests concerning views
+
+COVERAGE REPORTS
 ---
 
-<a name="Members"></a>
-### Members ###
+<a name="Troubleshooting"></a>
+## Troubleshooting ##
 ---
 
-
----
-
-<a name="DefectTracking"></a>
-### Defect Tracking ###
----
-
-
----
-
-<a name="NoteworthyBugs"></a>
-### Noteworthy Bugs ###
----
+As I had a few learning curves by using Django frameworks there were a lot of errors I needed to work through and understand, I wanted to document a lot of my learning opportunities through this project. See the separate [ERRORS.md](ERRORS.md) file for the details.
 
 ---
 
@@ -99,28 +80,8 @@ Travis
 ### Outstanding Defects ###
 ---
 
+Takes a while to get to the next page when uploading files - I should add in a file processing status bar so user's know what is going on. The static state of the selected submit button is some visual indicator but I should prevent user input during this wait.
 
+Inefficient Email - I should use a celery task or distributed system to handle emailing users. Right now it's all inline and not done asynchronously thus adding to the time it takes to create a contact form.
 
-
-
-
-
-*I used **pep8online.com** to test my Python code validator with no issues - http://pep8online.com/checkresult
-![pep8](static/img/pep8_test.png)
-* I tested the python code with **Python Debugger** - https://realpython.com/python-debugging-pdb/
-![pdb](static/img/pdb_debugger.png)
-* Also used this **Automated Testing** to test my flask applications - https://www.patricksoftwareblog.com/unit-testing-a-flask-application
-![test_flask](static/img/test_flask.png)
-* I used **Pylint** to lint my code by Linting my python code - http://pylint.pycqa.org/en/latest/
-![test_Pylint](static/img/pylint.png)
-* I tested the responsiveness of the website by using the [**Google Chrome Developer Tool**](https://developers.google.com/web/tools/chrome-devtools) as well as the plug-in **Unicorn Revealer** to control my overflow and the website [**Am I Responsive**](http://ami.responsivedesign.is/). 
-![AmIresponsive](static/img/amIresponsive.png)
-* I also tested my website on **different browsers and real devices** : **Iphone 6s, Ipad Pro 12", Ipad Mini, Google Chrome, Safari, Mozilla Firefox and Samsung A70.**
-* I used a first **dirty version** of this project on **Gitpod** and **refactored** my code **step by step** to remove any **useless classes**
-* I tested my CSS file and my HTML files using [**CSS Validator**](https://jigsaw.w3.org/css-validator/) and [**HTML Validator**](https://validator.w3.org/) then fixed the issues needed to be fixed.
-![test_Html](static/img/errors_val_w3.png)
-![test_CSS](static/img/errors_val_w3_css.png)
-* I tested every **functions** of my script.js using multiple **console.log** and checking for **errors** in the **Google Chrome console**.
-* I passed my deployed app through **Lighthouse** with the follwoing results
-![lighthouse](static/img/lighthouse.png)
-* All pages passed the HTML,CSS and Python validator final test with no major issues.
+No system timeout - User's login seems to last forever, should auto log users out after half an hour to keep accounts secure
