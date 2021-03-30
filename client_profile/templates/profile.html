@@ -13,6 +13,7 @@
 {% endblock %}
 
 {% block content %}
+<!-- profile page, welcoming the user by name -->
 <div class="overlay profile_page">
     <div class="row add_deal">
         <div class="col">
@@ -20,6 +21,7 @@
             <h2 class="logo-font mb-4">My Profile</h2>
             <h3>Welcome Back, {{ user }}</h3>
             <hr>
+            <!-- button to allow the user to add their newest offers on the home page -->
             {% if request.user.is_authenticated %}
             <a href="{% url 'add_deal' %}" class="btn btn-success">Add a new Deal</a>
             {% endif %}
@@ -28,6 +30,7 @@
     <div class=" d-flex deal_body">
         <div class="row">
             <div class="col-sm-md-12 col-lg-4">
+                <!-- displaying a form for the user to update their profile infomation -->
                 <h3 class="text-muted">Profile Information</h3>
                 <form class="mt-3" action="{% url 'profile' %}" method="POST" id="profile-update-form">
                     {% csrf_token %}
@@ -37,6 +40,7 @@
             </div>
             <div class="col-sm-md-12 col-lg-8 ">
                 <h3 class="text-muted">Deals Information</h3>
+                <!-- table to allow the user to see a all deals created simply and quickly -->
                 <div class="deal_history table-responsive">
                     <table class="table table-sm table-borderless">
                         <thead>
@@ -47,10 +51,12 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <!-- for loop to show the user the current deals that they have created in thier profile -->
                             {% for deal in deals %}
                             <tr>
                                 {% if request.user.is_authenticated %}
                                 {% if request.user.is_superuser %}
+                                <!-- for superuser to easily identify restaurant names -->
                                 <th>Restaurant Name</th>
                                 <td> {{ deal.restaurant_name }} </td>
                                 {% endif %}
@@ -59,7 +65,9 @@
                                         alt="Card image cap" /></td>
                                 <td> {{ deal.name }} </td>
                                 <td>€{{ deal.price }}</td>
+                                <!-- button to go to the deal detail to see what clients are veiwing -->
                                 <td><a href="{% url 'deals_display' deal.id %}" class="btn btn-primary">Go to Deal</a>
+                                    <!-- buttons for edit and delete functions  -->
                                     <a href="{% url 'edit_deal' deal.id %}" class="btn btn-warning">Edit</a>
                                     <a href="{% url 'delete_deal' deal.id %}" class="btn btn-danger">Delete</a></td>
                             </tr>

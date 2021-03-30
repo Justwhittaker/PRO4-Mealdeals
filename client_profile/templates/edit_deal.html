@@ -13,6 +13,7 @@
 {% endblock %}
 
 {% block content %}
+<!-- add a deal -->
 <div class="overlay"></div>
 <div class="container">
     <div class="row">
@@ -26,8 +27,10 @@
 
     <div class="row">
         <div class="col-12 col-md-6">
+            <!-- edit a deal form -->
             <form method="POST" class="form mb-2" enctype="multipart/form-data">
                 {% csrf_token %}
+                <!-- for loop to bring data from the id and display for user to identify whats already saved -->
                 {% for field in form %}
                 {% if field.name != 'image' %}
                 {{ field | as_crispy_field }}
@@ -36,7 +39,9 @@
                 {% endif %}
                 {% endfor %}
                 <div class="text-right">
+                    <!-- button to opt out and go back to profile -->
                     <a class="btn btn-warning rounded-0" href="{% url 'profile' %}">Cancel</a>
+                    <!-- summit button POST data to the db -->
                     <button class="btn btn-danger rounded-0" type="submit">Update Deal</button>
                 </div>
             </form>
@@ -47,6 +52,7 @@
 
 {% block postloadjs %}
 {{ block.super }}
+<!-- java to bring image and allow user to edit saved image -->
 <script type="text/javascript">
     $('#new-image').change(function () {
         var file = $('#new-image')[0].files[0];
