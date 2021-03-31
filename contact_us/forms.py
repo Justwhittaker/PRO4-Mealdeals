@@ -11,7 +11,7 @@ class ContactForm(forms.Form):
     email_address = forms.EmailField(max_length=200)
     phone_number = forms.CharField(max_length=45)
     deal_description = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 5, 'cols': 80}), max_length=1500)
+        widget=forms.Textarea(attrs={'rows': 5, 'cols': 30}), max_length=1500)
 
     def __init__(self, *args, **kwargs):
         """
