@@ -388,6 +388,9 @@ Even though the design is responsive, because of the obvious reasons, a service 
 ![social](media/readme/insta.jpg)
 ![social](media/readme/tweet.jpg)
 
+#### IamResponsive: ####
+![Responsiveness](static/media/readme_media/responsive.jpg)
+
 ---
 ---
 <a name="technologies"></a>
@@ -763,6 +766,7 @@ http://karma-runner.github.io/5.0/dev/git-commit-msg.html
 * https://devcenter.heroku.com/articles/heroku-postgresql#connecting-in-python<br>
 * https://medium.com/analytics-vidhya/how-to-build-a-django-membership-site-with-payment-integration-part-1-163552292aed
 * https://medium.com/analytics-vidhya/django-and-stripe-subscriptions-part-2-8ddd406458a9
+* http://ami.responsivedesign.is/#
 
 **Many thanks to:**
 
