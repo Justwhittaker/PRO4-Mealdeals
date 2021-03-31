@@ -37,7 +37,7 @@ class Deal(models.Model):
     number_phone = models.CharField(max_length=48)
     address = models.CharField(max_length=254)
     website_address = models.CharField(max_length=254)
-    name = models.CharField(max_length=254)
+    name = models.CharField(max_length=80)
     description = models.TextField(max_length=2054)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     image = models.ImageField(blank=True)

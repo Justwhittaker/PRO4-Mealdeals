@@ -5,7 +5,7 @@ from .forms import CustomSignupForm
 from django.urls import reverse_lazy
 from django.views import generic
 from django.contrib.auth import authenticate, login
-from mealdeals.settings import DEBUG, STRIPE_SECRET_KEY
+from mealdeals.settings import HEROKU, STRIPE_SECRET_KEY
 
 import stripe
 
@@ -62,11 +62,11 @@ def checkout(request):
                 membership = 'monthly'
                 membership_id = 'price_1IYfthIFzPFZzgCPFbLoedwj'
                 final_dollar = 20
-        if DEBUG:
-            success_url = 'https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}'
+        if HEROKU:
+            success_url = 'https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}',
             cancel_url = 'https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/cancel'
         else:
-            success_url ='https://mealdeals-pro.herokuapp.com/success?session_id={CHECKOUT_SESSION_ID}'
+            success_url ='https://mealdeals-pro.herokuapp.com/success?session_id={CHECKOUT_SESSION_ID}',
             cancel_url = 'mealdeals-pro.herokuapp.com/cancel'
         """Create Strip Checkout""" 
         session = stripe.checkout.Session.create(
