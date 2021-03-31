@@ -68,6 +68,7 @@ def checkout(request):
         else:
             success_url = 'https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}',
             cancel_url = 'https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/cancel'
+
         """Create Strip Checkout""" 
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
