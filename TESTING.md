@@ -38,6 +38,75 @@
 
 As core functionality and features were delivered I attempted to create python tests to ensure functionality was not lost. I got behind after a point, but made up ground at the end to get some coverage of all models, forms and views.
 
+Testing user stories
+**Client user**
+* The **Clients user** wants an **attractive website** with a **non-distracting** background.
+    * Expected to be responsive on the landing page and user drawn into the deals 
+        * As you drop onto the site it draws me into the deals as they pop up from the clean background
+        * The site acted as expected
+
+* The **Clients user** wants to see **clear instructions** on how to drill down into further information on deals within the website.
+    * Expected to have clear visuals and can click onto the image to load 
+        * The deals are responsive and clearly shows the ability to click on the link to veiw further information
+        * The site acted as expected
+
+* The **Clients user** wants there to be a **search box** so that the user can quickly identify **deals**.
+    * Expected to have clear visuals and can quickly narrow down into the different deals by field 
+        * Search bar is responsive and quickly searches and filters out any irrelevant deals.
+        * The site acted as expected
+
+* The **Clients user** wants to start **finding deals immediately**. 
+    * Expected user drawn into the deals immediately
+        * As you drop onto the site it draws me into the deals as they pop up from the clean background
+        * The site acted as expected
+
+* The **Clients user** wants to see the **latest deals** added.
+    * Expected user drawn into the deals immediately with the latest deals appearing
+        * As you drop onto the site it draws me into the deals as they pop up from the clean background
+        * The site acted as expected
+
+* The **Clients user** wants a **convenient sized deal box** to be able to read the Deal clearfully.
+    * Expected to that deal box doesnt break through veiws on different devices 
+        * checked and formulated a checklist view below under CrossBrowser verification, some areas needed fixing on the CSS but manage to do this easily with the help of the spreadsheet
+        * The site acted as expected
+
+* The **Clients user** wants to know the **Deals** details such as **T&C's, price, and end time** for the promotion.
+    * Expected to have clear pathways to find all the details on the page including extra info about us and contact and FAQs 
+        * As you drop onto the site all the info is clearly listed in the footer and the nav bar, likewise the deal detail page gives you additional info the admin user has added
+        * The site acted as expected
+
+* The **Clients user** wants to get a maximum of advantage of the **Mealdeals cloud**.
+    * Expected to be able to view all the deals on the site 
+        * All deals are visible on the landing page
+        * The site acted as expected
+
+**Admin user**
+
+* The **Admin user** wants to **have the possibility** of their **own profile** where their deals come up first.
+    * Expected to be able to veiw all own profiles in the profile veiw 
+        * All deals appear in the Profile page along with the ability to quickly guide yourself into the CRUD functionality or veiw in detail and return back to the Profile.
+        * The site acted as expected
+
+* The **Admin user** wants to **know** if **their Deals has been submitted**.
+    * Expected to show messages of success, errors, caution and cancellations 
+        * all messages are working correctly and display at the correct time 
+        * The site acted as expected
+
+* The **Admin user** wants to know the **deals** details such as **name of restaurant, address, telephone number, website**
+    * Expected to be be able to load, edit and delete CRUD functionality for their business info
+        * add and edit business info has the functionality to ensure that adding, editing and deleting info is simple and easy
+        * The site acted as expected
+
+* The **Admin user** wants to **easily add, edit and delete their own Deals** on the website.
+    * Expected to be be able to load, edit and delete CRUD functionality for their deals
+        * add and edit deal has the functionality to ensure that adding, editing and deleting deals is simple and easy
+        * The site acted as expected
+
+* The **Admin user** wants to **have the possibility** to **upload pictures**.
+    * Expected to be be able to load good size photos 
+        * add and edit deal has the functionality to ensure photo upload
+        * The site acted as expected
+
 ---
 
 <a name="CrossBrowser"></a>

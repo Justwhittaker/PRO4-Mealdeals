@@ -110,7 +110,6 @@ The site also allows for restaurant customers to find good and decent deals in t
 * The **Clients user** wants an **attractive website** with a **non-distracting** background.
 * The **Clients user** wants to see **clear instructions** on how to drill down into further information on deals within the website.
 * The **Clients user** wants there to be a **search box** so that the user can quickly identify **deals**.
-* The **Clients user** wants to be able to **sort by** categories or restaurant name.
 * The **Clients user** wants to start **finding deals immediately**. 
 * The **Clients user** wants to see the **latest deals** added.
 * The **Clients user** wants a **convenient sized deal box** to be able to read the Deal clearfully.
@@ -118,7 +117,6 @@ The site also allows for restaurant customers to find good and decent deals in t
 * The **Clients user** wants to get a maximum of advantage of the **Mealdeals cloud**.
 
 **Admin user**
-* The **Admin user** wants to know the **time period** of the deal before **deciding** on continuing with the specific deal.
 * The **Admin user** wants to **have the possibility** of their **own profile** where their deals come up first.
 * The **Admin user** wants to **know** if **their Deals has been submitted**.
 * The **Admin user** wants to know the **deals** details such as **name of restaurant, address, telephone number, website**
@@ -768,6 +766,18 @@ http://karma-runner.github.io/5.0/dev/git-commit-msg.html
 * https://medium.com/analytics-vidhya/django-and-stripe-subscriptions-part-2-8ddd406458a9
 * https://stripe.com/docs/payments/checkout/migration
 * http://ami.responsivedesign.is/#
+
+7. Media sources<br>
+* 
+*
+*
+*
+*
+*
+*
+*
+*
+
 
 **Many thanks to:**
 
