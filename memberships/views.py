@@ -5,11 +5,11 @@ from .forms import CustomSignupForm
 from django.urls import reverse_lazy
 from django.views import generic
 from django.contrib.auth import authenticate, login
-from mealdeals import settings
+from mealdeals.settings import DEBUG, STRIPE_SECRET_KEY
 
 import stripe
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
+stripe.api_key = STRIPE_SECRET_KEY
 
 
 @login_required
@@ -18,8 +18,8 @@ def join(request):
     return render(request, 'membership/join.html')
 
 
-def settings(request):
-    return render(request, 'registration/settings.html')
+# def settings(request):
+#     return render(request, 'registration/settings.html')
 
 
 def success(request):
@@ -62,7 +62,12 @@ def checkout(request):
                 membership = 'monthly'
                 membership_id = 'price_1IYfthIFzPFZzgCPFbLoedwj'
                 final_dollar = 20
-
+        if DEBUG:
+            success_url = 'https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}'
+            cancel_url = 'https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/cancel'
+        else:
+            success_url ='https://mealdeals-pro.herokuapp.com/success?session_id={CHECKOUT_SESSION_ID}'
+            cancel_url = 'mealdeals-pro.herokuapp.com/cancel'
         """Create Strip Checkout""" 
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
@@ -73,10 +78,12 @@ def checkout(request):
             }],
             mode='subscription',
             allow_promotion_codes=True,
+            success_url=success_url,
+            cancel_url=cancel_url
             # if settings.DEBUG=True:
-            success_url='https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}',
-            # else:
-            cancel_url='https://mealdeals-pro.herokuapp.com/memberships/membership/cancel'
+            # success_url='https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}',
+            # # else:
+            
         )
 
         return render(request, 'membership/checkout.html', {
