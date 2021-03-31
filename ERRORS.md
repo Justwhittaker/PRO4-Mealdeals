@@ -2,7 +2,7 @@
 # Mealdeals Errors #
 ---
 * [Build Errors](#BuildErrors)
-* [Carousel Errors](#user-goals)
+* [Carousel Errors](#CarouselErrors)
 * [Deal Detail Errors](#DealDetailErrors)
 * [Products Errors](#ProductsErrors)
 * [Query Issues](#QueryIssues)
