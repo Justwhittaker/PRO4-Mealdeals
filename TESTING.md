@@ -51,7 +51,7 @@ Operating systems and screen sizes is as follows:
 
 ![Testing](static/media/readme_media/responsiveTest.jpg)
 
-
+I would say after creating this form I have been able to fix 99% of the responsiveness and turned alot of the No's into a Yes!
 
 ---
 
@@ -64,6 +64,8 @@ Tests were written for Django views, forms, models. These files are located in e
 * test_forms.py - for tests concerning forms
 * test_models.py - for tests concerning models
 * test_views.py - for tests concerning views
+
+I focused Alot of time on the code itself ensure that I wrote good and clean code and simply ran out of time to ensure that I complete a 100% Coverage on my tests.
 
 #### COVERAGE REPORTS ####
 
