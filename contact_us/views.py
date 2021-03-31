@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from .forms import ContactForm
 from django.http import HttpResponse
+from django.contrib import messages
 from django.core.mail import send_mail, BadHeaderError
 
 
@@ -18,7 +19,10 @@ def contact(request):
                 'deal_description': form.cleaned_data['deal_description'],
             }
             message = "\n".join(body.values())
-
+            messages.success(request, 'Your Email was sent successfully')
+        else:
+            messages.error(request,
+                           'Email failed. Please ensure the form is valid.')
             try:
                 send_mail(subject, message,
                           'just.whittaker@gmail.com',
