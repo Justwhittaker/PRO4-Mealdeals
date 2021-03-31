@@ -62,8 +62,12 @@ def checkout(request):
                 membership = 'monthly'
                 membership_id = 'price_1IYfthIFzPFZzgCPFbLoedwj'
                 final_dollar = 20
-        
-        """Create Strip Checkout""" 
+
+        """Create Strip Checkout"""
+        """
+        So note this success_url and cancel_url will
+        only work on the deployed app https://mealdeals-pro.herokuapp.com/
+        """
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             customer_email=request.user.email,
@@ -73,9 +77,8 @@ def checkout(request):
             }],
             mode='subscription',
             allow_promotion_codes=True,
-            success_url=(f"{'https://mealdeals-pro.herokuapp.com/success?session_id={CHECKOUT_SESSION_ID}'}"),
-            cancel_url=(f"{'https://mealdeals-pro.herokuapp.com/cancel'}")
-
+            success_url=(f"https://mealdeals-pro.herokuapp.com/success?session_id={CHECKOUT_SESSION_ID}"),
+            cancel_url="https://mealdeals-pro.herokuapp.com/cancel"
         )
 
         return render(request, 'membership/checkout.html', {
