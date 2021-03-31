@@ -5,7 +5,7 @@ from .forms import CustomSignupForm
 from django.urls import reverse_lazy
 from django.views import generic
 from django.contrib.auth import authenticate, login
-from mealdeals.settings import HEROKU, STRIPE_SECRET_KEY
+from mealdeals.settings import STRIPE_SECRET_KEY
 
 import stripe
 
@@ -53,7 +53,10 @@ def checkout(request):
     if request.method == 'POST':
         pass
     else:
-        """Create Stripe payment amount from the product ids stored in stripe"""
+        """
+        Create Stripe payment amount from
+        the product ids stored in stripe
+        """
         membership = 'registration'
         final_dollar = 2
         membership_id = 'price_1Iae8BIFzPFZzgCPlrmTpzZ2'
@@ -80,7 +83,7 @@ def checkout(request):
             success_url=(
                 f"{'https://mealdeals-pro.herokuapp.com/success?session_id={CHECKOUT_SESSION_ID}'}"
                 ),
-            cancel_url="https://mealdeals-pro.herokuapp.com/cancel"
+            cancel_url="https://mealdeals-pro.herokuapp.com/cancel",
         )
 
         return render(request, 'membership/checkout.html', {

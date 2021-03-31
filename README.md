@@ -766,6 +766,7 @@ http://karma-runner.github.io/5.0/dev/git-commit-msg.html
 * https://devcenter.heroku.com/articles/heroku-postgresql#connecting-in-python<br>
 * https://medium.com/analytics-vidhya/how-to-build-a-django-membership-site-with-payment-integration-part-1-163552292aed
 * https://medium.com/analytics-vidhya/django-and-stripe-subscriptions-part-2-8ddd406458a9
+* https://stripe.com/docs/payments/checkout/migration
 * http://ami.responsivedesign.is/#
 
 **Many thanks to:**

@@ -10,3 +10,4 @@ class TestCustomSignupForm(TestCase):
         self.assertIn('restaurant_name', form.errors.keys())
         self.assertEqual(form.errors[
             'restaurant_name'][0], 'this field is required.')
+
