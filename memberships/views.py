@@ -81,8 +81,9 @@ def checkout(request):
             mode='subscription',
             allow_promotion_codes=True,
             success_url=(
-                f"{'https://mealdeals-pro.herokuapp.com/success?session_id={CHECKOUT_SESSION_ID}'}"
-                ),
+                'https://mealdeals-pro.herokuapp.com/'\
+                f"{'success?session_id={CHECKOUT_SESSION_ID}'}"
+            ),
             cancel_url="https://mealdeals-pro.herokuapp.com/cancel",
         )
 

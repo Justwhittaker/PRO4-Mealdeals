@@ -65,8 +65,17 @@ Tests were written for Django views, forms, models. These files are located in e
 * test_models.py - for tests concerning models
 * test_views.py - for tests concerning views
 
-COVERAGE REPORTS
+#### COVERAGE REPORTS ####
+
+**home**
+![coverage](static/media/readme_media/coverage-home.jpg)
+**client_profiles**
 ![coverage](static/media/readme_media/coverage-client_profiles.jpg)
+**contact_us**
+![coverage](static/media/readme_media/coverage-contact_us.jpg)
+**memberships**
+![coverage](static/media/readme_media/coverage-memberships.jpg)
+
 ---
 
 <a name="Troubleshooting"></a>

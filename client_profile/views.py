@@ -45,7 +45,7 @@ def profile(request):
 
 def add_deal(request):
     """ Add a deal """
-    if request.method == 'POST': 
+    if request.method == 'POST':
         form = DealForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)

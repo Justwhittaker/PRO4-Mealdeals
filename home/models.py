@@ -2,7 +2,7 @@ from django.db import models
 from client_profile.models import UserProfile
 
 """
-Created my models by using the logic from 
+Created my models by using the logic from
 the Boutique ado project on CI tutorial
 """
 

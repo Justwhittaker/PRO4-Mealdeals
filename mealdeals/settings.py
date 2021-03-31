@@ -29,11 +29,6 @@ DEBUG = 'DEVELOPMENT' in os.environ
 
 ALLOWED_HOSTS = ['mealdeals-pro.herokuapp.com', 'localhost']
 
-if 'HEROKU' in os.environ:
-    HEROKU = True
-else:
-    HEROKU = False
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -124,7 +119,12 @@ LOGOUT_REDIRECT_URL = '/'
 
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
-        'default': dj_database_url.parse('postgres://betporpucukcli:9b1b15b5fe2e531b5d650172129e9a5f41e1f8d6069609be3dd1a1723a4e8eeb@ec2-34-252-251-16.eu-west-1.compute.amazonaws.com:5432/dc11g510am7otc')
+        'default': dj_database_url.parse('postgres://betporpucukcli:'
+                                         '9b1b15b5fe2e531b5d650172129'
+                                         'e9a5f41e1f8d6069609be3dd1a1723a4'
+                                         'e8eeb@ec2-34-252-251-16.eu-west-'
+                                         '1.compute.amazonaws.com:5432/'
+                                         'dc11g510am7otc')
     }
 else:
     DATABASES = {
@@ -140,7 +140,8 @@ else:
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME':
-        'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'django.contrib.auth.password_validation.'
+            'UserAttributeSimilarityValidator',
     },
     {
         'NAME':

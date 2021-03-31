@@ -11,3 +11,6 @@ class TestCustomSignupForm(TestCase):
         self.assertEqual(form.errors[
             'restaurant_name'][0], 'this field is required.')
 
+    def test_done_field_is_not_required(self):
+        form = CustomSignupForm({'restaurant_name':''})
+        self.assertTrue(form.is_valid)
