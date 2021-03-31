@@ -29,7 +29,10 @@ DEBUG = 'DEVELOPMENT' in os.environ
 
 ALLOWED_HOSTS = ['mealdeals-pro.herokuapp.com', 'localhost']
 
-HEROKU = 'HEROKU' in os.environ
+if 'HEROKU' in os.environ:
+    HEROKU = True
+else:
+    HEROKU = False
 
 # Application definition
 

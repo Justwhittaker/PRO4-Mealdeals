@@ -53,7 +53,7 @@ def checkout(request):
     if request.method == 'POST':
         pass
     else:
-        """Create Strip payment amount from the product ids stored in stripe""" 
+        """Create Stripe payment amount from the product ids stored in stripe"""
         membership = 'registration'
         final_dollar = 2
         membership_id = 'price_1Iae8BIFzPFZzgCPlrmTpzZ2'
@@ -62,13 +62,7 @@ def checkout(request):
                 membership = 'monthly'
                 membership_id = 'price_1IYfthIFzPFZzgCPFbLoedwj'
                 final_dollar = 20
-        if HEROKU:
-            success_url ='https://mealdeals-pro.herokuapp.com/success?session_id={CHECKOUT_SESSION_ID}'
-            cancel_url = 'mealdeals-pro.herokuapp.com/cancel'
-        else:
-            success_url = 'https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url = 'https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/cancel'
-
+        
         """Create Strip Checkout""" 
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
@@ -79,12 +73,9 @@ def checkout(request):
             }],
             mode='subscription',
             allow_promotion_codes=True,
-            success_url=success_url,
-            cancel_url=cancel_url
-            # if settings.DEBUG=True:
-            # success_url='https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}',
-            # # else:
-            
+            success_url=(f"{'https://mealdeals-pro.herokuapp.com/success?session_id={CHECKOUT_SESSION_ID}'}"),
+            cancel_url=(f"{'https://mealdeals-pro.herokuapp.com/cancel'}")
+
         )
 
         return render(request, 'membership/checkout.html', {
