@@ -63,11 +63,11 @@ def checkout(request):
                 membership_id = 'price_1IYfthIFzPFZzgCPFbLoedwj'
                 final_dollar = 20
         if HEROKU:
+            success_url ='https://mealdeals-pro.herokuapp.com/success?session_id={CHECKOUT_SESSION_ID}'
+            cancel_url = 'mealdeals-pro.herokuapp.com/cancel'
+        else:
             success_url = 'https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/success?session_id={CHECKOUT_SESSION_ID}',
             cancel_url = 'https://8000-plum-hornet-g40qmw6m.ws-eu03.gitpod.io/cancel'
-        else:
-            success_url ='https://mealdeals-pro.herokuapp.com/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url = 'mealdeals-pro.herokuapp.com/cancel'
         """Create Strip Checkout""" 
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
