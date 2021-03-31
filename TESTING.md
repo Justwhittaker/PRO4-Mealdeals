@@ -49,7 +49,7 @@ These tests are light on the functionality with more attention being paid to the
 
 Operating systems and screen sizes is as follows:
 
-INSERT THE TEST results
+![Testing](static/media/readme_media/responsiveTest.jpg)
 
 
 
@@ -66,6 +66,7 @@ Tests were written for Django views, forms, models. These files are located in e
 * test_views.py - for tests concerning views
 
 COVERAGE REPORTS
+![coverage](static/media/readme_media/coverage-client_profiles.jpg)
 ---
 
 <a name="Troubleshooting"></a>
