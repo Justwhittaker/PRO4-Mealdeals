@@ -49,6 +49,7 @@ As I had afew learning curves by using Django frameworks there was alot of errro
 ![Deal Detail Errors](static/media/errors/dealdetailerror3.jpg)
 ![Deal Detail Errors](static/media/errors/dealdetailerror4.jpg)
 ![Deal Detail Errors](static/media/errors/dealdetailerror1print.jpg)
+SOLVE
 ![Deal Detail Errors](static/media/errors/dealdetailerror2solve.jpg)
 
 ---

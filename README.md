@@ -551,7 +551,7 @@ Validation, manual unit, cross browser/cross device, accessibility, travis, cove
 ---
 ---
 
-As I had a few learning curves by using Django frameworks there were a lot of errors I needed to work through and understand, I wanted to document a lot of my learning opportunities through this project. See the separate [ERRORS.md](Errors.md) file for the details.
+As I had a few learning curves by using Django frameworks there were a lot of errors I needed to work through and understand, I wanted to document a lot of my learning opportunities through this project. See the separate [ERRORS.md](ERRORS.md) file for the details.
 
 ---
 ---
