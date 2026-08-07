@@ -49,11 +49,12 @@ export function HeaderScrapeMetrics({
 
   return (
     <p
-      className="text-center font-display text-sm font-bold leading-tight text-charcoal-200 sm:text-base"
+      className="min-w-0 text-center font-display text-xs font-bold leading-tight text-charcoal-200 sm:text-[1.05rem]"
       aria-live="polite"
     >
-      <span className="block">{dealsLabel} deals globally</span>
-      <span className="block">across {marketsLabel} countries</span>
+      <span className="whitespace-nowrap">
+        {dealsLabel} deals · {marketsLabel} countries
+      </span>
     </p>
   );
 }
