@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { cityDisplayLabel, countrySearchLabel } from "@/lib/geo";
 
 interface LocationHeaderProps {
   country: string;
@@ -8,32 +9,14 @@ interface LocationHeaderProps {
   subtitle?: ReactNode;
 }
 
-function titleCase(slug: string) {
-  return slug
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}
-
-const COUNTRY_LABELS: Record<string, string> = {
-  uk: "United Kingdom",
-  gb: "United Kingdom",
-  us: "United States",
-  ie: "Ireland",
-  au: "Australia",
-  ca: "Canada",
-  nz: "New Zealand",
-  za: "South Africa",
-};
-
 export function LocationHeader({
   country,
   city,
   title,
   subtitle,
 }: LocationHeaderProps) {
-  const countryLabel = COUNTRY_LABELS[country.toLowerCase()] ?? titleCase(country);
-  const cityLabel = city ? titleCase(city) : null;
+  const countryLabel = countrySearchLabel(country);
+  const cityLabel = city ? cityDisplayLabel(country, city) : null;
 
   return (
     <header className="mb-8 animate-fade-up">

@@ -83,8 +83,16 @@ export function RadiusSelector({
     </div>
   ) : null;
 
+  const onlyInlineFilters = !showCategory && (showRadius || showSort);
+
   return (
-    <div className="flex w-full max-w-md flex-col items-stretch gap-2 sm:max-w-none sm:items-center">
+    <div
+      className={
+        onlyInlineFilters
+          ? "inline-flex items-center gap-2"
+          : "flex w-full max-w-md flex-col items-stretch gap-2 sm:max-w-none sm:items-center"
+      }
+    >
       {showCategory ? <CategorySelector category={category} /> : null}
       {radiusSelect || sortSelect ? (
         <div className="flex flex-wrap items-center justify-center gap-2">

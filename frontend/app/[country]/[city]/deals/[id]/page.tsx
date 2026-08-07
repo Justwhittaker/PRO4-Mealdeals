@@ -7,6 +7,7 @@ import { DealHeroMedia } from "@/components/deals/DealHeroMedia";
 import { LocationHeader } from "@/components/deals/LocationHeader";
 import { fetchDeal, fetchValueCalculator } from "@/lib/api";
 import { formatMoney } from "@/lib/currency";
+import { cityDisplayLabel } from "@/lib/geo";
 import { dealBadge } from "@/lib/priority";
 
 interface PageProps {
@@ -149,7 +150,7 @@ export default async function DealDetailPage({ params }: PageProps) {
           </Button>
           <Button asChild size="lg" variant="outline">
             <Link href={`/${country}/${city}`}>
-              More in {city.replace(/-/g, " ")}
+              More in {cityDisplayLabel(country, city)}
             </Link>
           </Button>
         </div>

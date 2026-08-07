@@ -2,7 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { nearestCity, cityToTarget, type GeoTarget } from "@/lib/geo";
+import {
+  cityDisplayLabel,
+  cityToTarget,
+  countrySearchLabel,
+  nearestCity,
+  type GeoTarget,
+} from "@/lib/geo";
 import { setLocationPreference } from "@/lib/location-preference";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -27,9 +33,9 @@ async function resolveFromApi(lat: number, lon: number): Promise<GeoTarget | nul
     };
     return {
       countryCode: data.country_slug,
-      countryLabel: data.country_slug.toUpperCase(),
+      countryLabel: countrySearchLabel(data.country_slug),
       citySlug: data.city_slug,
-      cityLabel: data.city,
+      cityLabel: data.city || cityDisplayLabel(data.country_slug, data.city_slug),
     };
   } catch {
     return null;

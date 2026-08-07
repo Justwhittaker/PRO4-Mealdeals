@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { scrapeAreaDeals } from "@/lib/api";
 import { currencyForCountry } from "@/lib/currency";
 import {
+  countrySearchLabel,
   listCountries,
   resolveLocationQuery,
   type CityOption,
@@ -59,7 +60,7 @@ export function CitySearchBar() {
     setLocationPreference(
       {
         countryCode: city.country,
-        countryLabel: city.country.toUpperCase(),
+        countryLabel: countrySearchLabel(city.country),
         citySlug: city.city,
         cityLabel: city.label,
       },

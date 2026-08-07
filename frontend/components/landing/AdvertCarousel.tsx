@@ -45,7 +45,7 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-5xl select-none">
+    <div className="relative mx-auto w-full max-w-5xl select-none lg:max-w-6xl xl:max-w-7xl">
       <button
         type="button"
         onClick={(e) => {
@@ -53,10 +53,10 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
           e.stopPropagation();
           prev();
         }}
-        className="absolute left-0 top-1/2 z-40 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-2 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:-left-2"
+        className="absolute left-0 top-1/2 z-40 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-2 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:-left-2 lg:p-2.5 xl:-left-4"
         aria-label="Previous advert"
       >
-        <ChevronLeft className="h-7 w-7" strokeWidth={2.5} />
+        <ChevronLeft className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={2.5} />
       </button>
       <button
         type="button"
@@ -65,13 +65,14 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
           e.stopPropagation();
           next();
         }}
-        className="absolute right-0 top-1/2 z-40 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-2 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:-right-2"
+        className="absolute right-0 top-1/2 z-40 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-2 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:-right-2 lg:p-2.5 xl:-right-4"
         aria-label="Next advert"
       >
-        <ChevronRight className="h-7 w-7" strokeWidth={2.5} />
+        <ChevronRight className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={2.5} />
       </button>
 
-      <div className="relative mx-auto flex h-[340px] items-center justify-center perspective-[1200px] sm:h-[400px]">
+      {/* Mobile/tablet keep current size; desktop/xl scale cards + stage up */}
+      <div className="relative mx-auto flex h-[340px] items-center justify-center perspective-[1200px] sm:h-[400px] lg:h-[520px] xl:h-[580px] 2xl:h-[620px]">
         {deals.map((deal, index) => {
           let offset = index - active;
           if (offset > count / 2) offset -= count;
@@ -83,7 +84,7 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
           const href = `/${deal.country}/${deal.city}/deals/${deal.id}`;
           const scale = abs === 0 ? 1 : abs === 1 ? 0.86 : 0.72;
           const rotateY = offset * -28;
-          const translateX = offset * 38;
+          const translateX = offset * 42;
           const z = 30 - abs * 10;
           const opacity = abs === 0 ? 1 : abs === 1 ? 0.75 : 0.45;
 
@@ -91,7 +92,7 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
             <Link
               key={deal.id}
               href={href}
-              className={`absolute h-[280px] w-[200px] overflow-hidden rounded-sm border border-charcoal-700 bg-white shadow-deal transition-all duration-500 ease-out sm:h-[320px] sm:w-[230px] ${
+              className={`absolute h-[280px] w-[200px] overflow-hidden rounded-sm border border-charcoal-700 bg-white shadow-deal transition-all duration-500 ease-out sm:h-[320px] sm:w-[230px] lg:h-[420px] lg:w-[300px] xl:h-[480px] xl:w-[340px] 2xl:h-[520px] 2xl:w-[370px] ${
                 abs === 0 ? "" : "pointer-events-none"
               }`}
               style={{
@@ -108,14 +109,14 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
                 restaurantName={deal.restaurantName}
                 aspectClassName="h-[55%] w-full"
               />
-              <div className="space-y-1 p-3">
-                <p className="truncate text-xs uppercase tracking-wider text-charcoal-400">
+              <div className="space-y-1 p-3 lg:space-y-1.5 lg:p-4">
+                <p className="truncate text-xs uppercase tracking-wider text-charcoal-400 lg:text-sm">
                   {deal.restaurantName}
                 </p>
-                <p className="line-clamp-2 font-display text-base leading-snug text-charcoal-50">
+                <p className="line-clamp-2 font-display text-base leading-snug text-charcoal-50 lg:text-xl xl:text-2xl">
                   {deal.title}
                 </p>
-                <p className="pt-1 text-lg font-semibold text-burgundy-500">
+                <p className="pt-1 text-lg font-semibold text-burgundy-500 lg:text-2xl">
                   {formatMoney(deal.price, deal.currency)}
                 </p>
               </div>

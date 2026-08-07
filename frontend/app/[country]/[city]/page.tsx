@@ -16,7 +16,9 @@ import {
 import {
   LOCATION_COOKIE,
   LOCATION_SOURCE_COOKIE,
+  cityDisplayLabel,
   countrySearchLabel,
+  lookupCityCoords,
   parseLocationCookie,
   type LocationSource,
 } from "@/lib/geo";
@@ -24,11 +26,12 @@ import {
   filterDealsByCategory,
   parseCategoryParam,
 } from "@/lib/categories";
+import {
+  buildDealFeedParams,
+  feedEmptyMessage,
+} from "@/lib/deal-feed-query";
 import { areaListingDeals } from "@/lib/priority";
 import { parseFeedSort, parseRadiusMiles } from "@/lib/radius";
-
-/** Request enough rows for full country listings (backend max 10000). */
-const GEO_FEED_LIMIT = 10000;
 
 interface PageProps {
   params: { country: string; city: string };
@@ -38,13 +41,6 @@ interface PageProps {
     sort?: string;
     category?: string;
   };
-}
-
-function titleCase(slug: string) {
-  return slug
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
 }
 
 export default async function CityPage({ params, searchParams }: PageProps) {
@@ -57,34 +53,42 @@ export default async function CityPage({ params, searchParams }: PageProps) {
   const sort = parseFeedSort(searchParams.sort);
   const category = parseCategoryParam(searchParams.category);
   const countryLabel = countrySearchLabel(country);
-  const cityLabel = titleCase(city);
+  const cityLabel = cityDisplayLabel(country, city);
+  const hasCentroid = Boolean(lookupCityCoords(country, city));
 
   const jar = cookies();
   const pref = parseLocationCookie(jar.get(LOCATION_COOKIE)?.value);
   const source = (jar.get(LOCATION_SOURCE_COOKIE)?.value as
     | LocationSource
     | undefined) ?? "geo";
-  const barTarget = pref ?? {
-    countryCode: country.toLowerCase() === "gb" ? "uk" : country.toLowerCase(),
-    countryLabel,
-    citySlug: city,
-    cityLabel,
-  };
+  const barTarget = pref?.citySlug === city
+    ? pref
+    : {
+        countryCode:
+          country.toLowerCase() === "gb" ? "uk" : country.toLowerCase(),
+        countryLabel,
+        citySlug: city,
+        cityLabel,
+      };
 
-  // Full country listing for the selected geo — not a single-city radius slice.
-  const feed = await fetchDealsFeed({
-    country,
-    currency,
-    limit: GEO_FEED_LIMIT,
-    sort,
-  });
+  const feed = await fetchDealsFeed(
+    buildDealFeedParams({
+      scope: "city",
+      country,
+      city,
+      currency,
+      sort,
+      radius,
+    }),
+  );
   const deals = feed.ok
     ? filterDealsByCategory(areaListingDeals(feed.data), category)
     : [];
+  const empty = feedEmptyMessage("city", cityLabel);
 
   return (
     <div className="min-h-screen bg-white">
-      <LocationDealsBar target={barTarget} source={source} scope="country" />
+      <LocationDealsBar target={barTarget} source={source} scope="city" />
       <main className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6">
         <div className="mb-6">
           <CitySearchBar />
@@ -93,7 +97,9 @@ export default async function CityPage({ params, searchParams }: PageProps) {
           <LocationHeader
             country={country}
             city={city}
-            subtitle={`HOT Deals across ${countryLabel} — all categories (hub: ${cityLabel}). ${deals.length} listings.`}
+            subtitle={`HOT Deals near ${cityLabel}, ${countryLabel}${
+              hasCentroid ? ` — within ${radius} miles` : ""
+            }. ${deals.length} listing${deals.length === 1 ? "" : "s"}.`}
           />
           <div className="flex flex-col items-end gap-2">
             <Suspense fallback={null}>
@@ -101,7 +107,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
                 radius={radius}
                 sort={sort}
                 category={category}
-                showRadius={false}
+                showRadius={hasCentroid}
               />
             </Suspense>
             <Suspense fallback={null}>
@@ -120,10 +126,11 @@ export default async function CityPage({ params, searchParams }: PageProps) {
 
         <AreaDealGrid
           deals={deals}
-          cityLabel={countryLabel}
+          cityLabel={cityLabel}
+          radiusMiles={hasCentroid ? radius : undefined}
           category={category}
-          emptyMessage={`No deals listed across ${countryLabel} yet.`}
-          emptyHint="Search another country or check back soon."
+          emptyMessage={empty.emptyMessage}
+          emptyHint={empty.emptyHint}
         />
       </main>
       <SiteFooter />

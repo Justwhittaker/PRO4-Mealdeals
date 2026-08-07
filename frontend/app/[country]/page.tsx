@@ -20,10 +20,12 @@ import {
   POPULAR_CITIES,
   countrySearchLabel,
 } from "@/lib/geo";
+import {
+  buildDealFeedParams,
+  feedEmptyMessage,
+} from "@/lib/deal-feed-query";
 import { areaListingDeals } from "@/lib/priority";
 import { parseFeedSort, parseRadiusMiles } from "@/lib/radius";
-
-const GEO_FEED_LIMIT = 10000;
 
 interface PageProps {
   params: { country: string };
@@ -46,18 +48,21 @@ export default async function CountryPage({ params, searchParams }: PageProps) {
   const radius = parseRadiusMiles(searchParams.radius);
   const countryLabel = countrySearchLabel(country);
 
-  const feed = await fetchDealsFeed({
-    country,
-    currency,
-    limit: GEO_FEED_LIMIT,
-    sort,
-  });
+  const feed = await fetchDealsFeed(
+    buildDealFeedParams({
+      scope: "country",
+      country,
+      currency,
+      sort,
+    }),
+  );
   const deals = feed.ok
     ? filterDealsByCategory(areaListingDeals(feed.data), category)
     : [];
   const countrySlug =
     country.toLowerCase() === "gb" ? "uk" : country.toLowerCase();
   const cities = POPULAR_CITIES.filter((c) => c.country === countrySlug);
+  const empty = feedEmptyMessage("country", countryLabel);
 
   return (
     <div className="min-h-screen bg-white">
@@ -110,8 +115,8 @@ export default async function CountryPage({ params, searchParams }: PageProps) {
           deals={deals}
           cityLabel={countryLabel}
           category={category}
-          emptyMessage={`No deals listed across ${countryLabel} yet.`}
-          emptyHint="Search another country or check back soon."
+          emptyMessage={empty.emptyMessage}
+          emptyHint={empty.emptyHint}
         />
       </main>
       <SiteFooter />

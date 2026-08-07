@@ -24,11 +24,9 @@ import {
   filterDealsByCategory,
   parseCategoryParam,
 } from "@/lib/categories";
+import { buildDealFeedParams } from "@/lib/deal-feed-query";
 import { areaListingDeals } from "@/lib/priority";
 import { parseFeedSort, parseRadiusMiles } from "@/lib/radius";
-
-/** Request enough rows for full country listings (backend max 10000). */
-const GEO_FEED_LIMIT = 10000;
 
 function resolveHomeLocation(): {
   target: ReturnType<typeof defaultGeoTarget>;
@@ -76,13 +74,14 @@ export default async function HomePage({
   const category = parseCategoryParam(searchParams?.category);
 
   // Country-wide feed for the geolocated country — all cities, all categories.
-  // Do not pass city/lat/lon/radius (those shrink the set to ~one city).
-  const feed = await fetchDealsFeed({
-    country: feedCountry,
-    currency,
-    limit: GEO_FEED_LIMIT,
-    sort,
-  });
+  const feed = await fetchDealsFeed(
+    buildDealFeedParams({
+      scope: "country",
+      country: feedCountry,
+      currency,
+      sort,
+    }),
+  );
   const deals = feed.ok ? feed.data : [];
   const listed = filterDealsByCategory(areaListingDeals(deals), category);
   const carouselDeals = listed.slice(0, 12);
@@ -98,43 +97,46 @@ export default async function HomePage({
       <NewsletterPopup />
 
       <main>
-        <p className="animate-fade-up bg-white px-4 pt-8 text-center font-display text-xl text-charcoal-50 sm:px-6 sm:pt-10 sm:text-2xl">
+        <p className="animate-fade-up bg-white px-4 py-3 text-center font-display text-xl text-charcoal-50 sm:px-6 sm:text-2xl">
           HOT DEALS across {countryLabel} — all categories
           {hubLabel ? ` (near ${hubLabel})` : ""}.
         </p>
-        {/* Spacer between HOT DEALS subheading and hero search image */}
-        <div className="h-10 bg-white sm:h-14" aria-hidden />
         <section className="hero-atmosphere grain relative border-b border-charcoal-700">
-          <div className="relative z-10 mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+          <div className="relative z-10 mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
             <div className="animate-fade-up opacity-0 [animation-delay:120ms] [animation-fill-mode:forwards]">
               <LandingSearch category={category} />
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-[90rem] px-4 py-12 sm:px-6 sm:py-16">
-          <div className="mb-8 flex flex-col items-center gap-4 text-center">
+        <section className="mx-auto max-w-[90rem] px-4 py-5 sm:px-6 sm:py-6">
+          <div className="mb-3 flex flex-col items-center gap-1 text-center">
             <div>
               <h2 className="font-display text-2xl text-charcoal-50 sm:text-3xl">
                 Today&apos;s adverts across {countryLabel}
               </h2>
-              <p className="mt-2 text-sm text-charcoal-400">
+              <p className="mt-1 text-sm text-charcoal-400">
                 HOT Deals for {countryLabel} — every listing in every category
                 ({listed.length} shown).
               </p>
             </div>
-            <RestaurantSearch restaurants={restaurants} />
           </div>
           <AdvertCarousel deals={carouselDeals} />
-          <div className="mt-6 flex justify-center">
+          <div className="mx-auto mt-6 flex w-full max-w-4xl flex-row items-center justify-center gap-3 px-1">
+            <RestaurantSearch
+              restaurants={restaurants}
+              className="min-w-0 flex-1 max-w-md"
+            />
             <Suspense fallback={null}>
-              <RadiusSelector
-                radius={radius}
-                sort={sort}
-                category={category}
-                showRadius={false}
-                showCategory={false}
-              />
+              <div className="shrink-0">
+                <RadiusSelector
+                  radius={radius}
+                  sort={sort}
+                  category={category}
+                  showRadius={false}
+                  showCategory={false}
+                />
+              </div>
             </Suspense>
           </div>
           {!feed.ok ? (

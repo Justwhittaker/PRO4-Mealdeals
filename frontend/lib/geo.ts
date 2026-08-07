@@ -179,13 +179,22 @@ const COUNTRY_LABELS: Record<string, string> = Object.fromEntries(
   }),
 );
 
-/** Short labels for country search UI (no leading "the"). */
+/** Full country names for UI (no leading "the"). Keyed by route slug + ISO. */
 const COUNTRY_SEARCH_LABELS: Record<string, string> = Object.fromEntries(
   MARKET_COUNTRIES.flatMap((m) => {
-    const pairs: [string, string][] = [[m.code, m.label]];
+    const pairs: [string, string][] = [
+      [m.code, m.label],
+      [m.iso.toLowerCase(), m.label],
+    ];
     if (m.code === "uk") pairs.push(["gb", m.label]);
     return pairs;
   }),
+);
+
+const CITY_SEARCH_LABELS: Record<string, string> = Object.fromEntries(
+  MARKET_COUNTRIES.flatMap((m) =>
+    m.cities.map((c) => [`${c.country}/${c.city}`, c.label] as const),
+  ),
 );
 
 export interface CountryOption {
@@ -205,9 +214,23 @@ export function listCountries(): CountryOption[] {
   })).sort((a, b) => a.label.localeCompare(b.label));
 }
 
+/** Full country name for breadcrumbs, headings, banners (never abbreviations). */
 export function countrySearchLabel(code: string): string {
   const key = code.toLowerCase() === "gb" ? "uk" : code.toLowerCase();
-  return COUNTRY_SEARCH_LABELS[key] ?? code.toUpperCase();
+  return COUNTRY_SEARCH_LABELS[key] ?? titleCaseSlug(key);
+}
+
+/** @deprecated Prefer countrySearchLabel — same full-name behaviour. */
+export const countryDisplayLabel = countrySearchLabel;
+
+/** Full city name from markets catalog when known. */
+export function cityDisplayLabel(country: string, city: string): string {
+  const countryKey =
+    country.toLowerCase() === "gb" ? "uk" : country.toLowerCase();
+  const cityKey = city.toLowerCase().replace(/\s+/g, "-");
+  return (
+    CITY_SEARCH_LABELS[`${countryKey}/${cityKey}`] ?? titleCaseSlug(cityKey)
+  );
 }
 
 function slugify(value: string): string {
@@ -228,7 +251,7 @@ function titleCaseSlug(slug: string): string {
 export function cityToTarget(option: CityOption): GeoTarget {
   return {
     countryCode: option.country,
-    countryLabel: COUNTRY_LABELS[option.country] ?? option.country.toUpperCase(),
+    countryLabel: countrySearchLabel(option.country),
     citySlug: option.city,
     cityLabel: option.label,
   };
@@ -260,9 +283,9 @@ export function parseLocationCookie(
   if (known) return cityToTarget(known);
   return {
     countryCode: country === "gb" ? "uk" : country,
-    countryLabel: COUNTRY_LABELS[country] ?? country.toUpperCase(),
+    countryLabel: countrySearchLabel(country),
     citySlug: city,
-    cityLabel: titleCaseSlug(city),
+    cityLabel: cityDisplayLabel(country, city),
   };
 }
 
@@ -346,12 +369,9 @@ export function resolveGeoFromHeaders(headersList: {
     if (GEO_DEFAULTS[countryKey] || COUNTRY_SEARCH_LABELS[countrySlug]) {
       return {
         countryCode: countrySlug,
-        countryLabel:
-          COUNTRY_LABELS[countrySlug] ??
-          GEO_DEFAULTS[countryKey]?.countryLabel ??
-          countryKey,
+        countryLabel: countrySearchLabel(countrySlug),
         citySlug: slug,
-        cityLabel: titleCaseSlug(slug),
+        cityLabel: cityDisplayLabel(countrySlug, slug),
       };
     }
   }
@@ -427,9 +447,9 @@ export function resolveLocationQuery(query: string): GeoTarget | null {
       if (known) return cityToTarget(known);
       return {
         countryCode: country,
-        countryLabel: COUNTRY_LABELS[country] ?? country.toUpperCase(),
+        countryLabel: countrySearchLabel(country),
         citySlug: slug,
-        cityLabel: titleCaseSlug(slug),
+        cityLabel: cityDisplayLabel(country, slug),
       };
     }
   }

@@ -6,7 +6,11 @@ import { Mic, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { scrapeAreaDeals } from "@/lib/api";
 import { currencyForCountry } from "@/lib/currency";
-import type { GeoTarget } from "@/lib/geo";
+import {
+  cityDisplayLabel,
+  countrySearchLabel,
+  type GeoTarget,
+} from "@/lib/geo";
 import { setLocationPreference } from "@/lib/location-preference";
 
 export interface RestaurantSuggestion {
@@ -69,9 +73,9 @@ export function RestaurantSearch({
       void goToArea(
         {
           countryCode: country,
-          countryLabel: country.toUpperCase(),
+          countryLabel: countrySearchLabel(country),
           citySlug: city,
-          cityLabel: city.replace(/-/g, " "),
+          cityLabel: cityDisplayLabel(country, city),
         },
         router,
       );
@@ -81,7 +85,7 @@ export function RestaurantSearch({
   }
 
   return (
-    <div className={`relative w-full max-w-md ${className}`}>
+    <div className={`relative w-full ${className}`}>
       <label htmlFor="search-restaurants" className="sr-only">
         Search restaurants
       </label>

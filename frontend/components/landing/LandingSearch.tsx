@@ -9,6 +9,7 @@ import { scrapeAreaDeals } from "@/lib/api";
 import type { ParentCategoryId } from "@/lib/categories";
 import { currencyForCountry } from "@/lib/currency";
 import {
+  countrySearchLabel,
   listCountries,
   resolveLocationQuery,
   type CityOption,
@@ -71,7 +72,7 @@ export function LandingSearch({ category = "all" }: LandingSearchProps) {
     await goToArea(
       {
         countryCode: city.country,
-        countryLabel: city.country.toUpperCase(),
+        countryLabel: countrySearchLabel(city.country),
         citySlug: city.city,
         cityLabel: city.label,
       },

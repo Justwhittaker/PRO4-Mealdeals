@@ -163,8 +163,10 @@ async def deals_feed(
     """
     Geo-aware deal feed.
 
-    With lat/lon + radius: return featured + scraped deals within the radius
-    (not limited to a single city name). Sort by feed score or distance.
+    - country only → nationwide for that country
+    - city → that city (exact name); with lat/lon + radius also includes nearby
+    - lat/lon + radius (no city) → circle search for geo homepage-style feeds
+    Sort: score (featured first) or distance (needs lat/lon).
     """
     if country_code:
         country_code = normalize_country(country_code)
@@ -210,12 +212,22 @@ async def deals_feed(
     if country_code:
         stmt = stmt.where(Location.country_code == country_code.upper())
 
-    # Radius mode: include nearby cities (featured + scraped) inside the circle.
-    # Exact city name only when no coordinates are provided.
-    if has_point and distance_expr is not None:
-        stmt = stmt.where(distance_expr <= effective_radius_km)
+    radius_explicit = radius_miles is not None or radius_km is not None
+
+    # City pages: always pin to that city. When lat/lon + radius are also sent,
+    # include nearby venues inside the circle (still not the whole country).
+    # Country / geo radius mode (no city): filter by distance only.
+    if city and has_point and distance_expr is not None and radius_explicit:
+        stmt = stmt.where(
+            or_(
+                Location.city.ilike(city),
+                distance_expr <= effective_radius_km,
+            )
+        )
     elif city:
         stmt = stmt.where(Location.city.ilike(city))
+    elif has_point and distance_expr is not None:
+        stmt = stmt.where(distance_expr <= effective_radius_km)
 
     stmt = stmt.limit(limit * 3)  # over-fetch then rank in Python for scoring clarity
     result = await db.execute(stmt)
