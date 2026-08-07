@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { unsubscribeNewsletter } from "@/lib/api";
-import { clearNewsletterSubscribedFlag } from "@/lib/newsletter-storage";
+import { clearNewsletterSession } from "@/lib/newsletter-storage";
 
 export function UnsubscribeClient() {
   const searchParams = useSearchParams();
@@ -29,7 +29,7 @@ export function UnsubscribeClient() {
         setMessage(result.error);
         return;
       }
-      clearNewsletterSubscribedFlag();
+      clearNewsletterSession();
       setEmail(result.data.email);
       setMessage(result.data.message);
       setStatus("done");

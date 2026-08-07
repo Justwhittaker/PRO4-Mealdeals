@@ -1,6 +1,6 @@
 "use client";
 
-import { NewsletterSignupForm } from "@/components/newsletter/NewsletterSignupForm";
+import { NewsletterAuthPanel } from "@/components/newsletter/NewsletterAuthPanel";
 
 export function NewsletterPortalClient({
   resubscribe,
@@ -12,11 +12,11 @@ export function NewsletterPortalClient({
   initialEmail?: string;
 }) {
   return (
-    <NewsletterSignupForm
-      mode={resubscribe ? "resubscribe" : "subscribe"}
+    <NewsletterAuthPanel
+      initialView={resubscribe ? "resubscribe" : "signup"}
       initialEmail={initialEmail}
       initialToken={token}
-      submitLabel={
+      signupSubmitLabel={
         resubscribe ? "Subscribe again" : "Join Friday weekly specials"
       }
     />

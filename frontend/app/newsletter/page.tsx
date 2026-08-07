@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 export const metadata = {
   title: "Weekly Hot Deals newsletter",
   description:
-    "Sign up for Dine A Deal Weekly Hot Deals. First name, surname, email, and location — unsubscribe anytime without erasing your details.",
+    "Sign up or sign in for Dine A Deal Weekly Hot Deals. New readers join with name, email, and location; returning readers sign in with email on a new device.",
 };
 
 export default function NewsletterPortalPage({
@@ -27,9 +27,10 @@ export default function NewsletterPortalPage({
             Weekly Hot Deals newsletter
           </h1>
           <p className="mt-3 text-sm text-charcoal-300">
-            Sign up with your first name, surname, email, and location.
-            Unsubscribe links pause emails — your record stays so you can
-            subscribe again anytime.
+            New readers sign up with first name, surname, email, and location.
+            Already on the list? Sign in with your email to restore deals on
+            this device. Unsubscribe pauses emails — your record stays so you
+            can come back anytime.
           </p>
           <div className="mt-8 border border-charcoal-700 bg-white/90 p-6 shadow-deal">
             <NewsletterPortalClient

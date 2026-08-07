@@ -3,16 +3,20 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Mail } from "lucide-react";
-import { NewsletterSignupForm } from "@/components/newsletter/NewsletterSignupForm";
+import {
+  NewsletterAuthPanel,
+  type NewsletterAuthView,
+} from "@/components/newsletter/NewsletterAuthPanel";
 import {
   clearNewsletterSubscribedFlag,
   getRememberedNewsletterEmail,
+  isNewsletterSubscribedLocally,
 } from "@/lib/newsletter-storage";
 import { getNewsletterStatus } from "@/lib/api";
 
 export function NewsletterMenu() {
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"subscribe" | "resubscribe">("subscribe");
+  const [view, setView] = useState<NewsletterAuthView>("signup");
   const [email, setEmail] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
@@ -41,8 +45,13 @@ export function NewsletterMenu() {
   useEffect(() => {
     if (!open) return;
     const remembered = getRememberedNewsletterEmail();
+    if (isNewsletterSubscribedLocally() && remembered) {
+      setEmail(remembered);
+      setView("signin");
+      return;
+    }
     if (!remembered) {
-      setMode("subscribe");
+      setView("signup");
       setEmail("");
       return;
     }
@@ -50,11 +59,11 @@ export function NewsletterMenu() {
     void getNewsletterStatus(remembered).then((result) => {
       if (result.ok && result.data.exists && !result.data.is_subscribed) {
         clearNewsletterSubscribedFlag();
-        setMode("resubscribe");
+        setView("resubscribe");
       } else if (result.ok && result.data.is_subscribed) {
-        setMode("resubscribe");
+        setView("signin");
       } else {
-        setMode("subscribe");
+        setView("signup");
       }
     });
   }, [open]);
@@ -78,24 +87,16 @@ export function NewsletterMenu() {
           id={menuId}
           role="menu"
           aria-label="Newsletter"
-          className="absolute right-0 z-30 mt-2 w-72 overflow-hidden rounded-md border border-charcoal-700 bg-white p-3 shadow-deal"
+          className="absolute right-0 z-[100] mt-2 w-80 overflow-hidden rounded-md border border-charcoal-700 bg-white p-3 shadow-deal"
         >
           <p className="border-b border-charcoal-800 pb-2 text-[10px] font-medium uppercase tracking-wider text-charcoal-400">
             Weekly Hot Deals
           </p>
-          <p className="mt-2 text-xs text-charcoal-300">
-            {mode === "resubscribe"
-              ? "Already unsubscribed? Subscribe again for Weekly Hot Deals."
-              : "Sign up for our Weekly Hot Deals newsletter"}
-          </p>
           <div className="mt-3">
-            <NewsletterSignupForm
-              mode={mode}
-              initialEmail={email}
+            <NewsletterAuthPanel
               compact
-              submitLabel={
-                mode === "resubscribe" ? "Subscribe again" : "Subscribe"
-              }
+              initialView={view}
+              initialEmail={email}
               onSuccess={() => setOpen(false)}
             />
           </div>

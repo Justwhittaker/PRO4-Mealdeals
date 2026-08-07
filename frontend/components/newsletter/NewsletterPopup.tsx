@@ -3,7 +3,7 @@
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
-import { NewsletterSignupForm } from "@/components/newsletter/NewsletterSignupForm";
+import { NewsletterAuthPanel } from "@/components/newsletter/NewsletterAuthPanel";
 import {
   markNewsletterPopupDismissed,
   shouldShowNewsletterPopup,
@@ -56,16 +56,17 @@ export function NewsletterPopup() {
           id={titleId}
           className="mt-1 font-display text-2xl text-charcoal-50"
         >
-          Sign up for our Weekly Hot Deals newsletter
+          Sign up or sign in
         </h2>
         <p className="mt-2 text-sm text-charcoal-300">
-          First name, surname, email, and location — unsubscribe anytime; we
-          keep your details on file.
+          New readers join the newsletter to unlock deals. Already subscribed?
+          Sign in with your email on this device — no need to sign up again.
         </p>
 
         <div className="mt-5">
-          <NewsletterSignupForm
+          <NewsletterAuthPanel
             compact
+            initialView="signup"
             onSuccess={() => {
               setOpen(false);
             }}
@@ -73,7 +74,7 @@ export function NewsletterPopup() {
         </div>
 
         <p className="mt-4 text-center text-xs text-charcoal-400">
-          Prefer the full form?{" "}
+          Prefer the full page?{" "}
           <Link
             href="/newsletter"
             className="text-burgundy-500 underline-offset-2 hover:underline"
