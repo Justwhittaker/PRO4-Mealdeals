@@ -1,11 +1,13 @@
 core.Microsoft*
 core.mongo*
 core.python*
-env.py
+# Django leftover local settings (do not ignore Alembic env.py)
+/env.py
 .env
 .env.*
 !.env.example
 mealdeals/.env
+!backend/alembic/env.py
 .venv/
 venv/
 __pycache__/
