@@ -64,8 +64,14 @@ class DealUpdate(BaseModel):
     is_active: Optional[bool] = None
     deal_price: Optional[Decimal] = Field(default=None, ge=0)
     original_price: Optional[Decimal] = Field(default=None, ge=0)
+    currency_code: Optional[str] = Field(default=None, min_length=3, max_length=3)
+    image_url: Optional[str] = None
     expires_at: Optional[datetime] = None
     tier_priority_score: Optional[int] = None
+    title: Optional[str] = Field(default=None, max_length=255)
+    description: Optional[str] = None
+    language_code: Optional[str] = Field(default=None, min_length=2, max_length=5)
+    items: Optional[List[DealItemCreate]] = None
 
 
 class DealRead(DealBase):

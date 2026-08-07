@@ -345,6 +345,7 @@ async def update_deal(
     if deal is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
 
+    fields_set = payload.model_fields_set
     data = payload.model_dump(exclude_unset=True)
     reactivating = (
         data.get("is_active") is True
@@ -378,16 +379,84 @@ async def update_deal(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=(
                     f"Deal slot limit reached ({active_count}/{slot_limit}). "
-                    "Archive another Priority deal first."
+                    "Deactivate another Priority deal first."
                 ),
             )
 
+    items_payload = payload.items if "items" in fields_set else None
+    title = payload.title if "title" in fields_set else None
+    description = payload.description if "description" in fields_set else None
+    language_code = (
+        payload.language_code
+        if "language_code" in fields_set and payload.language_code
+        else "en"
+    )
+    data.pop("items", None)
+    data.pop("title", None)
+    data.pop("description", None)
+    data.pop("language_code", None)
+
+    if "currency_code" in data and data["currency_code"]:
+        data["currency_code"] = str(data["currency_code"]).upper()
+
     for field, value in data.items():
-        setattr(deal, field, value)
+        if hasattr(deal, field):
+            setattr(deal, field, value)
+
+    if title is not None or description is not None:
+        translation = next(
+            (t for t in deal.translations if t.language_code == language_code),
+            None,
+        )
+        if translation is None and deal.translations:
+            translation = deal.translations[0]
+        next_title = (
+            (title if title is not None else (translation.title if translation else ""))
+            or (description or "")
+        )[:255]
+        next_description = (
+            description
+            if description is not None
+            else (translation.description if translation else title or "")
+        )
+        if translation is None:
+            db.add(
+                DealTranslation(
+                    deal_id=deal.id,
+                    language_code=language_code,
+                    title=next_title,
+                    description=next_description or next_title,
+                )
+            )
+        else:
+            if title is not None:
+                translation.title = next_title
+            if description is not None:
+                translation.description = next_description or next_title
+            elif title is not None and not translation.description:
+                translation.description = next_title
+
+    if items_payload is not None:
+        for existing in list(deal.items):
+            await db.delete(existing)
+        await db.flush()
+        for item in items_payload:
+            db.add(
+                DealItem(
+                    deal_id=deal.id,
+                    category=item.category,
+                    item_name=item.item_name,
+                    individual_price=item.individual_price,
+                )
+            )
 
     await db.flush()
-    await db.refresh(deal)
-    return deal
+    loaded = await db.execute(
+        select(Deal)
+        .where(Deal.id == deal.id)
+        .options(selectinload(Deal.items), selectinload(Deal.translations))
+    )
+    return loaded.scalar_one()
 
 
 @router.get("/{deal_id}", response_model=DealDetailRead)

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies, headers } from "next/headers";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
+import { syncMerchantPriorityFromStripe } from "@/actions/stripe";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +40,16 @@ export default async function DealOfTheCenturyPage({
   if (!session) redirect("/dashboard");
 
   const merchantId = session.user.id;
-  const profile = await fetchMerchantProfile(merchantId);
+  let profile = await fetchMerchantProfile(merchantId);
+
+  // Free month = monthly Stripe sub in "trialing". Sync after checkout / if webhook lagged.
+  if (searchParams?.success === "1" || (profile.ok && !profile.data.is_subscriber)) {
+    const sync = await syncMerchantPriorityFromStripe(merchantId);
+    if (sync.synced) {
+      profile = await fetchMerchantProfile(merchantId);
+    }
+  }
+
   const countryCode = resolveBillingCountry(
     profile.ok ? profile.data.location?.country_code : null,
   );
@@ -81,12 +91,13 @@ export default async function DealOfTheCenturyPage({
 
       {searchParams?.success ? (
         <div className="rounded-lg border border-burgundy-200 bg-burgundy-50 px-4 py-3 text-sm text-charcoal-200">
-          Checkout completed
-          {searchParams.plan === "trial"
-            ? " — your free month is active once Stripe confirms the card."
-            : searchParams.plan === "promo"
-              ? " — your discounted three months will activate via webhook."
-              : ". Your subscription activates once the Stripe webhook confirms."}
+          {isSubscriber
+            ? searchParams.plan === "trial"
+              ? "You're on Priority — first month free on your monthly plan. Billing starts after 30 days unless you cancel."
+              : searchParams.plan === "promo"
+                ? "You're on Priority — discounted three months are active, then monthly continues."
+                : "Priority subscription is active."
+            : "Checkout completed — activating your Priority monthly plan… refresh if slots don’t appear yet."}
         </div>
       ) : null}
       {searchParams?.canceled ? (

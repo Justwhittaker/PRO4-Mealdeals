@@ -17,10 +17,8 @@ export function DashboardSignIn() {
     searchParams.get("register") === "1" ? "register" : "signin";
 
   const [mode, setMode] = useState<AuthMode>(initialMode);
-  const [email, setEmail] = useState(
-    initialMode === "signin" ? "merchant@dineadeal.demo" : "",
-  );
-  const [password, setPassword] = useState(initialMode === "signin" ? "demo" : "");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,13 +27,8 @@ export function DashboardSignIn() {
     setMode(next);
     setError(null);
     setConfirmPassword("");
-    if (next === "register") {
-      setEmail("");
-      setPassword("");
-    } else {
-      setEmail("merchant@dineadeal.demo");
-      setPassword("demo");
-    }
+    setEmail("");
+    setPassword("");
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -89,7 +82,7 @@ export function DashboardSignIn() {
         <p className="mt-2 text-charcoal-400">
           {isRegister
             ? "Create an account to list deals and manage billing."
-            : "Sign in to manage deals and billing. Demo credentials work with any password."}
+            : "Sign in to manage deals and billing."}
         </p>
       </div>
       <Card>

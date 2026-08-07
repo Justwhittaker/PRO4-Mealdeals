@@ -231,3 +231,16 @@ export function currenciesForSelector(countryCode?: string): CurrencyCode[] {
   }
   return ordered;
 }
+
+/** All currencies A–Z with a display label like `EUR (€)`. */
+export function currenciesAlphabetical(): {
+  code: CurrencyCode;
+  label: string;
+}[] {
+  return Object.keys(CURRENCIES)
+    .sort((a, b) => a.localeCompare(b))
+    .map((code) => ({
+      code,
+      label: `${code} (${CURRENCIES[code]!.symbol})`,
+    }));
+}

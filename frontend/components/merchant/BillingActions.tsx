@@ -47,18 +47,26 @@ export function BillingActions({
     setLoading(kind);
     setError(null);
     setContactHint(false);
-    const result = await createPriorityCheckoutSession({
-      merchantId,
-      countryCode,
-      currency,
-      kind,
-    });
-    if (result.url) {
-      window.location.href = result.url;
-      return;
+    try {
+      const result = await createPriorityCheckoutSession({
+        merchantId,
+        countryCode,
+        currency,
+        kind,
+      });
+      if (result.url) {
+        window.location.assign(result.url);
+        return;
+      }
+      setError(result.error ?? "Checkout failed");
+      setContactHint(Boolean(result.contactPath));
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Checkout failed — check Stripe is configured on the server.",
+      );
     }
-    setError(result.error ?? "Checkout failed");
-    setContactHint(Boolean(result.contactPath));
     setLoading(null);
   }
 
@@ -73,12 +81,20 @@ export function BillingActions({
       setLoading(null);
       return;
     }
-    const result = await createCustomerPortalSession(customerId);
-    if (result.url) {
-      window.location.href = result.url;
-      return;
+    try {
+      const result = await createCustomerPortalSession(customerId);
+      if (result.url) {
+        window.location.assign(result.url);
+        return;
+      }
+      setError(result.error ?? "Portal failed");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not open the Stripe customer portal.",
+      );
     }
-    setError(result.error ?? "Portal failed");
     setLoading(null);
   }
 
@@ -114,18 +130,19 @@ export function BillingActions({
                 Free
               </p>
               <p className="mt-1 text-sm text-charcoal-400">
-                {DEAL_SLOT_LIMIT} slots · card required to schedule
+                Free month on the monthly plan · {DEAL_SLOT_LIMIT} slots · card
+                required
               </p>
             </div>
             <div className="rounded-xl border border-charcoal-700 bg-white p-4">
               <p className="text-xs uppercase tracking-wider text-charcoal-500">
-                Then
+                Then monthly
               </p>
               <p className="mt-1 font-display text-3xl text-charcoal-100">
                 {formatMoney(monthlyAmount, currency)}
               </p>
               <p className="mt-1 text-sm text-charcoal-400">
-                per month · still {DEAL_SLOT_LIMIT} slots
+                /month · same {DEAL_SLOT_LIMIT} slots
               </p>
             </div>
           </div>
@@ -138,7 +155,7 @@ export function BillingActions({
           >
             {loading === "trial"
               ? "Redirecting…"
-              : "Start free month — add card to schedule"}
+              : "Start monthly Priority — first month free"}
           </Button>
           {!trialEligible ? (
             <p className="text-sm text-amber-800">
@@ -153,7 +170,8 @@ export function BillingActions({
             </p>
           ) : (
             <p className="text-xs text-charcoal-500">
-              You must add a card at checkout. We charge{" "}
+              This starts a monthly subscription with the first month free. Add a
+              card at checkout — we charge{" "}
               {formatMoney(monthlyAmount, currency)}/month after 30 days unless
               you cancel in the portal.
             </p>

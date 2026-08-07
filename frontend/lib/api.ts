@@ -452,7 +452,9 @@ export interface MerchantProfile {
   total_deal_count: number;
   open_slots: number;
   used_free_trial?: boolean;
+  location_id?: string;
   location?: {
+    id?: string;
     country_code: string;
     city: string;
   } | null;
@@ -491,8 +493,32 @@ export interface HistoryDeal {
   created_at: string;
   slot_exempt?: boolean;
   reposted_from_id?: string | null;
+  image_url?: string | null;
   title?: string;
   translations?: { title: string; description: string }[];
+}
+
+export interface MerchantDealDetail {
+  id: string;
+  merchant_id: string;
+  deal_price: number;
+  original_price: number;
+  currency_code: string;
+  is_active: boolean;
+  image_url?: string | null;
+  title?: string | null;
+  description?: string | null;
+  items: {
+    id?: string;
+    item_name: string;
+    individual_price: number;
+    category?: string;
+  }[];
+  translations?: {
+    language_code: string;
+    title: string;
+    description: string;
+  }[];
 }
 
 export async function fetchMerchantProfile(
@@ -512,12 +538,44 @@ export async function updateMerchantProfile(
     phone: string;
     website: string;
     bio: string;
+    location_id: string;
   }>,
 ): Promise<ApiResult<MerchantProfile>> {
   return apiFetch(`/api/v1/merchants/${merchantId}/profile`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+}
+
+/** Find or create a geo location row for the merchant venue. */
+export async function resolveOrCreateLocation(payload: {
+  countryCode: string;
+  city: string;
+  latitude?: number;
+  longitude?: number;
+  timezone?: string;
+}): Promise<ApiResult<{ id: string }>> {
+  const country = payload.countryCode.trim().toUpperCase();
+  const city = payload.city.trim();
+  const listed = await apiFetch<{ id: string }[]>(
+    `/api/v1/geo/locations?country_code=${encodeURIComponent(country)}&city=${encodeURIComponent(city)}&limit=1`,
+    { cache: "no-store" },
+  );
+  if (listed.ok && listed.data[0]?.id) {
+    return { ok: true, data: { id: listed.data[0].id } };
+  }
+  return apiFetch<{ id: string }>("/api/v1/geo/locations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      country_code: country,
+      city,
+      timezone: payload.timezone ?? "UTC",
+      latitude: payload.latitude ?? 0,
+      longitude: payload.longitude ?? 0,
+    }),
     cache: "no-store",
   });
 }
@@ -584,6 +642,7 @@ export async function createMerchantDeal(payload: {
   deal_price: number;
   original_price: number;
   currency_code: string;
+  image_url?: string | null;
   items: { item_name: string; individual_price: number; category?: string }[];
 }): Promise<ApiResult<{ id: string }>> {
   return apiFetch("/api/v1/deals", {
@@ -596,9 +655,44 @@ export async function createMerchantDeal(payload: {
       deal_price: payload.deal_price,
       original_price: payload.original_price,
       currency_code: payload.currency_code,
+      image_url: payload.image_url || null,
       is_active: true,
       slot_exempt: false,
       items: payload.items.map((item) => ({
+        item_name: item.item_name,
+        individual_price: item.individual_price,
+        category: item.category ?? "main",
+      })),
+    }),
+    cache: "no-store",
+  });
+}
+
+export async function fetchMerchantDeal(
+  dealId: string,
+): Promise<ApiResult<MerchantDealDetail>> {
+  return apiFetch(`/api/v1/deals/${dealId}`, { cache: "no-store" });
+}
+
+export async function updateMerchantDeal(
+  dealId: string,
+  payload: {
+    title?: string;
+    description?: string;
+    deal_price?: number;
+    original_price?: number;
+    currency_code?: string;
+    image_url?: string | null;
+    is_active?: boolean;
+    items?: { item_name: string; individual_price: number; category?: string }[];
+  },
+): Promise<ApiResult<MerchantDealDetail>> {
+  return apiFetch(`/api/v1/deals/${dealId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...payload,
+      items: payload.items?.map((item) => ({
         item_name: item.item_name,
         individual_price: item.individual_price,
         category: item.category ?? "main",
@@ -756,6 +850,35 @@ export async function getNewsletterStatus(
   return apiFetch(`/api/v1/newsletter/status?${qs}`, {
     cache: "no-store",
   });
+}
+
+export interface ScrapeMetrics {
+  activeDeals: number;
+  markets: number;
+  areas: number;
+}
+
+interface BackendScrapeMetrics {
+  active_deals: number;
+  markets: number;
+  areas: number;
+}
+
+/** Live counters from scrape inventory (header / marketing). */
+export async function getScrapeMetrics(): Promise<ApiResult<ScrapeMetrics>> {
+  const result = await apiFetch<BackendScrapeMetrics>(
+    "/api/v1/scrapers/metrics",
+    { cache: "no-store" },
+  );
+  if (!result.ok) return result;
+  return {
+    ok: true,
+    data: {
+      activeDeals: result.data.active_deals,
+      markets: result.data.markets,
+      areas: result.data.areas,
+    },
+  };
 }
 
 export { API_URL };

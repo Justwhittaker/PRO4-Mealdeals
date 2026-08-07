@@ -122,10 +122,10 @@ export default async function HomePage({
             </div>
           </div>
           <AdvertCarousel deals={carouselDeals} />
-          <div className="mx-auto mt-6 flex w-full max-w-4xl flex-row items-center justify-center gap-3 px-1">
+          <div className="mx-auto mt-6 flex w-full max-w-4xl flex-col items-center justify-center gap-3 px-1 sm:flex-row">
             <RestaurantSearch
               restaurants={restaurants}
-              className="min-w-0 flex-1 max-w-md"
+              className="w-full min-w-0 max-w-md"
             />
             <Suspense fallback={null}>
               <div className="shrink-0">

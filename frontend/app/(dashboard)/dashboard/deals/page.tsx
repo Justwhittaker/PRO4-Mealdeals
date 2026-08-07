@@ -19,12 +19,12 @@ export default async function MerchantDealsPage() {
         <div>
           <h1 className="font-display text-3xl text-charcoal-50">Your deals</h1>
           <p className="mt-2 text-charcoal-400">
-            Live Priority slots plus full history — archive to free a slot, then
-            repost anytime.
+            Live Priority slots plus full history — create, edit, deactivate to
+            free a slot, then reactivate or repost anytime.
           </p>
         </div>
         <Button asChild>
-          <Link href="/dashboard/deals/new">New deal</Link>
+          <Link href="/dashboard/deals/new">Create deal</Link>
         </Button>
       </div>
 

@@ -63,7 +63,7 @@ class Deal(Base):
     )
     # Designed specials (€20 design) do not consume Priority subscription slots
     slot_exempt: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    image_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    image_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     scraped_raw_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     clean_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     affiliate_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

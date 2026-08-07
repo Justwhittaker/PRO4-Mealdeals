@@ -1,36 +1,96 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  resolveOrCreateLocation,
   updateMerchantProfile,
   type MerchantProfile,
 } from "@/lib/api";
+import { lookupCityCoords } from "@/lib/geo";
+import { MARKET_COUNTRIES } from "@/lib/markets-catalog";
 
 interface ProfileFormProps {
   merchantId: string;
   initial: MerchantProfile;
 }
 
+function matchCountryIso(code?: string | null): string {
+  if (!code) return "";
+  const upper = code.toUpperCase();
+  if (MARKET_COUNTRIES.some((c) => c.iso === upper)) return upper;
+  if (upper === "UK") return "GB";
+  return upper;
+}
+
 export function ProfileForm({ merchantId, initial }: ProfileFormProps) {
+  const countries = useMemo(
+    () => [...MARKET_COUNTRIES].sort((a, b) => a.label.localeCompare(b.label)),
+    [],
+  );
+
   const [name, setName] = useState(initial.name);
   const [email, setEmail] = useState(initial.email ?? "");
   const [contactName, setContactName] = useState(initial.contact_name ?? "");
   const [phone, setPhone] = useState(initial.phone ?? "");
   const [website, setWebsite] = useState(initial.website ?? "");
   const [bio, setBio] = useState(initial.bio ?? "");
+  const [countryIso, setCountryIso] = useState(
+    matchCountryIso(initial.location?.country_code),
+  );
+  const [cityLabel, setCityLabel] = useState(initial.location?.city ?? "");
   const [status, setStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState(initial);
+
+  const cities = useMemo(() => {
+    const country = countries.find((c) => c.iso === countryIso);
+    if (!country) return [];
+    return [...country.cities].sort((a, b) => a.label.localeCompare(b.label));
+  }, [countries, countryIso]);
 
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setStatus(null);
+
+    if (!countryIso || !cityLabel.trim()) {
+      setSaving(false);
+      setStatus("Choose a country and city so we know where your venue is.");
+      return;
+    }
+
+    const country = countries.find((c) => c.iso === countryIso);
+    const cityOption = cities.find(
+      (c) => c.label.toLowerCase() === cityLabel.trim().toLowerCase(),
+    );
+    const coords =
+      lookupCityCoords(country?.code ?? countryIso, cityOption?.city ?? cityLabel) ??
+      { lat: 0, lon: 0 };
+
+    const location = await resolveOrCreateLocation({
+      countryCode: countryIso,
+      city: cityLabel.trim(),
+      latitude: coords.lat,
+      longitude: coords.lon,
+    });
+    if (!location.ok) {
+      setSaving(false);
+      setStatus(location.error);
+      return;
+    }
+
     const result = await updateMerchantProfile(merchantId, {
       name,
       email: email || undefined,
@@ -38,6 +98,7 @@ export function ProfileForm({ merchantId, initial }: ProfileFormProps) {
       phone: phone || undefined,
       website: website || undefined,
       bio: bio || undefined,
+      location_id: location.data.id,
     });
     setSaving(false);
     if (!result.ok) {
@@ -45,6 +106,8 @@ export function ProfileForm({ merchantId, initial }: ProfileFormProps) {
       return;
     }
     setProfile(result.data);
+    setCountryIso(matchCountryIso(result.data.location?.country_code) || countryIso);
+    setCityLabel(result.data.location?.city ?? cityLabel);
     setStatus("Profile saved.");
   }
 
@@ -64,6 +127,48 @@ export function ProfileForm({ merchantId, initial }: ProfileFormProps) {
                 onChange={(e) => setName(e.target.value)}
                 required
               />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Country</Label>
+                <Select
+                  value={countryIso || undefined}
+                  onValueChange={(value) => {
+                    setCountryIso(value);
+                    setCityLabel("");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {countries.map((country) => (
+                      <SelectItem key={country.iso} value={country.iso}>
+                        {country.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>City</Label>
+                <Select
+                  value={cityLabel || undefined}
+                  onValueChange={setCityLabel}
+                  disabled={!countryIso}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select city" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {cities.map((city) => (
+                      <SelectItem key={`${city.country}-${city.city}`} value={city.label}>
+                        {city.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Login email</Label>
@@ -148,7 +253,11 @@ export function ProfileForm({ merchantId, initial }: ProfileFormProps) {
             <p className="text-charcoal-500">
               {profile.location.city}, {profile.location.country_code}
             </p>
-          ) : null}
+          ) : (
+            <p className="text-amber-200">
+              Add your country and city so deals show in the right area.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

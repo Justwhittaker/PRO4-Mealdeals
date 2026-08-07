@@ -9,8 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  CURRENCIES,
-  currenciesForSelector,
+  currenciesAlphabetical,
   type CurrencyCode,
 } from "@/lib/currency";
 
@@ -20,11 +19,11 @@ interface CurrencySelectorProps {
   country?: string;
 }
 
-export function CurrencySelector({ value, country }: CurrencySelectorProps) {
+export function CurrencySelector({ value }: CurrencySelectorProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const options = currenciesForSelector(country);
+  const options = currenciesAlphabetical();
   const current = value.toUpperCase();
 
   function onChange(next: string) {
@@ -34,21 +33,17 @@ export function CurrencySelector({ value, country }: CurrencySelectorProps) {
   }
 
   return (
-    <div className="w-[150px]">
+    <div className="w-[170px]">
       <Select value={current} onValueChange={onChange}>
         <SelectTrigger aria-label="Currency">
           <SelectValue placeholder="Currency" />
         </SelectTrigger>
-        <SelectContent>
-          {options.map((code) => {
-            const meta = CURRENCIES[code];
-            return (
-              <SelectItem key={code} value={code}>
-                {meta?.symbol ?? code} {code}
-                {country && code === options[0] ? " · local" : ""}
-              </SelectItem>
-            );
-          })}
+        <SelectContent className="max-h-72">
+          {options.map(({ code, label }) => (
+            <SelectItem key={code} value={code}>
+              {label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

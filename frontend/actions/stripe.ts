@@ -1,20 +1,27 @@
 "use server";
 
 import {
+  DEAL_SLOT_LIMIT,
   designSpecialPriceId,
   ensureRecurringPrice,
   getStripe,
+  phaseFromPlanMeta,
   TRIAL_DAYS,
+  type SubscriptionPhase,
 } from "@/lib/stripe";
 import { resolvePriorityAmounts } from "@/lib/subscription-pricing";
 import type { CurrencyCode } from "@/lib/currency";
-import { checkTrialEligibility } from "@/lib/api";
+import {
+  checkTrialEligibility,
+  claimMerchantTrial,
+  updateMerchantSubscription,
+} from "@/lib/api";
 
 export type PriorityCheckoutKind = "trial" | "promo";
 
 /**
  * Start Priority checkout.
- * - trial: free first month (card required) → monthly local price
+ * - trial: monthly subscription with first month free (card required), then local monthly price
  * - promo: pay 50% off next 3 months now → then monthly
  */
 export async function createPriorityCheckoutSession(opts: {
@@ -54,12 +61,13 @@ export async function createPriorityCheckoutSession(opts: {
     });
 
     if (kind === "trial") {
+      // Free first month = Stripe trial on the monthly recurring price (not a separate product).
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         line_items: [{ price: monthlyPriceId, quantity: 1 }],
         success_url: `${appUrl}/dashboard?success=1&plan=trial`,
         cancel_url: `${appUrl}/dashboard?canceled=1`,
-        // Require card details up front (default) so billing can start after trial
+        // Card required now so month 2+ can bill automatically after the free month.
         payment_method_collection: "always",
         customer_email: undefined,
         metadata: {
@@ -67,7 +75,8 @@ export async function createPriorityCheckoutSession(opts: {
           countryCode,
           currency,
           plan: "priority_trial",
-          dealSlots: "3",
+          billing: "monthly_with_free_first_month",
+          dealSlots: String(DEAL_SLOT_LIMIT),
           monthlyPriceId,
         },
         subscription_data: {
@@ -80,7 +89,8 @@ export async function createPriorityCheckoutSession(opts: {
             countryCode,
             currency,
             plan: "priority_trial",
-            dealSlots: "3",
+            billing: "monthly_with_free_first_month",
+            dealSlots: String(DEAL_SLOT_LIMIT),
             phase: "trial",
             monthlyPriceId,
           },
@@ -217,6 +227,81 @@ export async function createCustomerPortalSession(
     const message =
       err instanceof Error ? err.message : "Failed to open customer portal";
     return { error: message };
+  }
+}
+
+/**
+ * After Checkout return (or if webhooks lag), activate Priority from Stripe.
+ * Free month = trialing monthly subscription → treat as subscriber with slots.
+ */
+export async function syncMerchantPriorityFromStripe(
+  merchantId: string,
+): Promise<{ synced: boolean; phase?: SubscriptionPhase; error?: string }> {
+  try {
+    const stripe = getStripe();
+    const sessions = await stripe.checkout.sessions.list({
+      limit: 40,
+      status: "complete",
+    });
+    const session = sessions.data.find(
+      (item) =>
+        item.metadata?.merchantId === merchantId &&
+        item.mode === "subscription" &&
+        (item.payment_status === "paid" ||
+          item.payment_status === "no_payment_required"),
+    );
+    if (!session) {
+      return { synced: false, error: "No completed Priority checkout found" };
+    }
+
+    const plan = session.metadata?.plan;
+    let phase: SubscriptionPhase = phaseFromPlanMeta(plan);
+    if (session.subscription && typeof session.subscription === "string") {
+      const sub = await stripe.subscriptions.retrieve(session.subscription);
+      if (sub.status === "trialing") {
+        // Free first month of the monthly subscription
+        phase = "trial";
+      } else if (sub.status === "active") {
+        phase = plan === "priority_promo" ? "promo" : "monthly";
+      } else if (
+        sub.status === "canceled" ||
+        sub.status === "unpaid" ||
+        sub.status === "incomplete_expired"
+      ) {
+        return { synced: false, error: `Subscription status is ${sub.status}` };
+      }
+    }
+
+    if (plan === "priority_trial") {
+      await claimMerchantTrial(merchantId);
+    }
+
+    const customerId =
+      typeof session.customer === "string"
+        ? session.customer
+        : session.customer?.id;
+
+    const result = await updateMerchantSubscription({
+      merchantId,
+      is_subscriber: true,
+      tier_level: "featured",
+      deal_slot_limit: DEAL_SLOT_LIMIT,
+      subscription_phase: phase,
+      ...(customerId ? { stripe_customer_id: customerId } : {}),
+    });
+
+    if (!result.ok) {
+      return { synced: false, error: result.error };
+    }
+    return { synced: true, phase };
+  } catch (err) {
+    return {
+      synced: false,
+      error:
+        err instanceof Error
+          ? err.message
+          : "Failed to sync Priority subscription from Stripe",
+    };
   }
 }
 

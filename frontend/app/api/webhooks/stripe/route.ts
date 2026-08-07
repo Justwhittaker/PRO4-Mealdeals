@@ -82,8 +82,10 @@ export async function POST(req: Request) {
             tier = tierFromPriceId(priceId);
             phase = phaseFromPriceId(priceId);
           }
-          if (sub.status === "trialing") {
+          // Free first month on the monthly price → Stripe status "trialing"
+          if (sub.status === "trialing" || plan === "priority_trial") {
             phase = "trial";
+            tier = "featured";
           }
 
           if (plan === "priority_promo" && monthlyPriceId) {

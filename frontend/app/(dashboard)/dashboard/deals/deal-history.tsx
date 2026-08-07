@@ -68,10 +68,10 @@ export function DealHistory({
       next
         ? deal.slot_exempt
           ? "Design Special reactivated."
-          : "Deal activated."
+          : "Deal reactivated."
         : deal.slot_exempt
-          ? "Design Special archived."
-          : "Deal archived — slot freed.",
+          ? "Design Special deactivated."
+          : "Deal deactivated — slot freed.",
     );
   }
 
@@ -93,10 +93,15 @@ export function DealHistory({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-charcoal-400">
-        {activeCount} live Priority · {openSlots} open slots · {deals.length} in
-        history
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-charcoal-400">
+          {activeCount} live Priority · {openSlots} open slots · {deals.length} in
+          history
+        </p>
+        <Button asChild size="sm">
+          <Link href="/dashboard/deals/new">Create deal</Link>
+        </Button>
+      </div>
       {message ? (
         <p className="text-sm text-citrus-200">{message}</p>
       ) : null}
@@ -119,7 +124,7 @@ export function DealHistory({
                         {title}
                       </p>
                       <Badge variant={deal.is_active ? "default" : "secondary"}>
-                        {deal.is_active ? "Live" : "History"}
+                        {deal.is_active ? "Live" : "Inactive"}
                       </Badge>
                       {deal.slot_exempt ? (
                         <Badge variant="outline">Design Special</Badge>
@@ -141,6 +146,9 @@ export function DealHistory({
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/dashboard/deals/${deal.id}/edit`}>Edit</Link>
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -148,20 +156,20 @@ export function DealHistory({
                         busy === deal.id ||
                         (canReactivatePriority && !deal.is_active)
                       }
-                      onClick={() => onToggle(deal)}
+                      onClick={() => void onToggle(deal)}
                       title={
                         canReactivatePriority
-                          ? "No open Priority slots — archive another deal first"
+                          ? "No open Priority slots — deactivate another deal first"
                           : undefined
                       }
                     >
-                      {deal.is_active ? "Archive" : "Reactivate"}
+                      {deal.is_active ? "Deactivate" : "Reactivate"}
                     </Button>
                     {!deal.is_active && !deal.slot_exempt ? (
                       <Button
                         size="sm"
                         disabled={busy === deal.id || openSlots <= 0}
-                        onClick={() => onRepost(deal.id)}
+                        onClick={() => void onRepost(deal.id)}
                       >
                         {busy === deal.id ? "…" : "Repost"}
                       </Button>

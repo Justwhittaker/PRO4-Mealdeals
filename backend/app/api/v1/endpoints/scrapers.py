@@ -7,11 +7,13 @@ from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import get_settings
+from app.models.deal import Deal
 from app.scrapers.global_retail import NEW_MARKETS, TARGET_MARKETS, iter_market_areas
+from app.scrapers.markets import MARKET_CITIES
 from app.services.scrape_report import build_scrape_report
 from app.services.scrape_runner import scrape_and_ingest_area, scrape_and_ingest_markets
 from app.workers.tasks import scrape_area as scrape_area_task
@@ -53,6 +55,14 @@ class ScrapeReport(BaseModel):
     by_country: dict[str, int]
     breakdown: list[BreakdownRow]
     category_tally: list[CategoryTallyRow]
+
+
+class ScrapeMetrics(BaseModel):
+    """Lightweight live counters (same sources as scrape report summary)."""
+
+    active_deals: int
+    markets: int
+    areas: int
 
 
 class ScrapeAreaResponse(BaseModel):
@@ -276,6 +286,32 @@ async def scrape_report_endpoint() -> ScrapeReport:
     """
     report = await asyncio.to_thread(_load_scrape_report)
     return ScrapeReport.model_validate(report)
+
+
+def _load_scrape_metrics() -> dict[str, int]:
+    markets = list(TARGET_MARKETS)
+    areas = sum(len(MARKET_CITIES.get(code, [])) for code in markets)
+    with _ReportSession() as session:
+        active_deals = int(
+            session.execute(
+                select(func.count()).select_from(Deal).where(Deal.is_active.is_(True))
+            ).scalar_one()
+        )
+    return {
+        "active_deals": active_deals,
+        "markets": len(markets),
+        "areas": areas,
+    }
+
+
+@router.get("/metrics", response_model=ScrapeMetrics)
+async def scrape_metrics_endpoint() -> ScrapeMetrics:
+    """
+    Live active-deal + market counters for the public site header.
+
+    Same inventory sources as GET /report summary, without the heavy breakdown.
+    """
+    return ScrapeMetrics.model_validate(await asyncio.to_thread(_load_scrape_metrics))
 
 
 class PlanInfo(BaseModel):

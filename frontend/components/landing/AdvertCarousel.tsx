@@ -25,7 +25,7 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
 
   if (count === 0) {
     return (
-      <div className="rounded-md border border-dashed border-charcoal-600 bg-white px-6 py-16 text-center shadow-sm">
+      <div className="mx-auto max-w-lg rounded-md border border-dashed border-charcoal-600 bg-white px-6 py-16 text-center shadow-sm">
         <p className="font-display text-2xl text-burgundy-500">
           Adverts loading soon
         </p>
@@ -45,7 +45,7 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-5xl select-none lg:max-w-6xl xl:max-w-7xl">
+    <div className="relative mx-auto w-full max-w-5xl select-none px-8 sm:px-10 lg:max-w-6xl lg:px-12 xl:max-w-7xl">
       <button
         type="button"
         onClick={(e) => {
@@ -53,10 +53,10 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
           e.stopPropagation();
           prev();
         }}
-        className="absolute left-0 top-1/2 z-40 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-2 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:-left-2 lg:p-2.5 xl:-left-4"
+        className="absolute left-0 top-1/2 z-40 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-1.5 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:left-1 sm:p-2 lg:p-2.5"
         aria-label="Previous advert"
       >
-        <ChevronLeft className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={2.5} />
+        <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" strokeWidth={2.5} />
       </button>
       <button
         type="button"
@@ -65,14 +65,14 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
           e.stopPropagation();
           next();
         }}
-        className="absolute right-0 top-1/2 z-40 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-2 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:-right-2 lg:p-2.5 xl:-right-4"
+        className="absolute right-0 top-1/2 z-40 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-1.5 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:right-1 sm:p-2 lg:p-2.5"
         aria-label="Next advert"
       >
-        <ChevronRight className="h-7 w-7 lg:h-8 lg:w-8" strokeWidth={2.5} />
+        <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" strokeWidth={2.5} />
       </button>
 
-      {/* Mobile/tablet keep current size; desktop/xl scale cards + stage up */}
-      <div className="relative mx-auto flex h-[340px] items-center justify-center perspective-[1200px] sm:h-[400px] lg:h-[520px] xl:h-[580px] 2xl:h-[620px]">
+      {/* Stage — cards are absolutely centered, then offset (flex center ignores absolute kids). */}
+      <div className="relative mx-auto flex h-[340px] items-center justify-center overflow-hidden perspective-[1200px] sm:h-[400px] sm:overflow-visible lg:h-[520px] xl:h-[580px] 2xl:h-[620px]">
         {deals.map((deal, index) => {
           let offset = index - active;
           if (offset > count / 2) offset -= count;
@@ -84,7 +84,8 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
           const href = `/${deal.country}/${deal.city}/deals/${deal.id}`;
           const scale = abs === 0 ? 1 : abs === 1 ? 0.86 : 0.72;
           const rotateY = offset * -28;
-          const translateX = offset * 42;
+          // % of card width — keep mobile spread tighter so the active card reads centered
+          const translateX = offset * 38;
           const z = 30 - abs * 10;
           const opacity = abs === 0 ? 1 : abs === 1 ? 0.75 : 0.45;
 
@@ -92,11 +93,11 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
             <Link
               key={deal.id}
               href={href}
-              className={`absolute h-[280px] w-[200px] overflow-hidden rounded-sm border border-charcoal-700 bg-white shadow-deal transition-all duration-500 ease-out sm:h-[320px] sm:w-[230px] lg:h-[420px] lg:w-[300px] xl:h-[480px] xl:w-[340px] 2xl:h-[520px] 2xl:w-[370px] ${
+              className={`absolute left-1/2 top-1/2 h-[280px] w-[200px] overflow-hidden rounded-sm border border-charcoal-700 bg-white shadow-deal transition-all duration-500 ease-out sm:h-[320px] sm:w-[230px] lg:h-[420px] lg:w-[300px] xl:h-[480px] xl:w-[340px] 2xl:h-[520px] 2xl:w-[370px] ${
                 abs === 0 ? "" : "pointer-events-none"
               }`}
               style={{
-                transform: `translateX(${translateX}%) rotateY(${rotateY}deg) scale(${scale})`,
+                transform: `translate(-50%, -50%) translateX(${translateX}%) rotateY(${rotateY}deg) scale(${scale})`,
                 zIndex: z,
                 opacity,
               }}

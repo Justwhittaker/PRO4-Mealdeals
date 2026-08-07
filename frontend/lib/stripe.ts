@@ -81,9 +81,9 @@ export const PLANS: PlanPrice[] = [
     amount: 0,
     interval: "month",
     intervalCount: 1,
-    label: "Priority — Free month",
+    label: "Priority — Monthly (first month free)",
     description:
-      "First month free with 3 Priority slots. Card required — billing starts after the trial at the local monthly rate.",
+      "Monthly Priority with the first month free and 3 slots. Card required — local monthly rate starts after 30 days.",
     dealSlots: DEAL_SLOT_LIMIT,
     phase: "trial",
   },

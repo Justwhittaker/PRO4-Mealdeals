@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Crimson_Text, Oswald } from "next/font/google";
 import { AdSenseScript } from "@/components/ads/AdSenseScript";
 import { ConditionalSiteHeader } from "@/components/landing/ConditionalSiteHeader";
+import { SiteHeader } from "@/components/landing/SiteHeader";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/brand";
 import "./globals.css";
 
@@ -50,7 +51,9 @@ export default function RootLayout({
     <html lang="en" className={`${oswald.variable} ${crimson.variable}`}>
       <body className="min-h-screen font-sans">
         <AdSenseScript />
-        <ConditionalSiteHeader />
+        <ConditionalSiteHeader>
+          <SiteHeader />
+        </ConditionalSiteHeader>
         {children}
       </body>
     </html>
