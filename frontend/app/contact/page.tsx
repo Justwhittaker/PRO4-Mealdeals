@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/landing/BrandLogo";
 import { SiteFooter } from "@/components/landing/SiteFooter";
-import { SiteHeader } from "@/components/landing/SiteHeader";
 
 import { BRAND_CONTACT_EMAIL, BRAND_NAME_COMPACT } from "@/lib/brand";
 
@@ -16,7 +15,6 @@ export const metadata = {
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-white">
-      <SiteHeader />
       <main className="mx-auto max-w-xl px-4 py-16 sm:px-6">
         <p className="text-[10px] font-medium uppercase tracking-wider text-burgundy-500">
           Support

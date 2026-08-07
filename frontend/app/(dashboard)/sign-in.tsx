@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 type AuthMode = "signin" | "register";
 
 export function DashboardSignIn() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const initialMode: AuthMode =
     searchParams.get("register") === "1" ? "register" : "signin";
@@ -57,13 +58,24 @@ export function DashboardSignIn() {
     const res = await signIn("credentials", {
       email,
       password,
+      redirect: false,
       callbackUrl: "/dashboard",
-      redirect: true,
     });
-    if (res?.error) {
-      setError(mode === "register" ? "Could not create account" : "Sign-in failed");
+
+    if (!res || res.error) {
+      const hint =
+        res?.error === "Configuration"
+          ? "Auth is misconfigured (missing NEXTAUTH_SECRET)."
+          : mode === "register"
+            ? "Could not create account. Check your connection and try again."
+            : "Sign-in failed. Check email/password and try again.";
+      setError(hint);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    router.push(res.url || "/dashboard");
+    router.refresh();
   }
 
   const isRegister = mode === "register";

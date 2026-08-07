@@ -12,7 +12,7 @@ const MENU_ITEMS = [
     icon: UserRound,
   },
   {
-    href: "/dashboard",
+    href: "/dashboard/design",
     label: "Marketing portal",
     description: "Build an advert",
     icon: Megaphone,

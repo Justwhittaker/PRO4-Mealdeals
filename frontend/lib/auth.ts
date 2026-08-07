@@ -45,7 +45,11 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  // Prefer NEXTAUTH_SECRET; fall back so local/demo builds don't hard-fail.
+  secret:
+    process.env.NEXTAUTH_SECRET ||
+    process.env.AUTH_SECRET ||
+    "dineadeal-dev-nextauth-secret-change-me",
   callbacks: {
     async jwt({ token, user, account }) {
       if (user) {
