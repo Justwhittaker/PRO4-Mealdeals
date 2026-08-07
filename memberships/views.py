@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render, redirect
 from .models import Customer
 from django.contrib.auth.decorators import login_required
@@ -5,11 +6,10 @@ from .forms import CustomSignupForm
 from django.urls import reverse_lazy
 from django.views import generic
 from django.contrib.auth import authenticate, login
-from mealdeals.settings import STRIPE_SECRET_KEY
 
 import stripe
 
-stripe.api_key = STRIPE_SECRET_KEY
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 @login_required
@@ -59,20 +59,15 @@ def checkout(request):
         """
         membership = 'registration'
         final_dollar = 2
-        membership_id = 'price_1Iae8BIFzPFZzgCPlrmTpzZ2'
+        membership_id = settings.STRIPE_PRICE_REGISTRATION
         if request.method == 'GET' and 'membership' in request.GET:
             if request.GET['membership'] == 'monthly':
                 membership = 'monthly'
-                membership_id = 'price_1IYfthIFzPFZzgCPFbLoedwj'
+                membership_id = settings.STRIPE_PRICE_MONTHLY
                 final_dollar = 20
 
-        """Create Strip Checkout"""
-        """
-        So note this success_url and cancel_url will
-        only work on the deployed app https://mealdeals-pro.herokuapp.com/
-        """
+        base_url = request.build_absolute_uri('/').rstrip('/')
         session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
             customer_email=request.user.email,
             line_items=[{
                 'price': membership_id,
@@ -81,14 +76,17 @@ def checkout(request):
             mode='subscription',
             allow_promotion_codes=True,
             success_url=(
-                'https://mealdeals-pro.herokuapp.com/'\
-                f"{'success?session_id={CHECKOUT_SESSION_ID}'}"
+                f"{base_url}/success?session_id={{CHECKOUT_SESSION_ID}}"
             ),
-            cancel_url="https://mealdeals-pro.herokuapp.com/cancel",
+            cancel_url=f"{base_url}/cancel",
         )
 
         return render(request, 'membership/checkout.html', {
-            'final_dollar': final_dollar, 'session_id': session.id})
+            'final_dollar': final_dollar,
+            'session_id': session.id,
+            'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+            'membership': membership,
+        })
 
 
 class SignUp(generic.CreateView):

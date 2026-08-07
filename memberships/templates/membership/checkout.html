@@ -30,7 +30,8 @@
 
                 {% load static %}
                 <script type="text/javascript">
-                    var sessionid = "{{session_id}}";
+                    var sessionid = "{{ session_id }}";
+                    window.STRIPE_PUBLIC_KEY = "{{ stripe_public_key }}";
                 </script>
                 <script src="{% static 'js/checkout.js' %}"></script>
             </div>

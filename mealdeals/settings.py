@@ -10,24 +10,28 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import os
-import dj_database_url
 from pathlib import Path
 
+import dj_database_url
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / 'mealdeals' / '.env')
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', '')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-insecure-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = 'DEVELOPMENT' in os.environ
 
-ALLOWED_HOSTS = ['mealdeals-pro.herokuapp.com', 'localhost']
+ALLOWED_HOSTS = ['mealdeals-pro.herokuapp.com', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -117,14 +121,20 @@ LOGOUT_REDIRECT_URL = '/'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-if 'DATABASE_URL' in os.environ:
+if os.environ.get('DATABASE_URL'):
     DATABASES = {
-        'default': dj_database_url.parse('postgres://betporpucukcli:'
-                                         '9b1b15b5fe2e531b5d650172129'
-                                         'e9a5f41e1f8d6069609be3dd1a1723a4'
-                                         'e8eeb@ec2-34-252-251-16.eu-west-'
-                                         '1.compute.amazonaws.com:5432/'
-                                         'dc11g510am7otc')
+        'default': dj_database_url.parse(os.environ['DATABASE_URL'])
+    }
+elif os.environ.get('USE_POSTGRES') == '1' and os.environ.get('DB_NAME'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER', ''),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
     }
 else:
     DATABASES = {
@@ -210,6 +220,12 @@ STRIPE_CURRENCY = 'eur'
 STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY', '')
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', '')
 STRIPE_WH_SECRET = os.getenv('STRIPE_WH_SECRET', '')
+STRIPE_PRICE_REGISTRATION = os.getenv(
+    'STRIPE_PRICE_REGISTRATION', 'price_1Iae8BIFzPFZzgCPlrmTpzZ2'
+)
+STRIPE_PRICE_MONTHLY = os.getenv(
+    'STRIPE_PRICE_MONTHLY', 'price_1IYfthIFzPFZzgCPFbLoedwj'
+)
 
 
 if 'DEVELOPMENT' in os.environ:

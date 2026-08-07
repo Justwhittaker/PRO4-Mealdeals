@@ -2,7 +2,37 @@ core.Microsoft*
 core.mongo*
 core.python*
 env.py
+.env
+.env.*
+!.env.example
+mealdeals/.env
+.venv/
+venv/
 __pycache__/
 *.py[cod]
 *.sqlite3
 *.pyc
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Next.js frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.turbo/
+frontend/coverage/
+
+# Backend local
+backend/.venv/
+backend/**/__pycache__/
+backend/.pytest_cache/
+backend/.mypy_cache/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.log

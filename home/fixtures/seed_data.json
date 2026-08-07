@@ -1,0 +1,478 @@
+[
+  {
+    "model": "sites.site",
+    "pk": 1,
+    "fields": {
+      "domain": "example.com",
+      "name": "example.com"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$QQVBzLaI3FS2$naMdZhooSyjY7+7Q4k3akieSWuq7YJXCl3UUaH5CQ1k=",
+      "last_login": "2021-03-28T22:32:48.180Z",
+      "is_superuser": true,
+      "username": "jw457u",
+      "first_name": "",
+      "last_name": "",
+      "email": "just.whittaker@gmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2021-03-26T18:21:21.855Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$2xYE4HLeF6Gw$6sSq8ztXw04e4MMQ68Una5nYa1XtKzRN4A2ay6c8uZA=",
+      "last_login": "2021-03-26T20:16:59.940Z",
+      "is_superuser": false,
+      "username": "test12345",
+      "first_name": "",
+      "last_name": "",
+      "email": "test@test.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2021-03-26T18:34:22.225Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$MYphCnNhb6Dj$Wxa89GMnOTVhWbGCpmycuA4ayvP0LeJHa/E6e6l1rdg=",
+      "last_login": "2021-03-30T09:34:07.137Z",
+      "is_superuser": false,
+      "username": "alishia",
+      "first_name": "",
+      "last_name": "",
+      "email": "alishia@alishia.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2021-03-26T20:43:32.104Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 4,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$DewwLsFLZSHf$CdOrzCtZdtdCjRxW2HGBgyulBPUOfEJeFO27p8kPeIg=",
+      "last_login": "2021-03-26T21:02:22.362Z",
+      "is_superuser": false,
+      "username": "test123456",
+      "first_name": "",
+      "last_name": "",
+      "email": "testing@testing.ie",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2021-03-26T21:02:22.016Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 6,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$SqvqKqjdbtIv$4jaw1siYLDK7dA4XEJ6ebeok9aUD3O3a4Nuu9BagJe8=",
+      "last_login": "2021-03-28T13:31:19.960Z",
+      "is_superuser": false,
+      "username": "masrat",
+      "first_name": "",
+      "last_name": "",
+      "email": "masrat786@hotmail.co.uk",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2021-03-28T13:31:19.577Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 7,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$mkDXAFqLp0TN$jUWIDQQ0W/l8PNxT8C3E4XtHBMcFnQ0eJeVzZfv/YwY=",
+      "last_login": "2021-03-30T09:34:40.582Z",
+      "is_superuser": false,
+      "username": "mike",
+      "first_name": "",
+      "last_name": "",
+      "email": "mike@mike.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2021-03-29T00:25:59.536Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 8,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$9iJ0YpkP1dcl$k1gYiqVAETuS8GMcvwNONnwsohLMUqVcWFLZ426aRZc=",
+      "last_login": "2021-03-29T01:05:31.977Z",
+      "is_superuser": false,
+      "username": "jackie",
+      "first_name": "",
+      "last_name": "",
+      "email": "jax@jax.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2021-03-29T01:05:31.567Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 9,
+    "fields": {
+      "password": "pbkdf2_sha256$216000$dp66rZLGGPRk$qPAovq//TZZ95MH+a4OOe/UtaaZQCr+vkgYmjMPPwEI=",
+      "last_login": "2021-03-30T09:35:11.102Z",
+      "is_superuser": false,
+      "username": "renegade",
+      "first_name": "",
+      "last_name": "",
+      "email": "ren@ren.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2021-03-30T09:35:10.680Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "client_profile.userprofile",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "default_restaurant_name": "testing",
+      "default_phone_number": "088776645",
+      "default_street_address1": "test",
+      "default_street_address2": "test",
+      "default_town_or_city": "testtown",
+      "default_county": "test",
+      "default_postcode": "test"
+    }
+  },
+  {
+    "model": "client_profile.userprofile",
+    "pk": 2,
+    "fields": {
+      "user": 2,
+      "default_restaurant_name": "test",
+      "default_phone_number": "088776645",
+      "default_street_address1": "test",
+      "default_street_address2": "test",
+      "default_town_or_city": "testtown",
+      "default_county": "test",
+      "default_postcode": "test"
+    }
+  },
+  {
+    "model": "client_profile.userprofile",
+    "pk": 3,
+    "fields": {
+      "user": 3,
+      "default_restaurant_name": "Alishia Fine Dining",
+      "default_phone_number": "2564582",
+      "default_street_address1": "audas estate",
+      "default_street_address2": "audas manor",
+      "default_town_or_city": "buckinghamshire",
+      "default_county": "London",
+      "default_postcode": "h221t564"
+    }
+  },
+  {
+    "model": "client_profile.userprofile",
+    "pk": 4,
+    "fields": {
+      "user": 4,
+      "default_restaurant_name": "testing1",
+      "default_phone_number": "2564582",
+      "default_street_address1": "audas estate",
+      "default_street_address2": "audas manor",
+      "default_town_or_city": "buckinghamshire",
+      "default_county": "London",
+      "default_postcode": "h221t564"
+    }
+  },
+  {
+    "model": "client_profile.userprofile",
+    "pk": 5,
+    "fields": {
+      "user": 6,
+      "default_restaurant_name": "",
+      "default_phone_number": "",
+      "default_street_address1": "",
+      "default_street_address2": "",
+      "default_town_or_city": "",
+      "default_county": "",
+      "default_postcode": ""
+    }
+  },
+  {
+    "model": "client_profile.userprofile",
+    "pk": 6,
+    "fields": {
+      "user": 7,
+      "default_restaurant_name": "",
+      "default_phone_number": "",
+      "default_street_address1": "",
+      "default_street_address2": "",
+      "default_town_or_city": "",
+      "default_county": "",
+      "default_postcode": ""
+    }
+  },
+  {
+    "model": "client_profile.userprofile",
+    "pk": 7,
+    "fields": {
+      "user": 8,
+      "default_restaurant_name": "",
+      "default_phone_number": "",
+      "default_street_address1": "",
+      "default_street_address2": "",
+      "default_town_or_city": "",
+      "default_county": "",
+      "default_postcode": ""
+    }
+  },
+  {
+    "model": "client_profile.userprofile",
+    "pk": 8,
+    "fields": {
+      "user": 9,
+      "default_restaurant_name": "",
+      "default_phone_number": "",
+      "default_street_address1": "",
+      "default_street_address2": "",
+      "default_town_or_city": "",
+      "default_county": "",
+      "default_postcode": ""
+    }
+  },
+  {
+    "model": "home.category",
+    "pk": 1,
+    "fields": {
+      "name": "Irish",
+      "friendly_name": "Ireland"
+    }
+  },
+  {
+    "model": "home.category",
+    "pk": 2,
+    "fields": {
+      "name": "French",
+      "friendly_name": "French"
+    }
+  },
+  {
+    "model": "home.category",
+    "pk": 3,
+    "fields": {
+      "name": "Italian",
+      "friendly_name": "Italy"
+    }
+  },
+  {
+    "model": "home.category",
+    "pk": 4,
+    "fields": {
+      "name": "English",
+      "friendly_name": "English"
+    }
+  },
+  {
+    "model": "home.category",
+    "pk": 5,
+    "fields": {
+      "name": "Moroccan",
+      "friendly_name": "Morocco"
+    }
+  },
+  {
+    "model": "home.category",
+    "pk": 6,
+    "fields": {
+      "name": "South African",
+      "friendly_name": "Saffa"
+    }
+  },
+  {
+    "model": "home.deal",
+    "pk": 6,
+    "fields": {
+      "category": 1,
+      "restaurant_name": "Bia & Co",
+      "number_phone": "0123543323",
+      "address": "Claregalway Village, Claregalway, Co. Galway, H91 XR8E",
+      "website_address": "https://www.claregalwayhotel.ie/bia-and-co/",
+      "name": "Pizza Dinner for Two",
+      "description": "Pizza Dinner for two special",
+      "price": "15.00",
+      "image": "pizza_EMHjEpH.jpg",
+      "author": 1
+    }
+  },
+  {
+    "model": "home.deal",
+    "pk": 7,
+    "fields": {
+      "category": 1,
+      "restaurant_name": "Bia & Co",
+      "number_phone": "(091) 738 324",
+      "address": "Claregalway Village, Claregalway, Co. Galway, H91 XR8E",
+      "website_address": "https://www.claregalwayhotel.ie/bia-and-co/",
+      "name": "Breakfast for two",
+      "description": "Full irish Breakfast for two",
+      "price": "15.00",
+      "image": "St.-Patricks-Day-Breakfast-Hash-012319_GwoZcHb.jpg",
+      "author": 1
+    }
+  },
+  {
+    "model": "home.deal",
+    "pk": 8,
+    "fields": {
+      "category": 6,
+      "restaurant_name": "Henry's Boerewors",
+      "number_phone": "353 6859658",
+      "address": "Galway market",
+      "website_address": "https://www.facebook.com/pg/Galway-Market-Henrys-Boerewors-Cart-205582102813529/posts/",
+      "name": "Buy 1 get 1 free Boerewors roll",
+      "description": "Buy 1 get 1 free Boerewors roll",
+      "price": "5.00",
+      "image": "boereworsrolls_GmVbbI6.jpg",
+      "author": 1
+    }
+  },
+  {
+    "model": "home.deal",
+    "pk": 9,
+    "fields": {
+      "category": 2,
+      "restaurant_name": "alishia fine dining",
+      "number_phone": "353 8998565",
+      "address": "audas estate",
+      "website_address": "https://rougegalway.com/restaurant/",
+      "name": "Lunch deal buy two course meal",
+      "description": "Lunch deal buy two course meal",
+      "price": "20.00",
+      "image": "french_chicken.jpg",
+      "author": 3
+    }
+  },
+  {
+    "model": "home.deal",
+    "pk": 10,
+    "fields": {
+      "category": 4,
+      "restaurant_name": "London pie co",
+      "number_phone": "2564582",
+      "address": "audas estate",
+      "website_address": "www.londonpie.co.za",
+      "name": "pork pies 50% off",
+      "description": "pork pies 50% off monday to thursday",
+      "price": "5.00",
+      "image": "pork_pies_4O1lf2j.jpg",
+      "author": 3
+    }
+  },
+  {
+    "model": "home.deal",
+    "pk": 11,
+    "fields": {
+      "category": 5,
+      "restaurant_name": "Marrakesh By Mindo Karaoke Bar",
+      "number_phone": "(01) 878 8988",
+      "address": "121-122 Capel St, North City, Dublin, D01 V3P0",
+      "website_address": "https://www.marrakesh.ie/",
+      "name": "Three Courses Set Menu \u20ac15.95",
+      "description": "Harira Soup (1, 9, 13)\r\nTraditional Vegetarian Moroccan soup served with bread.\r\nBissara Soup\r\nDried fava beans cooked with garlic, cumin, and olive oil served with bread.\r\nChicken Wings (11)\r\nMarinated chicken wings in Moroccan spices.\r\nMerguez\r\nAuthentic spicy Moroccan house made lamb sausage.\r\nZaalouck (1, 13)\r\nRoasted eggplant with preserved lemon and Moroccan spices served with Bread.\r\nMoroccan Taboulet Salad (1, 7, 8)\r\nTagine Khodra.\r\nA delectable mixture of vegetables, slow cooked in olive oil and Moroccan Spices.\r\nTagine Kofta \r\nSeasoned Moroccan meatballs cooked in a rich tomato sauce with olive oil, garlic, parsley and eggs (optional).",
+      "price": "15.95",
+      "image": "tagine_1rmh7LK.jpg",
+      "author": 3
+    }
+  },
+  {
+    "model": "home.deal",
+    "pk": 12,
+    "fields": {
+      "category": 3,
+      "restaurant_name": "Da Robertos Pizzeria",
+      "number_phone": "091 585808",
+      "address": "161 Upper Salthill Road, Galway",
+      "website_address": "https://www.orderdarobertas.com/",
+      "name": "Pasta or Pizza deal for two",
+      "description": "Rigatoni amatriciana                                                \r\n       Rigatoni pasta from gragnano with carmelised red onion, pancetta,\r\n      red wine cherry tomato sauce, pecorino cheese\r\nor \r\nHawaiian                                                                       \r\n     Tomato sauce, mozzarella, pineapple and cooked ham\r\n\u200b",
+      "price": "15.00",
+      "image": "alfredo.jpg",
+      "author": 3
+    }
+  },
+  {
+    "model": "home.deal",
+    "pk": 15,
+    "fields": {
+      "category": 1,
+      "restaurant_name": "Bia & Co",
+      "number_phone": "+353 84584584",
+      "address": "Claregalway Village, Claregalway, Co. Galway, H91 XR8E",
+      "website_address": "https://www.claregalwayhotel.ie/bia-and-co/",
+      "name": "Dinner for Two",
+      "description": "Dinner for Two",
+      "price": "20.00",
+      "image": "Coq-au-vin-1024x683_u9rQOUy.jpg",
+      "author": 1
+    }
+  },
+  {
+    "model": "memberships.customer",
+    "pk": 1,
+    "fields": {
+      "user": 3,
+      "stripeid": "cus_JCQ26BMXPvXY5J",
+      "stripe_subscription_id": "sub_JCQ2WuMRpIviLs",
+      "cancel_at_period_end": false,
+      "membership": true,
+      "paid_until": null
+    }
+  },
+  {
+    "model": "memberships.customer",
+    "pk": 2,
+    "fields": {
+      "user": 1,
+      "stripeid": "cus_JCWwJEb7pcYgOv",
+      "stripe_subscription_id": "sub_JCWwu5mn5auA9I",
+      "cancel_at_period_end": false,
+      "membership": true,
+      "paid_until": null
+    }
+  },
+  {
+    "model": "memberships.customer",
+    "pk": 3,
+    "fields": {
+      "user": 7,
+      "stripeid": "cus_JCYHLxLvKe95w0",
+      "stripe_subscription_id": "sub_JCYHc9jpoqvCL4",
+      "cancel_at_period_end": false,
+      "membership": true,
+      "paid_until": null
+    }
+  }
+]

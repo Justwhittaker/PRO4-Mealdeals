@@ -36,3 +36,4 @@ toml==0.10.2
 uuid==1.30
 Werkzeug==1.0.1
 wrapt==1.12.1
+python-dotenv==1.2.1

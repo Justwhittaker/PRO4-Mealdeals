@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_USER: mealdeals
+      POSTGRES_PASSWORD: mealdeals
+      POSTGRES_DB: mealdeals
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mealdeals -d mealdeals"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend-api:
+    build: .
+    container_name: mealdeals-api
+    env_file:
+      - .env.example
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8000"
+      DATABASE_URL: postgresql+asyncpg://mealdeals:mealdeals@postgres:5432/mealdeals
+      DATABASE_URL_SYNC: postgresql://mealdeals:mealdeals@postgres:5432/mealdeals
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      CORS_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000,https://dineadeal.com,https://www.dineadeal.com"
+      FRONTEND_BASE_URL: "https://dineadeal.com"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port $${PORT:-8000} --reload"
+    volumes:
+      - .:/app
+
+  celery-worker:
+    build: .
+    container_name: mealdeals-celery
+    env_file:
+      - .env.example
+    environment:
+      DATABASE_URL: postgresql+asyncpg://mealdeals:mealdeals@postgres:5432/mealdeals
+      DATABASE_URL_SYNC: postgresql://mealdeals:mealdeals@postgres:5432/mealdeals
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend-api:
+        condition: service_started
+    command: >
+      sh -c "celery -A app.workers.celery_app.celery_app worker --beat --loglevel=info"
+    volumes:
+      - .:/app
+
+volumes:
+  pgdata:

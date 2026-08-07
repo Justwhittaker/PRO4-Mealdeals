@@ -1,0 +1,60 @@
+# Dine A Deal API — Render Blueprint
+# Dashboard: https://dashboard.render.com
+services:
+  - type: web
+    name: dineadeal-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: master
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://dineadeal.com,https://www.dineadeal.com,http://localhost:3000,http://127.0.0.1:3000
+      - key: FRONTEND_BASE_URL
+        value: https://dineadeal.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: dineadeal-db
+          property: connectionString
+      - key: DATABASE_URL_SYNC
+        fromDatabase:
+          name: dineadeal-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: dineadeal-redis
+          type: keyvalue
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          name: dineadeal-redis
+          type: keyvalue
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          name: dineadeal-redis
+          type: keyvalue
+          property: connectionString
+
+  - type: keyvalue
+    name: dineadeal-redis
+    plan: free
+    region: frankfurt
+    ipAllowList: []
+
+databases:
+  - name: dineadeal-db
+    plan: free
+    region: frankfurt
+    postgresMajorVersion: "16"

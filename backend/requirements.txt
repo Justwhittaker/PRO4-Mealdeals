@@ -1,0 +1,33 @@
+# FastAPI / ASGI
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.0
+email-validator==2.2.0
+eval_type_backport==0.2.2
+
+# Database
+SQLAlchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+psycopg2-binary==2.9.10
+alembic==1.14.0
+geoalchemy2==0.15.2
+shapely==2.0.6
+
+# Redis / Celery
+redis==5.2.1
+celery==5.4.0
+
+# Scraping
+httpx==0.28.1
+beautifulsoup4==4.12.3
+lxml==5.3.0
+playwright==1.49.1
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.25.0
+httpx==0.28.1
+
+# Utilities
+python-dotenv==1.0.1
