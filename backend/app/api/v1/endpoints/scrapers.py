@@ -87,6 +87,38 @@ def _report_from_result(result: dict[str, Any]) -> ScrapeReport | None:
     return ScrapeReport.model_validate(raw)
 
 
+def _celery_workers_online() -> bool:
+    """True only if at least one Celery worker responds to ping."""
+    try:
+        from app.workers.celery_app import celery_app
+
+        replies = celery_app.control.ping(timeout=1.0)
+        return bool(replies)
+    except Exception:
+        return False
+
+
+def _queue_or_background(
+    background_tasks: BackgroundTasks,
+    *,
+    celery_delay,
+    background_fn,
+    background_args: tuple[Any, ...],
+) -> str:
+    """
+    Enqueue via Celery when a worker is live; otherwise run in-process after
+    the response. Publishing to Redis alone is not enough (no worker = stuck).
+    """
+    if _celery_workers_online():
+        try:
+            celery_delay()
+            return "celery"
+        except Exception:
+            pass
+    background_tasks.add_task(background_fn, *background_args)
+    return "background"
+
+
 @router.post("/area", response_model=ScrapeAreaResponse)
 async def scrape_area_endpoint(
     background_tasks: BackgroundTasks,
@@ -113,13 +145,13 @@ async def scrape_area_endpoint(
             message="Area scrape finished and deals were ingested.",
         )
 
-    # Prefer Celery when the worker is up; fall back to BackgroundTasks
-    try:
-        scrape_area_task.delay(country_code, city)
-        queued_via = "celery"
-    except Exception:
-        background_tasks.add_task(scrape_and_ingest_area, country_code, city)
-        queued_via = "background"
+    # Prefer Celery only when a worker is actually online; otherwise BackgroundTasks.
+    queued_via = _queue_or_background(
+        background_tasks,
+        celery_delay=lambda: scrape_area_task.delay(country_code, city),
+        background_fn=scrape_and_ingest_area,
+        background_args=(country_code, city),
+    )
 
     return ScrapeAreaResponse(
         status="queued",
@@ -174,12 +206,12 @@ async def _run_worldwide_scrape(
             message="Worldwide scrape finished; deals + marketing contacts ingested.",
         )
 
-    try:
-        scrape_global_task.delay(markets)
-        queued_via = "celery"
-    except Exception:
-        background_tasks.add_task(scrape_and_ingest_markets, markets)
-        queued_via = "background"
+    queued_via = _queue_or_background(
+        background_tasks,
+        celery_delay=lambda: scrape_global_task.delay(markets),
+        background_fn=scrape_and_ingest_markets,
+        background_args=(markets,),
+    )
 
     return ScrapeWorldwideResponse(
         status="queued",
