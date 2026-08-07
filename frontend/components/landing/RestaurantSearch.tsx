@@ -116,7 +116,7 @@ export function RestaurantSearch({
         />
       </div>
       {openRestaurant && filteredRestaurants.length > 0 ? (
-        <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-md border border-charcoal-700 bg-white py-1 shadow-deal">
+        <ul className="absolute left-0 right-0 top-full z-[100] mt-1 max-h-56 w-full overflow-auto rounded-md border border-charcoal-700 bg-white py-1 shadow-deal">
           {filteredRestaurants.slice(0, 8).map((r) => (
             <li key={r.label}>
               <button

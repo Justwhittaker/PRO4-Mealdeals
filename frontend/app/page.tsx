@@ -101,15 +101,15 @@ export default async function HomePage({
           HOT DEALS across {countryLabel} — all categories
           {hubLabel ? ` (near ${hubLabel})` : ""}.
         </p>
-        <section className="hero-atmosphere grain relative border-b border-charcoal-700">
-          <div className="relative z-10 mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
+        <section className="hero-atmosphere grain relative z-50 border-b border-charcoal-700">
+          <div className="relative z-50 mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
             <div className="animate-fade-up opacity-0 [animation-delay:120ms] [animation-fill-mode:forwards]">
               <LandingSearch category={category} />
             </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-[90rem] px-4 py-5 sm:px-6 sm:py-6">
+        <section className="relative z-0 mx-auto max-w-[90rem] px-4 py-5 sm:px-6 sm:py-6">
           <div className="mb-3 flex flex-col items-center gap-1 text-center">
             <div>
               <h2 className="font-display text-2xl text-charcoal-50 sm:text-3xl">

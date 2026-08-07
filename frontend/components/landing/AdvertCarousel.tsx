@@ -45,7 +45,7 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-5xl select-none px-8 sm:px-10 lg:max-w-6xl lg:px-12 xl:max-w-7xl">
+    <div className="relative z-0 mx-auto w-full max-w-5xl select-none px-8 sm:px-10 lg:max-w-6xl lg:px-12 xl:max-w-7xl">
       <button
         type="button"
         onClick={(e) => {
@@ -53,7 +53,7 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
           e.stopPropagation();
           prev();
         }}
-        className="absolute left-0 top-1/2 z-40 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-1.5 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:left-1 sm:p-2 lg:p-2.5"
+        className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-1.5 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:left-1 sm:p-2 lg:p-2.5"
         aria-label="Previous advert"
       >
         <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" strokeWidth={2.5} />
@@ -65,7 +65,7 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
           e.stopPropagation();
           next();
         }}
-        className="absolute right-0 top-1/2 z-40 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-1.5 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:right-1 sm:p-2 lg:p-2.5"
+        className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-md border border-charcoal-700 bg-white p-1.5 text-burgundy-600 shadow-sm transition hover:bg-burgundy-50 sm:right-1 sm:p-2 lg:p-2.5"
         aria-label="Next advert"
       >
         <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" strokeWidth={2.5} />
