@@ -19,8 +19,9 @@ export default function NewsletterPortalPage({
   return (
     <div className="relative min-h-screen max-w-[100vw] overflow-x-clip bg-white">
       <main className="hero-atmosphere grain relative w-full border-b border-charcoal-700">
-        <div className="relative z-10 mx-auto w-full max-w-3xl px-3 py-10 sm:px-6 sm:py-16">
-          <div className="w-full border border-charcoal-700 bg-white/90 p-5 text-center shadow-deal sm:p-8">
+        <div className="relative z-10 mx-auto flex w-full max-w-3xl justify-center px-3 py-10 sm:px-6 sm:py-16">
+          {/* Single card: intro + Sign up / Returning reader CTAs all live inside. */}
+          <div className="w-full rounded-md border border-charcoal-700 bg-white p-5 shadow-deal sm:p-8">
             <NewsletterPortalClient
               resubscribe={resubscribe}
               token={token}

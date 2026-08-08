@@ -16,7 +16,7 @@ export type NewsletterAuthView = "signup" | "signin" | "resubscribe";
 
 interface NewsletterAuthPanelProps {
   compact?: boolean;
-  /** Portal page: show signed-in intro inside the box above “Signed in as …”. */
+  /** Portal page: render Weekly Hot Deals intro inside the card above CTAs. */
   portalLayout?: boolean;
   initialView?: NewsletterAuthView;
   initialEmail?: string;
@@ -173,7 +173,12 @@ export function NewsletterAuthPanel({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {portalLayout ? (
+        <NewsletterAuthIntro as="h1" className="text-center" />
+      ) : null}
+
+      <div className={`space-y-3 ${portalLayout ? "text-left" : ""}`}>
       {view !== "resubscribe" ? (
         <div
           className="flex items-center gap-4"
@@ -300,6 +305,7 @@ export function NewsletterAuthPanel({
           </p>
         </>
       ) : null}
+      </div>
     </div>
   );
 }
