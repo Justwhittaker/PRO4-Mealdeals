@@ -2,6 +2,8 @@ interface NewsletterAuthIntroProps {
   titleId?: string;
   as?: "h1" | "h2";
   className?: string;
+  /** Signed-in portal: shorter copy above “Signed in as …”. */
+  variant?: "default" | "signedIn";
 }
 
 /**
@@ -12,8 +14,10 @@ export function NewsletterAuthIntro({
   titleId,
   as = "h1",
   className,
+  variant = "default",
 }: NewsletterAuthIntroProps) {
   const Title = as;
+  const signedIn = variant === "signedIn";
 
   return (
     <div className={className}>
@@ -27,10 +31,9 @@ export function NewsletterAuthIntro({
         Weekly Hot Deals newsletter
       </Title>
       <p className="mt-3 text-sm leading-relaxed text-charcoal-300">
-        New readers sign up with first name, surname, email, and location.
-        Already on the list? Sign in with your email to restore deals on this
-        device. Unsubscribe pauses emails — your record stays so you can come
-        back anytime.
+        {signedIn
+          ? "You're on the list on this device. Manage your subscription below — unsubscribe pauses weekly emails, but your record stays so you can come back anytime."
+          : "New readers sign up with first name, surname, email, and location. Already on the list? Sign in with your email to restore deals on this device. Unsubscribe pauses emails — your record stays so you can come back anytime."}
       </p>
     </div>
   );

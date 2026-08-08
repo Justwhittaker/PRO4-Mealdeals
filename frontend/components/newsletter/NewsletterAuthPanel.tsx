@@ -1,37 +1,47 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { NewsletterAuthIntro } from "@/components/newsletter/NewsletterAuthIntro";
 import { NewsletterSignInForm } from "@/components/newsletter/NewsletterSignInForm";
 import { NewsletterSignupForm } from "@/components/newsletter/NewsletterSignupForm";
+import { getNewsletterStatus, unsubscribeNewsletterByEmail } from "@/lib/api";
 import {
+  clearNewsletterSession,
   clearNewsletterSubscribedFlag,
   getRememberedNewsletterEmail,
   isNewsletterSubscribedLocally,
 } from "@/lib/newsletter-storage";
-import { getNewsletterStatus } from "@/lib/api";
 
 export type NewsletterAuthView = "signup" | "signin" | "resubscribe";
 
 interface NewsletterAuthPanelProps {
   compact?: boolean;
+  /** Portal page: show signed-in intro inside the box above “Signed in as …”. */
+  portalLayout?: boolean;
   initialView?: NewsletterAuthView;
   initialEmail?: string;
   initialToken?: string;
   onSuccess?: (email: string) => void;
+  onSignedInChange?: (signedIn: boolean) => void;
   signupSubmitLabel?: string;
 }
 
 export function NewsletterAuthPanel({
   compact = false,
+  portalLayout = false,
   initialView = "signup",
   initialEmail = "",
   initialToken,
   onSuccess,
+  onSignedInChange,
   signupSubmitLabel,
 }: NewsletterAuthPanelProps) {
   const [view, setView] = useState<NewsletterAuthView>(initialView);
   const [email, setEmail] = useState(initialEmail);
   const [signedInLocally, setSignedInLocally] = useState(false);
+  const [unsubLoading, setUnsubLoading] = useState(false);
+  const [unsubError, setUnsubError] = useState<string | null>(null);
+  const [unsubDone, setUnsubDone] = useState(false);
 
   useEffect(() => {
     setView(initialView);
@@ -46,41 +56,118 @@ export function NewsletterAuthPanel({
     if (isNewsletterSubscribedLocally() && remembered) {
       setSignedInLocally(true);
       setEmail(remembered);
+      onSignedInChange?.(true);
       return;
     }
+    onSignedInChange?.(false);
     if (!remembered || initialView === "resubscribe") return;
     setEmail(remembered);
     void getNewsletterStatus(remembered).then((result) => {
-      if (result.ok && result.data.exists && !result.data.is_subscribed) {
+      if (!result.ok) return;
+      if (result.data.exists && !result.data.is_subscribed) {
         clearNewsletterSubscribedFlag();
         setView("resubscribe");
-      } else if (result.ok && result.data.is_subscribed) {
+      } else if (result.data.is_subscribed) {
         setView("signin");
       }
     });
-  }, [initialView]);
+  }, [initialView, onSignedInChange]);
+
+  async function onUnsubscribe() {
+    setUnsubLoading(true);
+    setUnsubError(null);
+    const result = await unsubscribeNewsletterByEmail(email.trim());
+    setUnsubLoading(false);
+    if (!result.ok) {
+      setUnsubError(result.error || "Could not unsubscribe. Try again.");
+      return;
+    }
+    clearNewsletterSession();
+    setUnsubDone(true);
+    setSignedInLocally(false);
+    onSignedInChange?.(false);
+    setView("resubscribe");
+  }
 
   if (signedInLocally) {
     return (
-      <div className="space-y-2 text-sm text-charcoal-200">
-        <p>
-          Signed in as{" "}
-          <span className="font-medium text-charcoal-50">{email}</span>
-        </p>
-        <p className="text-xs text-charcoal-400">
-          Deals stay unlocked on this device. On a new phone or after clearing
-          cache, use Sign in with the same email.
-        </p>
-        <button
-          type="button"
-          className="text-xs text-burgundy-500 underline-offset-2 hover:underline"
-          onClick={() => {
-            setSignedInLocally(false);
-            setView("signin");
-          }}
-        >
-          Use a different email
-        </button>
+      <div className="space-y-4">
+        {portalLayout ? (
+          <NewsletterAuthIntro
+            as="h1"
+            className="text-center"
+            variant="signedIn"
+          />
+        ) : null}
+        <div className="space-y-3 text-left text-sm text-charcoal-200">
+          <p>
+            Signed in as{" "}
+            <span className="font-medium text-charcoal-50">{email}</span>
+          </p>
+          <p className="text-xs text-charcoal-400">
+            Deals stay unlocked on this device. On a new phone or after clearing
+            cache, use Sign in with the same email.
+          </p>
+          <div className="flex items-center justify-between gap-3 pt-1">
+            <button
+              type="button"
+              className="text-xs text-burgundy-500 underline-offset-2 hover:underline disabled:opacity-50"
+              disabled={unsubLoading}
+              onClick={() => void onUnsubscribe()}
+            >
+              {unsubLoading ? "Unsubscribing…" : "Unsubscribe"}
+            </button>
+            <button
+              type="button"
+              className="text-xs text-burgundy-500 underline-offset-2 hover:underline"
+              onClick={() => {
+                setSignedInLocally(false);
+                onSignedInChange?.(false);
+                setView("signin");
+              }}
+            >
+              Use a different email
+            </button>
+          </div>
+          {unsubError ? (
+            <p className="text-xs text-red-600">{unsubError}</p>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  if (unsubDone) {
+    return (
+      <div className="space-y-4">
+        {portalLayout ? (
+          <NewsletterAuthIntro
+            as="h1"
+            className="text-center"
+            variant="signedIn"
+          />
+        ) : null}
+        <div className="space-y-3 text-left text-sm text-charcoal-200">
+          <p className="text-charcoal-50">
+            You&apos;ve been unsubscribed. Your details stay on file.
+          </p>
+          <p className="text-xs text-charcoal-400">
+            Want Weekly Hot Deals again? Subscribe below anytime.
+          </p>
+          <NewsletterSignupForm
+            mode="resubscribe"
+            initialEmail={email}
+            compact={compact}
+            submitLabel="Subscribe again"
+            onSuccess={(value) => {
+              setEmail(value);
+              setUnsubDone(false);
+              setSignedInLocally(true);
+              onSignedInChange?.(true);
+              onSuccess?.(value);
+            }}
+          />
+        </div>
       </div>
     );
   }
@@ -134,6 +221,8 @@ export function NewsletterAuthPanel({
             submitLabel={signupSubmitLabel ?? "Get Weekly Hot Deals"}
             onSuccess={(value) => {
               setEmail(value);
+              setSignedInLocally(true);
+              onSignedInChange?.(true);
               onSuccess?.(value);
             }}
           />
@@ -170,6 +259,7 @@ export function NewsletterAuthPanel({
             onSuccess={(value) => {
               setEmail(value);
               setSignedInLocally(true);
+              onSignedInChange?.(true);
               onSuccess?.(value);
             }}
             onNeedSignup={() => setView("signup")}
@@ -194,6 +284,8 @@ export function NewsletterAuthPanel({
             submitLabel="Subscribe again"
             onSuccess={(value) => {
               setEmail(value);
+              setSignedInLocally(true);
+              onSignedInChange?.(true);
               onSuccess?.(value);
             }}
           />

@@ -817,6 +817,18 @@ export async function unsubscribeNewsletter(
   });
 }
 
+/** Soft-unsubscribe from the portal when this device already has the email. */
+export async function unsubscribeNewsletterByEmail(
+  email: string,
+): Promise<ApiResult<NewsletterAction>> {
+  return apiFetch("/api/v1/newsletter/unsubscribe-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+    cache: "no-store",
+  });
+}
+
 export async function resubscribeNewsletter(payload: {
   email: string;
   token?: string;

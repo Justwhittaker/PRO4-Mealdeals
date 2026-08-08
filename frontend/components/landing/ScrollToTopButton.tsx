@@ -6,9 +6,8 @@ import { ArrowUp } from "lucide-react";
 const SCROLL_THRESHOLD_PX = 360;
 
 /**
- * Mobile / small-tablet “back to top” control.
+ * “Back to top” control for all viewport sizes.
  * Mount under ConditionalSiteHeader so it stays off /dashboard.
- * Hidden from lg+ where page chrome already makes scrolling easy.
  */
 export function ScrollToTopButton() {
   const [visible, setVisible] = useState(false);
@@ -29,7 +28,7 @@ export function ScrollToTopButton() {
     <button
       type="button"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      className="fixed right-4 z-50 flex h-11 w-11 items-center justify-center rounded-md border border-charcoal-700 bg-white text-burgundy-600 shadow-deal transition hover:bg-burgundy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-500 focus-visible:ring-offset-2 lg:hidden"
+      className="fixed right-4 z-50 flex h-11 w-11 items-center justify-center rounded-md border border-charcoal-700 bg-white text-burgundy-600 shadow-deal transition hover:bg-burgundy-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-burgundy-500 focus-visible:ring-offset-2"
       style={{ bottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
       aria-label="Back to top"
     >

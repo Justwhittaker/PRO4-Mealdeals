@@ -13,6 +13,7 @@ from app.schemas.newsletter import (
     NewsletterStatusResponse,
     NewsletterSubscribeRequest,
     NewsletterSubscriberRead,
+    NewsletterUnsubscribeEmailRequest,
 )
 from app.services.newsletter import (
     new_unsubscribe_token,
@@ -86,6 +87,31 @@ async def unsubscribe_by_token(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Subscriber not found",
+        )
+    soft_unsubscribe(subscriber)
+    await db.flush()
+    return NewsletterActionResponse(
+        message="You've been unsubscribed. Your details stay on file.",
+        email=subscriber.email,
+        is_subscribed=False,
+    )
+
+
+@router.post("/unsubscribe-email", response_model=NewsletterActionResponse)
+async def unsubscribe_by_email(
+    payload: NewsletterUnsubscribeEmailRequest,
+    db: DbSession,
+) -> NewsletterActionResponse:
+    """Soft-unsubscribe using the email stored on this device (newsletter portal)."""
+    email = normalize_email(str(payload.email))
+    result = await db.execute(
+        select(NewsletterSubscriber).where(NewsletterSubscriber.email == email)
+    )
+    subscriber = result.scalar_one_or_none()
+    if subscriber is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No newsletter record for that email.",
         )
     soft_unsubscribe(subscriber)
     await db.flush()

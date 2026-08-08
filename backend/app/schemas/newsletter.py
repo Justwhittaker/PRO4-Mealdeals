@@ -24,6 +24,12 @@ class NewsletterResubscribeRequest(BaseModel):
     token: Optional[str] = None
 
 
+class NewsletterUnsubscribeEmailRequest(BaseModel):
+    """Soft-unsubscribe from the newsletter portal when the reader is signed in locally."""
+
+    email: EmailStr
+
+
 class NewsletterSubscriberRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
