@@ -259,8 +259,23 @@ _RULES: list[tuple[str, re.Pattern[str]]] = [
 ]
 
 
+# Parent filter ids used by the public UI (frontend/lib/categories.ts).
+CATEGORY_LABEL_TO_ID: dict[str, str] = {
+    "Restaurants, Cafe's & Bistro's": "restaurants-cafes-bistros",
+    "Food Trucks & Takeaway's": "food-trucks-takeaways",
+    "Wine Farms & Entertainment Venues": "wine-farms-entertainment",
+    "Deli's and Grocers": "delis-grocers",
+    "Clubs, Bars & Pubs": "clubs-bars-pubs",
+    "Hotels, Resorts & B&B's": "hotels-resorts-bbs",
+}
+
+CATEGORY_ID_TO_LABEL: dict[str, str] = {
+    value: key for key, value in CATEGORY_LABEL_TO_ID.items()
+}
+
+
 def categorize_venue(merchant_name: str) -> str:
-    """Map a merchant / venue name to a parent hospitality category."""
+    """Map a merchant / venue name to a parent hospitality category label."""
     name = (merchant_name or "").strip()
     if not name:
         return "Restaurants, Cafe's & Bistro's"
@@ -268,3 +283,14 @@ def categorize_venue(merchant_name: str) -> str:
         if pattern.search(name):
             return category
     return "Restaurants, Cafe's & Bistro's"
+
+
+def venue_category_id(value: str | None, *, merchant_name: str = "") -> str:
+    """Normalize a venue category to the parent filter id used by the UI."""
+    raw = (value or "").strip()
+    if raw in CATEGORY_ID_TO_LABEL:
+        return raw
+    if raw in CATEGORY_LABEL_TO_ID:
+        return CATEGORY_LABEL_TO_ID[raw]
+    label = categorize_venue(merchant_name or raw)
+    return CATEGORY_LABEL_TO_ID.get(label, "restaurants-cafes-bistros")

@@ -20,11 +20,19 @@ import {
   type MerchantDealDetail,
 } from "@/lib/api";
 import {
+  PARENT_CATEGORIES,
+  resolveVenueCategory,
+  type ParentCategoryId,
+} from "@/lib/categories";
+import {
   currenciesAlphabetical,
   formatMoney,
   isCurrencyCode,
   type CurrencyCode,
 } from "@/lib/currency";
+import { compressDealImageFile } from "@/lib/deal-image";
+import { DealPreviewDialog } from "@/components/merchant/DealPreviewDialog";
+import type { DealCardProps } from "@/components/deals/DealCard";
 
 interface LineItem {
   name: string;
@@ -38,9 +46,13 @@ interface NewDealFormProps {
   mode?: "create" | "edit";
   dealId?: string;
   initialDeal?: MerchantDealDetail;
+  restaurantName?: string;
+  logoUrl?: string | null;
+  countryCode?: string;
+  citySlug?: string;
 }
 
-const MAX_IMAGE_BYTES = 900_000;
+const MAX_SOURCE_IMAGE_BYTES = 8_000_000;
 
 function guessCategory(name: string): string {
   const n = name.toLowerCase();
@@ -51,18 +63,6 @@ function guessCategory(name: string): string {
     return "side";
   }
   return "main";
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") resolve(reader.result);
-      else reject(new Error("Could not read image"));
-    };
-    reader.onerror = () => reject(new Error("Could not read image"));
-    reader.readAsDataURL(file);
-  });
 }
 
 function initialItemsFromDeal(deal?: MerchantDealDetail): LineItem[] {
@@ -86,6 +86,10 @@ export function NewDealForm({
   mode = "create",
   dealId,
   initialDeal,
+  restaurantName = "Your restaurant",
+  logoUrl = null,
+  countryCode = "ie",
+  citySlug = "city",
 }: NewDealFormProps) {
   const router = useRouter();
   const currencyOptions = useMemo(() => currenciesAlphabetical(), []);
@@ -104,6 +108,9 @@ export function NewDealForm({
     isCurrencyCode(initialCurrency) ? initialCurrency : "GBP",
   );
   const [imageUrl, setImageUrl] = useState(initialDeal?.image_url ?? "");
+  const [venueCategory, setVenueCategory] = useState<ParentCategoryId>(() =>
+    resolveVenueCategory(initialDeal?.venue_category, restaurantName),
+  );
   const [items, setItems] = useState<LineItem[]>(() =>
     initialItemsFromDeal(initialDeal),
   );
@@ -116,8 +123,10 @@ export function NewDealForm({
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [showCardPreview, setShowCardPreview] = useState(false);
 
   const isEdit = mode === "edit";
+  const wasActive = initialDeal?.is_active ?? false;
 
   useEffect(() => {
     const handle = setTimeout(() => {
@@ -164,16 +173,20 @@ export function NewDealForm({
       setError("Use a PNG, JPG, or WebP image.");
       return;
     }
-    if (file.size > MAX_IMAGE_BYTES) {
-      setError("Image must be under ~900KB. Compress it or use an image URL.");
+    if (file.size > MAX_SOURCE_IMAGE_BYTES) {
+      setError("Image must be under 8MB. Compress it or use an https:// image URL.");
       return;
     }
     try {
-      const dataUrl = await readFileAsDataUrl(file);
-      setImageUrl(dataUrl);
       setError(null);
-    } catch {
-      setError("Could not read that image file.");
+      const dataUrl = await compressDealImageFile(file);
+      setImageUrl(dataUrl);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not prepare that image file.",
+      );
     }
   }
 
@@ -189,27 +202,53 @@ export function NewDealForm({
       );
       return;
     }
-    if (!isEdit && openSlots <= 0) {
-      setError(
-        "No open Priority slots. Deactivate a live deal or upgrade on Deal of the century.",
-      );
-      return;
-    }
     const lineItems = items.filter((i) => i.name.trim() && i.value > 0);
     if (lineItems.length === 0) {
       setError("Add at least one included item with a value.");
       return;
     }
+    setShowCardPreview(true);
+  }
 
+  function buildPayload(activate: boolean) {
+    const lineItems = items.filter((i) => i.name.trim() && i.value > 0);
     const original =
       preview?.marketValue ??
       lineItems.reduce((sum, i) => sum + i.value, 0);
-
     const mappedItems = lineItems.map((i) => ({
       item_name: i.name.trim(),
       individual_price: i.value,
       category: guessCategory(i.name),
     }));
+    const photo = imageUrl.trim() || null;
+    return { original, mappedItems, photo, activate };
+  }
+
+  async function persistDeal(activate: boolean) {
+    setError(null);
+    const { original, mappedItems, photo, activate: goLive } = buildPayload(
+      activate,
+    );
+
+    if (photo && photo.startsWith("data:") && photo.length > 1_200_000) {
+      setError(
+        "Photo is still too large to save. Drop a smaller image or paste an https:// URL.",
+      );
+      return;
+    }
+
+    if (goLive && !isEdit && openSlots <= 0) {
+      setError(
+        "No open Priority slots. Save for later, or deactivate a live deal first.",
+      );
+      return;
+    }
+    if (goLive && isEdit && !wasActive && openSlots <= 0) {
+      setError(
+        "No open Priority slots to activate. Save inactive, or free a slot first.",
+      );
+      return;
+    }
 
     setPublishing(true);
     const result =
@@ -220,7 +259,9 @@ export function NewDealForm({
             deal_price: dealPrice,
             original_price: original,
             currency_code: currency,
-            image_url: imageUrl.trim() || null,
+            image_url: photo,
+            venue_category: venueCategory,
+            is_active: goLive,
             items: mappedItems,
           })
         : await createMerchantDeal({
@@ -230,7 +271,9 @@ export function NewDealForm({
             deal_price: dealPrice,
             original_price: original,
             currency_code: currency,
-            image_url: imageUrl.trim() || null,
+            image_url: photo,
+            venue_category: venueCategory,
+            is_active: goLive,
             items: mappedItems,
           });
     setPublishing(false);
@@ -239,9 +282,35 @@ export function NewDealForm({
       setError(result.error);
       return;
     }
+    setShowCardPreview(false);
     router.push("/dashboard/deals");
     router.refresh();
   }
+
+  const cardPreview: DealCardProps = {
+    id: dealId || "preview",
+    title: title.trim() || "Untitled deal",
+    restaurantName,
+    price: dealPrice,
+    originalPrice:
+      preview?.marketValue && preview.marketValue > dealPrice
+        ? preview.marketValue
+        : null,
+    currency,
+    country: countryCode.toLowerCase() === "gb" ? "uk" : countryCode.toLowerCase(),
+    city: citySlug,
+    tier: "featured",
+    isSubscriber: true,
+    isScraped: false,
+    imageUrl: imageUrl || null,
+    logoUrl,
+    category: venueCategory,
+    savingsPercent: preview?.savingsPercent,
+    createdAt: new Date().toISOString(),
+  };
+
+  const canActivateNow =
+    openSlots > 0 || (isEdit && wasActive);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -269,6 +338,13 @@ export function NewDealForm({
             </a>
             .
           </p>
+          {!canActivateNow ? (
+            <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+              No open slots right now. You can still preview and{" "}
+              <strong>Save for later</strong> to add the deal to your profile,
+              then activate when a slot frees up.
+            </p>
+          ) : null}
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
@@ -291,11 +367,36 @@ export function NewDealForm({
           </div>
 
           <div className="space-y-2">
+            <Label>Venue category</Label>
+            <Select
+              value={venueCategory}
+              onValueChange={(v) => setVenueCategory(v as ParentCategoryId)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {PARENT_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-charcoal-500">
+              Used for browse filters on the public site — same categories as
+              scraped listings.
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="image-url">Deal photo</Label>
             <Input
               id="image-url"
-              type="url"
-              placeholder="https://… or drop a PNG below"
+              type="text"
+              inputMode="url"
+              autoComplete="off"
+              placeholder="https://… or drop a photo below"
               value={imageUrl.startsWith("data:") ? "" : imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
             />
@@ -316,7 +417,7 @@ export function NewDealForm({
                 void applyImageFile(e.dataTransfer.files?.[0]);
               }}
             >
-              <p>Drop a PNG / JPG here, or choose a file</p>
+              <p>Drop a PNG / JPG here — we compress it before saving</p>
               <Input
                 type="file"
                 accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
@@ -418,22 +519,29 @@ export function NewDealForm({
           <Button
             type="button"
             className="w-full sm:w-auto"
-            disabled={publishing || (!isEdit && openSlots <= 0)}
+            disabled={publishing}
             onClick={() => void onPublish()}
           >
-            {publishing
-              ? isEdit
-                ? "Saving…"
-                : "Publishing…"
-              : !isEdit && openSlots <= 0
-                ? "No open slots"
-                : isEdit
-                  ? "Save changes"
-                  : "Publish deal"}
+            Preview deal
           </Button>
           {error ? <p className="text-sm text-amber-200">{error}</p> : null}
         </CardContent>
       </Card>
+
+      <DealPreviewDialog
+        open={showCardPreview}
+        deal={cardPreview}
+        publishing={publishing}
+        canActivate={canActivateNow}
+        activateBlockedReason={
+          canActivateNow
+            ? null
+            : "No open Priority slots — save for later or free a slot first."
+        }
+        onKeepEditing={() => setShowCardPreview(false)}
+        onSaveForLater={() => void persistDeal(false)}
+        onConfirmActivate={() => void persistDeal(true)}
+      />
 
       <Card className="h-fit border-citrus-500/25 lg:sticky lg:top-24">
         <CardHeader>

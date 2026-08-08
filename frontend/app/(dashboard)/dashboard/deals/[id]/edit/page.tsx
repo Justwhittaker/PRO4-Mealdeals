@@ -10,6 +10,10 @@ interface EditDealPageProps {
   params: { id: string };
 }
 
+function slugifyCity(city: string): string {
+  return city.trim().toLowerCase().replace(/\s+/g, "-");
+}
+
 export default async function EditDealPage({ params }: EditDealPageProps) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/dashboard");
@@ -36,6 +40,14 @@ export default async function EditDealPage({ params }: EditDealPageProps) {
 
   const openSlots = profile.ok ? profile.data.open_slots : 0;
   const isSubscriber = profile.ok ? profile.data.is_subscriber : false;
+  const restaurantName = profile.ok ? profile.data.name : "Your restaurant";
+  const logoUrl = profile.ok ? profile.data.logo_url ?? null : null;
+  const countryCode = profile.ok
+    ? (profile.data.location?.country_code || "ie").toLowerCase()
+    : "ie";
+  const citySlug = profile.ok
+    ? slugifyCity(profile.data.location?.city || "city")
+    : "city";
 
   return (
     <div className="space-y-6">
@@ -58,6 +70,10 @@ export default async function EditDealPage({ params }: EditDealPageProps) {
         mode="edit"
         dealId={id}
         initialDeal={deal.data}
+        restaurantName={restaurantName}
+        logoUrl={logoUrl}
+        countryCode={countryCode}
+        citySlug={citySlug}
       />
     </div>
   );

@@ -16,6 +16,7 @@ from app.models.location import Location
 from app.models.merchant import Merchant, MerchantCategory, TierLevel
 from app.models.translation import DealTranslation
 from app.scrapers.base import ScrapedDeal
+from app.scrapers.categories import venue_category_id
 from app.scrapers.markets import (
     CITY_COORDS as NEW_CITY_COORDS,
     COUNTRY_TIMEZONES as MARKET_COUNTRY_TIMEZONES,
@@ -387,6 +388,9 @@ def upsert_scraped_deal(session: Session, scraped: ScrapedDeal) -> Deal:
         existing.is_active = True
         if scraped.image_url:
             existing.image_url = scraped.image_url[:500]
+        existing.venue_category = venue_category_id(
+            scraped.venue_category, merchant_name=scraped.merchant_name
+        )
         merchant = session.get(Merchant, existing.merchant_id)
         if merchant is not None:
             _apply_scraped_merchant_profile(merchant, scraped)
@@ -413,6 +417,9 @@ def upsert_scraped_deal(session: Session, scraped: ScrapedDeal) -> Deal:
         deal_price=scraped.deal_price,
         currency_code=scraped.currency_code.upper(),
         image_url=scraped.image_url[:500] if scraped.image_url else None,
+        venue_category=venue_category_id(
+            scraped.venue_category, merchant_name=scraped.merchant_name
+        ),
         is_active=True,
         tier_priority_score=0,
     )

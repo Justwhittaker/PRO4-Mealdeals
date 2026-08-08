@@ -3,11 +3,17 @@
 /** Local last-resort hero when remote deal photos are missing or broken. */
 export const DEAL_IMAGE_FALLBACK = "/hero-food.jpg";
 
-/** Drop tracking pixels / non-http media; keep real dish stock photos. */
+/** Drop tracking pixels / junk media; keep http(s) photos and uploaded data URLs. */
 export function cleanMediaUrl(value?: string | null): string | null {
   if (!value) return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
+
+  // Merchant deal form stores dropped PNG/JPG/WebP as data URLs in image_url.
+  if (/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(trimmed)) {
+    return trimmed;
+  }
+
   if (!/^https?:\/\//i.test(trimmed)) return null;
   const lower = trimmed.toLowerCase();
   if (

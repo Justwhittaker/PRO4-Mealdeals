@@ -32,6 +32,7 @@ from app.services.deal_copy import clean_deal_description
 from app.services.ingest import normalize_city, normalize_country
 from app.services.ranking import compute_feed_score
 from app.services.scrape_runner import scrape_and_ingest_area
+from app.scrapers.categories import venue_category_id
 
 router = APIRouter(prefix="/deals", tags=["deals"])
 
@@ -45,8 +46,8 @@ async def create_deal(payload: DealCreate, db: DbSession) -> Deal:
             detail="merchant_id does not exist",
         )
 
-    # Priority slot rules apply only to non–slot-exempt deals (designed specials skip).
-    if not payload.slot_exempt:
+    # Priority slot rules apply only when activating a live Priority deal.
+    if not payload.slot_exempt and payload.is_active:
         slot_limit = merchant.deal_slot_limit or 0
         if not merchant.is_subscriber or slot_limit <= 0:
             raise HTTPException(
@@ -76,9 +77,32 @@ async def create_deal(payload: DealCreate, db: DbSession) -> Deal:
                     f"Paid plans include {PAID_DEAL_SLOT_LIMIT} active priority deals."
                 ),
             )
+    elif not payload.slot_exempt:
+        # Save-for-later still requires a Priority subscription.
+        slot_limit = merchant.deal_slot_limit or 0
+        if not merchant.is_subscriber or slot_limit <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=(
+                    "Priority deal drafts require an active subscription "
+                    "(€20 for 3 months / then €20 per month — 3 slots)."
+                ),
+            )
 
     # Paid merchant deals get a ranking boost so they sit above scrapes
     priority = payload.tier_priority_score or 200
+
+    image_url = payload.image_url
+    if image_url is not None:
+        image_url = image_url.strip() or None
+        if image_url and image_url.startswith("data:") and len(image_url) > 1_500_000:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=(
+                    "Deal photo is too large to store. Use a smaller image "
+                    "or an https:// image URL."
+                ),
+            )
 
     clean_url = payload.clean_url
     affiliate_url = payload.affiliate_url
@@ -86,6 +110,12 @@ async def create_deal(payload: DealCreate, db: DbSession) -> Deal:
         generated_clean, generated_aff = build_affiliate_urls(payload.scraped_raw_url)
         clean_url = clean_url or generated_clean
         affiliate_url = affiliate_url or generated_aff
+
+    resolved_category = None
+    if payload.venue_category:
+        resolved_category = venue_category_id(
+            payload.venue_category, merchant_name=merchant.name
+        )
 
     deal = Deal(
         merchant_id=payload.merchant_id,
@@ -98,7 +128,8 @@ async def create_deal(payload: DealCreate, db: DbSession) -> Deal:
         is_active=payload.is_active,
         tier_priority_score=priority,
         slot_exempt=payload.slot_exempt,
-        image_url=payload.image_url,
+        image_url=image_url,
+        venue_category=resolved_category,
         expires_at=payload.expires_at,
     )
     db.add(deal)
@@ -289,6 +320,8 @@ async def deals_feed(
                 clean_url=deal.clean_url,
                 image_url=deal.image_url,
                 logo_url=merchant.logo_url,
+                venue_category=deal.venue_category
+                or venue_category_id(None, merchant_name=merchant.name),
                 created_at=deal.created_at,
                 expires_at=deal.expires_at,
                 city=location.city,
@@ -402,6 +435,25 @@ async def update_deal(
     if "currency_code" in data and data["currency_code"]:
         data["currency_code"] = str(data["currency_code"]).upper()
 
+    if "image_url" in data and data["image_url"] is not None:
+        image_url = str(data["image_url"]).strip() or None
+        if image_url and image_url.startswith("data:") and len(image_url) > 1_500_000:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=(
+                    "Deal photo is too large to store. Use a smaller image "
+                    "or an https:// image URL."
+                ),
+            )
+        data["image_url"] = image_url
+
+    if "venue_category" in data and data["venue_category"] is not None:
+        merchant_for_cat = await db.get(Merchant, deal.merchant_id)
+        data["venue_category"] = venue_category_id(
+            str(data["venue_category"]),
+            merchant_name=merchant_for_cat.name if merchant_for_cat else "",
+        )
+
     for field, value in data.items():
         if hasattr(deal, field):
             setattr(deal, field, value)
@@ -462,6 +514,16 @@ async def update_deal(
     return loaded.scalar_one()
 
 
+@router.delete("/{deal_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_deal(deal_id: UUID, db: DbSession) -> None:
+    """Permanently remove a deal and cascaded items/translations/metrics history."""
+    deal = await db.get(Deal, deal_id)
+    if deal is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
+    await db.delete(deal)
+    await db.flush()
+
+
 @router.get("/{deal_id}", response_model=DealDetailRead)
 async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
     result = await db.execute(
@@ -506,6 +568,7 @@ async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
         tier_priority_score=deal.tier_priority_score,
         slot_exempt=deal.slot_exempt,
         image_url=deal.image_url,
+        venue_category=deal.venue_category,
         expires_at=deal.expires_at,
         created_at=deal.created_at,
         items=list(deal.items),

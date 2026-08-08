@@ -232,31 +232,40 @@ export function categorizeVenue(merchantName: string): ParentCategoryId {
   return "restaurants-cafes-bistros";
 }
 
-const CATEGORY_ORDER_INDEX = new Map(
-  PARENT_CATEGORIES.map((c, index) => [c.id, index]),
-);
+/** Resolve stored venue_category (id or legacy label) or fall back to name inference. */
+export function resolveVenueCategory(
+  category: string | null | undefined,
+  restaurantName = "",
+): ParentCategoryId {
+  const raw = (category || "").trim();
+  if (raw && PARENT_IDS.has(raw)) return raw as ParentCategoryId;
+  const byLabel = PARENT_CATEGORIES.find((c) => c.label === raw);
+  if (byLabel) return byLabel.id;
+  return categorizeVenue(restaurantName);
+}
 
 /** Filter (optional) then always order by parent category list order. */
-export function filterDealsByCategory<T extends { restaurantName: string }>(
-  deals: T[],
-  category: ParentCategoryId | "all",
-): T[] {
+export function filterDealsByCategory<
+  T extends { restaurantName: string; category?: string | null },
+>(deals: T[], category: ParentCategoryId | "all"): T[] {
   // Keep caller order (featured-first + shuffled rest). Category sections are
   // handled by groupDealsByCategory in the grid.
   if (category === "all") return deals;
-  return deals.filter((d) => categorizeVenue(d.restaurantName) === category);
+  return deals.filter(
+    (d) => resolveVenueCategory(d.category, d.restaurantName) === category,
+  );
 }
 
 /** Group deals into parent sections (same order as the category filter). */
-export function groupDealsByCategory<T extends { restaurantName: string }>(
-  deals: T[],
-): { id: ParentCategoryId; label: string; deals: T[] }[] {
+export function groupDealsByCategory<
+  T extends { restaurantName: string; category?: string | null },
+>(deals: T[]): { id: ParentCategoryId; label: string; deals: T[] }[] {
   const buckets = new Map<ParentCategoryId, T[]>();
   for (const parent of PARENT_CATEGORIES) {
     buckets.set(parent.id, []);
   }
   for (const deal of deals) {
-    const id = categorizeVenue(deal.restaurantName);
+    const id = resolveVenueCategory(deal.category, deal.restaurantName);
     buckets.get(id)?.push(deal);
   }
   return PARENT_CATEGORIES.map((parent) => ({

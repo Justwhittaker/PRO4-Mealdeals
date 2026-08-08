@@ -76,6 +76,7 @@ interface BackendDealFeedItem {
   clean_url?: string | null;
   image_url?: string | null;
   logo_url?: string | null;
+  venue_category?: string | null;
   created_at: string;
   expires_at?: string | null;
   city?: string | null;
@@ -155,6 +156,7 @@ function mapFeedItem(
     cleanUrl: item.clean_url ?? null,
     imageUrl: cleanMediaUrl(item.image_url),
     logoUrl: cleanMediaUrl(item.logo_url),
+    category: item.venue_category ?? undefined,
     savingsPercent:
       savingsPercent != null && savingsPercent > 0 ? savingsPercent : undefined,
   };
@@ -223,7 +225,15 @@ async function apiFetch<T>(
       };
     }
 
-    const data = (await res.json()) as T;
+    if (res.status === 204) {
+      return { ok: true, data: undefined as T };
+    }
+
+    const text = await res.text();
+    if (!text) {
+      return { ok: true, data: undefined as T };
+    }
+    const data = JSON.parse(text) as T;
     return { ok: true, data };
   } catch (err) {
     const message =
@@ -289,6 +299,7 @@ export async function fetchDeal(
     image_url?: string | null;
     logo_url?: string | null;
     about_blurb?: string | null;
+    venue_category?: string | null;
     original_price: string | number;
     deal_price: string | number;
     currency_code: string;
@@ -331,6 +342,7 @@ export async function fetchDeal(
       cleanUrl: d.clean_url ?? null,
       imageUrl: cleanMediaUrl(d.image_url),
       logoUrl: cleanMediaUrl(d.logo_url),
+      category: d.venue_category ?? undefined,
     },
   };
 }
@@ -492,6 +504,7 @@ export interface MerchantDealDetail {
   currency_code: string;
   is_active: boolean;
   image_url?: string | null;
+  venue_category?: string | null;
   title?: string | null;
   description?: string | null;
   items: {
@@ -621,6 +634,17 @@ export async function setDealActive(
   });
 }
 
+export async function deleteMerchantDeal(
+  dealId: string,
+): Promise<ApiResult<{ ok: true }>> {
+  const result = await apiFetch<unknown>(`/api/v1/deals/${dealId}`, {
+    method: "DELETE",
+    cache: "no-store",
+  });
+  if (!result.ok) return result;
+  return { ok: true, data: { ok: true } };
+}
+
 export async function createMerchantDeal(payload: {
   merchant_id: string;
   title: string;
@@ -629,6 +653,8 @@ export async function createMerchantDeal(payload: {
   original_price: number;
   currency_code: string;
   image_url?: string | null;
+  venue_category?: string | null;
+  is_active?: boolean;
   items: { item_name: string; individual_price: number; category?: string }[];
 }): Promise<ApiResult<{ id: string }>> {
   return apiFetch("/api/v1/deals", {
@@ -642,7 +668,8 @@ export async function createMerchantDeal(payload: {
       original_price: payload.original_price,
       currency_code: payload.currency_code,
       image_url: payload.image_url || null,
-      is_active: true,
+      venue_category: payload.venue_category || null,
+      is_active: payload.is_active ?? true,
       slot_exempt: false,
       items: payload.items.map((item) => ({
         item_name: item.item_name,
@@ -669,6 +696,7 @@ export async function updateMerchantDeal(
     original_price?: number;
     currency_code?: string;
     image_url?: string | null;
+    venue_category?: string | null;
     is_active?: boolean;
     items?: { item_name: string; individual_price: number; category?: string }[];
   },

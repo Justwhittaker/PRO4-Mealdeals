@@ -3,8 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { DealHeroMedia } from "@/components/deals/DealHeroMedia";
 import {
-  categorizeVenue,
   parentCategoryLabel,
+  resolveVenueCategory,
 } from "@/lib/categories";
 import { formatMoney, type CurrencyCode } from "@/lib/currency";
 import { dealBadge, type TierLevel } from "@/lib/priority";
@@ -24,6 +24,8 @@ export interface DealCardProps {
   isScraped?: boolean;
   imageUrl?: string | null;
   logoUrl?: string | null;
+  /** Parent venue category id (or legacy label); falls back to name inference. */
+  category?: string | null;
   savingsPercent?: number;
   createdAt: string;
   distanceKm?: number | null;
@@ -32,7 +34,9 @@ export interface DealCardProps {
 export function DealCard(deal: DealCardProps) {
   const badge = dealBadge(deal);
   const href = `/${deal.country}/${deal.city}/deals/${deal.id}`;
-  const venueCategory = parentCategoryLabel(categorizeVenue(deal.restaurantName));
+  const venueCategory = parentCategoryLabel(
+    resolveVenueCategory(deal.category, deal.restaurantName),
+  );
 
   return (
     <Card className="group overflow-hidden rounded-sm border border-charcoal-600 bg-white shadow-deal transition duration-300 hover:-translate-y-0.5 hover:border-burgundy-300">

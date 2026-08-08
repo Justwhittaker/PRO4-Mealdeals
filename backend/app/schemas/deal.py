@@ -49,6 +49,7 @@ class DealBase(BaseModel):
     tier_priority_score: int = 0
     slot_exempt: bool = False
     image_url: Optional[str] = None
+    venue_category: Optional[str] = Field(default=None, max_length=120)
     expires_at: Optional[datetime] = None
 
 
@@ -66,6 +67,7 @@ class DealUpdate(BaseModel):
     original_price: Optional[Decimal] = Field(default=None, ge=0)
     currency_code: Optional[str] = Field(default=None, min_length=3, max_length=3)
     image_url: Optional[str] = None
+    venue_category: Optional[str] = Field(default=None, max_length=120)
     expires_at: Optional[datetime] = None
     tier_priority_score: Optional[int] = None
     title: Optional[str] = Field(default=None, max_length=255)
@@ -119,6 +121,7 @@ class DealFeedItem(BaseModel):
     clean_url: Optional[str] = None
     image_url: Optional[str] = None
     logo_url: Optional[str] = None
+    venue_category: Optional[str] = None
     created_at: datetime
     expires_at: Optional[datetime] = None
     city: Optional[str] = None

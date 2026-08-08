@@ -6,6 +6,10 @@ import { authOptions } from "@/lib/auth";
 import { fetchMerchantProfile } from "@/lib/api";
 import { NewDealForm } from "./new-deal-form";
 
+function slugifyCity(city: string): string {
+  return city.trim().toLowerCase().replace(/\s+/g, "-");
+}
+
 export default async function NewDealPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/dashboard");
@@ -14,6 +18,14 @@ export default async function NewDealPage() {
   const profile = await fetchMerchantProfile(merchantId);
   const isSubscriber = profile.ok ? profile.data.is_subscriber : false;
   const openSlots = profile.ok ? profile.data.open_slots : 0;
+  const restaurantName = profile.ok ? profile.data.name : "Your restaurant";
+  const logoUrl = profile.ok ? profile.data.logo_url ?? null : null;
+  const countryCode = profile.ok
+    ? (profile.data.location?.country_code || "ie").toLowerCase()
+    : "ie";
+  const citySlug = profile.ok
+    ? slugifyCity(profile.data.location?.city || "city")
+    : "city";
 
   if (!isSubscriber) {
     return (
@@ -51,6 +63,10 @@ export default async function NewDealPage() {
         merchantId={merchantId}
         openSlots={openSlots}
         isSubscriber={isSubscriber}
+        restaurantName={restaurantName}
+        logoUrl={logoUrl}
+        countryCode={countryCode}
+        citySlug={citySlug}
       />
     </div>
   );
