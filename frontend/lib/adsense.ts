@@ -60,19 +60,38 @@ export function isAdSenseEligibleAppUrl(
   }
 }
 
+/** True when at least one manual ad unit slot is configured. */
+export function hasAdSenseSlots(): boolean {
+  return Boolean(getAdSenseInFeedSlotId() || getAdSenseSidebarSlotId());
+}
+
 /**
- * Live AdSense script + real units only when:
- * - publisher + slots are set
+ * Use Google Auto ads when the publisher is set but slot IDs are not yet created.
+ * Manual InFeed/Sidebar units take over once slot env vars exist.
+ */
+export function useAdSenseAutoAds(): boolean {
+  return isAdSenseConfigured() && !hasAdSenseSlots();
+}
+
+/**
+ * Live AdSense script when:
+ * - publisher ID is configured (slots optional — Auto ads covers first connect)
  * - site has a public https URL AdSense can crawl
  * - not forced off via NEXT_PUBLIC_ADSENSE_ENABLED=false
  */
 export function isAdSenseLive(): boolean {
   if (process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "false") return false;
   if (!isAdSenseConfigured()) return false;
-  if (!getAdSenseInFeedSlotId() || !getAdSenseSidebarSlotId()) return false;
   if (!isAdSenseEligibleAppUrl()) return false;
   // Explicit opt-in once domain is ready (avoids accidental live calls pre-launch)
   if (process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "true") return true;
   // Default: live in production builds only when URL is eligible
   return process.env.NODE_ENV === "production";
+}
+
+/** `ca-pub-…` form for meta tags / AdSense client attributes. */
+export function getAdSenseClientId(): string | undefined {
+  const id = getAdSensePublisherId();
+  if (!id) return undefined;
+  return id.startsWith("ca-") ? id : `ca-${id}`;
 }

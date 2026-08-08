@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/write-ads-txt.mjs",
     "build": "next build && npm run create-ads-txt",
-    "create-ads-txt": "create-ads-txt || true",
+    "create-ads-txt": "node scripts/write-ads-txt.mjs && (create-ads-txt || true)",
     "start": "next start",
     "lint": "next lint"
   },

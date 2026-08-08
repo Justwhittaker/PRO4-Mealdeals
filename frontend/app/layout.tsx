@@ -3,6 +3,7 @@ import { Crimson_Text, Oswald } from "next/font/google";
 import { AdSenseScript } from "@/components/ads/AdSenseScript";
 import { ConditionalSiteHeader } from "@/components/landing/ConditionalSiteHeader";
 import { SiteHeader } from "@/components/landing/SiteHeader";
+import { getAdSenseClientId, isAdSenseConfigured } from "@/lib/adsense";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/brand";
 import "./globals.css";
 
@@ -19,6 +20,9 @@ const crimson = Crimson_Text({
   weight: ["400", "600", "700"],
   display: "swap",
 });
+
+const adsenseClient =
+  isAdSenseConfigured() ? getAdSenseClientId() : undefined;
 
 export const metadata: Metadata = {
   title: {
@@ -40,6 +44,9 @@ export const metadata: Metadata = {
     shortcut: [{ url: "/favicon.ico", type: "image/x-icon" }],
     apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
+  ...(adsenseClient
+    ? { other: { "google-adsense-account": adsenseClient } }
+    : {}),
 };
 
 export default function RootLayout({

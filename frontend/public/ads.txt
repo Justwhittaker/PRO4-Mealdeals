@@ -1,5 +1,2 @@
-# Placeholder — replace via `npm run create-ads-txt` after setting
-# NEXT_PUBLIC_ADSENSE_PUBLISHER_ID on a public production domain.
-# AdSense needs a crawlable https URL before site approval.
-# Format once live:
-# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+# Dine A Deal — Authorized Digital Sellers
+google.com, pub-8070048250193300, DIRECT, f08c47fec0942fa0
