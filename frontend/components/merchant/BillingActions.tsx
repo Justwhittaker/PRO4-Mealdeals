@@ -148,7 +148,7 @@ export function BillingActions({
           </div>
 
           <Button
-            className="w-full"
+            className="h-auto min-h-12 w-full whitespace-normal px-4 py-3 text-center text-sm leading-snug tracking-wide sm:px-6 sm:text-base"
             size="lg"
             disabled={loading !== null || !trialEligible || Boolean(isSubscriber)}
             onClick={() => void checkout("trial")}
@@ -198,7 +198,7 @@ export function BillingActions({
             {formatMoney(monthlyAmount, currency)}/month.
           </p>
           <Button
-            className="w-full"
+            className="h-auto min-h-12 w-full whitespace-normal px-4 py-3 text-center text-sm leading-snug tracking-wide sm:px-6 sm:text-base"
             size="lg"
             variant="outline"
             disabled={loading !== null || Boolean(isSubscriber)}

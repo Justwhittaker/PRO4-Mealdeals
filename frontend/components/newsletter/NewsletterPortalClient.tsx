@@ -14,8 +14,8 @@ export function NewsletterPortalClient({
 }) {
   return (
     <>
-      <NewsletterAuthIntro as="h1" />
-      <div className="mt-6">
+      <NewsletterAuthIntro as="h1" className="text-center" />
+      <div className="mt-6 text-left">
         <NewsletterAuthPanel
           initialView={resubscribe ? "resubscribe" : "signup"}
           initialEmail={initialEmail}

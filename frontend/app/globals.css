@@ -29,6 +29,8 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: clip;
+    max-width: 100%;
   }
 
   body {
@@ -47,6 +49,8 @@
       );
     background-attachment: fixed;
     min-height: 100vh;
+    overflow-x: clip;
+    max-width: 100%;
   }
 }
 

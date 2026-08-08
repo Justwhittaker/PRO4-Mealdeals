@@ -52,7 +52,7 @@ export function HeaderScrapeMetrics({
       className="mx-auto max-w-6xl text-center font-display text-sm font-bold leading-tight text-citrus-300 sm:text-base"
       aria-live="polite"
     >
-      <span className="whitespace-nowrap">
+      <span className="inline-block max-w-full px-1">
         {dealsLabel} deals · {marketsLabel} countries
       </span>
     </p>

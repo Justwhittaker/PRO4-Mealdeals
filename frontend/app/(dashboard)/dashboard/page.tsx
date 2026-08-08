@@ -74,15 +74,15 @@ export default async function DealOfTheCenturyPage({
   const phase = profile.ok ? profile.data.subscription_phase : undefined;
 
   return (
-    <div className="space-y-10">
-      <div>
+    <div className="space-y-10 text-center sm:text-left">
+      <div className="mx-auto max-w-2xl sm:mx-0">
         <p className="text-[10px] font-medium uppercase tracking-wider text-burgundy-500">
           Merchant portal
         </p>
         <h1 className="mt-1 font-display text-3xl text-charcoal-50 sm:text-4xl">
           Deal of the century
         </h1>
-        <p className="mt-2 max-w-2xl text-charcoal-400">
+        <p className="mt-2 text-charcoal-400">
           Your Priority subscription landing page — pick a plan, unlock{" "}
           {DEAL_SLOT_LIMIT} slots, then publish deals that rank above scraped
           listings. Or skip the quota with Design Deals 4 U.
@@ -107,8 +107,8 @@ export default async function DealOfTheCenturyPage({
       ) : null}
 
       <section className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
+        <div className="flex flex-col flex-wrap items-center justify-between gap-3 sm:flex-row sm:items-end">
+          <div className="max-w-2xl">
             <h2 className="font-display text-2xl text-charcoal-50">
               Priority subscription
             </h2>
@@ -202,7 +202,7 @@ export default async function DealOfTheCenturyPage({
         </Card>
       </section>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap justify-center gap-3 sm:justify-start">
         <Button asChild size="lg" variant="outline">
           <Link href="/dashboard/profile">Your profile</Link>
         </Button>

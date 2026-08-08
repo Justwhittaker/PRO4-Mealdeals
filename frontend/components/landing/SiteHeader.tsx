@@ -20,13 +20,13 @@ export async function SiteHeader() {
         />
       </div>
 
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <div className="relative z-[90] shrink-0">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-3 sm:gap-3 sm:px-6">
+        <div className="relative z-[90] min-w-0 shrink">
           <BrandLogo size="md" priority />
         </div>
 
         <nav
-          className="relative z-[90] flex shrink-0 items-center justify-end gap-1 sm:gap-2"
+          className="relative z-[90] flex shrink-0 items-center justify-end gap-0.5 sm:gap-2"
           aria-label="Site"
         >
           <Link

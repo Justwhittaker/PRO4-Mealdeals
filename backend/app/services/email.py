@@ -30,13 +30,16 @@ def send_email(
     from_addr = settings.smtp_from_email
 
     if not settings.smtp_host:
-        logger.info(
-            "[email-dry-run] to=%s subject=%s\n%s",
+        logger.warning(
+            "[email-dry-run] SMTP_HOST unset — not delivering to=%s subject=%s\n%s",
             to_email,
             subject,
             text_body[:2000],
         )
-        return True
+        # Local/test: pretend success. Production/staging must set SMTP_HOST.
+        if settings.app_env in {"development", "test"}:
+            return True
+        return False
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject

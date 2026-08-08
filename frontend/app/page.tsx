@@ -95,20 +95,20 @@ export default async function HomePage({
       <LocationDealsBar target={target} source={source} scope="country" />
       <GeoBootstrap enabled={needsClientGeo} />
 
-      <main>
-        <p className="animate-fade-up bg-white px-4 py-3 text-center font-display text-xl text-charcoal-50 sm:px-6 sm:text-2xl">
+      <main className="w-full max-w-[100vw] overflow-x-clip">
+        <p className="animate-fade-up w-full bg-white px-3 py-3 text-center font-display text-lg text-charcoal-50 sm:px-6 sm:text-2xl">
           HOT DEALS across {countryLabel} — all categories
           {hubLabel ? ` (near ${hubLabel})` : ""}.
         </p>
-        <section className="hero-atmosphere grain relative z-10 border-b border-charcoal-700">
-          <div className="relative z-10 mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
+        <section className="hero-atmosphere grain relative z-10 w-full border-b border-charcoal-700">
+          <div className="relative z-10 w-full px-3 py-4 sm:px-6 sm:py-5">
             <div className="animate-fade-up opacity-0 [animation-delay:120ms] [animation-fill-mode:forwards]">
               <LandingSearch category={category} />
             </div>
           </div>
         </section>
 
-        <section className="relative z-0 mx-auto max-w-[90rem] px-4 py-5 sm:px-6 sm:py-6">
+        <section className="relative z-0 mx-auto w-full max-w-[90rem] px-3 py-5 sm:px-6 sm:py-6">
           <NewsletterDealGate>
             <div className="mb-3 flex flex-col items-center gap-1 text-center">
               <div>

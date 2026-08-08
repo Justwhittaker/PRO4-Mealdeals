@@ -19,16 +19,18 @@ const SIZE: Record<
     wordSizes: "180px",
   },
   md: {
-    logo: "h-16 w-16 sm:h-20 sm:w-20",
-    word: "h-[3.75rem] w-[15rem] sm:h-[4.5rem] sm:w-[19.5rem]",
+    logo: "h-12 w-12 sm:h-16 sm:w-16 md:h-20 md:w-20",
+    word:
+      "h-12 w-[9.75rem] max-w-[42vw] sm:h-[3.75rem] sm:w-[15rem] sm:max-w-none md:h-[4.5rem] md:w-[19.5rem]",
     logoPx: 80,
-    wordSizes: "312px",
+    wordSizes: "(max-width: 640px) 156px, 312px",
   },
   lg: {
-    logo: "h-24 w-24",
-    word: "h-[5.25rem] w-96",
+    logo: "h-16 w-16 sm:h-24 sm:w-24",
+    word:
+      "h-14 w-[min(12rem,calc(100vw-7rem))] sm:h-[5.25rem] sm:w-96 sm:max-w-none",
     logoPx: 96,
-    wordSizes: "384px",
+    wordSizes: "(max-width: 640px) 192px, 384px",
   },
 };
 

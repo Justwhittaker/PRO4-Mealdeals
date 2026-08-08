@@ -43,11 +43,11 @@ export function LocationDealsBar({
           : "default area";
 
   return (
-    <div className="border-b border-burgundy-200 bg-burgundy-50">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-2 px-4 py-2.5 text-center sm:justify-between sm:px-6 sm:text-left">
-        <p className="flex items-start justify-center gap-2 text-sm text-charcoal-200 sm:items-center sm:justify-start">
+    <div className="w-full border-b border-burgundy-200 bg-burgundy-50">
+      <div className="flex w-full flex-wrap items-center justify-center gap-2 px-3 py-2.5 text-center sm:justify-between sm:px-6 sm:text-left">
+        <p className="flex min-w-0 max-w-full items-start justify-center gap-2 text-sm text-charcoal-200 sm:items-center sm:justify-start">
           <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-burgundy-500 sm:mt-0" />
-          <span>
+          <span className="min-w-0 break-words">
             Showing deals{" "}
             {scope === "country" ? "across" : "for"}{" "}
             <Link

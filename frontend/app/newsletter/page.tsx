@@ -17,10 +17,10 @@ export default function NewsletterPortalPage({
   const email = searchParams?.email ?? "";
 
   return (
-    <div className="relative min-h-screen bg-white">
-      <main className="hero-atmosphere grain relative border-b border-charcoal-700">
-        <div className="relative z-10 mx-auto max-w-lg px-4 py-12 sm:px-6 sm:py-16">
-          <div className="border border-charcoal-700 bg-white/90 p-6 shadow-deal sm:p-8">
+    <div className="relative min-h-screen max-w-[100vw] overflow-x-clip bg-white">
+      <main className="hero-atmosphere grain relative w-full border-b border-charcoal-700">
+        <div className="relative z-10 mx-auto w-full max-w-3xl px-3 py-10 sm:px-6 sm:py-16">
+          <div className="w-full border border-charcoal-700 bg-white/90 p-5 text-center shadow-deal sm:p-8">
             <NewsletterPortalClient
               resubscribe={resubscribe}
               token={token}

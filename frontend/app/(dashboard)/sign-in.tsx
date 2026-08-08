@@ -137,7 +137,7 @@ export function DashboardSignIn() {
   const isForgot = mode === "forgot";
 
   return (
-    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-16 sm:px-6">
+    <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-3 py-10 text-center sm:px-6 sm:py-16 sm:text-left">
       <div>
         <h1 className="font-display text-3xl text-charcoal-50">
           {isForgot
@@ -154,7 +154,7 @@ export function DashboardSignIn() {
               : "Sign in to manage deals and billing."}
         </p>
       </div>
-      <Card>
+      <Card className="text-left">
         <CardHeader>
           <CardTitle>
             {isForgot

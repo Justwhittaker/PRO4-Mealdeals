@@ -45,7 +45,7 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
   }
 
   return (
-    <div className="relative z-0 mx-auto w-full max-w-5xl select-none px-8 sm:px-10 lg:max-w-6xl lg:px-12 xl:max-w-7xl">
+    <div className="relative z-0 mx-auto w-full max-w-5xl select-none overflow-x-clip px-6 sm:px-10 lg:max-w-6xl lg:overflow-visible lg:px-12 xl:max-w-7xl">
       <button
         type="button"
         onClick={(e) => {

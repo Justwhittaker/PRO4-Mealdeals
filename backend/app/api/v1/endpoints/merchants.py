@@ -197,6 +197,15 @@ async def forgot_password(
     result = await db.execute(select(Merchant).where(Merchant.email == email))
     merchant = result.scalar_one_or_none()
     if merchant is not None:
+        # Never claim success when mail cannot leave the server.
+        if not settings.smtp_host:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=(
+                    "Password reset email is not configured yet (SMTP_HOST). "
+                    "Contact support or try Google sign-in."
+                ),
+            )
         subject = "Reset your Dine A Deal merchant sign-in"
         text_body = "\n".join(
             [
@@ -209,11 +218,16 @@ async def forgot_password(
                 "If you did not request this, you can ignore this email.",
             ]
         )
-        send_email(
+        delivered = send_email(
             to_email=email,
             subject=subject,
             text_body=text_body,
         )
+        if not delivered:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Could not send the reset email. Please try again shortly.",
+            )
 
     return ForgotPasswordResponse(
         message=(

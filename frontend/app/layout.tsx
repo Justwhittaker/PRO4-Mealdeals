@@ -3,6 +3,7 @@ import { Crimson_Text, Oswald } from "next/font/google";
 import { AdSenseScript } from "@/components/ads/AdSenseScript";
 import { CookieConsentProvider } from "@/components/cookie/CookieConsentProvider";
 import { ConditionalSiteHeader } from "@/components/landing/ConditionalSiteHeader";
+import { ScrollToTopButton } from "@/components/landing/ScrollToTopButton";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { NewsletterPopup } from "@/components/newsletter/NewsletterPopup";
 import { getAdSenseClientId, isAdSenseConfigured } from "@/lib/adsense";
@@ -58,7 +59,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${oswald.variable} ${crimson.variable}`}>
-      <body className="min-h-screen font-sans">
+      <body className="min-h-screen max-w-[100vw] overflow-x-clip font-sans">
         <CookieConsentProvider>
           <AdSenseScript />
           {/* Deal counter + public chrome — always visible, including merchant login */}
@@ -67,6 +68,7 @@ export default function RootLayout({
             <NewsletterPopup />
           </ConditionalSiteHeader>
           {children}
+          <ScrollToTopButton />
         </CookieConsentProvider>
       </body>
     </html>
