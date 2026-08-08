@@ -69,7 +69,7 @@ export function hasAdSenseSlots(): boolean {
  * Use Google Auto ads when the publisher is set but slot IDs are not yet created.
  * Manual InFeed/Sidebar units take over once slot env vars exist.
  */
-export function useAdSenseAutoAds(): boolean {
+export function shouldUseAdSenseAutoAds(): boolean {
   return isAdSenseConfigured() && !hasAdSenseSlots();
 }
 

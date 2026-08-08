@@ -2,7 +2,7 @@ import { GoogleAdSense } from "next-google-adsense";
 import {
   getAdSensePublisherId,
   isAdSenseLive,
-  useAdSenseAutoAds,
+  shouldUseAdSenseAutoAds,
 } from "@/lib/adsense";
 
 /**
@@ -19,7 +19,7 @@ export function AdSenseScript() {
   return (
     <GoogleAdSense
       publisherId={publisherId}
-      isAutoAd={useAdSenseAutoAds()}
+      isAutoAd={shouldUseAdSenseAutoAds()}
     />
   );
 }
