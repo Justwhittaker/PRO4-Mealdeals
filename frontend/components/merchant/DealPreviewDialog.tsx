@@ -6,18 +6,21 @@ import { Button } from "@/components/ui/button";
 interface DealPreviewDialogProps {
   open: boolean;
   deal: DealCardProps;
+  /** compose = activate/save CTAs; view = close-only history preview */
+  mode?: "compose" | "view";
   publishing?: boolean;
   canActivate?: boolean;
   activateBlockedReason?: string | null;
   onKeepEditing: () => void;
-  onSaveForLater: () => void;
-  onConfirmActivate: () => void;
+  onSaveForLater?: () => void;
+  onConfirmActivate?: () => void;
 }
 
 /** Full-screen overlay — shows how the deal card will look on the public site. */
 export function DealPreviewDialog({
   open,
   deal,
+  mode = "compose",
   publishing = false,
   canActivate = true,
   activateBlockedReason = null,
@@ -40,8 +43,8 @@ export function DealPreviewDialog({
         aria-label="Close preview"
         onClick={onKeepEditing}
       />
-      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-md border border-charcoal-700 bg-white shadow-deal">
-        <div className="border-b border-charcoal-800 px-4 py-3">
+      <div className="relative z-10 flex max-h-[min(92vh,720px)] w-full max-w-md flex-col overflow-hidden rounded-md border border-charcoal-700 bg-white shadow-deal">
+        <div className="shrink-0 border-b border-charcoal-800 px-4 py-3">
           <p className="text-[10px] font-medium uppercase tracking-wider text-burgundy-500">
             Preview
           </p>
@@ -56,14 +59,22 @@ export function DealPreviewDialog({
           </p>
         </div>
 
-        <div className="bg-charcoal-950/40 p-4">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-charcoal-950/40 p-4">
           <div className="pointer-events-none">
             <DealCard {...deal} />
           </div>
         </div>
 
-        <div className="space-y-3 border-t border-charcoal-800 p-4">
-          {canActivate ? (
+        <div className="shrink-0 space-y-3 border-t border-charcoal-800 p-4">
+          {mode === "view" ? (
+            <Button
+              type="button"
+              className="w-full"
+              onClick={onKeepEditing}
+            >
+              Close preview
+            </Button>
+          ) : canActivate ? (
             <>
               <Button
                 type="button"
@@ -82,17 +93,22 @@ export function DealPreviewDialog({
               >
                 {publishing ? "Saving…" : "Save for later"}
               </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                disabled={publishing}
+                onClick={onKeepEditing}
+              >
+                Keep editing
+              </Button>
+              <p className="text-center text-xs text-charcoal-500">
+                Save for later keeps the deal on your profile as inactive — it
+                won&apos;t appear on the public site until you activate it.
+              </p>
             </>
           ) : (
             <>
-              <Button
-                type="button"
-                className="w-full"
-                disabled
-                title={activateBlockedReason ?? undefined}
-              >
-                No open slots
-              </Button>
               <Button
                 type="button"
                 className="w-full"
@@ -101,22 +117,30 @@ export function DealPreviewDialog({
               >
                 {publishing ? "Saving…" : "Save for later — add to profile"}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                disabled
+                title={activateBlockedReason ?? undefined}
+              >
+                No open slots
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                disabled={publishing}
+                onClick={onKeepEditing}
+              >
+                Keep editing
+              </Button>
+              <p className="text-center text-xs text-charcoal-500">
+                All Priority slots are full. Save for later adds this deal to
+                your profile inactive so you can Activate now when a slot opens.
+              </p>
             </>
           )}
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full"
-            disabled={publishing}
-            onClick={onKeepEditing}
-          >
-            Keep editing
-          </Button>
-          <p className="text-center text-xs text-charcoal-500">
-            {canActivate
-              ? "Save for later keeps the deal on your profile as inactive — it won't appear on the public site until you activate it."
-              : "All Priority slots are full. Save for later adds this deal to your profile inactive so you can schedule Activate now when a slot opens."}
-          </p>
         </div>
       </div>
     </div>

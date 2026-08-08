@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { syncMerchantPriorityFromStripe } from "@/actions/stripe";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BillingActions } from "@/components/merchant/BillingActions";
 import { authOptions } from "@/lib/auth";
@@ -15,7 +14,7 @@ import {
   parseLocationCookie,
   resolveGeoFromHeaders,
 } from "@/lib/geo";
-import { DEAL_SLOT_LIMIT, DESIGN_SPECIAL } from "@/lib/stripe";
+import { DEAL_SLOT_LIMIT } from "@/lib/stripe";
 import { resolvePriorityAmounts } from "@/lib/subscription-pricing";
 
 function resolveBillingCountry(merchantCountry?: string | null): string {
@@ -42,11 +41,30 @@ export default async function DealOfTheCenturyPage({
   const merchantId = session.user.id;
   let profile = await fetchMerchantProfile(merchantId);
 
-  // Free month = monthly Stripe sub in "trialing". Sync after checkout / if webhook lagged.
-  if (searchParams?.success === "1" || (profile.ok && !profile.data.is_subscriber)) {
+  // Legacy Stripe success URLs still hit /dashboard — sync then send to profile.
+  if (searchParams?.success === "1") {
     const sync = await syncMerchantPriorityFromStripe(merchantId);
     if (sync.synced) {
       profile = await fetchMerchantProfile(merchantId);
+    }
+    const params = new URLSearchParams({ success: "1" });
+    if (searchParams.plan) params.set("plan", searchParams.plan);
+    redirect(`/dashboard/profile?${params.toString()}`);
+  }
+
+  // Hide Deal of the century once Priority is active.
+  if (profile.ok && profile.data.is_subscriber) {
+    redirect("/dashboard/profile");
+  }
+
+  // Webhook lag: try activating Priority before showing the upsell.
+  if (profile.ok && !profile.data.is_subscriber) {
+    const sync = await syncMerchantPriorityFromStripe(merchantId);
+    if (sync.synced) {
+      profile = await fetchMerchantProfile(merchantId);
+      if (profile.ok && profile.data.is_subscriber) {
+        redirect("/dashboard/profile");
+      }
     }
   }
 
@@ -70,7 +88,6 @@ export default async function DealOfTheCenturyPage({
       : "/contact";
 
   const isSubscriber = profile.ok ? profile.data.is_subscriber : false;
-  const openSlots = profile.ok ? profile.data.open_slots : 0;
   const phase = profile.ok ? profile.data.subscription_phase : undefined;
 
   return (
@@ -89,17 +106,6 @@ export default async function DealOfTheCenturyPage({
         </p>
       </div>
 
-      {searchParams?.success ? (
-        <div className="rounded-lg border border-burgundy-200 bg-burgundy-50 px-4 py-3 text-sm text-charcoal-200">
-          {isSubscriber
-            ? searchParams.plan === "trial"
-              ? "You're on Priority — first month free on your monthly plan. Billing starts after 30 days unless you cancel."
-              : searchParams.plan === "promo"
-                ? "You're on Priority — discounted three months are active, then monthly continues."
-                : "Priority subscription is active."
-            : "Checkout completed — activating your Priority monthly plan… refresh if slots don’t appear yet."}
-        </div>
-      ) : null}
       {searchParams?.canceled ? (
         <div className="rounded-lg border border-charcoal-600 bg-charcoal-900/60 px-4 py-3 text-sm text-charcoal-300">
           Checkout canceled — no charge was made.
@@ -119,13 +125,7 @@ export default async function DealOfTheCenturyPage({
               three months.
             </p>
           </div>
-          {isSubscriber ? (
-            <Badge variant="verified">
-              Active{phase ? ` · ${phase}` : ""} · {openSlots} open slots
-            </Badge>
-          ) : (
-            <Badge variant="outline">No subscription yet</Badge>
-          )}
+          <Badge variant="outline">No subscription yet</Badge>
         </div>
 
         <BillingActions
@@ -137,69 +137,9 @@ export default async function DealOfTheCenturyPage({
           trialEligible={trialEligible}
           trialReason={trialReason}
           contactPath={contactPath}
-          stripeCustomerId={
-            profile.ok ? profile.data.stripe_customer_id ?? null : null
-          }
           isSubscriber={isSubscriber}
           subscriptionPhase={phase}
         />
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Publish Priority deals</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-charcoal-400">
-            {isSubscriber ? (
-              <p>
-                You have {openSlots} open slot
-                {openSlots === 1 ? "" : "s"}. Create a deal or manage history.
-              </p>
-            ) : (
-              <p>
-                Choose a subscription above before you can add a new Priority
-                deal.
-              </p>
-            )}
-            <div className="flex flex-wrap gap-2">
-              {isSubscriber ? (
-                <Button asChild>
-                  <Link href="/dashboard/deals/new">Create a Priority deal</Link>
-                </Button>
-              ) : (
-                <Button disabled type="button">
-                  Subscribe first
-                </Button>
-              )}
-              <Button asChild variant="outline">
-                <Link href="/dashboard/deals">Deal history</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-burgundy-300/40">
-          <CardHeader>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="featured">Design Deals 4 U</Badge>
-              <Badge variant="outline">Slot-exempt</Badge>
-            </div>
-            <CardTitle className="mt-2 text-xl">
-              {formatMoney(DESIGN_SPECIAL.amount, DESIGN_SPECIAL.currency)} per
-              deal
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-charcoal-400">
-            <p>
-              We design from your brief + photos. Does not use Priority slots —
-              specials can run for two months.
-            </p>
-            <Button asChild variant="outline">
-              <Link href="/dashboard/design">Open Design Deals 4 U</Link>
-            </Button>
-          </CardContent>
-        </Card>
       </section>
 
       <div className="flex flex-wrap justify-center gap-3 sm:justify-start">

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  createCustomerPortalSession,
   createPriorityCheckoutSession,
   type PriorityCheckoutKind,
 } from "@/actions/stripe";
@@ -21,7 +20,6 @@ interface BillingActionsProps {
   trialEligible: boolean;
   trialReason?: string | null;
   contactPath: string;
-  stripeCustomerId?: string | null;
   isSubscriber?: boolean;
   subscriptionPhase?: string;
 }
@@ -35,7 +33,6 @@ export function BillingActions({
   trialEligible,
   trialReason,
   contactPath,
-  stripeCustomerId,
   isSubscriber,
   subscriptionPhase,
 }: BillingActionsProps) {
@@ -70,34 +67,6 @@ export function BillingActions({
     setLoading(null);
   }
 
-  async function openPortal() {
-    setLoading("portal");
-    setError(null);
-    const customerId = stripeCustomerId?.trim() ?? "";
-    if (!customerId) {
-      setError(
-        "No Stripe customer on this profile yet — complete Priority checkout first, then reopen the portal.",
-      );
-      setLoading(null);
-      return;
-    }
-    try {
-      const result = await createCustomerPortalSession(customerId);
-      if (result.url) {
-        window.location.assign(result.url);
-        return;
-      }
-      setError(result.error ?? "Portal failed");
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Could not open the Stripe customer portal.",
-      );
-    }
-    setLoading(null);
-  }
-
   return (
     <div className="space-y-6">
       <Card className="border-burgundy-300/40">
@@ -117,7 +86,14 @@ export function BillingActions({
             <p className="rounded-md border border-charcoal-700 bg-charcoal-900/40 px-3 py-2 text-sm text-charcoal-200">
               Active subscription
               {subscriptionPhase ? ` · phase: ${subscriptionPhase}` : ""}. Manage
-              billing in the customer portal below.
+              billing in the customer portal on{" "}
+              <Link
+                href="/dashboard/profile"
+                className="font-medium text-burgundy-600 underline-offset-2 hover:underline"
+              >
+                your profile
+              </Link>
+              .
             </p>
           ) : null}
 
@@ -207,24 +183,6 @@ export function BillingActions({
             {loading === "promo"
               ? "Redirecting…"
               : `Pay ${formatMoney(promoAmount, currency)} now — unlock 3 months`}
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
-          <div>
-            <p className="font-medium text-charcoal-100">Customer Portal</p>
-            <p className="text-sm text-charcoal-500">
-              Update payment method, invoices, or cancel.
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            disabled={loading !== null}
-            onClick={() => void openPortal()}
-          >
-            {loading === "portal" ? "Opening…" : "Open portal"}
           </Button>
         </CardContent>
       </Card>

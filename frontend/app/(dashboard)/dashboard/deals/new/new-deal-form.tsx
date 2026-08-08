@@ -516,14 +516,33 @@ export function NewDealForm({
             ))}
           </div>
 
-          <Button
-            type="button"
-            className="w-full sm:w-auto"
-            disabled={publishing}
-            onClick={() => void onPublish()}
-          >
-            Preview deal
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+            <Button
+              type="button"
+              className="w-full sm:w-auto"
+              disabled={publishing}
+              onClick={() => void onPublish()}
+            >
+              Preview deal
+            </Button>
+            {!canActivateNow ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                disabled={publishing}
+                onClick={() => void persistDeal(false)}
+              >
+                {publishing ? "Saving…" : "Save for later — add to profile"}
+              </Button>
+            ) : null}
+          </div>
+          {!canActivateNow ? (
+            <p className="text-xs text-charcoal-500">
+              No open Priority slots to go live — save to your profile now, or
+              preview first, then activate when a slot frees up.
+            </p>
+          ) : null}
           {error ? <p className="text-sm text-amber-200">{error}</p> : null}
         </CardContent>
       </Card>

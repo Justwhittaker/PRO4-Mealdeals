@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 /**
- * Billing is merged into the merchant landing page ("Deal of the century").
+ * Billing is merged into Deal of the century (upsell) / profile (post-pay).
  * Keep this route so old Stripe return URLs still work.
  */
 export default function BillingRedirectPage({
@@ -14,5 +14,10 @@ export default function BillingRedirectPage({
   if (searchParams.canceled) params.set("canceled", searchParams.canceled);
   if (searchParams.plan) params.set("plan", searchParams.plan);
   const qs = params.toString();
+
+  // Paid checkout → profile; cancel / bare hit → upsell page.
+  if (searchParams.success) {
+    redirect(qs ? `/dashboard/profile?${qs}` : "/dashboard/profile");
+  }
   redirect(qs ? `/dashboard?${qs}` : "/dashboard");
 }

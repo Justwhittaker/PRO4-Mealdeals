@@ -3,15 +3,31 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { authOptions } from "@/lib/auth";
-import { fetchDealHistory } from "@/lib/api";
+import { fetchDealHistory, fetchMerchantProfile } from "@/lib/api";
 import { DealHistory } from "./deal-history";
+
+function slugifyCity(city: string): string {
+  return city.trim().toLowerCase().replace(/\s+/g, "-");
+}
 
 export default async function MerchantDealsPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/dashboard");
 
   const merchantId = session.user.id;
-  const history = await fetchDealHistory(merchantId);
+  const [history, profile] = await Promise.all([
+    fetchDealHistory(merchantId),
+    fetchMerchantProfile(merchantId),
+  ]);
+
+  const restaurantName = profile.ok ? profile.data.name : "Your restaurant";
+  const logoUrl = profile.ok ? profile.data.logo_url ?? null : null;
+  const countryCode = profile.ok
+    ? (profile.data.location?.country_code || "ie").toLowerCase()
+    : "ie";
+  const citySlug = profile.ok
+    ? slugifyCity(profile.data.location?.city || "city")
+    : "city";
 
   return (
     <div className="space-y-6">
@@ -39,6 +55,10 @@ export default async function MerchantDealsPage() {
           initialDeals={history.data.results}
           openSlots={history.data.open_slots}
           activeCount={history.data.active_count}
+          restaurantName={restaurantName}
+          logoUrl={logoUrl}
+          countryCode={countryCode}
+          citySlug={citySlug}
         />
       )}
     </div>

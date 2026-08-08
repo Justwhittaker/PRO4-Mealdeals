@@ -6,6 +6,8 @@ import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { DealPreviewDialog } from "@/components/merchant/DealPreviewDialog";
+import type { DealCardProps } from "@/components/deals/DealCard";
 import {
   deleteMerchantDeal,
   setDealActive,
@@ -18,12 +20,59 @@ interface DealHistoryProps {
   initialDeals: HistoryDeal[];
   openSlots: number;
   activeCount: number;
+  restaurantName?: string;
+  logoUrl?: string | null;
+  countryCode?: string;
+  citySlug?: string;
+}
+
+function buildPreviewCard(
+  deal: HistoryDeal,
+  opts: {
+    restaurantName: string;
+    logoUrl: string | null;
+    country: string;
+    citySlug: string;
+  },
+): DealCardProps {
+  const title =
+    deal.title || deal.translations?.[0]?.title || "Untitled deal";
+  const currency = (deal.currency_code || "EUR").toUpperCase() as CurrencyCode;
+  const savings =
+    deal.original_price > deal.deal_price
+      ? Math.round(
+          ((deal.original_price - deal.deal_price) / deal.original_price) * 100,
+        )
+      : undefined;
+  return {
+    id: deal.id,
+    title,
+    restaurantName: opts.restaurantName,
+    price: deal.deal_price,
+    originalPrice:
+      deal.original_price > deal.deal_price ? deal.original_price : null,
+    currency,
+    country: opts.country,
+    city: opts.citySlug,
+    tier: "featured",
+    isSubscriber: true,
+    isScraped: false,
+    imageUrl: deal.image_url || null,
+    logoUrl: opts.logoUrl,
+    category: deal.venue_category ?? undefined,
+    savingsPercent: savings,
+    createdAt: deal.created_at,
+  };
 }
 
 export function DealHistory({
   initialDeals,
   openSlots: initialOpen,
   activeCount: initialActive,
+  restaurantName = "Your restaurant",
+  logoUrl = null,
+  countryCode = "ie",
+  citySlug = "city",
 }: DealHistoryProps) {
   const [deals, setDeals] = useState(initialDeals);
   const [openSlots, setOpenSlots] = useState(initialOpen);
@@ -31,6 +80,21 @@ export function DealHistory({
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [previewDealId, setPreviewDealId] = useState<string | null>(null);
+
+  const country =
+    countryCode.toLowerCase() === "gb" ? "uk" : countryCode.toLowerCase();
+  const previewDeal = previewDealId
+    ? deals.find((d) => d.id === previewDealId) ?? null
+    : null;
+  const previewCard = previewDeal
+    ? buildPreviewCard(previewDeal, {
+        restaurantName,
+        logoUrl,
+        country,
+        citySlug,
+      })
+    : null;
 
   async function onToggle(deal: HistoryDeal) {
     setBusy(deal.id);
@@ -98,15 +162,10 @@ export function DealHistory({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-charcoal-400">
-          {activeCount} live Priority · {openSlots} open slots · {deals.length} in
-          history
-        </p>
-        <Button asChild size="sm">
-          <Link href="/dashboard/deals/new">Create deal</Link>
-        </Button>
-      </div>
+      <p className="text-sm text-charcoal-400">
+        {activeCount} live Priority · {openSlots} open slots · {deals.length} in
+        history
+      </p>
       {message ? (
         <p className="text-sm text-citrus-200">{message}</p>
       ) : null}
@@ -153,6 +212,14 @@ export function DealHistory({
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPreviewDealId(deal.id)}
+                      >
+                        Preview
+                      </Button>
                       <Button asChild variant="outline" size="sm">
                         <Link href={`/dashboard/deals/${deal.id}/edit`}>Edit</Link>
                       </Button>
@@ -168,6 +235,7 @@ export function DealHistory({
                       ) : canActivatePriority ? (
                         <Button
                           size="sm"
+                          variant="outline"
                           disabled
                           title="No open Priority slots — deactivate another live deal first, then Activate now"
                         >
@@ -234,6 +302,15 @@ export function DealHistory({
           );
         })}
       </ul>
+
+      {previewCard ? (
+        <DealPreviewDialog
+          open
+          mode="view"
+          deal={previewCard}
+          onKeepEditing={() => setPreviewDealId(null)}
+        />
+      ) : null}
     </div>
   );
 }

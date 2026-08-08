@@ -492,6 +492,7 @@ export interface HistoryDeal {
   slot_exempt?: boolean;
   reposted_from_id?: string | null;
   image_url?: string | null;
+  venue_category?: string | null;
   title?: string;
   translations?: { title: string; description: string }[];
 }

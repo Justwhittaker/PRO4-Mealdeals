@@ -65,7 +65,7 @@ export async function createPriorityCheckoutSession(opts: {
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         line_items: [{ price: monthlyPriceId, quantity: 1 }],
-        success_url: `${appUrl}/dashboard?success=1&plan=trial`,
+        success_url: `${appUrl}/dashboard/profile?success=1&plan=trial`,
         cancel_url: `${appUrl}/dashboard?canceled=1`,
         // Card required now so month 2+ can bill automatically after the free month.
         payment_method_collection: "always",
@@ -116,7 +116,7 @@ export async function createPriorityCheckoutSession(opts: {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [{ price: promoPriceId, quantity: 1 }],
-      success_url: `${appUrl}/dashboard?success=1&plan=promo`,
+      success_url: `${appUrl}/dashboard/profile?success=1&plan=promo`,
       cancel_url: `${appUrl}/dashboard?canceled=1`,
       metadata: {
         merchantId,
@@ -219,7 +219,7 @@ export async function createCustomerPortalSession(
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${appUrl}/dashboard`,
+      return_url: `${appUrl}/dashboard/profile`,
     });
 
     return { url: session.url };
