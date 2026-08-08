@@ -23,6 +23,15 @@ services:
         value: https://dineadeal.com,https://www.dineadeal.com,http://localhost:3000,http://127.0.0.1:3000
       - key: FRONTEND_BASE_URL
         value: https://dineadeal.com
+      # Email: Render free blocks SMTP 25/465/587 — use Resend HTTPS instead.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        value: Dine A Deal <onboarding@resend.dev>
+      - key: CONTACT_TO_EMAIL
+        value: just.whittaker@gmail.com
+      - key: SMTP_ALLOW
+        value: "false"
       - key: DATABASE_URL
         fromDatabase:
           name: dineadeal-db

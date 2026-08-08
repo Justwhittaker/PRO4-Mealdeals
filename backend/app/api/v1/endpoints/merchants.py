@@ -29,7 +29,7 @@ from app.schemas.merchant import (
     TrialClaimResponse,
     TrialEligibilityResponse,
 )
-from app.services.email import send_email
+from app.services.email import is_email_configured, send_email
 from app.services.trial import check_trial_eligibility, record_trial_claim
 
 router = APIRouter(prefix="/merchants", tags=["merchants"])
@@ -198,11 +198,12 @@ async def forgot_password(
     merchant = result.scalar_one_or_none()
     if merchant is not None:
         # Never claim success when mail cannot leave the server.
-        if not settings.smtp_host:
+        if not is_email_configured(settings):
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail=(
-                    "Password reset email is not configured yet (SMTP_HOST). "
+                    "Password reset email is not configured yet "
+                    "(set RESEND_API_KEY, or SMTP_HOST on a paid instance). "
                     "Contact support or try Google sign-in."
                 ),
             )

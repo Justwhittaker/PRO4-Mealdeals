@@ -1,4 +1,4 @@
-"""Public contact form — emails Justin via SMTP helper."""
+"""Public contact form — emails Justin via Resend/SMTP helper."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from app.core.config import get_settings
 from app.schemas.contact import ContactMessageCreate, ContactMessageResponse
-from app.services.email import send_email
+from app.services.email import is_email_configured, send_email
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/contact", tags=["contact"])
@@ -25,6 +25,16 @@ async def submit_contact_message(
 ) -> ContactMessageResponse:
     settings = get_settings()
     to_email = (settings.contact_to_email or "").strip() or "just.whittaker@gmail.com"
+
+    if not is_email_configured(settings):
+        logger.error("Contact form rejected: email transport not configured")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "Contact email is not configured yet (set RESEND_API_KEY, or "
+                "SMTP_HOST on a paid Render instance). Please try again later."
+            ),
+        )
 
     name = payload.name.strip()
     surname = payload.surname.strip()
@@ -70,7 +80,10 @@ async def submit_contact_message(
         logger.error("Contact form email failed for %s", email)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Could not deliver your message. Please try again shortly.",
+            detail=(
+                "Could not deliver your message. Please try again shortly. "
+                "On Render free, outbound SMTP is blocked — set RESEND_API_KEY."
+            ),
         )
 
     return ContactMessageResponse(

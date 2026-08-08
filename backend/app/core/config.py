@@ -95,13 +95,21 @@ class Settings(BaseSettings):
     # Public site URL (unsubscribe / deal links in emails)
     frontend_base_url: str = Field(default="https://dineadeal.com")
 
-    # SMTP for weekly specials + contact form (empty host = dry-run log only)
+    # Resend HTTPS API (preferred on Render free — SMTP ports are blocked there)
+    resend_api_key: str = Field(default="")
+    resend_from_email: str = Field(
+        default="Dine A Deal <onboarding@resend.dev>"
+    )
+
+    # SMTP fallback (local/dev, or paid Render with SMTP_ALLOW=true)
     smtp_host: str = Field(default="")
     smtp_port: int = Field(default=587)
     smtp_user: str = Field(default="")
     smtp_password: str = Field(default="")
     smtp_from_email: str = Field(default="noreply@dineadeal.com")
     smtp_use_tls: bool = Field(default=True)
+    # Render free blocks 25/465/587 — keep false in production unless on a paid instance.
+    smtp_allow: bool = Field(default=False)
 
     # Inbox for public contact form submissions
     contact_to_email: str = Field(default="just.whittaker@gmail.com")
