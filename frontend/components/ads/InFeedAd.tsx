@@ -2,6 +2,7 @@
 
 import { AdUnit } from "next-google-adsense";
 import { AdPlaceholder } from "@/components/ads/AdPlaceholder";
+import { useMarketingConsent } from "@/components/cookie/CookieConsentProvider";
 import {
   getAdSenseInFeedSlotId,
   getAdSensePublisherId,
@@ -32,16 +33,18 @@ function InFeedIns({
 }
 
 export function InFeedAd() {
+  const marketingAllowed = useMarketingConsent();
   const live = isAdSenseLive();
   const publisherId = getAdSensePublisherId();
   const slotId = getAdSenseInFeedSlotId();
+  const showAd = marketingAllowed && live && publisherId && slotId;
 
   return (
     <aside
       className="my-2 overflow-hidden rounded-xl border border-charcoal-700/60 bg-charcoal-900/40"
       aria-label="Sponsored"
     >
-      {live && publisherId && slotId ? (
+      {showAd ? (
         <div className="min-h-[120px] px-4 py-6">
           <AdUnit
             publisherId={publisherId}
@@ -60,7 +63,15 @@ export function InFeedAd() {
           />
         </div>
       ) : (
-        <AdPlaceholder label="Ad space" minHeight={120} />
+        <AdPlaceholder
+          label="Ad space"
+          hint={
+            marketingAllowed
+              ? "Ads unlock on the live site URL"
+              : "Enable marketing cookies in Cookie settings to show ads"
+          }
+          minHeight={120}
+        />
       )}
     </aside>
   );

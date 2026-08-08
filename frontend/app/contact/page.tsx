@@ -1,10 +1,7 @@
 import Link from "next/link";
+import { ContactForm } from "@/components/contact/ContactForm";
 import { BrandLogo } from "@/components/landing/BrandLogo";
 import { SiteFooter } from "@/components/landing/SiteFooter";
-
-import { BRAND_CONTACT_EMAIL, BRAND_NAME_COMPACT } from "@/lib/brand";
-
-const CONTACT_EMAIL = BRAND_CONTACT_EMAIL;
 
 export const metadata = {
   title: "Contact us",
@@ -25,23 +22,11 @@ export default function ContactPage() {
         <p className="mt-3 text-sm text-charcoal-300">
           Free Priority months can only be used once per email, business name,
           or venue location. If registration failed and you think that&apos;s
-          wrong — or you need help with billing — email us.
+          wrong — or you need help with billing — send us a message below.
         </p>
 
-        <div className="mt-8 border border-charcoal-700 bg-white p-6 shadow-deal">
-          <p className="text-xs uppercase tracking-wider text-charcoal-400">
-            Email
-          </p>
-          <a
-            href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`${BRAND_NAME_COMPACT} Priority subscription`)}`}
-            className="mt-2 block font-display text-xl text-burgundy-600 underline-offset-2 hover:underline"
-          >
-            {CONTACT_EMAIL}
-          </a>
-          <p className="mt-4 text-sm text-charcoal-400">
-            Include your business name, city, and the email you used at signup
-            so we can check eligibility quickly.
-          </p>
+        <div className="mt-8">
+          <ContactForm />
         </div>
 
         <p className="mt-8 text-center text-sm text-charcoal-400">

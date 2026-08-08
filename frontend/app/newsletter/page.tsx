@@ -20,19 +20,7 @@ export default function NewsletterPortalPage({
     <div className="relative min-h-screen bg-white">
       <main className="hero-atmosphere grain relative border-b border-charcoal-700">
         <div className="relative z-10 mx-auto max-w-lg px-4 py-12 sm:px-6 sm:py-16">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-burgundy-500">
-            Customer newsletter
-          </p>
-          <h1 className="mt-2 font-display text-3xl text-charcoal-50 sm:text-4xl">
-            Weekly Hot Deals newsletter
-          </h1>
-          <p className="mt-3 text-sm text-charcoal-300">
-            New readers sign up with first name, surname, email, and location.
-            Already on the list? Sign in with your email to restore deals on
-            this device. Unsubscribe pauses emails — your record stays so you
-            can come back anytime.
-          </p>
-          <div className="mt-8 border border-charcoal-700 bg-white/90 p-6 shadow-deal">
+          <div className="border border-charcoal-700 bg-white/90 p-6 shadow-deal sm:p-8">
             <NewsletterPortalClient
               resubscribe={resubscribe}
               token={token}

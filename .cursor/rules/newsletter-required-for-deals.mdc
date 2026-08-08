@@ -1,0 +1,44 @@
+---
+description: Newsletter subscription is required to view deals on the website
+globs: frontend/app/**/*.tsx,frontend/components/deals/**/*.tsx,frontend/components/newsletter/**/*.tsx,frontend/lib/newsletter-storage.ts,frontend/lib/api.ts,backend/app/api/v1/endpoints/newsletter.py,backend/app/api/v1/endpoints/deals.py
+alwaysApply: false
+---
+
+# Newsletter required to view deals
+
+Visitors must be Weekly Hot Deals newsletter readers (Dine a Deal / dineadeal.com) before they can view deal content on the public website.
+
+## Product rule
+
+1. **Gate deal viewing** — country/city feeds, deal cards, deal detail pages, and deal grids stay locked until the visitor is a subscribed newsletter reader.
+2. **Unlock after signup or sign-in** — successful newsletter signup, or sign-in with an already-subscribed email, unlocks deals for that browser.
+3. **Remember on device** — store unlock in local cache (`newsletter-storage`) so returning visitors on the same browser keep access without repeating signup.
+4. **New device / cleared cache** — offer **Sign in** (email + `/newsletter/status` check). If `exists && is_subscribed`, restore the local unlock. Do **not** force them through the full signup form again.
+5. **Prompt, don’t soft-skip** — unsubscribed / unknown visitors see a clear newsletter CTA (popup, portal, or inline gate) with Sign up and Sign in.
+6. **Respect unsubscribe** — if they unsubscribe, clear local unlock; deal access locks until they resubscribe or sign in after resubscribing.
+7. **Merchant dashboard is separate** — Priority / merchant portal access is not the same as the consumer newsletter gate.
+
+## Implementation expectations
+
+- Use existing newsletter APIs (`/api/v1/newsletter/subscribe`, `status`, `unsubscribe`, `resubscribe`) and `frontend/lib/newsletter-storage.ts` flags.
+- Sign-in is email + status verification (restore cache), not a separate password/auth system.
+- Treat local “subscribed” storage as a UX unlock; prefer verifying `is_subscribed` via the status endpoint when practical (especially on sign-in).
+- Landing/marketing pages may stay public; **deal inventory** is what requires subscription.
+- Shared UI: `NewsletterAuthPanel` (Sign up / Sign in tabs) in popup, header menu, and `/newsletter` portal.
+
+## Examples
+
+```tsx
+// ❌ BAD — show full deal feed to everyone
+<DealFeed deals={deals} />
+
+// ❌ BAD — only signup, no way back after cache clear
+<NewsletterSignupForm />
+
+// ✅ GOOD — gate until newsletter subscribed locally
+{isNewsletterSubscribedLocally() ? (
+  <DealFeed deals={deals} />
+) : (
+  <NewsletterAuthPanel initialView="signup" />
+)}
+```

@@ -5,6 +5,7 @@ import { CurrencySelector } from "@/components/deals/CurrencySelector";
 import { RadiusSelector } from "@/components/deals/RadiusSelector";
 import { AreaDealGrid } from "@/components/deals/AreaDealGrid";
 import { SiteFooter } from "@/components/landing/SiteFooter";
+import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { CitySearchBar } from "@/components/geo/CitySearchBar";
 import { fetchDealsFeed } from "@/lib/api";
 import {
@@ -104,20 +105,22 @@ export default async function CountryPage({ params, searchParams }: PageProps) {
           </div>
         ) : null}
 
-        {!feed.ok ? (
-          <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-            Couldn&apos;t reach the deals API ({feed.error}). Showing an empty
-            feed until the backend is available.
-          </div>
-        ) : null}
+        <NewsletterDealGate>
+          {!feed.ok ? (
+            <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              Couldn&apos;t reach the deals API ({feed.error}). Showing an empty
+              feed until the backend is available.
+            </div>
+          ) : null}
 
-        <AreaDealGrid
-          deals={deals}
-          cityLabel={countryLabel}
-          category={category}
-          emptyMessage={empty.emptyMessage}
-          emptyHint={empty.emptyHint}
-        />
+          <AreaDealGrid
+            deals={deals}
+            cityLabel={countryLabel}
+            category={category}
+            emptyMessage={empty.emptyMessage}
+            emptyHint={empty.emptyHint}
+          />
+        </NewsletterDealGate>
       </main>
       <SiteFooter />
     </div>

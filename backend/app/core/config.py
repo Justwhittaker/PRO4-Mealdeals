@@ -95,13 +95,16 @@ class Settings(BaseSettings):
     # Public site URL (unsubscribe / deal links in emails)
     frontend_base_url: str = Field(default="https://dineadeal.com")
 
-    # SMTP for weekly specials (empty host = dry-run log only)
+    # SMTP for weekly specials + contact form (empty host = dry-run log only)
     smtp_host: str = Field(default="")
     smtp_port: int = Field(default=587)
     smtp_user: str = Field(default="")
     smtp_password: str = Field(default="")
     smtp_from_email: str = Field(default="noreply@dineadeal.com")
     smtp_use_tls: bool = Field(default=True)
+
+    # Inbox for public contact form submissions
+    contact_to_email: str = Field(default="just.whittaker@gmail.com")
 
     @model_validator(mode="after")
     def normalize_database_urls(self) -> Self:

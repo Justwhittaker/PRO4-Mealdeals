@@ -10,12 +10,15 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
 from app.api.dependencies import DbSession
+from app.core.config import get_settings
 from app.models.deal import Deal, DealItem
 from app.models.location import Location
 from app.models.merchant import PAID_DEAL_SLOT_LIMIT, Merchant, TierLevel
 from app.models.translation import DealTranslation
 from app.schemas.deal import DealRead
 from app.schemas.merchant import (
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     MerchantCreate,
     MerchantDealHistoryResponse,
     MerchantListResponse,
@@ -26,6 +29,7 @@ from app.schemas.merchant import (
     TrialClaimResponse,
     TrialEligibilityResponse,
 )
+from app.services.email import send_email
 from app.services.trial import check_trial_eligibility, record_trial_claim
 
 router = APIRouter(prefix="/merchants", tags=["merchants"])
@@ -178,6 +182,45 @@ async def get_profile_by_email(email: str, db: DbSession) -> MerchantProfile:
     if merchant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
     return await _profile_from_merchant(db, merchant)
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+async def forgot_password(
+    payload: ForgotPasswordRequest,
+    db: DbSession,
+) -> ForgotPasswordResponse:
+    """Email sign-in reset instructions (does not reveal whether the account exists)."""
+    email = str(payload.email).strip().lower()
+    settings = get_settings()
+    sign_in_url = f"{settings.frontend_base_url.rstrip('/')}/dashboard"
+
+    result = await db.execute(select(Merchant).where(Merchant.email == email))
+    merchant = result.scalar_one_or_none()
+    if merchant is not None:
+        subject = "Reset your Dine A Deal merchant sign-in"
+        text_body = "\n".join(
+            [
+                "You requested a password reset for your Dine A Deal merchant account.",
+                "",
+                f"Open Merchant Sign in: {sign_in_url}",
+                "Enter this email and choose a new password, then sign in.",
+                "If you use Google, click Continue with Google on that page instead.",
+                "",
+                "If you did not request this, you can ignore this email.",
+            ]
+        )
+        send_email(
+            to_email=email,
+            subject=subject,
+            text_body=text_body,
+        )
+
+    return ForgotPasswordResponse(
+        message=(
+            "If an account exists for that email, reset instructions have been sent."
+        ),
+        email=email,
+    )
 
 
 @router.get("/{merchant_id}/profile", response_model=MerchantProfile)

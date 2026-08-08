@@ -140,8 +140,8 @@ export function LandingSearch({ category = "all" }: LandingSearchProps) {
   }
 
   return (
-    <div className="relative z-50 mx-auto grid w-full max-w-4xl gap-3 sm:grid-cols-2">
-      <div className={`relative ${openLocation ? "z-50" : ""}`}>
+    <div className="relative z-10 mx-auto grid w-full max-w-4xl gap-3 sm:grid-cols-2">
+      <div className={`relative ${openLocation ? "z-20" : ""}`}>
         <label htmlFor="search-country" className="sr-only">
           Search country
         </label>

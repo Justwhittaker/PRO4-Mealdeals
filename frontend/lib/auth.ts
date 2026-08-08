@@ -35,12 +35,15 @@ export const authOptions: NextAuthOptions = {
           GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            // Same email may already exist via credentials merchant login.
+            allowDangerousEmailAccountLinking: true,
           }),
         ]
       : []),
   ],
   pages: {
     signIn: "/dashboard",
+    error: "/dashboard",
   },
   session: {
     strategy: "jwt",

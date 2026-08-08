@@ -1,4 +1,5 @@
 import type { CurrencyCode } from "./currency";
+import { cleanDealDescription, cleanMediaUrl } from "@/lib/deal-media";
 import type { TierLevel } from "./priority";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -114,21 +115,6 @@ function mapTier(tier: string | undefined, isSubscriber: boolean): TierLevel {
   return "free";
 }
 
-/** Drop placeholder / non-http media so the UI never paints a fake logo/photo. */
-function cleanMediaUrl(value?: string | null): string | null {
-  if (!value) return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  if (!/^https?:\/\//i.test(trimmed)) return null;
-  const lower = trimmed.toLowerCase();
-  if (
-    /(placeholder|sprite|pixel|1x1|tracking|spacer|blank\.gif)/i.test(lower)
-  ) {
-    return null;
-  }
-  return trimmed;
-}
-
 function mapFeedItem(
   item: BackendDealFeedItem,
   fallbackCountry?: string,
@@ -153,7 +139,7 @@ function mapFeedItem(
   return {
     id: item.id,
     title: item.title?.trim() || item.merchant_name,
-    description: item.description ?? undefined,
+    description: cleanDealDescription(item.description),
     restaurantName: item.merchant_name,
     price,
     originalPrice: original || null,
@@ -329,7 +315,7 @@ export async function fetchDeal(
     data: {
       id: d.id,
       title: translation?.title?.trim() || d.merchant_name,
-      description: translation?.description,
+      description: cleanDealDescription(translation?.description),
       aboutBlurb: d.about_blurb ?? null,
       restaurantName: d.merchant_name,
       price: toNumber(d.deal_price),
@@ -848,6 +834,34 @@ export async function getNewsletterStatus(
 ): Promise<ApiResult<NewsletterStatus>> {
   const qs = new URLSearchParams({ email });
   return apiFetch(`/api/v1/newsletter/status?${qs}`, {
+    cache: "no-store",
+  });
+}
+
+export async function submitContactMessage(payload: {
+  name: string;
+  surname: string;
+  email: string;
+  phone: string;
+  business?: string;
+  title: string;
+  description: string;
+}): Promise<ApiResult<{ message: string; delivered: boolean }>> {
+  return apiFetch("/api/v1/contact", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+}
+
+export async function requestPasswordReset(
+  email: string,
+): Promise<ApiResult<{ message: string; email: string }>> {
+  return apiFetch("/api/v1/merchants/forgot-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
     cache: "no-store",
   });
 }

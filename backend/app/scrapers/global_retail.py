@@ -46,7 +46,7 @@ _AREA_DEAL_TEMPLATES: list[dict[str, str]] = [
         "title": "{merchant} Lunch Meal Deal — {city}",
         "description": (
             "Main + side + drink combo spotted for {city}. "
-            "External listing — prices may vary by store."
+            "Prices may vary by store."
         ),
         "original": "14.50",
         "deal": "7.50",
@@ -57,8 +57,8 @@ _AREA_DEAL_TEMPLATES: list[dict[str, str]] = [
     {
         "title": "{merchant} Hot Meal Offer — {city}",
         "description": (
-            "Hot lunch special near {city}. Scraped external deal — "
-            "verify in-store before visiting."
+            "Hot lunch special near {city}. "
+            "Verify in-store before visiting."
         ),
         "original": "16.00",
         "deal": "8.99",
@@ -68,10 +68,7 @@ _AREA_DEAL_TEMPLATES: list[dict[str, str]] = [
     },
     {
         "title": "{merchant} Breakfast Bundle — {city}",
-        "description": (
-            "Breakfast meal deal for {city} shoppers. "
-            "External scraped listing."
-        ),
+        "description": "Breakfast meal deal for {city} shoppers.",
         "original": "11.00",
         "deal": "5.50",
         "main": "Breakfast roll",

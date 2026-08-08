@@ -2,7 +2,10 @@
 
 import { usePathname } from "next/navigation";
 
-/** Public chrome — hidden on merchant dashboard (has its own shell). */
+/**
+ * Optional public overlays (e.g. newsletter popup).
+ * SiteHeader (incl. deal counter) always stays mounted in the root layout.
+ */
 export function ConditionalSiteHeader({
   children,
 }: {

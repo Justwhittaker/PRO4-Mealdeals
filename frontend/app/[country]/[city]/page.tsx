@@ -5,6 +5,7 @@ import { CurrencySelector } from "@/components/deals/CurrencySelector";
 import { RadiusSelector } from "@/components/deals/RadiusSelector";
 import { AreaDealGrid } from "@/components/deals/AreaDealGrid";
 import { SiteFooter } from "@/components/landing/SiteFooter";
+import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { LocationDealsBar } from "@/components/geo/LocationDealsBar";
 import { CitySearchBar } from "@/components/geo/CitySearchBar";
 import { fetchDealsFeed } from "@/lib/api";
@@ -116,22 +117,24 @@ export default async function CityPage({ params, searchParams }: PageProps) {
           </div>
         </div>
 
-        {!feed.ok ? (
-          <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-            Couldn&apos;t load deals ({feed.error}). Start the API at{" "}
-            <code className="text-citrus-300">NEXT_PUBLIC_API_URL</code> to
-            populate this feed.
-          </div>
-        ) : null}
+        <NewsletterDealGate>
+          {!feed.ok ? (
+            <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+              Couldn&apos;t load deals ({feed.error}). Start the API at{" "}
+              <code className="text-citrus-300">NEXT_PUBLIC_API_URL</code> to
+              populate this feed.
+            </div>
+          ) : null}
 
-        <AreaDealGrid
-          deals={deals}
-          cityLabel={cityLabel}
-          radiusMiles={hasCentroid ? radius : undefined}
-          category={category}
-          emptyMessage={empty.emptyMessage}
-          emptyHint={empty.emptyHint}
-        />
+          <AreaDealGrid
+            deals={deals}
+            cityLabel={cityLabel}
+            radiusMiles={hasCentroid ? radius : undefined}
+            category={category}
+            emptyMessage={empty.emptyMessage}
+            emptyHint={empty.emptyHint}
+          />
+        </NewsletterDealGate>
       </main>
       <SiteFooter />
     </div>

@@ -87,7 +87,7 @@ export function NewsletterMenu() {
           id={menuId}
           role="menu"
           aria-label="Newsletter"
-          className="absolute right-0 z-[100] mt-2 w-80 overflow-hidden rounded-md border border-charcoal-700 bg-white p-3 shadow-deal"
+          className="absolute right-0 z-[200] mt-2 w-80 overflow-hidden rounded-md border border-charcoal-700 bg-white p-3 shadow-deal"
         >
           <p className="border-b border-charcoal-800 pb-2 text-[10px] font-medium uppercase tracking-wider text-charcoal-400">
             Weekly Hot Deals

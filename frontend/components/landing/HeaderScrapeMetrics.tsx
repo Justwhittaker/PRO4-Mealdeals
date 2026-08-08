@@ -49,7 +49,7 @@ export function HeaderScrapeMetrics({
 
   return (
     <p
-      className="min-w-0 text-center font-display text-xs font-bold leading-tight text-charcoal-200 sm:text-[1.05rem]"
+      className="mx-auto max-w-6xl text-center font-display text-sm font-bold leading-tight text-citrus-300 sm:text-base"
       aria-live="polite"
     >
       <span className="whitespace-nowrap">

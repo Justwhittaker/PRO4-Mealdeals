@@ -1,0 +1,70 @@
+---
+description: Hospitality venue scope and deal types for MealDeals scrapers
+globs: backend/app/scrapers/**/*.py,backend/app/services/scrape*.py,backend/app/services/ingest.py,backend/app/workers/tasks.py
+alwaysApply: false
+---
+
+# Hospitality deal scraping
+
+Scrapers must find **food & beverage hospitality venues** and extract **time-bound or promotional offers**, not generic catalogue items.
+
+## Mission
+
+1. Discover venues that sell food and/or drinks for on-site, takeaway, or delivery consumption.
+2. For each venue, search menus, promo pages, social/OG metadata, and offer hubs for deal inventory.
+3. Normalize into MealDeals deals (title, description, prices, currency, city/country, image, affiliate/clean URL).
+4. Capture business contact fields for marketing export into `marketing_contacts` (separate from deals):
+   - Name of business
+   - Website
+   - Telephone number
+   - Email address
+   - Shortened about blurb when an About / description section is available
+
+Fresh worldwide refresh is triggered via `POST /api/v1/scrapers/scrape` (Cursor skill: `/scrape`).
+
+## Deal types to capture
+
+Prioritize any of:
+
+- Daily / chef’s specials, lunch deals, early-bird menus, set menus, meal deals
+- Happy hours, drink promotions
+- Seasonal menus, weekday / weekend offers
+- Family deals, group packages, limited-time promotions
+
+Skip pure grocery SKUs, non-F&B retail, and permanent full-price menu listings with no offer framing.
+
+## Venue types in scope
+
+Include any venue that sells food and beverages, including:
+
+**Core dining:** restaurants (casual, fine-dining, family, independent, chain, hotel, bistro, brasserie), gastropubs, diners, roadside diners, breakfast cafés, brunch restaurants, carveries, buffets, all-you-can-eat, grill, rotisserie, steak houses, seafood, fish-and-chip, barbecue, pizzerias, burger, noodle bars, sushi, tapas, mezze, vegetarian, vegan, farm-to-table.
+
+**Pubs & bars with food:** pubs, bars, sports bars, cocktail bars, wine bars, taprooms, breweries / microbreweries with kitchens, beer gardens, nightclubs / music / comedy venues serving food.
+
+**Cafés & light bites:** cafés, coffee shops, tea rooms, bakeries / patisseries with seating, delis, sandwich shops, salad bars, soup cafés, dessert cafés, ice-cream parlours with drinks, creperies, pancake / waffle houses, juice / smoothie bars serving food, health-food cafés.
+
+**QSR & mobile:** takeaways, fast-food / QSR, drive-through, food trucks, mobile vans, street-food stalls, food-market vendors, food halls, market cafés, pop-ups, supper clubs, meal-prep kitchens with collection.
+
+**Lodging & events:** hotels, resorts, inns, lodges, hostel cafés/bars, guesthouse restaurants, B&B dining rooms, wine farms / farm cafés, banqueting / wedding / conference / event venues, function rooms, catering companies, private dining.
+
+**Attraction & amenity F&B:** museum / gallery / theatre / cinema cafés or bars; bowling, casino, golf / country / sports / social / members’ club restaurants; theme-park, zoo, aquarium, visitor-attraction, holiday-park, campsite cafés; garden-centre cafés.
+
+**Transport & retail F&B:** airport / railway / ferry / cruise restaurants; service-station / motorway cafés; department-store / shopping-centre / supermarket cafés; convenience / petrol hot-food counters; workplace / university / college / hospital canteens and cafés.
+
+## Implementation notes
+
+- Prefer live offer pages (`/offers`, `/specials`, `/menu`, happy-hour, lunch-deal) and `og:image` / promo imagery.
+- Keep deals **city-local** (unique clean URL per city/country) and use local currency.
+- When live HTML is blocked, still emit area-localised hospitality-style templates for in-scope venue categories — never invent non-F&B merchants.
+- Subscriber/Priority merchant deals always rank above scraped external listings.
+- Tag `venue_category` on scrape so reports can break down by hospitality category.
+
+## /scrape results report
+
+Worldwide refresh uses full `TARGET_MARKETS` (not `only_new` unless asked). After a run, surface:
+
+1. Summary — areas, markets, deals discovered/ingested, marketing contacts upserted (+ unique DB count), runtime
+2. Breakdown — country → city → category → deals
+3. Category tally — category → deals
+
+API: `POST /api/v1/scrapers/scrape?wait=true` (report in response) or `GET /api/v1/scrapers/report`.

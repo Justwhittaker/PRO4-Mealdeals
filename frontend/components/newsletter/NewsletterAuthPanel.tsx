@@ -89,7 +89,7 @@ export function NewsletterAuthPanel({
     <div className="space-y-3">
       {view !== "resubscribe" ? (
         <div
-          className="grid grid-cols-2 gap-1 rounded-md border border-charcoal-700 bg-charcoal-950 p-1"
+          className="flex items-center gap-4"
           role="tablist"
           aria-label="Newsletter access"
         >
@@ -97,10 +97,10 @@ export function NewsletterAuthPanel({
             type="button"
             role="tab"
             aria-selected={view === "signup"}
-            className={`rounded px-2 py-1.5 text-xs font-medium transition ${
+            className={`rounded-md px-3 py-1.5 text-sm transition ${
               view === "signup"
-                ? "bg-white text-charcoal-50 shadow-sm"
-                : "text-charcoal-400 hover:text-charcoal-100"
+                ? "border border-charcoal-700 bg-white font-semibold text-charcoal-50"
+                : "border border-transparent font-medium text-charcoal-400 hover:text-charcoal-100"
             }`}
             onClick={() => setView("signup")}
           >
@@ -110,14 +110,14 @@ export function NewsletterAuthPanel({
             type="button"
             role="tab"
             aria-selected={view === "signin"}
-            className={`rounded px-2 py-1.5 text-xs font-medium transition ${
+            className={`rounded-md px-3 py-1.5 text-sm transition ${
               view === "signin"
-                ? "bg-white text-charcoal-50 shadow-sm"
-                : "text-charcoal-400 hover:text-charcoal-100"
+                ? "border border-charcoal-700 bg-white font-semibold text-charcoal-50"
+                : "border border-transparent font-medium text-charcoal-400 hover:text-charcoal-100"
             }`}
             onClick={() => setView("signin")}
           >
-            Sign in
+            Returning reader
           </button>
         </div>
       ) : null}
@@ -144,7 +144,7 @@ export function NewsletterAuthPanel({
               className="text-burgundy-500 underline-offset-2 hover:underline"
               onClick={() => setView("signin")}
             >
-              Sign in
+              Restore with email
             </button>
           </p>
         </>
@@ -153,8 +153,16 @@ export function NewsletterAuthPanel({
       {view === "signin" ? (
         <>
           <p className="text-xs text-charcoal-300">
-            Returning reader? Enter the email you used for the newsletter —
-            we&apos;ll restore deal access on this device.
+            Already on the Weekly Hot Deals list? Enter that email — no
+            password — and we&apos;ll restore deal access on this device.
+            Merchants managing venues use{" "}
+            <a
+              href="/dashboard"
+              className="text-burgundy-500 underline-offset-2 hover:underline"
+            >
+              Merchant Sign in
+            </a>{" "}
+            (email + password).
           </p>
           <NewsletterSignInForm
             compact={compact}
@@ -195,7 +203,7 @@ export function NewsletterAuthPanel({
               className="text-burgundy-500 underline-offset-2 hover:underline"
               onClick={() => setView("signin")}
             >
-              Back to sign in
+              Back to returning reader
             </button>
           </p>
         </>

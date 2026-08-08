@@ -37,4 +37,4 @@ backend/.mypy_cache/
 .DS_Store
 .idea/
 .vscode/
-*.log
+*.logbackend/celerybeat-schedule

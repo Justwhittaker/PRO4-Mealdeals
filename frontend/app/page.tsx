@@ -6,7 +6,7 @@ import { RestaurantSearch } from "@/components/landing/RestaurantSearch";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { GeoBootstrap } from "@/components/geo/GeoBootstrap";
 import { LocationDealsBar } from "@/components/geo/LocationDealsBar";
-import { NewsletterPopup } from "@/components/newsletter/NewsletterPopup";
+import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { AreaDealGrid } from "@/components/deals/AreaDealGrid";
 import { RadiusSelector } from "@/components/deals/RadiusSelector";
 import { fetchDealsFeed } from "@/lib/api";
@@ -94,15 +94,14 @@ export default async function HomePage({
     <div className="relative min-h-screen bg-white">
       <LocationDealsBar target={target} source={source} scope="country" />
       <GeoBootstrap enabled={needsClientGeo} />
-      <NewsletterPopup />
 
       <main>
         <p className="animate-fade-up bg-white px-4 py-3 text-center font-display text-xl text-charcoal-50 sm:px-6 sm:text-2xl">
           HOT DEALS across {countryLabel} — all categories
           {hubLabel ? ` (near ${hubLabel})` : ""}.
         </p>
-        <section className="hero-atmosphere grain relative z-50 border-b border-charcoal-700">
-          <div className="relative z-50 mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
+        <section className="hero-atmosphere grain relative z-10 border-b border-charcoal-700">
+          <div className="relative z-10 mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
             <div className="animate-fade-up opacity-0 [animation-delay:120ms] [animation-fill-mode:forwards]">
               <LandingSearch category={category} />
             </div>
@@ -110,51 +109,53 @@ export default async function HomePage({
         </section>
 
         <section className="relative z-0 mx-auto max-w-[90rem] px-4 py-5 sm:px-6 sm:py-6">
-          <div className="mb-3 flex flex-col items-center gap-1 text-center">
-            <div>
-              <h2 className="font-display text-2xl text-charcoal-50 sm:text-3xl">
-                Today&apos;s adverts across {countryLabel}
-              </h2>
-              <p className="mt-1 text-sm text-charcoal-400">
-                HOT Deals for {countryLabel} — every listing in every category
-                ({listed.length} shown).
-              </p>
-            </div>
-          </div>
-          <AdvertCarousel deals={carouselDeals} />
-          <div className="mx-auto mt-6 flex w-full max-w-4xl flex-col items-center justify-center gap-3 px-1 sm:flex-row">
-            <RestaurantSearch
-              restaurants={restaurants}
-              className="w-full min-w-0 max-w-md"
-            />
-            <Suspense fallback={null}>
-              <div className="shrink-0">
-                <RadiusSelector
-                  radius={radius}
-                  sort={sort}
-                  category={category}
-                  showRadius={false}
-                  showCategory={false}
-                />
+          <NewsletterDealGate>
+            <div className="mb-3 flex flex-col items-center gap-1 text-center">
+              <div>
+                <h2 className="font-display text-2xl text-charcoal-50 sm:text-3xl">
+                  Today&apos;s adverts across {countryLabel}
+                </h2>
+                <p className="mt-1 text-sm text-charcoal-400">
+                  HOT Deals for {countryLabel} — every listing in every category
+                  ({listed.length} shown).
+                </p>
               </div>
-            </Suspense>
-          </div>
-          {!feed.ok ? (
-            <p className="mt-6 text-center text-sm text-charcoal-400">
-              Feed unavailable ({feed.error}). Start the API to load live
-              adverts.
-            </p>
-          ) : null}
+            </div>
+            <AdvertCarousel deals={carouselDeals} />
+            <div className="mx-auto mt-6 flex w-full max-w-4xl flex-col items-center justify-center gap-3 px-1 sm:flex-row">
+              <RestaurantSearch
+                restaurants={restaurants}
+                className="w-full min-w-0 max-w-md"
+              />
+              <Suspense fallback={null}>
+                <div className="shrink-0">
+                  <RadiusSelector
+                    radius={radius}
+                    sort={sort}
+                    category={category}
+                    showRadius={false}
+                    showCategory={false}
+                  />
+                </div>
+              </Suspense>
+            </div>
+            {!feed.ok ? (
+              <p className="mt-6 text-center text-sm text-charcoal-400">
+                Feed unavailable ({feed.error}). Start the API to load live
+                adverts.
+              </p>
+            ) : null}
 
-          <div className="mt-12 border-t border-charcoal-700 pt-10">
-            <AreaDealGrid
-              deals={listed}
-              cityLabel={countryLabel}
-              category={category}
-              emptyMessage={`No deals listed across ${countryLabel} yet.`}
-              emptyHint="Search another country or check back soon."
-            />
-          </div>
+            <div className="mt-12 border-t border-charcoal-700 pt-10">
+              <AreaDealGrid
+                deals={listed}
+                cityLabel={countryLabel}
+                category={category}
+                emptyMessage={`No deals listed across ${countryLabel} yet.`}
+                emptyHint="Search another country or check back soon."
+              />
+            </div>
+          </NewsletterDealGate>
         </section>
       </main>
 

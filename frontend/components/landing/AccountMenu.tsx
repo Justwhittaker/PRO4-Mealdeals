@@ -20,7 +20,7 @@ const MENU_ITEMS = [
   {
     href: "/contact",
     label: "Contact us",
-    description: "Email the Dine A Deal team",
+    description: "Send a message to the team",
     icon: Mail,
   },
 ] as const;
@@ -70,7 +70,7 @@ export function AccountMenu() {
           id={menuId}
           role="menu"
           aria-label="Account"
-          className="absolute right-0 z-30 mt-2 w-64 overflow-hidden rounded-md border border-charcoal-700 bg-white py-1 shadow-deal"
+          className="absolute right-0 z-[200] mt-2 w-64 overflow-hidden rounded-md border border-charcoal-700 bg-white py-1 shadow-deal"
         >
           <p className="border-b border-charcoal-800 px-3 py-2 text-[10px] font-medium uppercase tracking-wider text-charcoal-400">
             Account

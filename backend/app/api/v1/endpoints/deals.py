@@ -28,6 +28,7 @@ from app.schemas.deal import (
     ValueCalculatorResponse,
 )
 from app.services.affiliate import build_affiliate_urls
+from app.services.deal_copy import clean_deal_description
 from app.services.ingest import normalize_city, normalize_country
 from app.services.ranking import compute_feed_score
 from app.services.scrape_runner import scrape_and_ingest_area
@@ -274,7 +275,9 @@ async def deals_feed(
                 merchant_id=merchant.id,
                 merchant_name=merchant.name,
                 title=translation.title if translation else None,
-                description=translation.description if translation else None,
+                description=clean_deal_description(
+                    translation.description if translation else None
+                ),
                 original_price=deal.original_price,
                 deal_price=deal.deal_price,
                 currency_code=deal.currency_code,

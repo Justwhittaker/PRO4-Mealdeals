@@ -11,21 +11,22 @@ export async function SiteHeader() {
   const markets = metrics.ok ? metrics.data.markets : null;
 
   return (
-    <header className="border-b border-charcoal-700 bg-white">
-      <div className="relative mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <BrandLogo size="md" priority />
+    <header className="relative z-[80] border-b border-charcoal-700 bg-white">
+      {/* Full-width strip — never overlapped by logo/nav */}
+      <div className="border-b border-charcoal-800 bg-charcoal-950 px-4 py-1.5 sm:px-6">
+        <HeaderScrapeMetrics
+          initialActiveDeals={activeDeals}
+          initialMarkets={markets}
+        />
+      </div>
 
-        <div className="pointer-events-none absolute inset-x-0 flex justify-center px-4">
-          <div className="pointer-events-auto">
-            <HeaderScrapeMetrics
-              initialActiveDeals={activeDeals}
-              initialMarkets={markets}
-            />
-          </div>
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="relative z-[90] shrink-0">
+          <BrandLogo size="md" priority />
         </div>
 
         <nav
-          className="relative z-10 flex shrink-0 items-center justify-end gap-1 sm:gap-2"
+          className="relative z-[90] flex shrink-0 items-center justify-end gap-1 sm:gap-2"
           aria-label="Site"
         >
           <Link

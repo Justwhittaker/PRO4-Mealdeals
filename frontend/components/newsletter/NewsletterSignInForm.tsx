@@ -97,7 +97,7 @@ export function NewsletterSignInForm({
       ) : null}
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Checking…" : "Sign in"}
+        {pending ? "Checking…" : "Restore access"}
       </Button>
     </form>
   );

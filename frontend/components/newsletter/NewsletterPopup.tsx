@@ -3,8 +3,10 @@
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { X } from "lucide-react";
+import { NewsletterAuthIntro } from "@/components/newsletter/NewsletterAuthIntro";
 import { NewsletterAuthPanel } from "@/components/newsletter/NewsletterAuthPanel";
 import {
+  NEWSLETTER_OPEN_EVENT,
   markNewsletterPopupDismissed,
   shouldShowNewsletterPopup,
 } from "@/lib/newsletter-storage";
@@ -19,6 +21,16 @@ export function NewsletterPopup() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    function onOpenRequest() {
+      setOpen(true);
+    }
+    window.addEventListener(NEWSLETTER_OPEN_EVENT, onOpenRequest);
+    return () => {
+      window.removeEventListener(NEWSLETTER_OPEN_EVENT, onOpenRequest);
+    };
+  }, []);
+
   function dismiss() {
     markNewsletterPopupDismissed();
     setOpen(false);
@@ -28,7 +40,7 @@ export function NewsletterPopup() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center"
+      className="fixed inset-0 z-[300] flex items-end justify-center bg-black/40 p-4 sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -39,7 +51,7 @@ export function NewsletterPopup() {
         aria-label="Dismiss newsletter signup"
         onClick={dismiss}
       />
-      <div className="relative z-10 w-full max-w-md border border-charcoal-700 bg-white p-6 shadow-deal sm:p-8">
+      <div className="relative z-10 w-full max-w-lg border border-charcoal-700 bg-white p-6 shadow-deal sm:p-8">
         <button
           type="button"
           onClick={dismiss}
@@ -49,21 +61,9 @@ export function NewsletterPopup() {
           <X className="h-4 w-4" />
         </button>
 
-        <p className="text-[10px] font-medium uppercase tracking-wider text-burgundy-500">
-          Weekly Hot Deals
-        </p>
-        <h2
-          id={titleId}
-          className="mt-1 font-display text-2xl text-charcoal-50"
-        >
-          Sign up or sign in
-        </h2>
-        <p className="mt-2 text-sm text-charcoal-300">
-          New readers join the newsletter to unlock deals. Already subscribed?
-          Sign in with your email on this device — no need to sign up again.
-        </p>
+        <NewsletterAuthIntro as="h2" titleId={titleId} className="pr-8" />
 
-        <div className="mt-5">
+        <div className="mt-6">
           <NewsletterAuthPanel
             compact
             initialView="signup"

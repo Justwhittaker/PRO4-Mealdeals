@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DEAL_IMAGE_FALLBACK, cleanMediaUrl } from "@/lib/deal-media";
 
 interface DealHeroMediaProps {
   imageUrl?: string | null;
@@ -14,24 +15,11 @@ interface DealHeroMediaProps {
   hoverZoom?: boolean;
 }
 
-/** Real http(s) media URL — excludes placeholders / tracking pixels. */
-function usableContentUrl(value?: string | null): string | null {
-  if (!value) return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  if (!/^https?:\/\//i.test(trimmed)) return null;
-  const lower = trimmed.toLowerCase();
-  if (
-    /(placeholder|sprite|pixel|1x1|tracking|spacer|blank\.gif)/i.test(lower)
-  ) {
-    return null;
-  }
-  return trimmed;
-}
-
 /**
  * Deal hero photo with optional circular company logo at bottom-left.
  * Logo only when merchant.logo_url is present and loads — never a placeholder.
+ * When the deal photo is missing/broken, fall back to a local hero so cards
+ * never show an empty charcoal slab.
  */
 export function DealHeroMedia({
   imageUrl,
@@ -41,20 +29,24 @@ export function DealHeroMedia({
   className = "",
   hoverZoom = false,
 }: DealHeroMediaProps) {
-  const resolvedImage = usableContentUrl(imageUrl);
-  const resolvedLogo = usableContentUrl(logoUrl);
+  const resolvedImage = cleanMediaUrl(imageUrl);
+  const resolvedLogo = cleanMediaUrl(logoUrl);
   const [imageFailed, setImageFailed] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
 
   useEffect(() => {
     setImageFailed(false);
+    setFallbackFailed(false);
   }, [resolvedImage]);
 
   useEffect(() => {
     setLogoFailed(false);
   }, [resolvedLogo]);
 
-  const showImage = Boolean(resolvedImage) && !imageFailed;
+  const primarySrc =
+    resolvedImage && !imageFailed ? resolvedImage : null;
+  const showFallback = !primarySrc && !fallbackFailed;
   const showLogo = Boolean(resolvedLogo) && !logoFailed;
 
   const imgClass = hoverZoom
@@ -65,17 +57,28 @@ export function DealHeroMedia({
     <div
       className={`relative overflow-hidden bg-charcoal-900 ${aspectClassName} ${className}`}
     >
-      {showImage ? (
+      {primarySrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          key={resolvedImage!}
-          src={resolvedImage!}
+          key={primarySrc}
+          src={primarySrc}
           alt=""
           className={imgClass}
           referrerPolicy="no-referrer"
           loading="lazy"
           decoding="async"
           onError={() => setImageFailed(true)}
+        />
+      ) : showFallback ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={DEAL_IMAGE_FALLBACK}
+          src={DEAL_IMAGE_FALLBACK}
+          alt=""
+          className={imgClass}
+          loading="lazy"
+          decoding="async"
+          onError={() => setFallbackFailed(true)}
         />
       ) : (
         <div

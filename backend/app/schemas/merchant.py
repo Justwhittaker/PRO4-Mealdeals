@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.merchant import MerchantCategory, TierLevel
 from app.schemas.deal import DealRead
@@ -106,3 +106,12 @@ class MerchantDealHistoryResponse(BaseModel):
 class RepostDealResponse(BaseModel):
     deal: DealRead
     message: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+    email: EmailStr

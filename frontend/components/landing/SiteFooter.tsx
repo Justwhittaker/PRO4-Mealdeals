@@ -1,4 +1,5 @@
 import { Facebook, Instagram } from "lucide-react";
+import { CookieSettingsLink } from "@/components/cookie/CookieSettingsLink";
 
 const SOCIAL = [
   {
@@ -59,6 +60,7 @@ export function SiteFooter() {
           >
             Privacy Choices
           </a>
+          <CookieSettingsLink />
         </nav>
         <p className="text-center text-xs uppercase tracking-wider text-charcoal-400">
           Dine A Deal · Flat-rate restaurant advertising

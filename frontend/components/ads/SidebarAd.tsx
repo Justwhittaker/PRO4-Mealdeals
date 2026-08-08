@@ -2,6 +2,7 @@
 
 import { AdUnit } from "next-google-adsense";
 import { AdPlaceholder } from "@/components/ads/AdPlaceholder";
+import { useMarketingConsent } from "@/components/cookie/CookieConsentProvider";
 import {
   getAdSensePublisherId,
   getAdSenseSidebarSlotId,
@@ -9,9 +10,11 @@ import {
 } from "@/lib/adsense";
 
 export function SidebarAd() {
+  const marketingAllowed = useMarketingConsent();
   const live = isAdSenseLive();
   const publisherId = getAdSensePublisherId();
   const slotId = getAdSenseSidebarSlotId();
+  const showAd = marketingAllowed && live && publisherId && slotId;
 
   return (
     <aside
@@ -19,7 +22,7 @@ export function SidebarAd() {
       aria-label="Sponsored sidebar"
     >
       <div className="flex min-h-[250px] w-full items-center justify-center p-4">
-        {live && publisherId && slotId ? (
+        {showAd ? (
           <AdUnit
             publisherId={publisherId}
             slotId={slotId}
@@ -27,7 +30,15 @@ export function SidebarAd() {
             dummySize="MEDIUM_RECTANGLE"
           />
         ) : (
-          <AdPlaceholder label="Sticky ad" minHeight={250} />
+          <AdPlaceholder
+            label="Sticky ad"
+            hint={
+              marketingAllowed
+                ? "Ads unlock on the live site URL"
+                : "Enable marketing cookies in Cookie settings to show ads"
+            }
+            minHeight={250}
+          />
         )}
       </div>
     </aside>
