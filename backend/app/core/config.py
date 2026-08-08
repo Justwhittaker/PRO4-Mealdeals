@@ -92,6 +92,9 @@ class Settings(BaseSettings):
     # Shared secret for design fulfill + inbound email auto-post
     design_fulfill_secret: str = Field(default="mealdeals-design")
 
+    # Staff admin portal — required on X-Admin-Key for /api/v1/admin/*
+    admin_api_key: str = Field(default="dev-admin-key-change-me")
+
     # Public site URL (unsubscribe / deal links in emails)
     frontend_base_url: str = Field(default="https://dineadeal.com")
 

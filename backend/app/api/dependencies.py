@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
 from app.core.database import get_db
-from app.core.security import verify_optional_api_key
+from app.core.security import require_admin_key, verify_optional_api_key
 from app.services.currency import CurrencyService
 
 _redis_client: Optional[aioredis.Redis] = None
@@ -48,4 +48,5 @@ DbSession = Annotated[AsyncSession, Depends(get_db)]
 RedisClient = Annotated[aioredis.Redis, Depends(get_redis)]
 AppSettings = Annotated[Settings, Depends(get_settings)]
 OptionalApiKey = Annotated[Optional[str], Depends(verify_optional_api_key)]
+AdminKey = Annotated[str, Depends(require_admin_key)]
 CurrencySvc = Annotated[CurrencyService, Depends(get_currency_service)]

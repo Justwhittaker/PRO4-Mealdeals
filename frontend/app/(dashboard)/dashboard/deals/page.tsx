@@ -36,7 +36,8 @@ export default async function MerchantDealsPage() {
           <h1 className="font-display text-3xl text-charcoal-50">Your deals</h1>
           <p className="mt-2 text-charcoal-400">
             Live Priority slots plus saved drafts — create, preview, activate,
-            deactivate to free a slot, or delete when you no longer need a deal.
+            deactivate to free a slot, or remove a deal from your profile (analytics
+            are kept).
           </p>
         </div>
         <Button asChild>

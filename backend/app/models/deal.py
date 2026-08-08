@@ -73,6 +73,12 @@ class Deal(Base):
     deal_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     currency_code: Mapped[str] = mapped_column(String(3), nullable=False, default="USD")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # Soft-delete: hidden from merchant profile + public feed, kept for analytics.
+    deleted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+    )
     tier_priority_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

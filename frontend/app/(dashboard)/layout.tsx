@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { authOptions } from "@/lib/auth";
 import { fetchMerchantProfile } from "@/lib/api";
@@ -12,6 +13,10 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession(authOptions);
+
+  if (session?.user?.role === "admin") {
+    redirect("/admin");
+  }
 
   if (!session) {
     // Global SiteHeader already shows the brand — no second logo strip.

@@ -286,11 +286,31 @@ def categorize_venue(merchant_name: str) -> str:
 
 
 def venue_category_id(value: str | None, *, merchant_name: str = "") -> str:
-    """Normalize a venue category to the parent filter id used by the UI."""
+    """Normalize a venue category to the parent filter id used by the UI.
+
+    Prefer an explicit id/label/subcategory. Only fall back to merchant-name
+    inference when no usable category value was provided.
+    """
     raw = (value or "").strip()
     if raw in CATEGORY_ID_TO_LABEL:
         return raw
     if raw in CATEGORY_LABEL_TO_ID:
         return CATEGORY_LABEL_TO_ID[raw]
-    label = categorize_venue(merchant_name or raw)
-    return CATEGORY_LABEL_TO_ID.get(label, "restaurants-cafes-bistros")
+
+    raw_lower = raw.lower()
+    for label, subs in CATEGORY_GROUPS.items():
+        if any(raw_lower == sub.lower() for sub in subs):
+            return CATEGORY_LABEL_TO_ID.get(label, "restaurants-cafes-bistros")
+
+    # Explicit value that isn't recognized — do not silently replace with
+    # merchant-name inference when the caller passed something non-empty.
+    if raw:
+        # Last resort: treat the raw string itself as a venue name hint.
+        label = categorize_venue(raw)
+        return CATEGORY_LABEL_TO_ID.get(label, "restaurants-cafes-bistros")
+
+    if merchant_name:
+        label = categorize_venue(merchant_name)
+        return CATEGORY_LABEL_TO_ID.get(label, "restaurants-cafes-bistros")
+
+    return "restaurants-cafes-bistros"

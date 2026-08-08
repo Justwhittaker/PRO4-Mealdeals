@@ -232,7 +232,7 @@ export function categorizeVenue(merchantName: string): ParentCategoryId {
   return "restaurants-cafes-bistros";
 }
 
-/** Resolve stored venue_category (id or legacy label) or fall back to name inference. */
+/** Resolve stored venue_category (id, parent label, or subcategory) or fall back to name inference. */
 export function resolveVenueCategory(
   category: string | null | undefined,
   restaurantName = "",
@@ -241,6 +241,15 @@ export function resolveVenueCategory(
   if (raw && PARENT_IDS.has(raw)) return raw as ParentCategoryId;
   const byLabel = PARENT_CATEGORIES.find((c) => c.label === raw);
   if (byLabel) return byLabel.id;
+  if (raw) {
+    const rawLower = raw.toLowerCase();
+    for (const parent of PARENT_CATEGORIES) {
+      const subs = CATEGORY_GROUPS[parent.id];
+      if (subs.some((sub) => sub.toLowerCase() === rawLower)) {
+        return parent.id;
+      }
+    }
+  }
   return categorizeVenue(restaurantName);
 }
 

@@ -66,6 +66,7 @@ async def create_deal(payload: DealCreate, db: DbSession) -> Deal:
                     Deal.merchant_id == merchant.id,
                     Deal.is_active.is_(True),
                     Deal.slot_exempt.is_(False),
+                    Deal.deleted_at.is_(None),
                 )
             )
         ).scalar_one()
@@ -111,11 +112,13 @@ async def create_deal(payload: DealCreate, db: DbSession) -> Deal:
         clean_url = clean_url or generated_clean
         affiliate_url = affiliate_url or generated_aff
 
-    resolved_category = None
-    if payload.venue_category:
-        resolved_category = venue_category_id(
-            payload.venue_category, merchant_name=merchant.name
+    if not (payload.venue_category and str(payload.venue_category).strip()):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="venue_category is required (choose a browse category for this deal).",
         )
+    # Honor the merchant's selection; do not re-infer from the business name.
+    resolved_category = venue_category_id(str(payload.venue_category).strip())
 
     deal = Deal(
         merchant_id=payload.merchant_id,
@@ -234,6 +237,7 @@ async def deals_feed(
         .join(Merchant, Deal.merchant_id == Merchant.id)
         .join(Location, Merchant.location_id == Location.id)
         .where(Deal.is_active.is_(True))
+        .where(Deal.deleted_at.is_(None))
         .where(or_(Deal.expires_at.is_(None), Deal.expires_at > now))
         .options(
             selectinload(Deal.items),
@@ -320,8 +324,11 @@ async def deals_feed(
                 clean_url=deal.clean_url,
                 image_url=deal.image_url,
                 logo_url=merchant.logo_url,
-                venue_category=deal.venue_category
-                or venue_category_id(None, merchant_name=merchant.name),
+                venue_category=(
+                    venue_category_id(deal.venue_category)
+                    if deal.venue_category
+                    else venue_category_id(None, merchant_name=merchant.name)
+                ),
                 created_at=deal.created_at,
                 expires_at=deal.expires_at,
                 city=location.city,
@@ -378,7 +385,7 @@ async def update_deal(
         .options(selectinload(Deal.items), selectinload(Deal.translations))
     )
     deal = result.scalar_one_or_none()
-    if deal is None:
+    if deal is None or deal.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
 
     fields_set = payload.model_fields_set
@@ -407,6 +414,7 @@ async def update_deal(
                     Deal.merchant_id == deal.merchant_id,
                     Deal.is_active.is_(True),
                     Deal.slot_exempt.is_(False),
+                    Deal.deleted_at.is_(None),
                 )
             )
         ).scalar_one()
@@ -447,12 +455,15 @@ async def update_deal(
             )
         data["image_url"] = image_url
 
-    if "venue_category" in data and data["venue_category"] is not None:
-        merchant_for_cat = await db.get(Merchant, deal.merchant_id)
-        data["venue_category"] = venue_category_id(
-            str(data["venue_category"]),
-            merchant_name=merchant_for_cat.name if merchant_for_cat else "",
-        )
+    if "venue_category" in data:
+        raw_cat = data.get("venue_category")
+        if raw_cat is None or not str(raw_cat).strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="venue_category cannot be empty.",
+            )
+        # Honor explicit selection — do not override from merchant name.
+        data["venue_category"] = venue_category_id(str(raw_cat).strip())
 
     for field, value in data.items():
         if hasattr(deal, field):
@@ -516,11 +527,12 @@ async def update_deal(
 
 @router.delete("/{deal_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_deal(deal_id: UUID, db: DbSession) -> None:
-    """Permanently remove a deal and cascaded items/translations/metrics history."""
+    """Soft-delete a deal: hide from profile/feed, keep the row for analytics."""
     deal = await db.get(Deal, deal_id)
-    if deal is None:
+    if deal is None or deal.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
-    await db.delete(deal)
+    deal.deleted_at = datetime.now(timezone.utc)
+    deal.is_active = False
     await db.flush()
 
 
@@ -538,6 +550,8 @@ async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
 
     deal, merchant, location = row
+    if deal.deleted_at is not None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
     about_blurb = merchant.bio
     if not about_blurb:
         # Fall back to marketing contact ledger from prior scrapes.

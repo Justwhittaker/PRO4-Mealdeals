@@ -108,8 +108,11 @@ export function NewDealForm({
     isCurrencyCode(initialCurrency) ? initialCurrency : "GBP",
   );
   const [imageUrl, setImageUrl] = useState(initialDeal?.image_url ?? "");
-  const [venueCategory, setVenueCategory] = useState<ParentCategoryId>(() =>
-    resolveVenueCategory(initialDeal?.venue_category, restaurantName),
+  const [venueCategory, setVenueCategory] = useState<ParentCategoryId | "">(
+    () =>
+      initialDeal?.venue_category
+        ? resolveVenueCategory(initialDeal.venue_category, restaurantName)
+        : "",
   );
   const [items, setItems] = useState<LineItem[]>(() =>
     initialItemsFromDeal(initialDeal),
@@ -196,6 +199,10 @@ export function NewDealForm({
       setError("Add a deal title.");
       return;
     }
+    if (!venueCategory) {
+      setError("Choose a venue category for browse filters.");
+      return;
+    }
     if (!isSubscriber) {
       setError(
         "Choose a Priority subscription on Deal of the century before adding a deal.",
@@ -247,6 +254,10 @@ export function NewDealForm({
       setError(
         "No open Priority slots to activate. Save inactive, or free a slot first.",
       );
+      return;
+    }
+    if (!venueCategory) {
+      setError("Choose a venue category for browse filters.");
       return;
     }
 
@@ -304,7 +315,7 @@ export function NewDealForm({
     isScraped: false,
     imageUrl: imageUrl || null,
     logoUrl,
-    category: venueCategory,
+    category: venueCategory || null,
     savingsPercent: preview?.savingsPercent,
     createdAt: new Date().toISOString(),
   };
@@ -369,7 +380,7 @@ export function NewDealForm({
           <div className="space-y-2">
             <Label>Venue category</Label>
             <Select
-              value={venueCategory}
+              value={venueCategory || undefined}
               onValueChange={(v) => setVenueCategory(v as ParentCategoryId)}
             >
               <SelectTrigger>
@@ -384,8 +395,8 @@ export function NewDealForm({
               </SelectContent>
             </Select>
             <p className="text-xs text-charcoal-500">
-              Used for browse filters on the public site — same categories as
-              scraped listings.
+              Required — controls which browse section this deal appears under
+              on the public site.
             </p>
           </div>
 

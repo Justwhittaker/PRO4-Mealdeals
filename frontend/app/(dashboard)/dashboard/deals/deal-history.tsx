@@ -140,7 +140,7 @@ export function DealHistory({
       setOpenSlots((n) => n + 1);
     }
     setPendingDeleteId(null);
-    setMessage("Deal deleted from your profile.");
+    setMessage("Deal removed from your profile.");
   }
 
   if (deals.length === 0) {
@@ -268,12 +268,12 @@ export function DealHistory({
                   {isDeleting ? (
                     <div className="rounded-md border border-burgundy-400/40 bg-burgundy-500/10 px-3 py-3 text-sm text-charcoal-200">
                       <p className="font-medium text-burgundy-200">
-                        Delete this deal permanently?
+                        Remove this deal from your profile?
                       </p>
                       <p className="mt-1 text-charcoal-400">
-                        Removing it from your profile also deletes any
-                        metric/analytics data for this deal. This cannot be
-                        undone.
+                        It will disappear from your deal list and the public
+                        site. Analytics for this deal are kept on our side and
+                        are not deleted.
                       </p>
                       <div className="mt-3 flex flex-wrap gap-2">
                         <Button
@@ -283,7 +283,7 @@ export function DealHistory({
                           disabled={busy === deal.id}
                           onClick={() => void onConfirmDelete(deal)}
                         >
-                          {busy === deal.id ? "Deleting…" : "Yes, delete deal"}
+                          {busy === deal.id ? "Removing…" : "Yes, remove from profile"}
                         </Button>
                         <Button
                           size="sm"

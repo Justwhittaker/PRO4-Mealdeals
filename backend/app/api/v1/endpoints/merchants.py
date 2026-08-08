@@ -45,6 +45,7 @@ async def _active_deal_count(db: DbSession, merchant_id: UUID) -> int:
                 Deal.merchant_id == merchant_id,
                 Deal.is_active.is_(True),
                 Deal.slot_exempt.is_(False),
+                Deal.deleted_at.is_(None),
             )
         )
     ).scalar_one()
@@ -55,7 +56,10 @@ async def _total_deal_count(db: DbSession, merchant_id: UUID) -> int:
         await db.execute(
             select(func.count())
             .select_from(Deal)
-            .where(Deal.merchant_id == merchant_id)
+            .where(
+                Deal.merchant_id == merchant_id,
+                Deal.deleted_at.is_(None),
+            )
         )
     ).scalar_one()
 
@@ -356,6 +360,7 @@ async def deal_history(
     stmt = (
         select(Deal)
         .where(Deal.merchant_id == merchant_id)
+        .where(Deal.deleted_at.is_(None))
         .options(selectinload(Deal.items), selectinload(Deal.translations))
         .order_by(Deal.created_at.desc())
         .limit(limit)
@@ -407,7 +412,7 @@ async def repost_deal(
         .options(selectinload(Deal.items), selectinload(Deal.translations))
     )
     source = result.scalar_one_or_none()
-    if source is None:
+    if source is None or source.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
 
     active = await _active_deal_count(db, merchant_id)
@@ -432,6 +437,9 @@ async def repost_deal(
         currency_code=source.currency_code,
         is_active=True,
         tier_priority_score=max(source.tier_priority_score, 200),
+        slot_exempt=source.slot_exempt,
+        image_url=source.image_url,
+        venue_category=source.venue_category,
         expires_at=None,
     )
     db.add(clone)

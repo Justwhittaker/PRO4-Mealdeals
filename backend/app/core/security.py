@@ -44,3 +44,22 @@ async def verify_optional_api_key(
             detail="Missing X-API-Key header",
         )
     return x_api_key
+
+
+async def require_admin_key(
+    x_admin_key: Optional[str] = Header(default=None, alias="X-Admin-Key"),
+) -> str:
+    """Require a matching X-Admin-Key for staff admin endpoints."""
+    settings = get_settings()
+    expected = (settings.admin_api_key or "").strip()
+    if not expected:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Admin API key is not configured",
+        )
+    if not x_admin_key or not constant_time_compare(x_admin_key, expected):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing X-Admin-Key",
+        )
+    return x_admin_key

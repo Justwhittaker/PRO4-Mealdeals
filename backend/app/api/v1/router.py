@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
+    admin,
     contact,
     currency,
     deals,
@@ -18,6 +19,7 @@ from app.api.v1.endpoints import (
 )
 
 api_router = APIRouter()
+api_router.include_router(admin.router)
 api_router.include_router(deals.router)
 api_router.include_router(merchants.router)
 api_router.include_router(geo.router)

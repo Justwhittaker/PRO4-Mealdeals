@@ -69,6 +69,7 @@ def fetch_active_deals_for_location(
     q = (
         select(Deal)
         .where(Deal.is_active.is_(True))
+        .where(Deal.deleted_at.is_(None))
         .options(
             selectinload(Deal.merchant).selectinload(Merchant.location),
             selectinload(Deal.translations),
