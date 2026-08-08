@@ -1,10 +1,10 @@
 "use client";
 
-import { AdUnit } from "next-google-adsense";
 import { AdPlaceholder } from "@/components/ads/AdPlaceholder";
+import { AdUnit } from "@/components/ads/AdUnit";
 import { useMarketingConsent } from "@/components/cookie/CookieConsentProvider";
 import {
-  getAdSensePublisherId,
+  getAdSenseClientId,
   getAdSenseSidebarSlotId,
   isAdSenseLive,
 } from "@/lib/adsense";
@@ -12,9 +12,9 @@ import {
 export function SidebarAd() {
   const marketingAllowed = useMarketingConsent();
   const live = isAdSenseLive();
-  const publisherId = getAdSensePublisherId();
+  const clientId = getAdSenseClientId();
   const slotId = getAdSenseSidebarSlotId();
-  const showAd = marketingAllowed && live && publisherId && slotId;
+  const showAd = marketingAllowed && live && clientId && slotId;
 
   return (
     <aside
@@ -23,12 +23,16 @@ export function SidebarAd() {
     >
       <div className="flex min-h-[250px] w-full items-center justify-center p-4">
         {showAd ? (
-          <AdUnit
-            publisherId={publisherId}
-            slotId={slotId}
-            layout="display"
-            dummySize="MEDIUM_RECTANGLE"
-          />
+          <AdUnit>
+            <ins
+              className="adsbygoogle"
+              style={{ display: "block", width: "100%" }}
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+              data-ad-client={clientId}
+              data-ad-slot={slotId}
+            />
+          </AdUnit>
         ) : (
           <AdPlaceholder
             label="Sticky ad"

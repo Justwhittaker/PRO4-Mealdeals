@@ -98,11 +98,6 @@ Implementation: `backend/app/scrapers/categories.py`, `frontend/lib/categories.t
 
 ### Wine Farms & Entertainment Venues
 
-Scraped from `WINE_FARM_PACK` in `hospitality_pack.py` (ZA, US, AU, NZ, FR, IT,
-ES, PT, CL, AR, DE, GB). Name tokens: vineyard / winery / wine farm / estate /
-cellar door / domaine / château / bodega / weingut / quinta. Do **not** treat
-bare `casino` (grocery) as this parent.
-
 - Wine farms
 - Vineyards
 - Wineries

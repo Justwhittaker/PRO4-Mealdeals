@@ -1,11 +1,11 @@
 "use client";
 
-import { AdUnit } from "next-google-adsense";
 import { AdPlaceholder } from "@/components/ads/AdPlaceholder";
+import { AdUnit } from "@/components/ads/AdUnit";
 import { useMarketingConsent } from "@/components/cookie/CookieConsentProvider";
 import {
+  getAdSenseClientId,
   getAdSenseInFeedSlotId,
-  getAdSensePublisherId,
   isAdSenseLive,
 } from "@/lib/adsense";
 
@@ -13,31 +13,12 @@ const LAYOUT_KEY =
   process.env.NEXT_PUBLIC_ADSENSE_INFEED_LAYOUT_KEY?.trim() ||
   "-fb+5w+4e-db+86";
 
-function InFeedIns({
-  clientId,
-  slotId,
-}: {
-  clientId: string;
-  slotId: string;
-}) {
-  return (
-    <ins
-      className="adsbygoogle"
-      style={{ display: "block", width: "100%", minHeight: 100 }}
-      data-ad-format="fluid"
-      data-ad-layout-key={LAYOUT_KEY}
-      data-ad-client={clientId}
-      data-ad-slot={slotId}
-    />
-  );
-}
-
 export function InFeedAd() {
   const marketingAllowed = useMarketingConsent();
   const live = isAdSenseLive();
-  const publisherId = getAdSensePublisherId();
+  const clientId = getAdSenseClientId();
   const slotId = getAdSenseInFeedSlotId();
-  const showAd = marketingAllowed && live && publisherId && slotId;
+  const showAd = marketingAllowed && live && clientId && slotId;
 
   return (
     <aside
@@ -46,21 +27,16 @@ export function InFeedAd() {
     >
       {showAd ? (
         <div className="min-h-[120px] px-4 py-6">
-          <AdUnit
-            publisherId={publisherId}
-            slotId={slotId}
-            layout="custom"
-            customLayout={
-              <InFeedIns
-                clientId={
-                  publisherId.startsWith("ca-")
-                    ? publisherId
-                    : `ca-${publisherId}`
-                }
-                slotId={slotId}
-              />
-            }
-          />
+          <AdUnit>
+            <ins
+              className="adsbygoogle"
+              style={{ display: "block", width: "100%", minHeight: 100 }}
+              data-ad-format="fluid"
+              data-ad-layout-key={LAYOUT_KEY}
+              data-ad-client={clientId}
+              data-ad-slot={slotId}
+            />
+          </AdUnit>
         </div>
       ) : (
         <AdPlaceholder

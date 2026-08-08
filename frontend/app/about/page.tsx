@@ -12,7 +12,7 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 export const metadata = {
   title: "About us",
   description:
-    "Dine A Deal services — digital marketing, SEO, content creation — and the marketing gurus, hoteliers, and developers working for you.",
+    "Dine a Deal services — digital marketing, SEO, content creation — and the marketing gurus, hoteliers, and developers working for you.",
 };
 
 const SERVICES = [
@@ -56,7 +56,7 @@ export default function AboutPage() {
     <div className="relative min-h-screen bg-white">
       <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
         <p className="text-[10px] font-medium uppercase tracking-wider text-burgundy-500">
-          Dine A Deal
+          Dine a Deal
         </p>
         <h1 className="mt-2 font-display text-3xl text-charcoal-50 sm:text-4xl">
           About us

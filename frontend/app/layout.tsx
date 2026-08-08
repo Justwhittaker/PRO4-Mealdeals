@@ -66,9 +66,9 @@ export default function RootLayout({
           <SiteHeader />
           <ConditionalSiteHeader>
             <NewsletterPopup />
+            <ScrollToTopButton />
           </ConditionalSiteHeader>
           {children}
-          <ScrollToTopButton />
         </CookieConsentProvider>
       </body>
     </html>

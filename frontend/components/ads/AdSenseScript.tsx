@@ -1,31 +1,49 @@
 "use client";
 
-import { GoogleAdSense } from "next-google-adsense";
+import { useEffect } from "react";
 import {
-  getAdSensePublisherId,
+  getAdSenseClientId,
   isAdSenseLive,
-  shouldUseAdSenseAutoAds,
 } from "@/lib/adsense";
 import { useMarketingConsent } from "@/components/cookie/CookieConsentProvider";
 
+const SCRIPT_ATTR = "data-dineadeal-adsense";
+
 /**
- * Loads AdSense only when:
- * - public https URL + publisher configured
- * - marketing cookie consent is granted
+ * Loads AdSense via a plain <script> in document.head (no next/script).
+ * Avoids Next's data-nscript attribute that triggers:
+ * "AdSense head tag doesn't support data-nscript attribute."
  *
- * Auto ads: when publisher is set but slot IDs are not.
- * Manual units: InFeedAd / SidebarAd once slot env vars exist.
+ * Loads only when marketing cookie consent is granted and AdSense is live.
  */
 export function AdSenseScript() {
   const marketingAllowed = useMarketingConsent();
-  if (!marketingAllowed) return null;
-  if (!isAdSenseLive()) return null;
-  const publisherId = getAdSensePublisherId();
-  if (!publisherId) return null;
-  return (
-    <GoogleAdSense
-      publisherId={publisherId}
-      isAutoAd={shouldUseAdSenseAutoAds()}
-    />
-  );
+  const live = isAdSenseLive();
+  const clientId = getAdSenseClientId();
+
+  useEffect(() => {
+    if (!marketingAllowed || !live || !clientId) {
+      document
+        .querySelectorAll(`script[${SCRIPT_ATTR}]`)
+        .forEach((node) => node.remove());
+      return;
+    }
+
+    if (document.querySelector(`script[${SCRIPT_ATTR}]`)) {
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`;
+    script.crossOrigin = "anonymous";
+    script.setAttribute(SCRIPT_ATTR, "1");
+    document.head.appendChild(script);
+
+    return () => {
+      script.remove();
+    };
+  }, [marketingAllowed, live, clientId]);
+
+  return null;
 }
