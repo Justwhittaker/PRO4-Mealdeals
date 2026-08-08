@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import logging
 import re
 import uuid
@@ -30,6 +31,7 @@ from app.schemas.design_request import (
     DesignRequestRead,
     DesignRequestUpdate,
 )
+from app.services.email import is_email_configured, send_email
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/design-requests", tags=["design-requests"])
@@ -124,15 +126,103 @@ async def mark_design_request_paid(
 ) -> DesignRequest:
     """Called from the Stripe webhook after €20 Checkout completes."""
     req = await _get_request(db, request_id)
+    already_paid = req.status == DesignRequestStatus.PAID and req.paid_at is not None
     req.status = DesignRequestStatus.PAID
-    req.paid_at = datetime.now(timezone.utc)
+    req.paid_at = req.paid_at or datetime.now(timezone.utc)
     if payload.stripe_checkout_session_id:
         req.stripe_checkout_session_id = payload.stripe_checkout_session_id
     if payload.stripe_payment_intent_id:
         req.stripe_payment_intent_id = payload.stripe_payment_intent_id
     await db.flush()
     await db.refresh(req)
+
+    # Notify ops once when payment first lands (skip duplicate webhook retries).
+    if not already_paid:
+        _notify_ops_design_paid(req)
+
     return req
+
+
+def _notify_ops_design_paid(req: DesignRequest) -> None:
+    """Email the Design Deals ops inbox with brief + full DESIGN:{uuid} subject tag."""
+    settings = get_settings()
+    to_email = (settings.contact_to_email or "").strip() or "just.whittaker@gmail.com"
+    if not is_email_configured(settings):
+        logger.warning(
+            "Design payment email skipped — email not configured. request=%s to=%s",
+            req.id,
+            to_email,
+        )
+        return
+
+    merchant = req.merchant
+    merchant_label = ""
+    if merchant is not None:
+        parts = [
+            p
+            for p in [merchant.name, merchant.email, merchant.contact_name]
+            if p
+        ]
+        merchant_label = " · ".join(str(p) for p in parts)
+
+    photos = list(req.photo_urls or [])
+    photo_lines = "\n".join(f"- {url}" for url in photos) if photos else "(none)"
+    design_tag = f"DESIGN:{req.id}"
+    fulfill_url = (
+        f"{settings.frontend_base_url.rstrip('/')}/dashboard/design/fulfill"
+        f"?request={req.id}"
+    )
+
+    subject = f"Design Deals 4 U — payment received ({req.title[:80]})"
+    text_body = "\n".join(
+        [
+            "A merchant paid for Design Deals 4 U.",
+            "",
+            f"Subject tag for inbound creative: {design_tag}",
+            f"Manual fulfill: {fulfill_url}",
+            "",
+            f"Title: {req.title}",
+            f"Merchant: {merchant_label or req.merchant_id}",
+            f"Description: {req.description}",
+            f"Brief: {req.details}",
+            "",
+            "Photo URLs:",
+            photo_lines,
+            "",
+            f"Stripe session: {req.stripe_checkout_session_id or '(n/a)'}",
+        ]
+    )
+    safe_title = html.escape(req.title)
+    safe_merchant = html.escape(merchant_label or str(req.merchant_id))
+    safe_desc = html.escape(req.description or "").replace("\n", "<br/>")
+    safe_details = html.escape(req.details or "").replace("\n", "<br/>")
+    safe_photos = (
+        "<br/>".join(html.escape(url) for url in photos) if photos else "(none)"
+    )
+    html_body = f"""
+    <p><strong>A merchant paid for Design Deals 4 U.</strong></p>
+    <p>Inbound creative subject must include:<br/>
+    <code>{html.escape(design_tag)}</code></p>
+    <p><a href="{html.escape(fulfill_url)}">Open manual fulfill</a></p>
+    <p><strong>Title:</strong> {safe_title}<br/>
+    <strong>Merchant:</strong> {safe_merchant}</p>
+    <p><strong>Description</strong><br/>{safe_desc}</p>
+    <p><strong>Brief</strong><br/>{safe_details}</p>
+    <p><strong>Photos</strong><br/>{safe_photos}</p>
+    """
+
+    delivered = send_email(
+        to_email=to_email,
+        subject=subject,
+        text_body=text_body,
+        html_body=html_body,
+    )
+    if delivered:
+        logger.info("Design payment ops email sent request=%s to=%s", req.id, to_email)
+    else:
+        logger.error(
+            "Design payment ops email failed request=%s to=%s", req.id, to_email
+        )
 
 
 async def _fulfill(

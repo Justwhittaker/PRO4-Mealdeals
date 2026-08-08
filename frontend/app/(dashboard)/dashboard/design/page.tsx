@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { listDesignRequests } from "@/lib/api";
+import { designRequestShortRef } from "@/lib/design-request";
 import { DESIGN_SPECIAL } from "@/lib/stripe";
 import { DesignBuyBox } from "./design-buy-box";
 import { DesignRequestForm } from "./design-request-form";
@@ -16,6 +17,9 @@ export default async function DesignPage({
 
   const merchantId = session.user.id;
   const history = await listDesignRequests(merchantId);
+  const shortRef = searchParams.request
+    ? designRequestShortRef(searchParams.request)
+    : null;
 
   return (
     <div className="space-y-8">
@@ -31,21 +35,18 @@ export default async function DesignPage({
       </div>
 
       {searchParams.paid ? (
-        <div className="rounded-lg border border-citrus-500/30 bg-citrus-500/10 px-4 py-3 text-sm text-citrus-200">
-          Payment received
-          {searchParams.request ? (
-            <>
-              {" "}
-              for request{" "}
-              <code className="text-citrus-300">{searchParams.request}</code>
-            </>
-          ) : null}
-          . We&apos;ll design your deal and post it automatically — reply or
-          email the finished file with subject{" "}
-          <code className="text-citrus-300">
-            DESIGN:{searchParams.request ?? "{request-id}"}
-          </code>
-          .
+        <div className="rounded-lg border border-burgundy-300 bg-burgundy-50 px-4 py-4 text-charcoal-100">
+          <p className="font-display text-xl font-semibold text-charcoal-50 sm:text-2xl">
+            Payment received
+            {shortRef ? (
+              <span className="ml-2 font-sans text-base font-semibold text-burgundy-600">
+                {shortRef}
+              </span>
+            ) : null}
+          </p>
+          <p className="mt-2 text-base font-semibold leading-snug text-charcoal-200">
+            We&apos;ll design your deal and post it automatically.
+          </p>
         </div>
       ) : null}
       {searchParams.canceled ? (

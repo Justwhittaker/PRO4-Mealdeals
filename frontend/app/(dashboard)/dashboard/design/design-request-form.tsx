@@ -14,6 +14,7 @@ import {
 } from "@/lib/api";
 import { DESIGN_SPECIAL } from "@/lib/stripe";
 import { formatMoney } from "@/lib/currency";
+import { designRequestShortRef } from "@/lib/design-request";
 
 interface DesignRequestFormProps {
   merchantId: string;
@@ -141,7 +142,7 @@ export function DesignRequestForm({
                   <div className="min-w-0">
                     <p className="font-medium text-charcoal-100">{req.title}</p>
                     <p className="text-xs text-charcoal-500">
-                      DESIGN:{req.id}
+                      {designRequestShortRef(req.id)} · Awaiting payment
                     </p>
                   </div>
                   <Button
@@ -269,7 +270,7 @@ export function DesignRequestForm({
                     </Badge>
                   </div>
                   <p className="mt-1 text-xs text-charcoal-500">
-                    DESIGN:{req.id}
+                    {designRequestShortRef(req.id)}
                   </p>
                   {req.status === "pending_payment" ? (
                     <Button
@@ -288,9 +289,8 @@ export function DesignRequestForm({
               ))
             )}
             <p className="text-xs text-charcoal-500">
-              After payment, email the finished creative with subject{" "}
-              <code className="text-citrus-300">DESIGN:&#123;id&#125;</code> — it
-              auto-posts for 60 days without using a Priority slot.
+              After payment we design the creative and post it for 60 days —
+              it does not use a Priority slot.
             </p>
           </CardContent>
         </Card>

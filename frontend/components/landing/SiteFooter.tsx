@@ -10,7 +10,7 @@ const SOCIAL = [
   },
   {
     label: "Facebook",
-    href: "https://facebook.com",
+    href: "https://www.facebook.com/mealdeals.ie",
     icon: Facebook,
     external: true,
   },
