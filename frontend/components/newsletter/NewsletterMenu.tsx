@@ -72,14 +72,15 @@ export function NewsletterMenu() {
     <div ref={rootRef} className="relative">
       <button
         type="button"
-        className="rounded-md p-2 text-charcoal-200 transition hover:bg-burgundy-50 hover:text-burgundy-600"
-        aria-label="Weekly specials newsletter"
+        className="inline-flex items-center gap-1 rounded-md px-1.5 py-2 text-[10px] font-medium uppercase tracking-wider text-charcoal-200 transition hover:bg-burgundy-50 hover:text-burgundy-600 sm:gap-1.5 sm:px-2 sm:text-xs"
+        aria-label="Subscribe to weekly specials newsletter"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((value) => !value)}
       >
-        <Mail className="h-5 w-5 sm:h-6 sm:w-6" />
+        <Mail className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
+        <span>Subscribe</span>
       </button>
 
       {open ? (

@@ -13,20 +13,20 @@ export async function SiteHeader() {
   return (
     <header className="relative z-[80] border-b border-charcoal-700 bg-white">
       {/* Full-width strip — never overlapped by logo/nav */}
-      <div className="border-b border-charcoal-800 bg-charcoal-950 px-4 py-1.5 sm:px-6">
+      <div className="border-b border-charcoal-800 bg-charcoal-950 px-3 py-1.5 sm:px-6">
         <HeaderScrapeMetrics
           initialActiveDeals={activeDeals}
           initialMarkets={markets}
         />
       </div>
 
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-3 py-3 sm:gap-3 sm:px-6">
-        <div className="relative z-[90] min-w-0 shrink">
+      <div className="mx-auto flex w-full max-w-6xl flex-nowrap items-center gap-2 px-3 py-3 sm:gap-3 sm:px-6">
+        <div className="relative z-[90] min-w-0 flex-1 overflow-hidden">
           <BrandLogo size="md" priority />
         </div>
 
         <nav
-          className="relative z-[90] flex shrink-0 items-center justify-end gap-0.5 sm:gap-2"
+          className="relative z-[90] ml-auto flex shrink-0 items-center justify-end gap-0.5 sm:gap-2"
           aria-label="Site"
         >
           <Link
