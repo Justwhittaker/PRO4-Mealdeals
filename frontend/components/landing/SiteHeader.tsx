@@ -20,13 +20,17 @@ export async function SiteHeader() {
         />
       </div>
 
-      <div className="mx-auto flex w-full max-w-6xl flex-nowrap items-center gap-2 px-3 py-3 sm:gap-3 sm:px-6">
-        <div className="relative z-[90] min-w-0 flex-1 overflow-hidden">
+      {/*
+        Mobile: logo on its own row, then About / Subscribe / Login hard-right.
+        sm+: single row, logo left / nav right.
+      */}
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6">
+        <div className="relative z-[90] min-w-0 self-start overflow-hidden">
           <BrandLogo size="md" priority />
         </div>
 
         <nav
-          className="relative z-[90] ml-auto flex shrink-0 items-center justify-end gap-0.5 sm:gap-2"
+          className="relative z-[90] flex w-full shrink-0 items-center justify-end gap-0.5 sm:w-auto sm:gap-2"
           aria-label="Site"
         >
           <Link

@@ -77,7 +77,11 @@ export function BrandLogo({
   if (!href) return content;
 
   return (
-    <Link href={href} aria-label={`${BRAND_NAME} home`}>
+    <Link
+      href={href}
+      aria-label={`${BRAND_NAME} home`}
+      className="inline-flex max-w-full"
+    >
       {content}
     </Link>
   );
