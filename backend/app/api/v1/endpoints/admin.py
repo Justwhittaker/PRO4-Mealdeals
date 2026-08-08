@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
@@ -202,20 +202,20 @@ async def admin_update_merchant(
 @router.delete(
     "/merchants/{merchant_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    response_model=None,
+    response_class=Response,
 )
 async def admin_delete_merchant(
     merchant_id: UUID,
     _: AdminKey,
     db: DbSession,
-) -> None:
+) -> Response:
     """Remove merchant account and cascaded deals from the website."""
     merchant = await db.get(Merchant, merchant_id)
     if merchant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Merchant not found")
     await db.delete(merchant)
     await db.flush()
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/merchants/{merchant_id}/deals", response_model=List[DealRead])
@@ -460,16 +460,16 @@ async def admin_update_deal(
 @router.delete(
     "/deals/{deal_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    response_model=None,
+    response_class=Response,
 )
 async def admin_delete_deal(
     deal_id: UUID,
     _: AdminKey,
     db: DbSession,
-) -> None:
+) -> Response:
     deal = await db.get(Deal, deal_id)
     if deal is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
     await db.delete(deal)
     await db.flush()
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

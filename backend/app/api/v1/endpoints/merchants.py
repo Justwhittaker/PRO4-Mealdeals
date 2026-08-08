@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
@@ -522,12 +522,12 @@ async def update_merchant(
 @router.delete(
     "/{merchant_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    response_model=None,
+    response_class=Response,
 )
-async def delete_merchant(merchant_id: UUID, db: DbSession) -> None:
+async def delete_merchant(merchant_id: UUID, db: DbSession) -> Response:
     merchant = await db.get(Merchant, merchant_id)
     if merchant is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Merchant not found")
     await db.delete(merchant)
     await db.flush()
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

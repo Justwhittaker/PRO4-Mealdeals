@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, Response, status
 from geoalchemy2.functions import ST_DistanceSphere, ST_MakePoint, ST_SetSRID
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import selectinload
@@ -540,8 +540,9 @@ async def update_deal(
 @router.post(
     "/{deal_id}/remove-from-profile",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
 )
-async def remove_deal_from_profile(deal_id: UUID, db: DbSession) -> None:
+async def remove_deal_from_profile(deal_id: UUID, db: DbSession) -> Response:
     """Soft-delete via POST (avoids DELETE 405 on some hosts). Keeps analytics row."""
     deal = await db.get(Deal, deal_id)
     if deal is None or deal.deleted_at is not None:
@@ -549,10 +550,15 @@ async def remove_deal_from_profile(deal_id: UUID, db: DbSession) -> None:
     deal.deleted_at = datetime.now(timezone.utc)
     deal.is_active = False
     await db.flush()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.delete("/{deal_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_deal(deal_id: UUID, db: DbSession) -> None:
+@router.delete(
+    "/{deal_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
+async def delete_deal(deal_id: UUID, db: DbSession) -> Response:
     """Soft-delete a deal: hide from profile/feed, keep the row for analytics."""
     deal = await db.get(Deal, deal_id)
     if deal is None or deal.deleted_at is not None:
@@ -560,6 +566,7 @@ async def delete_deal(deal_id: UUID, db: DbSession) -> None:
     deal.deleted_at = datetime.now(timezone.utc)
     deal.is_active = False
     await db.flush()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/{deal_id}", response_model=DealDetailRead)
