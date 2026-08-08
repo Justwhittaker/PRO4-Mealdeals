@@ -35,7 +35,7 @@ export function SiteFooter() {
           ))}
         </div>
         <nav
-          className="flex items-center gap-4 text-xs uppercase tracking-wider text-charcoal-400"
+          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs uppercase tracking-wider text-charcoal-400"
           aria-label="Footer"
         >
           <a href="/about" className="transition hover:text-burgundy-500">
@@ -49,6 +49,15 @@ export function SiteFooter() {
           </a>
           <a href="/contact" className="transition hover:text-burgundy-500">
             Contact
+          </a>
+          <a href="/privacy" className="transition hover:text-burgundy-500">
+            Privacy Notice
+          </a>
+          <a
+            href="/privacy/choices"
+            className="transition hover:text-burgundy-500"
+          >
+            Privacy Choices
           </a>
         </nav>
         <p className="text-center text-xs uppercase tracking-wider text-charcoal-400">

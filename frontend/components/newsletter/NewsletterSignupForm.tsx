@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,14 +34,21 @@ export function NewsletterSignupForm({
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState(initialEmail);
   const [location, setLocation] = useState("");
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    setPending(true);
     setError(null);
+
+    if (!acceptedPrivacy) {
+      setError("Please accept the Privacy Notice to continue.");
+      return;
+    }
+
+    setPending(true);
 
     if (mode === "resubscribe") {
       const result = await resubscribeNewsletter({
@@ -154,13 +162,53 @@ export function NewsletterSignupForm({
         </div>
       )}
 
+      <div className="flex items-start gap-2.5">
+        <input
+          id="nl-privacy"
+          name="privacy_accepted"
+          type="checkbox"
+          required
+          checked={acceptedPrivacy}
+          onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+          className="mt-1 h-4 w-4 shrink-0 rounded border-charcoal-600 text-burgundy-600 focus:ring-burgundy-500/40"
+        />
+        <Label
+          htmlFor="nl-privacy"
+          className="text-xs font-normal leading-snug text-charcoal-300"
+        >
+          I have read and accept the{" "}
+          <Link
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-burgundy-600 underline-offset-2 hover:underline"
+          >
+            Privacy Notice
+          </Link>
+          , including third-party marketing and compensated data sharing where I
+          choose to participate.{" "}
+          <Link
+            href="/privacy/choices"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-burgundy-600 underline-offset-2 hover:underline"
+          >
+            Privacy Choices
+          </Link>
+        </Label>
+      </div>
+
       {error ? (
         <p className="text-sm text-burgundy-600" role="alert">
           {error}
         </p>
       ) : null}
 
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button
+        type="submit"
+        disabled={pending || !acceptedPrivacy}
+        className="w-full"
+      >
         {pending
           ? "Saving…"
           : submitLabel ??
