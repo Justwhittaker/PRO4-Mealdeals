@@ -74,6 +74,8 @@ class DealUpdate(BaseModel):
     description: Optional[str] = None
     language_code: Optional[str] = Field(default=None, min_length=2, max_length=5)
     items: Optional[List[DealItemCreate]] = None
+    # Soft-delete: hide from merchant profile + public feed; keep DB row for analytics.
+    remove_from_profile: Optional[bool] = None
 
 
 class DealRead(DealBase):

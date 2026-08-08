@@ -638,11 +638,25 @@ export async function setDealActive(
 export async function deleteMerchantDeal(
   dealId: string,
 ): Promise<ApiResult<{ ok: true }>> {
-  const result = await apiFetch<unknown>(`/api/v1/deals/${dealId}`, {
-    method: "DELETE",
-    cache: "no-store",
-  });
-  if (!result.ok) return result;
+  // Prefer POST soft-delete — some hosts return 405 for DELETE on /deals/{id}.
+  // Row stays in DB (deleted_at set) for analytics; hidden from profile + feed.
+  const result = await apiFetch<unknown>(
+    `/api/v1/deals/${dealId}/remove-from-profile`,
+    {
+      method: "POST",
+      cache: "no-store",
+    },
+  );
+  if (!result.ok) {
+    // Fallback for older API: PATCH soft-delete flag on the update route.
+    const patch = await apiFetch<unknown>(`/api/v1/deals/${dealId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ remove_from_profile: true, is_active: false }),
+      cache: "no-store",
+    });
+    if (!patch.ok) return patch;
+  }
   return { ok: true, data: { ok: true } };
 }
 

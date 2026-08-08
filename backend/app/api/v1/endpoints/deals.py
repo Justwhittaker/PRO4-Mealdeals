@@ -390,6 +390,18 @@ async def update_deal(
 
     fields_set = payload.model_fields_set
     data = payload.model_dump(exclude_unset=True)
+
+    if data.pop("remove_from_profile", None) is True:
+        deal.deleted_at = datetime.now(timezone.utc)
+        deal.is_active = False
+        await db.flush()
+        loaded = await db.execute(
+            select(Deal)
+            .where(Deal.id == deal.id)
+            .options(selectinload(Deal.items), selectinload(Deal.translations))
+        )
+        return loaded.scalar_one()
+
     reactivating = (
         data.get("is_active") is True
         and not deal.is_active
@@ -523,6 +535,20 @@ async def update_deal(
         .options(selectinload(Deal.items), selectinload(Deal.translations))
     )
     return loaded.scalar_one()
+
+
+@router.post(
+    "/{deal_id}/remove-from-profile",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def remove_deal_from_profile(deal_id: UUID, db: DbSession) -> None:
+    """Soft-delete via POST (avoids DELETE 405 on some hosts). Keeps analytics row."""
+    deal = await db.get(Deal, deal_id)
+    if deal is None or deal.deleted_at is not None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
+    deal.deleted_at = datetime.now(timezone.utc)
+    deal.is_active = False
+    await db.flush()
 
 
 @router.delete("/{deal_id}", status_code=status.HTTP_204_NO_CONTENT)
