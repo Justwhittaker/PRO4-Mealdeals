@@ -50,7 +50,8 @@ export default async function DesignPage({
       ) : null}
       {searchParams.canceled ? (
         <div className="rounded-lg border border-charcoal-600 bg-charcoal-900/60 px-4 py-3 text-sm text-charcoal-300">
-          Checkout canceled — no charge was made.
+          Checkout canceled — no charge was made. Your request stays in the
+          design cart below so you can pay later.
         </div>
       ) : null}
 
