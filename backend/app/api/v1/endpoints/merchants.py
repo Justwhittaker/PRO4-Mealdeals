@@ -14,6 +14,7 @@ from app.core.config import get_settings
 from app.models.deal import Deal, DealItem
 from app.models.location import Location
 from app.models.merchant import PAID_DEAL_SLOT_LIMIT, Merchant, TierLevel
+from app.models.terms_acceptance import TermsAcceptance
 from app.models.translation import DealTranslation
 from app.schemas.deal import DealRead
 from app.schemas.merchant import (
@@ -26,6 +27,9 @@ from app.schemas.merchant import (
     MerchantRead,
     MerchantUpdate,
     RepostDealResponse,
+    TermsAcceptanceCreate,
+    TermsAcceptancePayload,
+    TermsAcceptanceRead,
     TrialClaimResponse,
     TrialEligibilityResponse,
 )
@@ -74,6 +78,29 @@ def _sync_subscription_fields(merchant: Merchant) -> None:
         merchant.deal_slot_limit = 0
         merchant.subscription_phase = "none"
         merchant.tier_level = TierLevel.FREE
+
+
+def _record_terms_acceptance(
+    db: DbSession,
+    merchant: Merchant,
+    payload: TermsAcceptancePayload,
+) -> TermsAcceptance:
+    email = (
+        str(payload.accepted_by_email).lower()
+        if payload.accepted_by_email
+        else (merchant.email.lower() if merchant.email else None)
+    )
+    row = TermsAcceptance(
+        merchant_id=merchant.id,
+        terms_version=payload.terms_version.strip(),
+        acceptance_source=payload.acceptance_source.strip()
+        or "merchant_registration",
+        accepted_by_email=email,
+        accepted_by_name=payload.accepted_by_name or merchant.contact_name,
+        accepted_by_user_id=payload.accepted_by_user_id or str(merchant.id),
+    )
+    db.add(row)
+    return row
 
 
 async def _profile_from_merchant(db: DbSession, merchant: Merchant) -> MerchantProfile:
@@ -173,6 +200,9 @@ async def create_merchant(payload: MerchantCreate, db: DbSession) -> Merchant:
     _sync_subscription_fields(merchant)
     db.add(merchant)
     await db.flush()
+    if payload.terms_acceptance is not None:
+        _record_terms_acceptance(db, merchant, payload.terms_acceptance)
+        await db.flush()
     await db.refresh(merchant)
     return merchant
 
@@ -240,6 +270,27 @@ async def forgot_password(
         ),
         email=email,
     )
+
+
+@router.post(
+    "/{merchant_id}/terms-acceptance",
+    response_model=TermsAcceptanceRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def record_merchant_terms_acceptance(
+    merchant_id: UUID,
+    payload: TermsAcceptanceCreate,
+    db: DbSession,
+) -> TermsAcceptance:
+    merchant = await db.get(Merchant, merchant_id)
+    if merchant is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Merchant not found"
+        )
+    row = _record_terms_acceptance(db, merchant, payload)
+    await db.flush()
+    await db.refresh(row)
+    return row
 
 
 @router.get("/{merchant_id}/profile", response_model=MerchantProfile)

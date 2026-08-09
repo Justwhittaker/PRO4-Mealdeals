@@ -332,6 +332,7 @@ async def deals_feed(
                 created_at=deal.created_at,
                 expires_at=deal.expires_at,
                 city=location.city,
+                area_local=location.area_local,
                 country_code=location.country_code,
                 tier_level=merchant.tier_level,
                 is_subscriber=merchant.is_subscriber,
@@ -626,6 +627,7 @@ async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
         tier_level=merchant.tier_level,
         is_subscriber=merchant.is_subscriber,
         city=location.city,
+        area_local=location.area_local,
         country_code=location.country_code,
     )
 

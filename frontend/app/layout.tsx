@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Crimson_Text, Oswald } from "next/font/google";
 import { AdSenseScript } from "@/components/ads/AdSenseScript";
+import { VercelAnalytics } from "@/components/analytics/VercelAnalytics";
 import { CookieConsentProvider } from "@/components/cookie/CookieConsentProvider";
 import { ConditionalSiteHeader } from "@/components/landing/ConditionalSiteHeader";
 import { ScrollToTopButton } from "@/components/landing/ScrollToTopButton";
@@ -62,6 +63,7 @@ export default function RootLayout({
       <body className="min-h-screen max-w-[100vw] overflow-x-clip font-sans">
         <CookieConsentProvider>
           <AdSenseScript />
+          <VercelAnalytics />
           {/* Deal counter + public chrome — always visible, including merchant login */}
           <SiteHeader />
           <ConditionalSiteHeader>

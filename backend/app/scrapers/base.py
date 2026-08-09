@@ -27,6 +27,9 @@ class ScrapedDeal:
     currency_code: str
     country_code: str
     city: str
+    # Hub city for routing (e.g. Galway) + nested town label (e.g. Tuam).
+    area_hub: str | None = None
+    area_local: str | None = None
     items: list[dict[str, Any]] = field(default_factory=list)
     language_code: str = "en"
     image_url: str | None = None

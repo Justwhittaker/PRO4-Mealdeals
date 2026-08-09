@@ -1,6 +1,8 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import { cookies } from "next/headers";
+import { TERMS_ACCEPT_COOKIE, TERMS_VERSION } from "@/lib/legal-config";
 import { resolveMerchantIdForEmail } from "@/lib/merchant-bootstrap";
 
 function parseAdminEmails(): Set<string> {
@@ -52,6 +54,8 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        termsAccepted: { label: "Terms accepted", type: "text" },
+        termsVersion: { label: "Terms version", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email) return null;
@@ -67,7 +71,25 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const merchantId = await resolveMerchantIdForEmail(credentials.email);
+        const termsAccepted =
+          credentials.termsAccepted === "true" ||
+          credentials.termsAccepted === "1";
+
+        const merchantId = await resolveMerchantIdForEmail(credentials.email, {
+          termsAccepted,
+          termsAcceptance: termsAccepted
+            ? {
+                termsVersion:
+                  typeof credentials.termsVersion === "string" &&
+                  credentials.termsVersion
+                    ? credentials.termsVersion
+                    : undefined,
+                acceptanceSource: "merchant_registration",
+                acceptedByEmail: credentials.email.trim().toLowerCase(),
+                acceptedByName: credentials.email.split("@")[0],
+              }
+            : undefined,
+        });
         if (!merchantId) return null;
 
         return {
@@ -114,7 +136,33 @@ export const authOptions: NextAuthOptions = {
         if (account?.provider === "credentials") {
           token.merchantId = user.id;
         } else if (user.email) {
-          const merchantId = await resolveMerchantIdForEmail(user.email);
+          // Google (and other OAuth): honour pending Terms cookie from register form.
+          let termsAccepted = false;
+          let termsVersion: string | undefined = TERMS_VERSION;
+          try {
+            const jar = await cookies();
+            const pending = jar.get(TERMS_ACCEPT_COOKIE)?.value;
+            if (pending) {
+              termsAccepted = true;
+              termsVersion = pending;
+              jar.delete(TERMS_ACCEPT_COOKIE);
+            }
+          } catch {
+            /* cookies() unavailable in some runtimes */
+          }
+
+          const merchantId = await resolveMerchantIdForEmail(user.email, {
+            termsAccepted,
+            termsAcceptance: termsAccepted
+              ? {
+                  termsVersion,
+                  acceptanceSource: "merchant_registration",
+                  acceptedByEmail: user.email.trim().toLowerCase(),
+                  acceptedByName:
+                    user.name || user.email.split("@")[0] || undefined,
+                }
+              : undefined,
+          });
           token.merchantId = merchantId ?? user.id;
         } else {
           token.merchantId = user.id;

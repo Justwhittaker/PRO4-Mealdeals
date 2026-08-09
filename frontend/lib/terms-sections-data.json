@@ -1,0 +1,1435 @@
+[
+  {
+    "number": 1,
+    "id": "about",
+    "title": "1. About Dine A Deal",
+    "tocLabel": "1. About Dine A Deal",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Dine A Deal is a trading name operated by [LEGAL COMPANY NAME], an Irish company registered under company number [COMPANY NUMBER], with its registered office at [REGISTERED ADDRESS]."
+      },
+      {
+        "type": "p",
+        "text": "In these Terms, “Dine A Deal”, “we”, “our” and “us” refer to [LEGAL COMPANY NAME]."
+      },
+      {
+        "type": "p",
+        "text": "Our contact information is:"
+      },
+      {
+        "type": "p",
+        "text": "Email: [SUPPORT EMAIL]"
+      },
+      {
+        "type": "p",
+        "text": "Complaints: [COMPLAINTS EMAIL]"
+      },
+      {
+        "type": "p",
+        "text": "Content reports and appeals: [REPORTING EMAIL]"
+      },
+      {
+        "type": "p",
+        "text": "Telephone: [PHONE NUMBER]"
+      },
+      {
+        "type": "p",
+        "text": "Postal address: [POSTAL ADDRESS]"
+      },
+      {
+        "type": "p",
+        "text": "The Dine A Deal website, applications and associated services are collectively referred to as the “Platform”."
+      }
+    ]
+  },
+  {
+    "number": 2,
+    "id": "acceptance",
+    "title": "2. Acceptance of these Terms",
+    "tocLabel": "2. Acceptance of these Terms",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "These Terms govern access to and use of the Platform by visitors, registered users, restaurants, cafés, bars, hotels, takeaways, hospitality businesses, advertisers and other business users."
+      },
+      {
+        "type": "p",
+        "text": "By creating an account, submitting a listing, purchasing a business plan, claiming a deal or otherwise using a feature of the Platform, you agree to these Terms."
+      },
+      {
+        "type": "p",
+        "text": "If you do not agree to these Terms, you must not create an account, publish a listing or use a feature that requires acceptance."
+      },
+      {
+        "type": "p",
+        "text": "Our Privacy Notice and Cookie Policy form separate documents explaining how we process personal information and use cookies."
+      }
+    ]
+  },
+  {
+    "number": 3,
+    "id": "definitions",
+    "title": "3. Definitions",
+    "tocLabel": "3. Definitions",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "“Consumer User” means an individual using Dine A Deal mainly for personal rather than business purposes."
+      },
+      {
+        "type": "p",
+        "text": "“Business User” means a restaurant, café, bar, hotel, takeaway, hospitality operator, advertiser or other business using the Platform commercially."
+      },
+      {
+        "type": "p",
+        "text": "“Venue” means the independent business providing the food, drink, hospitality service or promotion shown in a listing."
+      },
+      {
+        "type": "p",
+        "text": "“Deal” means a discount, special offer, promotion, menu, package or other benefit advertised through the Platform."
+      },
+      {
+        "type": "p",
+        "text": "“Listing” means a Venue profile, Deal, menu, image, description, price, location, opening time or other information displayed through the Platform."
+      },
+      {
+        "type": "p",
+        "text": "“Sponsored Listing” means a Listing for which a Business User or advertiser has paid to receive additional visibility."
+      },
+      {
+        "type": "p",
+        "text": "“User Content” means reviews, comments, photographs, listings, logos, menus, descriptions and other material submitted by a user."
+      }
+    ]
+  },
+  {
+    "number": 4,
+    "id": "what-we-provide",
+    "title": "4. What Dine A Deal provides",
+    "tocLabel": "4. What Dine A Deal provides",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Dine A Deal helps users discover Deals and information published by independent Venues."
+      },
+      {
+        "type": "p",
+        "text": "Unless Dine A Deal expressly states otherwise for a particular transaction, Dine A Deal is not:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The restaurant, café, bar, hotel or hospitality supplier",
+          "The seller of the food, drink or hospitality service",
+          "A food delivery company",
+          "A payment service provider",
+          "The issuer of a paid voucher",
+          "A booking or travel agent",
+          "A party to the transaction between a Consumer User and a Venue"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "When a user contacts, visits, books with, orders from or purchases from a Venue, the resulting contract is normally between the user and the Venue."
+      },
+      {
+        "type": "p",
+        "text": "The Venue is responsible for supplying its products and services, handling payments, honouring valid Deals and resolving complaints relating to its food, drink, premises, staff or services."
+      },
+      {
+        "type": "p",
+        "text": "If Dine A Deal later sells a product, voucher, booking or subscription directly to a consumer, the Platform will identify Dine A Deal as the seller and provide the additional terms applying to that transaction."
+      }
+    ]
+  },
+  {
+    "number": 5,
+    "id": "deal-and-venue-information",
+    "title": "5. Deal and Venue information",
+    "tocLabel": "5. Deal and Venue information",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Information displayed through the Platform may be supplied by Venues, advertisers, users or third-party information providers."
+      },
+      {
+        "type": "p",
+        "text": "We may review information submitted to the Platform, but we do not guarantee that every menu, photograph, price, address, opening time, availability statement or Deal is continuously accurate."
+      },
+      {
+        "type": "p",
+        "text": "Information may change after it is published. Users should confirm important information directly with the Venue before travelling, ordering or making a purchase."
+      },
+      {
+        "type": "p",
+        "text": "A Venue appearing on Dine A Deal is not automatically inspected, approved, certified or endorsed by Dine A Deal."
+      },
+      {
+        "type": "p",
+        "text": "Any identity or business verification performed by Dine A Deal does not guarantee the quality, safety, financial condition or legal compliance of a Venue."
+      }
+    ]
+  },
+  {
+    "number": 6,
+    "id": "using-and-claiming-deals",
+    "title": "6. Using and claiming Deals",
+    "tocLabel": "6. Using and claiming Deals",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Every Deal is subject to the individual conditions displayed with it."
+      },
+      {
+        "type": "p",
+        "text": "Conditions may include:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Start and expiry dates",
+          "Available days and times",
+          "Participating locations",
+          "Booking requirements",
+          "Minimum spend",
+          "Product or menu exclusions",
+          "Maximum group sizes",
+          "Limited availability",
+          "One-use or per-person limits",
+          "Dine-in, takeaway or collection restrictions",
+          "Restrictions on combining Deals",
+          "Age or identification requirements"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Unless expressly described as a paid voucher or confirmed reservation, saving or claiming a Deal through Dine A Deal does not constitute payment, a booking or a guaranteed reservation."
+      },
+      {
+        "type": "p",
+        "text": "A claimed Deal may remain subject to:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The Venue being open",
+          "Availability",
+          "The displayed Deal conditions",
+          "The Venue’s lawful capacity restrictions",
+          "Booking requirements",
+          "Age-verification requirements",
+          "The user presenting the Deal correctly"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "A Venue may withdraw or change a Deal before it has formed part of a binding transaction. A Venue must not retrospectively alter a transaction that has already become legally binding."
+      },
+      {
+        "type": "p",
+        "text": "Dine A Deal may remove, correct, suspend or mark a Deal as expired where we reasonably believe it is inaccurate, unavailable, misleading, unlawful or no longer current."
+      },
+      {
+        "type": "p",
+        "text": "A user who believes a Venue has improperly refused a valid Deal should first contact the Venue. The matter may also be reported to [COMPLAINTS EMAIL]."
+      }
+    ]
+  },
+  {
+    "number": 7,
+    "id": "consumer-accounts",
+    "title": "7. Consumer accounts",
+    "tocLabel": "7. Consumer accounts",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Public areas of the Platform may be browsed without creating an account."
+      },
+      {
+        "type": "p",
+        "text": "A person must be at least 18 years old to:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Create a registered account",
+          "Submit a review",
+          "Use an alcohol-related Deal",
+          "Purchase a paid service directly from Dine A Deal",
+          "Enter into a business agreement with Dine A Deal"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Users must provide accurate and current account information."
+      },
+      {
+        "type": "p",
+        "text": "Users are responsible for maintaining the confidentiality of their login details and for promptly notifying us of suspected unauthorised access."
+      },
+      {
+        "type": "p",
+        "text": "A user must not:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Create an account using another person’s identity",
+          "Transfer an account without permission",
+          "Create multiple accounts to evade restrictions",
+          "Manipulate Deal limits, reviews, competitions or rankings",
+          "Allow an account to be used unlawfully"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 8,
+    "id": "business-user-and-venue-accounts",
+    "title": "8. Business User and Venue accounts",
+    "tocLabel": "8. Business User and Venue accounts",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "A person creating or managing a Venue account confirms that they are authorised to act for that business and accept these Terms on its behalf."
+      },
+      {
+        "type": "p",
+        "text": "A Business User must provide accurate and current information, including where requested:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Legal business name",
+          "Trading name",
+          "Business address",
+          "Telephone number",
+          "Email address",
+          "Company or business registration number",
+          "VAT number, where applicable",
+          "Authorised representative",
+          "Payment information",
+          "Applicable licence information",
+          "Venue locations"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "We may request evidence to verify this information."
+      },
+      {
+        "type": "p",
+        "text": "The Business User must update its account promptly when information changes."
+      },
+      {
+        "type": "p",
+        "text": "Verification by Dine A Deal is not an endorsement or guarantee of the Venue."
+      }
+    ]
+  },
+  {
+    "number": 9,
+    "id": "venue-listings-and-deals",
+    "title": "9. Venue Listings and Deals",
+    "tocLabel": "9. Venue Listings and Deals",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "A Business User is responsible for every Listing published through its account."
+      },
+      {
+        "type": "p",
+        "text": "Every Listing must be accurate, current, lawful and not misleading."
+      },
+      {
+        "type": "p",
+        "text": "A Deal must clearly identify all material conditions, including where applicable:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "What is included",
+          "The total consumer price",
+          "VAT and mandatory charges",
+          "Any minimum spend",
+          "Start and expiry dates",
+          "Available days and times",
+          "Participating locations",
+          "Booking requirements",
+          "Excluded dates, products or services",
+          "Quantity or capacity limits",
+          "Age restrictions",
+          "Whether the Deal may be combined with other promotions"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "A Venue must not:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Advertise a Deal it cannot reasonably supply",
+          "Hide important conditions",
+          "Use false scarcity or false countdowns",
+          "Create a false reference price or discount",
+          "Publish fake reviews",
+          "Misrepresent availability",
+          "Advertise an unlawful or unlicensed product",
+          "Use another party’s content without permission",
+          "Publish inaccurate allergen or food information",
+          "Mislead users regarding its relationship with Dine A Deal"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "The Venue is responsible for honouring valid Deals according to their displayed conditions."
+      },
+      {
+        "type": "p",
+        "text": "The Venue is also responsible for its:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Products and services",
+          "Food safety and hygiene",
+          "Allergen and ingredient information",
+          "Licences and permissions",
+          "Payments",
+          "Refunds",
+          "Bookings",
+          "Cancellations",
+          "Customer service",
+          "Advertising claims",
+          "Consumer-law obligations"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "The Venue must promptly amend or remove a Listing that is no longer accurate or available."
+      }
+    ]
+  },
+  {
+    "number": 10,
+    "id": "paid-venue-plans",
+    "title": "10. Paid Venue plans",
+    "tocLabel": "10. Paid Venue plans",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Available Venue plans, prices, features and billing periods will be displayed before a Business User purchases a plan."
+      },
+      {
+        "type": "p",
+        "text": "Unless stated otherwise:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Fees are charged in advance",
+          "VAT is added where applicable",
+          "Subscriptions renew automatically for the same billing period",
+          "The registered payment method is charged at renewal"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "A Business User may cancel automatic renewal through its billing settings or by contacting [BILLING EMAIL]."
+      },
+      {
+        "type": "p",
+        "text": "Cancellation normally takes effect at the end of the current paid billing period."
+      },
+      {
+        "type": "p",
+        "text": "Fees already paid are non-refundable except where:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Dine A Deal charged the wrong amount",
+          "A duplicate charge occurred",
+          "Dine A Deal expressly agrees to a refund",
+          "A refund is legally required"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "We may suspend paid features where payment remains overdue."
+      },
+      {
+        "type": "p",
+        "text": "We will provide advance notice of a subscription price increase. The new price will normally apply from the next renewal date."
+      },
+      {
+        "type": "p",
+        "text": "A Business User that does not accept the new price may cancel before renewal."
+      }
+    ]
+  },
+  {
+    "number": 11,
+    "id": "ranking-and-sponsored-listings",
+    "title": "11. Ranking and Sponsored Listings",
+    "tocLabel": "11. Ranking and Sponsored Listings",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Search results and recommendations may be influenced by:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "User location or selected location",
+          "Distance",
+          "Deal availability",
+          "Search terms",
+          "User-selected filters",
+          "Cuisine or Venue category",
+          "Listing completeness",
+          "Listing quality",
+          "Recency",
+          "Whether information appears current",
+          "User engagement",
+          "Ratings and reviews",
+          "Editorial selection",
+          "Sponsored status"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "The importance of individual ranking factors may vary according to the search, location, device and filters used."
+      },
+      {
+        "type": "p",
+        "text": "Payment may increase the prominence, placement, distribution or frequency of a Sponsored Listing."
+      },
+      {
+        "type": "p",
+        "text": "Sponsored content will be identified using wording such as:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Sponsored",
+          "Featured",
+          "Promoted"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Payment does not guarantee a particular position, number of views, clicks, claims, customers or sales."
+      },
+      {
+        "type": "p",
+        "text": "Dine A Deal is not required to disclose source code, exact ranking weights or information that would enable manipulation of the Platform."
+      },
+      {
+        "type": "p",
+        "text": "Dine A Deal does not require a Venue to offer its lowest price exclusively through the Platform unless a separate written agreement expressly states otherwise."
+      }
+    ]
+  },
+  {
+    "number": 12,
+    "id": "reviews-and-user-content",
+    "title": "12. Reviews and User Content",
+    "tocLabel": "12. Reviews and User Content",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "A review must:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Be based on a genuine experience",
+          "Be honest and reasonably accurate",
+          "Relate to the relevant Venue or Deal",
+          "Avoid personal attacks or harassment",
+          "Avoid unlawful or defamatory claims",
+          "Avoid disclosing private information",
+          "Disclose any payment or benefit received for the review",
+          "Avoid spam, malware and unrelated promotions"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Users retain ownership of original User Content they create."
+      },
+      {
+        "type": "p",
+        "text": "By submitting User Content, the user grants Dine A Deal a non-exclusive, worldwide, royalty-free and sublicensable licence to host, store, reproduce, format, display and distribute that content for the operation, improvement and promotion of the Platform."
+      },
+      {
+        "type": "p",
+        "text": "The user confirms that they own the content or have permission to submit it."
+      },
+      {
+        "type": "p",
+        "text": "Dine A Deal does not endorse every statement contained in User Content."
+      },
+      {
+        "type": "p",
+        "text": "A Venue must not:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Review itself",
+          "Arrange fake reviews",
+          "Pay for undisclosed positive reviews",
+          "Submit false reviews about competitors",
+          "Pressure a consumer to remove a genuine review",
+          "Offer a reward conditional on a positive review",
+          "Use multiple accounts to manipulate ratings"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "A Venue may respond professionally to reviews."
+      },
+      {
+        "type": "p",
+        "text": "Disagreement with criticism does not, by itself, require Dine A Deal to remove a review."
+      }
+    ]
+  },
+  {
+    "number": 13,
+    "id": "prohibited-use",
+    "title": "13. Prohibited use",
+    "tocLabel": "13. Prohibited use",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Users and Business Users must not use the Platform to:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Break the law",
+          "Publish fraudulent or misleading information",
+          "Impersonate another person or business",
+          "Manipulate ratings, clicks, claims or search results",
+          "Publish unlawful, threatening, abusive or discriminatory content",
+          "Infringe intellectual property or privacy rights",
+          "Upload malware or harmful code",
+          "Gain unauthorised access to accounts or systems",
+          "Circumvent security or payment controls",
+          "Scrape or automatically extract Platform data without permission",
+          "Collect personal information without a lawful basis",
+          "Sell or republish Platform data without permission",
+          "Promote an unlawful, unsafe or unlicensed product",
+          "Abuse the complaints, reports or appeals system",
+          "Use consumer contact information for unrelated marketing"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 14,
+    "id": "content-moderation",
+    "title": "14. Content moderation",
+    "tocLabel": "14. Content moderation",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Dine A Deal may review Listings and User Content for compliance with these Terms and applicable law."
+      },
+      {
+        "type": "p",
+        "text": "We may use automated systems to identify suspected:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Spam",
+          "Duplicate content",
+          "Fraud",
+          "Malicious links",
+          "Prohibited content",
+          "Unusual account activity",
+          "Review manipulation",
+          "Expired or inconsistent information"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Depending on the circumstances, we may:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Request additional information",
+          "Correct formatting or obvious technical errors",
+          "Mark content as sponsored, disputed, expired or unverified",
+          "Reduce the visibility of content",
+          "Restrict Platform features",
+          "Remove content",
+          "Suspend a Listing",
+          "Suspend or terminate an account"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "We will aim to apply moderation measures reasonably and proportionately."
+      },
+      {
+        "type": "p",
+        "text": "Where appropriate, we will provide the affected user with a reason and information about available appeal options."
+      },
+      {
+        "type": "p",
+        "text": "We may withhold information where disclosure is prohibited, creates a security risk, compromises an investigation or exposes another person’s confidential information."
+      }
+    ]
+  },
+  {
+    "number": 15,
+    "id": "reporting-and-appealing",
+    "title": "15. Reporting and appealing content decisions",
+    "tocLabel": "15. Reporting and appealing content decisions",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Illegal, prohibited or misleading content may be reported to:"
+      },
+      {
+        "type": "p",
+        "text": "[REPORTING EMAIL OR REPORTING PAGE]"
+      },
+      {
+        "type": "p",
+        "text": "A report should include:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The URL or location of the content",
+          "An explanation of the concern",
+          "Relevant supporting evidence",
+          "The reporter’s contact details, where appropriate",
+          "A good-faith statement that the information is accurate"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Submitting a report does not guarantee removal. Dine A Deal will assess the report against these Terms and applicable law."
+      },
+      {
+        "type": "p",
+        "text": "A user or Business User affected by a moderation decision may appeal through:"
+      },
+      {
+        "type": "p",
+        "text": "[APPEALS EMAIL OR APPEALS PAGE]"
+      },
+      {
+        "type": "p",
+        "text": "An appeal should identify:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The account or content involved",
+          "The decision being challenged",
+          "Why the decision is believed to be incorrect",
+          "Relevant supporting evidence"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Dine A Deal may uphold, amend or reverse a decision."
+      }
+    ]
+  },
+  {
+    "number": 16,
+    "id": "food-safety-allergens",
+    "title": "16. Food safety, allergens and dietary requirements",
+    "tocLabel": "16. Food safety, allergens and dietary requirements",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Dine A Deal does not prepare, package, store or serve products supplied by a Venue."
+      },
+      {
+        "type": "p",
+        "text": "The Venue is responsible for food preparation, food safety, hygiene, ingredients, allergen information and cross-contamination controls."
+      },
+      {
+        "type": "p",
+        "text": "Menus and descriptions shown on the Platform may change and may not identify every ingredient, substitution or cross-contamination risk."
+      },
+      {
+        "type": "p",
+        "text": "A person with an allergy, intolerance, medical condition or dietary requirement must communicate directly with the Venue before ordering or consuming a product."
+      },
+      {
+        "type": "p",
+        "text": "Users should not rely solely on a Dine A Deal Listing when making a decision involving a serious allergy or medical risk."
+      },
+      {
+        "type": "p",
+        "text": "Nothing in this section excludes responsibility Dine A Deal may have for its own unlawful conduct or for information created directly by Dine A Deal."
+      }
+    ]
+  },
+  {
+    "number": 17,
+    "id": "alcohol-related-deals",
+    "title": "17. Alcohol-related Deals",
+    "tocLabel": "17. Alcohol-related Deals",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Alcohol-related content is intended only for adults legally permitted to purchase and consume alcohol."
+      },
+      {
+        "type": "p",
+        "text": "A Venue may request valid identification and may refuse service where legally required."
+      },
+      {
+        "type": "p",
+        "text": "A Venue advertising alcohol confirms that it holds all required licences and will comply with applicable alcohol pricing, advertising, promotion and age-verification requirements."
+      },
+      {
+        "type": "p",
+        "text": "Dine A Deal may restrict or remove alcohol-related content where it reasonably believes the content may be unlawful, unsafe or inappropriate."
+      },
+      {
+        "type": "p",
+        "text": "Users must not use the Platform to obtain alcohol for a person under the applicable legal age."
+      }
+    ]
+  },
+  {
+    "number": 18,
+    "id": "third-party-services",
+    "title": "18. Third-party services and commercial relationships",
+    "tocLabel": "18. Third-party services and commercial relationships",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "The Platform may link to:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Venue websites",
+          "Booking platforms",
+          "Delivery services",
+          "Maps",
+          "Payment providers",
+          "Social networks",
+          "Other third-party services"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Third-party services operate under their own terms and privacy notices."
+      },
+      {
+        "type": "p",
+        "text": "Dine A Deal is not responsible for the operation, content or security of an independent third-party service."
+      },
+      {
+        "type": "p",
+        "text": "Dine A Deal may receive:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Venue subscription fees",
+          "Sponsored Listing fees",
+          "Advertising revenue",
+          "Referral fees",
+          "Affiliate commissions",
+          "Other disclosed commercial benefits"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Commercial or promoted content will be identified where required."
+      }
+    ]
+  },
+  {
+    "number": 19,
+    "id": "intellectual-property",
+    "title": "19. Intellectual property",
+    "tocLabel": "19. Intellectual property",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "The Platform, software, databases, branding, designs, graphics and original content produced by Dine A Deal are owned by or licensed to Dine A Deal."
+      },
+      {
+        "type": "p",
+        "text": "Users receive a limited, non-exclusive, non-transferable and revocable right to use the Platform for its intended purpose."
+      },
+      {
+        "type": "p",
+        "text": "Without written permission, users must not:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Copy a substantial part of the Platform",
+          "Republish Platform content commercially",
+          "Create a competing database from Platform content",
+          "Reverse engineer the Platform, except where legally permitted",
+          "Remove copyright or trademark notices",
+          "Use Dine A Deal branding misleadingly",
+          "Frame or mirror the Platform"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "A Business User retains ownership of its original logos, photographs, menus and descriptions."
+      },
+      {
+        "type": "p",
+        "text": "The Business User grants Dine A Deal a non-exclusive, worldwide, royalty-free and sublicensable licence to host, reproduce, format and distribute its submitted content through the Platform, newsletters, social media, advertisements and approved promotional channels."
+      },
+      {
+        "type": "p",
+        "text": "The Business User confirms that it has permission to use all content it submits."
+      }
+    ]
+  },
+  {
+    "number": 20,
+    "id": "privacy-and-marketing",
+    "title": "20. Privacy and marketing",
+    "tocLabel": "20. Privacy and marketing",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Personal information is processed as described in the Dine A Deal Privacy Notice."
+      },
+      {
+        "type": "p",
+        "text": "Accepting these Terms does not constitute consent to:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Receive optional marketing emails",
+          "Receive promotional text messages",
+          "Have personal information sold",
+          "Have an email address shared with another business for that business’s marketing"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Where consent is required, Dine A Deal will request it separately through a clear, optional choice."
+      },
+      {
+        "type": "p",
+        "text": "Refusing optional marketing consent will not prevent a person from using ordinary Platform services."
+      },
+      {
+        "type": "p",
+        "text": "Dine A Deal may send necessary service communications, including:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Account verification",
+          "Password resets",
+          "Security warnings",
+          "Deal confirmations",
+          "Billing information",
+          "Service notices",
+          "Changes to these Terms",
+          "Replies to reports and complaints"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "A Venue must not use consumer details obtained through Dine A Deal for unrelated marketing unless it has a separate lawful basis and has provided all required privacy information."
+      },
+      {
+        "type": "p",
+        "text": "A Venue must not sell or disclose a consumer’s contact information to another business without an appropriate lawful basis."
+      }
+    ]
+  },
+  {
+    "number": 21,
+    "id": "platform-availability",
+    "title": "21. Platform availability",
+    "tocLabel": "21. Platform availability",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Dine A Deal aims to provide a reliable Platform but does not guarantee continuous or error-free availability."
+      },
+      {
+        "type": "p",
+        "text": "Access may be interrupted because of:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Maintenance",
+          "Security updates",
+          "Technical failures",
+          "Third-party service failures",
+          "Legal requirements",
+          "Fraud prevention",
+          "Events outside our reasonable control"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "We may add, remove or modify Platform features."
+      },
+      {
+        "type": "p",
+        "text": "Where a change materially affects a paid service, we will provide reasonable notice unless immediate action is required for legal, security or safety reasons."
+      }
+    ]
+  },
+  {
+    "number": 22,
+    "id": "consumer-rights-and-liability",
+    "title": "22. Consumer rights and liability",
+    "tocLabel": "22. Consumer rights and liability",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Nothing in these Terms excludes or restricts:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Mandatory consumer rights",
+          "Liability for death or personal injury caused by negligence",
+          "Liability for fraud or fraudulent misrepresentation",
+          "Any liability that cannot legally be excluded"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Where Dine A Deal breaches these Terms or fails to use reasonable care and skill, it is responsible for loss that was a reasonably foreseeable result of that breach."
+      },
+      {
+        "type": "p",
+        "text": "To the extent permitted by law, Dine A Deal is not responsible for loss caused solely by:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The independent conduct of a Venue",
+          "A Venue’s food, drink, premises, staff or service",
+          "A Venue cancelling or refusing a Deal",
+          "Inaccurate information supplied by a Venue that Dine A Deal could not reasonably have identified",
+          "An independent third-party service",
+          "A user failing to follow the displayed Deal conditions",
+          "Events outside Dine A Deal’s reasonable control"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "These limitations do not excuse Dine A Deal from responsibility for its own breach, negligence or unlawful conduct."
+      },
+      {
+        "type": "p",
+        "text": "The consumer Platform is supplied for personal use. Dine A Deal is not responsible to Consumer Users for commercial losses arising from personal use of the Platform."
+      }
+    ]
+  },
+  {
+    "number": 23,
+    "id": "liability-to-business-users",
+    "title": "23. Liability to Business Users",
+    "tocLabel": "23. Liability to Business Users",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "This section applies only to Business Users."
+      },
+      {
+        "type": "p",
+        "text": "Nothing excludes liability for:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Death or personal injury caused by negligence",
+          "Fraud or fraudulent misrepresentation",
+          "Deliberate misconduct",
+          "Liability that cannot legally be excluded"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Subject to those exceptions, Dine A Deal will not be liable to a Business User for:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Loss of profit",
+          "Loss of revenue",
+          "Loss of anticipated savings",
+          "Loss of goodwill",
+          "Loss of opportunity",
+          "Indirect or consequential losses",
+          "Failure to obtain a particular number of views, claims, customers or sales"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Subject to applicable law, Dine A Deal’s total aggregate liability to a Business User during any twelve-month period will not exceed the greater of:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The fees paid by that Business User during the preceding twelve months; or",
+          "€1,000"
+        ]
+      }
+    ]
+  },
+  {
+    "number": 24,
+    "id": "business-user-indemnity",
+    "title": "24. Business User indemnity",
+    "tocLabel": "24. Business User indemnity",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "A Business User will be responsible for third-party claims, losses and reasonable professional costs to the extent caused by:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Its breach of these Terms",
+          "A misleading or unlawful Listing",
+          "Its food, drink, products, premises or services",
+          "Its negligence or unlawful conduct",
+          "Content submitted without permission",
+          "Misuse of consumer personal information",
+          "Failure to hold a required licence"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "This responsibility does not apply to the extent that a claim was caused by Dine A Deal’s own negligence, breach or unlawful conduct."
+      }
+    ]
+  },
+  {
+    "number": 25,
+    "id": "account-restrictions-and-termination",
+    "title": "25. Account restrictions and termination",
+    "tocLabel": "25. Account restrictions and termination",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Dine A Deal may restrict, suspend or terminate an account where it reasonably believes:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "These Terms have been breached",
+          "The account is being used fraudulently",
+          "A security or consumer-safety risk exists",
+          "Reviews or Deals are being manipulated",
+          "Illegal or unlicensed activity is taking place",
+          "Payment is overdue",
+          "Information is inaccurate or cannot be verified",
+          "Dine A Deal is legally required to act"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Where appropriate, we will provide notice and an opportunity to address the issue."
+      },
+      {
+        "type": "p",
+        "text": "Immediate action may be taken where necessary to address fraud, illegality, consumer safety, cybersecurity or another serious risk."
+      },
+      {
+        "type": "p",
+        "text": "Where applicable to a Business User, Dine A Deal will provide reasons for a restriction, suspension or termination."
+      },
+      {
+        "type": "p",
+        "text": "Where the applicable Platform-to-Business rules require it, termination of the entire Business User relationship will normally be notified at least 30 days in advance, subject to legally permitted exceptions."
+      },
+      {
+        "type": "p",
+        "text": "A Consumer User may close an account through account settings or by contacting [SUPPORT EMAIL]."
+      },
+      {
+        "type": "p",
+        "text": "A Business User may cancel a paid plan according to section 10."
+      },
+      {
+        "type": "p",
+        "text": "Termination does not affect rights, obligations or amounts that arose before termination."
+      }
+    ]
+  },
+  {
+    "number": 26,
+    "id": "business-complaints",
+    "title": "26. Business complaints",
+    "tocLabel": "26. Business complaints",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Business Users may submit complaints free of charge to:"
+      },
+      {
+        "type": "p",
+        "text": "[BUSINESS COMPLAINTS EMAIL]"
+      },
+      {
+        "type": "p",
+        "text": "A complaint should include:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "Business name",
+          "Account details",
+          "Listing or decision concerned",
+          "A clear explanation",
+          "Supporting evidence",
+          "The requested resolution"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Dine A Deal will aim to acknowledge a complaint within five business days and provide a substantive response within twenty business days where reasonably possible."
+      },
+      {
+        "type": "p",
+        "text": "More complex matters may require additional time."
+      }
+    ]
+  },
+  {
+    "number": 27,
+    "id": "changes-to-these-terms",
+    "title": "27. Changes to these Terms",
+    "tocLabel": "27. Changes to these Terms",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Dine A Deal may change these Terms for a valid reason, including:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "A legal or regulatory change",
+          "A change to Platform functionality",
+          "A security requirement",
+          "The introduction of a new service",
+          "Fraud or abuse prevention",
+          "A change to the Dine A Deal business model",
+          "A need to clarify or correct the Terms"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Consumer Users will receive reasonable notice of a material change where required."
+      },
+      {
+        "type": "p",
+        "text": "Business Users will normally receive at least 15 days’ notice through email or another durable medium before a change takes effect."
+      },
+      {
+        "type": "p",
+        "text": "A longer notice period may be provided where a Business User reasonably needs to make significant technical or commercial changes."
+      },
+      {
+        "type": "p",
+        "text": "Changes may take effect immediately where required by law or necessary to address fraud, malware, illegal content, cybersecurity or consumer safety."
+      },
+      {
+        "type": "p",
+        "text": "Changes will not be applied retrospectively unless legally permitted and fair."
+      },
+      {
+        "type": "p",
+        "text": "The current version of these Terms will remain available on the Platform."
+      }
+    ]
+  },
+  {
+    "number": 28,
+    "id": "consumer-complaints",
+    "title": "28. Complaints from Consumer Users",
+    "tocLabel": "28. Complaints from Consumer Users",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Complaints about Dine A Deal may be sent to:"
+      },
+      {
+        "type": "p",
+        "text": "[COMPLAINTS EMAIL]"
+      },
+      {
+        "type": "p",
+        "text": "The complaint should include:"
+      },
+      {
+        "type": "ul",
+        "items": [
+          "The user’s name",
+          "Account email, where applicable",
+          "A description of the issue",
+          "Relevant Venue or Deal details",
+          "Supporting screenshots or correspondence",
+          "The outcome being requested"
+        ]
+      },
+      {
+        "type": "p",
+        "text": "Complaints relating directly to a Venue’s food, drink, payment, booking, premises or customer service should normally be raised first with the Venue."
+      },
+      {
+        "type": "p",
+        "text": "Users may also notify Dine A Deal where a complaint indicates that a Listing may be misleading, unsafe or unlawful."
+      }
+    ]
+  },
+  {
+    "number": 29,
+    "id": "events-outside-reasonable-control",
+    "title": "29. Events outside reasonable control",
+    "tocLabel": "29. Events outside reasonable control",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Neither party will be responsible for a delay or failure caused by events outside its reasonable control."
+      },
+      {
+        "type": "p",
+        "text": "These events may include internet outages, infrastructure failures, natural disasters, government action, epidemics, industrial disputes, cyberattacks or failure of a critical third-party provider."
+      },
+      {
+        "type": "p",
+        "text": "This section does not excuse payment of an amount that was already due."
+      }
+    ]
+  },
+  {
+    "number": 30,
+    "id": "transfer-of-the-agreement",
+    "title": "30. Transfer of the agreement",
+    "tocLabel": "30. Transfer of the agreement",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "A user may not transfer an account or rights under these Terms without written permission."
+      },
+      {
+        "type": "p",
+        "text": "Dine A Deal may transfer its rights and obligations to an affiliate, purchaser or successor operating the Platform."
+      },
+      {
+        "type": "p",
+        "text": "A transfer will not reduce a Consumer User’s mandatory legal rights."
+      }
+    ]
+  },
+  {
+    "number": 31,
+    "id": "no-partnership-or-agency",
+    "title": "31. No partnership or agency",
+    "tocLabel": "31. No partnership or agency",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Nothing in these Terms creates a partnership, employment relationship, joint venture or general agency relationship between Dine A Deal and a Venue."
+      },
+      {
+        "type": "p",
+        "text": "A Venue does not have authority to make commitments on behalf of Dine A Deal."
+      }
+    ]
+  },
+  {
+    "number": 32,
+    "id": "severability-and-waiver",
+    "title": "32. Severability and waiver",
+    "tocLabel": "32. Severability and waiver",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "If a provision of these Terms is found invalid or unenforceable, the remaining provisions will continue to apply."
+      },
+      {
+        "type": "p",
+        "text": "A delay in enforcing a right does not waive that right."
+      }
+    ]
+  },
+  {
+    "number": 33,
+    "id": "governing-law-and-courts",
+    "title": "33. Governing law and courts",
+    "tocLabel": "33. Governing law and courts",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "These Terms are governed by Irish law."
+      },
+      {
+        "type": "p",
+        "text": "Consumer Users retain any mandatory protections provided by the law of their country of residence."
+      },
+      {
+        "type": "p",
+        "text": "Nothing in these Terms requires a Consumer User to bring proceedings exclusively in Ireland where such a requirement would be unlawful."
+      },
+      {
+        "type": "p",
+        "text": "For Business Users, the Irish courts will have exclusive jurisdiction, subject to mandatory law and any separately agreed dispute-resolution process."
+      }
+    ]
+  },
+  {
+    "number": 34,
+    "id": "contact-information",
+    "title": "34. Contact information",
+    "tocLabel": "34. Contact information",
+    "blocks": [
+      {
+        "type": "p",
+        "text": "Questions about these Terms may be sent to:"
+      },
+      {
+        "type": "p",
+        "text": "[LEGAL COMPANY NAME]"
+      },
+      {
+        "type": "p",
+        "text": "Trading as Dine A Deal"
+      },
+      {
+        "type": "p",
+        "text": "[REGISTERED ADDRESS]"
+      },
+      {
+        "type": "p",
+        "text": "Email: [SUPPORT EMAIL]"
+      },
+      {
+        "type": "p",
+        "text": "Telephone: [PHONE NUMBER]"
+      }
+    ]
+  }
+]

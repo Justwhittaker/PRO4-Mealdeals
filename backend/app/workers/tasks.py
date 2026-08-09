@@ -14,7 +14,8 @@ from app.models.newsletter import NewsletterSubscriber
 from app.scrapers.global_retail import TARGET_MARKETS, iter_market_areas
 from app.scrapers.markets import CURRENCY_RATES
 from app.services.newsletter import send_weekly_special_to_subscriber
-from app.services.scrape_runner import scrape_and_ingest_area, scrape_and_ingest_markets
+from app.services.scrape_runner import scrape_and_ingest_area, scrape_and_ingest_markets, scrape_and_ingest_zone
+from app.scrapers.zones import SCRAPE_ZONES, markets_for_zone
 from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -75,6 +76,31 @@ def scrape_global_retail(country_codes: list[str] | None = None) -> dict[str, in
         for code, ingested in by_country.items():
             counts[str(code)] = int(ingested)
     return counts
+
+
+@celery_app.task(name="app.workers.tasks.scrape_zone_retail")
+def scrape_zone_retail(zone_id: str) -> dict[str, int | str]:
+    """Continental bite-size scrape for one of eight worldwide zones."""
+    zone = zone_id.strip().lower()
+    if zone not in SCRAPE_ZONES:
+        raise ValueError(f"Unknown scrape zone: {zone_id}")
+    result = scrape_and_ingest_zone(zone)
+    markets = markets_for_zone(zone)
+    logger.info(
+        "Zone scrape complete (%s): areas=%s discovered=%s ingested=%s",
+        zone,
+        result.get("areas"),
+        result.get("discovered"),
+        result.get("ingested"),
+    )
+    return {
+        "zone": zone,
+        "label": SCRAPE_ZONES[zone]["label"],
+        "areas": int(result.get("areas") or 0),
+        "discovered": int(result.get("discovered") or 0),
+        "ingested": int(result.get("ingested") or 0),
+        "markets": len(markets),
+    }
 
 
 @celery_app.task(name="app.workers.tasks.send_weekly_specials")

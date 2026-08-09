@@ -169,7 +169,7 @@ _RULES: list[tuple[str, re.Pattern[str]]] = [
             r"gas station|supermarket(?!\s*café)|hypermarket|"
             r"tesco|sainsbury|woolworth|coles|walmart|lidl|aldi|"
             r"carrefour|loblaw|fairprice|whole\s*foods|trader\s*joe|"
-            r"dunnes|centra|supervalu|countdown|new\s*world|checkers|"
+            r"dunnes|centra|supervalu|asda|morrisons|waitrose|countdown|new\s*world|checkers|"
             r"shoprite|albert\s*heijn|\bjumbo\b|\bhema\b|big\s*c|"
             r"foodland|lulu\s*hyper|migros|\bcoop\b|mercadona|"
             r"rewe|\bnetto\b|rema\s*1000|spar\b|billa|delhaize|"
@@ -188,7 +188,7 @@ _RULES: list[tuple[str, re.Pattern[str]]] = [
             r"mobile\s*food|chipotle|kfc|subway|greggs|mcdonald|"
             r"burger\s*king|dominos|\bqsr\b|jollibee|mang\s*inasal|"
             r"juici\s*patties|hungry\s*jack|guzman|debonairs|"
-            r"hell\s*pizza|mostaza|presto|habib",
+            r"hell\s*pizza|mostaza|presto|habib|papa\s*john|pizza\s*hut|pizza\s*pizza|telepizza|little\s*caesars|wingstop|supermac|apache\s*pizza|crust\s*pizza|new\s*york\s*pizza|roman.?s\s*pizza|chicken\s*licken|mcdonald",
             re.I,
         ),
     ),

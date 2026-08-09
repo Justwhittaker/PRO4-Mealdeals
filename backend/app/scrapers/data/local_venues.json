@@ -1,0 +1,651 @@
+{
+  "AG:St Johns": {
+    "fetched_at": 1786233600.063833,
+    "lat": 17.1274,
+    "lon": -61.8468,
+    "sources": []
+  },
+  "AT:Innsbruck": {
+    "fetched_at": 1786235569.7047524,
+    "lat": 47.2692,
+    "locality_version": 2,
+    "lon": 11.4041,
+    "sources": []
+  },
+  "AT:Salzburg": {
+    "fetched_at": 1786235504.3171117,
+    "lat": 47.8095,
+    "locality_version": 2,
+    "lon": 13.055,
+    "sources": []
+  },
+  "AT:Vienna": {
+    "fetched_at": 1786235400.0779192,
+    "lat": 48.2082,
+    "locality_version": 2,
+    "lon": 16.3738,
+    "sources": []
+  },
+  "BB:Bridgetown": {
+    "fetched_at": 1786233639.3860338,
+    "lat": 13.0975,
+    "lon": -59.6145,
+    "sources": [
+      {
+        "area_local": "Bridgetown City",
+        "merchant": "Harbour Lights",
+        "source_kind": "local_independent",
+        "url": "https://www.harbourlightsbarbados.com",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Fort-De-France",
+        "merchant": "Snack Elizé",
+        "source_kind": "local_independent",
+        "url": "https://snackelize.com",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Le Diamant",
+        "merchant": "U Express",
+        "source_kind": "local_independent",
+        "url": "https://www.magasins-u.com/magasin/uexpress-lediamantcherry.m30842",
+        "venue_category": "Deli's and Grocers"
+      },
+      {
+        "area_local": "Le Marin",
+        "merchant": "Mango Bay",
+        "source_kind": "local_independent",
+        "url": "https://restaurant-mangobay.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Soufriere",
+        "merchant": "Downtown Hotel",
+        "source_kind": "local_independent",
+        "url": "https://downtownhotelslu.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Le Diamant",
+        "merchant": "Domaine de l'Oasis",
+        "source_kind": "local_independent",
+        "url": "https://domainedeloasis.fr",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Vieux Fort",
+        "merchant": "Dr Freeza;Felly Belly",
+        "source_kind": "local_independent",
+        "url": "http://fellybelly.com",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Vieux Fort",
+        "merchant": "G's Marina Mart",
+        "source_kind": "local_independent",
+        "url": "https://glacesupermarkets.com",
+        "venue_category": "Deli's and Grocers"
+      },
+      {
+        "area_local": "Speightstown",
+        "merchant": "Island Plates",
+        "source_kind": "local_independent",
+        "url": "https://www.islandplatesbb.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Hillsborough",
+        "merchant": "Green Roof Inn",
+        "source_kind": "local_independent",
+        "url": "http://www.greenroofinn.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Fort-De-France",
+        "merchant": "Le Cloud",
+        "source_kind": "local_independent",
+        "url": "https://www.cloudrooftopbar.com",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Fort-De-France",
+        "merchant": "Tacos legend Kerlys",
+        "source_kind": "local_independent",
+        "url": "https://fr-fr.facebook.com/TacosLegend.Martinique",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Vieux Fort",
+        "merchant": "Lena's Country Mart",
+        "source_kind": "local_independent",
+        "url": "https://captainclifftours.wixsite.com/captainclifftours",
+        "venue_category": "Deli's and Grocers"
+      },
+      {
+        "area_local": "Speightstown",
+        "merchant": "The Orange Street Grocer",
+        "source_kind": "local_independent",
+        "url": "https://www.theorangestreetgrocer.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Padmore",
+        "merchant": "Pollards Mill",
+        "source_kind": "local_independent",
+        "url": "https://www.pollardsmill.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Bridgetown City",
+        "merchant": "La Cabane",
+        "source_kind": "local_independent",
+        "url": "https://www.lacabanebarbados.com",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Fort-De-France",
+        "merchant": "BKB Chicken & Burger",
+        "source_kind": "local_independent",
+        "url": "https://m.facebook.com/bkbpouletbokay/photos/a.1807217916168837.1073741829.1488529711370994/2015371065353520/?type=3&source=44",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Le Diamant",
+        "merchant": "La Guérande",
+        "source_kind": "local_independent",
+        "url": "https://boulangerielaguerande.fr",
+        "venue_category": "Deli's and Grocers"
+      },
+      {
+        "area_local": "Bridgetown",
+        "merchant": "Chefette Restaurants - Fontabelle",
+        "source_kind": "local_independent",
+        "url": "https://www.chefette.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Ealing Park",
+        "merchant": "Gemini House Bed & Breakfast",
+        "source_kind": "local_independent",
+        "url": "https://www.geminihouse.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Bridgetown",
+        "merchant": "Paloma",
+        "source_kind": "local_independent",
+        "url": "https://palomabarbados.com",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Ducos",
+        "merchant": "Big Fernand - Ducos",
+        "source_kind": "local_independent",
+        "url": "https://restaurants.bigfernand.com/martinique-genipa",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Vieux Fort",
+        "merchant": "it's alive",
+        "source_kind": "local_independent",
+        "url": "https://www.itsaliveslu.com",
+        "venue_category": "Deli's and Grocers"
+      },
+      {
+        "area_local": "Bridgetown",
+        "merchant": "Rascals of the Caribbean Restaurant",
+        "source_kind": "local_independent",
+        "url": "https://rascalswaterpark.com/menu",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Vieux Fort",
+        "merchant": "La Haut Resort",
+        "source_kind": "local_independent",
+        "url": "https://www.lahaut.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Bridgetown",
+        "merchant": "The Happy Hour Spot",
+        "source_kind": "local_independent",
+        "url": "https://thehappyhourspotbb.com",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Fort-De-France",
+        "merchant": "Snack élizé",
+        "source_kind": "local_independent",
+        "url": "https://www.elize.fr/www",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Bridgetown City",
+        "merchant": "Poinsettia Mart",
+        "source_kind": "local_independent",
+        "url": "https://poinsettiamart.weebly.com",
+        "venue_category": "Deli's and Grocers"
+      },
+      {
+        "area_local": "Fort-De-France",
+        "merchant": "Hippopotamus",
+        "source_kind": "local_independent",
+        "url": "http://galleria.mq/boutique/fiche/hippopotamus",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Vieux Fort",
+        "merchant": "Stonefield Estate Resort",
+        "source_kind": "local_independent",
+        "url": "https://www.stonefieldresort.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Worthing",
+        "merchant": "Lucky Horseshoe Saloon & Steakhouse",
+        "source_kind": "local_independent",
+        "url": "http://luckyhorseshoe.bb",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Fort-De-France",
+        "merchant": "Pizza Aldo",
+        "source_kind": "local_independent",
+        "url": "https://www.pizza-aldo-cluny.fr",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Sainte-Luce",
+        "merchant": "Les Artisans Du Pain",
+        "source_kind": "local_independent",
+        "url": "https://www.petitscommerces.fr/page/les-artisans-du-pain",
+        "venue_category": "Deli's and Grocers"
+      },
+      {
+        "area_local": "Port Elizabeth, Admiralty Bay, Belmont",
+        "merchant": "Frangipani Beach Bar & Restaurant",
+        "source_kind": "local_independent",
+        "url": "https://frangipanibequia.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Vieux Fort",
+        "merchant": "Unique Vacations Limited Call Centre",
+        "source_kind": "local_independent",
+        "url": "https://www.sandals.com/contact/worldwide.cfm",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Bridgetown",
+        "merchant": "The Boatyard",
+        "source_kind": "local_independent",
+        "url": "https://www.theboatyard.com",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Bridgetown",
+        "merchant": "Savvy On The Bay",
+        "source_kind": "local_independent",
+        "url": "https://www.savvyonthebay.com",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Fort-De-France",
+        "merchant": "Carrefour",
+        "source_kind": "local_chain",
+        "url": "https://carrefour-martinique.com/nos-magasins",
+        "venue_category": "Deli's and Grocers"
+      },
+      {
+        "area_local": "Vieux Fort",
+        "merchant": "Sea Island Cotton Shop;The Bread Basket (BB's)",
+        "source_kind": "local_independent",
+        "url": "http://seaislandstlucia.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Barbados",
+        "merchant": "Ocean Two Resort & Residences",
+        "source_kind": "local_independent",
+        "url": "http://www.oceantwobarbados.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      }
+    ]
+  },
+  "BB:Speightstown": {
+    "fetched_at": 1786233732.9515755,
+    "lat": 13.25,
+    "lon": -59.65,
+    "sources": []
+  },
+  "BE:Brussels": {
+    "fetched_at": 1786235664.345268,
+    "lat": 50.8503,
+    "locality_version": 2,
+    "lon": 4.3517,
+    "sources": []
+  },
+  "BS:Freeport": {
+    "fetched_at": 1786233868.7362971,
+    "lat": 26.5333,
+    "lon": -78.7,
+    "sources": []
+  },
+  "BS:Marsh Harbour": {
+    "fetched_at": 1786233954.3093889,
+    "lat": 26.5412,
+    "lon": -77.0636,
+    "sources": []
+  },
+  "BS:Nassau": {
+    "fetched_at": 1786233797.2511356,
+    "lat": 25.0443,
+    "lon": -77.3504,
+    "sources": [
+      {
+        "area_local": "Hope Town",
+        "merchant": "Ray’s Place Lounge",
+        "source_kind": "local_independent",
+        "url": "https://hopetownlodge.com",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "George Town",
+        "merchant": "Chat 'N' Chill Beach Bar & Grill",
+        "source_kind": "local_independent",
+        "url": "http://www.http://www.chatnchill.com",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Nassau City",
+        "merchant": "Da Market Centre",
+        "source_kind": "local_independent",
+        "url": "https://www.damarketcentre.com",
+        "venue_category": "Deli's and Grocers"
+      },
+      {
+        "area_local": "Nassau",
+        "merchant": "Señor Frog's",
+        "source_kind": "local_independent",
+        "url": "https://senorfrogs.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Williams Town",
+        "merchant": "Ocean Reef Yacht Club & Resort",
+        "source_kind": "local_independent",
+        "url": "http://www.oryc.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Nassau",
+        "merchant": "Pirate Republic Brewing",
+        "source_kind": "local_independent",
+        "url": "https://piraterepublicbahamas.com",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Nassau City",
+        "merchant": "Popeyes",
+        "source_kind": "local_independent",
+        "url": "https://www.popeyesbahamas.com",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Nassau City",
+        "merchant": "Cost Right",
+        "source_kind": "local_independent",
+        "url": "https://amlfoods.com",
+        "venue_category": "Deli's and Grocers"
+      },
+      {
+        "area_local": "High Rock",
+        "merchant": "Bishop's Beach Club",
+        "source_kind": "local_independent",
+        "url": "http://bishopsresort.net",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Great Exuma",
+        "merchant": "Exuma Palms Hotel",
+        "source_kind": "local_independent",
+        "url": "http://www.exumapalms.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Dunmore Town",
+        "merchant": "The Elbow Room",
+        "source_kind": "local_independent",
+        "url": "https://instagram.com/elbowroomharbourisland?igshid=YmMyMTA2M2Y=",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Nassau City",
+        "merchant": "Marco's Pizza",
+        "source_kind": "local_independent",
+        "url": "https://www.marcos.com",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Nassau City",
+        "merchant": "Bahamas Wholesale Agencies Limited",
+        "source_kind": "local_independent",
+        "url": "https://www.bahamaswholesale.com",
+        "venue_category": "Deli's and Grocers"
+      },
+      {
+        "area_local": "Foxtown",
+        "merchant": "Da Valley Restaurant & Bar",
+        "source_kind": "local_independent",
+        "url": "https://www.ronaldsrentals.com/valley_restaurant.htm",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Freeport",
+        "merchant": "Royal Islander Hotel",
+        "source_kind": "local_independent",
+        "url": "http://www.royalislanderhotel.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Nassau City",
+        "merchant": "Cheetah’s Lounge",
+        "source_kind": "local_independent",
+        "url": "https://cheetahslounge.com",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Nassau City",
+        "merchant": "Bistro Express",
+        "source_kind": "local_independent",
+        "url": "https://bahamianbistro.com",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Lucaya",
+        "merchant": "L'Elmo di Ottone",
+        "source_kind": "local_independent",
+        "url": "https://elmodiottone.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Black Point",
+        "merchant": "Staniel Cay Yacht Club",
+        "source_kind": "local_independent",
+        "url": "https://www.stanielcay.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Little Harbour",
+        "merchant": "Pete's Pub and Gallery",
+        "source_kind": "local_independent",
+        "url": "https://www.petespub.com",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Nassau City",
+        "merchant": "Bamboo Shack",
+        "source_kind": "local_independent",
+        "url": "https://www.facebook.com/TheBambooShack",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Nassau",
+        "merchant": "Sharkeez Bar & Grill",
+        "source_kind": "local_independent",
+        "url": "https://www.sharkeezcaribbean.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Deep Creek",
+        "merchant": "Cape Eleuthera Resort & Marina",
+        "source_kind": "local_independent",
+        "url": "https://www.capeeleuthera.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Lucaya",
+        "merchant": "Bones Bar",
+        "source_kind": "local_independent",
+        "url": "https://www.bones-bar.com",
+        "venue_category": "Clubs, Bars & Pubs"
+      },
+      {
+        "area_local": "Nassau City",
+        "merchant": "Subway",
+        "source_kind": "local_chain",
+        "url": "https://www.subway.com",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Nassau",
+        "merchant": "The Pier",
+        "source_kind": "local_independent",
+        "url": "https://thepierbahamas.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Rokers Point Settlement",
+        "merchant": "Grand Isle Resort & Residences",
+        "source_kind": "local_independent",
+        "url": "https://grandisleresort.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Nassau City",
+        "merchant": "McDonald's",
+        "source_kind": "local_chain",
+        "url": "https://www.mcdonalds.com",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "Nassau",
+        "merchant": "Louis & Steen's New Orleans Coffee",
+        "source_kind": "local_independent",
+        "url": "https://louisandsteens.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "George Town",
+        "merchant": "Hideaways Exuma",
+        "source_kind": "local_independent",
+        "url": "https://www.hideawayspalmbay.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      },
+      {
+        "area_local": "Nassau City",
+        "merchant": "Wendy's",
+        "source_kind": "local_chain",
+        "url": "https://wendysbahamas.com",
+        "venue_category": "Food Trucks & Takeaway's"
+      },
+      {
+        "area_local": "New Plymouth",
+        "merchant": "Sundowners Bar & Restaurant",
+        "source_kind": "local_independent",
+        "url": "http://sundownersbar.com",
+        "venue_category": "Restaurants, Cafe's & Bistro's"
+      },
+      {
+        "area_local": "Nassau",
+        "merchant": "Ocean West Boutique Hotel",
+        "source_kind": "local_independent",
+        "url": "https://oceanwestbahamas.com",
+        "venue_category": "Hotels, Resorts & B&B's"
+      }
+    ]
+  },
+  "BZ:Belize City": {
+    "fetched_at": 1786234039.8842528,
+    "lat": 17.5046,
+    "lon": -88.1962,
+    "sources": []
+  },
+  "BZ:Belmopan": {
+    "fetched_at": 1786234105.6067967,
+    "lat": 17.2514,
+    "lon": -88.759,
+    "sources": []
+  },
+  "BZ:San Ignacio": {
+    "fetched_at": 1786234187.6312354,
+    "lat": 17.1588,
+    "lon": -89.0696,
+    "sources": []
+  },
+  "CA:Calgary": {
+    "fetched_at": 1786234513.807213,
+    "lat": 51.0447,
+    "lon": -114.0719,
+    "sources": []
+  },
+  "CA:Edmonton": {
+    "fetched_at": 1786234672.2754874,
+    "lat": 53.5461,
+    "lon": -113.4938,
+    "sources": []
+  },
+  "CA:Hamilton": {
+    "fetched_at": 1786234878.6296632,
+    "lat": 43.2557,
+    "lon": -79.8711,
+    "sources": []
+  },
+  "CA:Montreal": {
+    "fetched_at": 1786234431.949911,
+    "lat": 45.5017,
+    "lon": -73.5673,
+    "sources": []
+  },
+  "CA:Ottawa": {
+    "fetched_at": 1786234585.8631518,
+    "lat": 45.4215,
+    "lon": -75.6972,
+    "sources": []
+  },
+  "CA:Quebec City": {
+    "fetched_at": 1786234806.813625,
+    "lat": 46.8139,
+    "lon": -71.208,
+    "sources": []
+  },
+  "CA:Toronto": {
+    "fetched_at": 1786234250.9947689,
+    "lat": 43.6532,
+    "lon": -79.3832,
+    "sources": []
+  },
+  "CA:Vancouver": {
+    "fetched_at": 1786234346.3848238,
+    "lat": 49.2827,
+    "lon": -123.1207,
+    "sources": []
+  },
+  "CA:Winnipeg": {
+    "fetched_at": 1786234724.080697,
+    "lat": 49.8951,
+    "lon": -97.1384,
+    "sources": []
+  }
+}

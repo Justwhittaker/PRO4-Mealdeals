@@ -1,4 +1,5 @@
 import type { CurrencyCode } from "./currency";
+import { formatAreaLabel, slugifyCity } from "@/lib/area-label";
 import { cleanDealDescription, cleanMediaUrl } from "@/lib/deal-media";
 import type { TierLevel } from "./priority";
 
@@ -18,6 +19,11 @@ export interface Deal {
   currency: CurrencyCode;
   country: string;
   city: string;
+  /** Hub city slug for routing (e.g. galway). */
+  areaHub?: string;
+  /** Nested town within hub radius (e.g. Tuam). */
+  areaLocal?: string | null;
+  areaLabel?: string | null;
   tier: TierLevel;
   isSubscriber?: boolean;
   isScraped?: boolean;
@@ -80,6 +86,7 @@ interface BackendDealFeedItem {
   created_at: string;
   expires_at?: string | null;
   city?: string | null;
+  area_local?: string | null;
   country_code?: string | null;
   tier_level?: string;
   is_subscriber?: boolean;
@@ -104,10 +111,6 @@ function toNumber(value: string | number | null | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-function slugifyCity(city: string): string {
-  return city.trim().toLowerCase().replace(/\s+/g, "-");
-}
-
 function mapTier(tier: string | undefined, isSubscriber: boolean): TierLevel {
   if (!isSubscriber) return "scraped";
   if (tier === "enterprise" || tier === "featured" || tier === "free") {
@@ -127,26 +130,36 @@ function mapFeedItem(
   ).toUpperCase() as CurrencyCode;
   const price = toNumber(item.converted_deal_price ?? item.deal_price);
   const original = toNumber(item.original_price);
+  // Scraped promo-only deals use 0/0 when no list price was found — hide money UI.
+  const hasListedPrice = price > 0;
   const savingsPercent =
-    original > 0 ? Math.round(((original - price) / original) * 100) : undefined;
+    hasListedPrice && original > price
+      ? Math.round(((original - price) / original) * 100)
+      : undefined;
 
   const country = (
     item.country_code ??
     fallbackCountry ??
     "us"
   ).toLowerCase();
-  const city = slugifyCity(item.city ?? fallbackCity ?? "city");
+  const hubName = item.city ?? fallbackCity ?? "city";
+  const city = slugifyCity(hubName);
+  const areaLocal = item.area_local ?? null;
+  const areaLabel = formatAreaLabel(hubName, areaLocal);
 
   return {
     id: item.id,
     title: item.title?.trim() || item.merchant_name,
     description: cleanDealDescription(item.description),
     restaurantName: item.merchant_name,
-    price,
-    originalPrice: original || null,
+    price: hasListedPrice ? price : 0,
+    originalPrice: hasListedPrice && original > price ? original : null,
     currency,
     country,
     city,
+    areaHub: hubName,
+    areaLocal,
+    areaLabel,
     tier: mapTier(item.tier_level, isSubscriber),
     isSubscriber,
     isScraped: !isSubscriber,
@@ -310,6 +323,7 @@ export async function fetchDeal(
     tier_level?: string;
     is_subscriber?: boolean;
     city?: string | null;
+    area_local?: string | null;
     country_code?: string | null;
   }>(`/api/v1/deals/${id}`);
 
@@ -319,7 +333,13 @@ export async function fetchDeal(
   const translation = d.translations?.[0];
   const isSubscriber = Boolean(d.is_subscriber);
   const country = (d.country_code ?? opts?.country ?? "us").toLowerCase();
-  const city = slugifyCity(d.city ?? opts?.city ?? "city");
+  const hubName = d.city ?? opts?.city ?? "city";
+  const city = slugifyCity(hubName);
+  const areaLocal = d.area_local ?? null;
+  const areaLabel = formatAreaLabel(hubName, areaLocal);
+  const price = toNumber(d.deal_price);
+  const original = toNumber(d.original_price);
+  const hasListedPrice = price > 0;
 
   return {
     ok: true,
@@ -329,11 +349,14 @@ export async function fetchDeal(
       description: cleanDealDescription(translation?.description),
       aboutBlurb: d.about_blurb ?? null,
       restaurantName: d.merchant_name,
-      price: toNumber(d.deal_price),
-      originalPrice: toNumber(d.original_price) || null,
+      price: hasListedPrice ? price : 0,
+      originalPrice: hasListedPrice && original > price ? original : null,
       currency: d.currency_code.toUpperCase() as CurrencyCode,
       country,
       city,
+      areaHub: hubName,
+      areaLocal,
+      areaLabel,
       tier: mapTier(d.tier_level, isSubscriber),
       isSubscriber,
       isScraped: !isSubscriber,

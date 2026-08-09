@@ -6,6 +6,7 @@ import {
   parentCategoryLabel,
   resolveVenueCategory,
 } from "@/lib/categories";
+import { formatAreaLabel, slugifyCity } from "@/lib/area-label";
 import { formatMoney, type CurrencyCode } from "@/lib/currency";
 import { dealBadge, type TierLevel } from "@/lib/priority";
 import { formatDistanceMiles } from "@/lib/radius";
@@ -19,6 +20,8 @@ export interface DealCardProps {
   currency: CurrencyCode;
   country: string;
   city: string;
+  areaLabel?: string | null;
+  areaLocal?: string | null;
   tier: TierLevel;
   isSubscriber?: boolean;
   isScraped?: boolean;
@@ -37,6 +40,10 @@ export function DealCard(deal: DealCardProps) {
   const venueCategory = parentCategoryLabel(
     resolveVenueCategory(deal.category, deal.restaurantName),
   );
+
+  const areaText =
+    deal.areaLabel ??
+    formatAreaLabel(deal.city.replace(/-/g, " "), deal.areaLocal);
 
   return (
     <Card className="group overflow-hidden rounded-sm border border-charcoal-600 bg-white shadow-deal transition duration-300 hover:-translate-y-0.5 hover:border-burgundy-300">
@@ -66,7 +73,7 @@ export function DealCard(deal: DealCardProps) {
         <CardContent className="space-y-2 p-4">
           <p className="text-xs uppercase tracking-wider text-charcoal-400">
             {deal.restaurantName}
-            {deal.city ? ` · ${deal.city.replace(/-/g, " ")}` : ""}
+            {areaText ? ` · ${areaText}` : ""}
             {formatDistanceMiles(deal.distanceKm)
               ? ` · ${formatDistanceMiles(deal.distanceKm)}`
               : ""}
@@ -74,16 +81,18 @@ export function DealCard(deal: DealCardProps) {
           <h3 className="line-clamp-2 font-display text-lg leading-snug text-charcoal-50">
             {deal.title}
           </h3>
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-semibold text-burgundy-500">
-              {formatMoney(deal.price, deal.currency)}
-            </span>
-            {deal.originalPrice && deal.originalPrice > deal.price ? (
-              <span className="text-sm text-charcoal-500 line-through">
-                {formatMoney(deal.originalPrice, deal.currency)}
+          {deal.price > 0 ? (
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg font-semibold text-burgundy-500">
+                {formatMoney(deal.price, deal.currency)}
               </span>
-            ) : null}
-          </div>
+              {deal.originalPrice && deal.originalPrice > deal.price ? (
+                <span className="text-sm text-charcoal-500 line-through">
+                  {formatMoney(deal.originalPrice, deal.currency)}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
         </CardContent>
       </Link>
     </Card>

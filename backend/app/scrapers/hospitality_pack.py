@@ -1,11 +1,280 @@
 """First-wave hospitality merchant pack for MealDeals scrapers.
 
-Adds hotels, pubs/bars, restaurants, cafés, and wine-farm / cellar-door
-venues alongside existing retail sources so worldwide scrapes are less
-supermarket-heavy.
+Adds hotels, pubs/bars (happy hours), takeaway/QSR (BOGO deals),
+grocery spend/money-off vouchers, restaurants, cafés, and wine-farm /
+cellar-door venues alongside existing retail sources so worldwide scrapes
+cover lower-volume categories.
 """
 
 from __future__ import annotations
+
+# Clubs, Bars & Pubs — happy hour / drink specials pages.
+# Merchant names should include pub/bar/brewery/cocktail tokens for tagging.
+BARS_PUBS_PACK: dict[str, list[dict[str, str]]] = {
+    "GB": [
+        {"merchant": "BrewDog Bar", "url": "https://www.brewdog.com/uk/bars"},
+        {"merchant": "O'Neill's Pub", "url": "https://www.oneills.co.uk/"},
+        {"merchant": "Slug and Lettuce Bar", "url": "https://www.slugandlettuce.co.uk/offers"},
+        {"merchant": "Revolution Bar", "url": "https://www.revolution-bars.co.uk/offers/"},
+        {"merchant": "Be At One Cocktail Bar", "url": "https://www.beatone.co.uk/"},
+        {"merchant": "Stonegate Pubs", "url": "https://www.stonegatepubs.com/offers"},
+    ],
+    "IE": [
+        {"merchant": "O'Neill's Pub", "url": "https://www.oneills.ie/"},
+        {"merchant": "The Quays Bar Galway", "url": "https://www.thequaysgalway.com/"},
+        {"merchant": "The Bierhaus Pub Galway", "url": "https://www.bierhausgalway.com/"},
+        {"merchant": "Against the Grain Bar", "url": "https://www.againstthegrain.ie/"},
+        {"merchant": "The Church Cafe Bar", "url": "https://www.thechurch.ie/"},
+        {"merchant": "Wetherspoons", "url": "https://www.jdwetherspoon.com/menu/"},
+    ],
+    "US": [
+        {"merchant": "TGI Fridays Bar", "url": "https://www.tgifridays.com/menu/"},
+        {"merchant": "Buffalo Wild Wings", "url": "https://www.buffalowildwings.com/menu/"},
+        {"merchant": "Yard House Bar", "url": "https://www.yardhouse.com/menu"},
+        {"merchant": "Hooters Bar", "url": "https://www.hooters.com/menu/"},
+        {"merchant": "Dave and Busters Bar", "url": "https://www.daveandbusters.com/"},
+    ],
+    "CA": [
+        {"merchant": "Earls Kitchen Bar", "url": "https://earls.ca/menu"},
+        {"merchant": "The Keg Steakhouse Bar", "url": "https://thekeg.com/en/menu"},
+        {"merchant": "Cactus Club Bar", "url": "https://www.cactusclubcafe.com/"},
+        {"merchant": "Boston Pizza Bar", "url": "https://bostonpizza.com/en/menu.html"},
+    ],
+    "AU": [
+        {"merchant": "The Local Taphouse Pub", "url": "https://thelocaltaphouse.com/"},
+        {"merchant": "Young Henrys Brewery Bar", "url": "https://younghenrys.com/"},
+        {"merchant": "Australian Hotel Pub", "url": "https://australianhotel.com.au/"},
+    ],
+    "NZ": [
+        {"merchant": "Garage Project Taproom Bar", "url": "https://garageproject.co.nz/"},
+        {"merchant": "Hashigo Zake Bar", "url": "https://hashigozake.co.nz/"},
+    ],
+    "DE": [
+        {"merchant": "Augustiner Keller Pub", "url": "https://www.augustiner-keller.de/"},
+        {"merchant": "Hofbraeuhaus Pub", "url": "https://www.hofbraeuhaus.de/en/"},
+    ],
+    "FR": [
+        {"merchant": "Cafe Oz Bar", "url": "https://www.cafe-oz.com/"},
+        {"merchant": "The Frog Pub", "url": "https://www.frogpubs.com/"},
+    ],
+    "ES": [
+        {"merchant": "100 Montaditos Bar", "url": "https://spain.100montaditos.com/"},
+        {"merchant": "Mahou Bar", "url": "https://www.mahou.es/"},
+    ],
+    "NL": [
+        {"merchant": "Brown Cafe Bar", "url": "https://www.iamsterdam.com/en"},
+        {"merchant": "Beer Temple Bar", "url": "https://www.beertemple.nl/"},
+    ],
+    "SG": [
+        {"merchant": "Brewerkz Bar", "url": "https://www.brewerkz.com/"},
+        {"merchant": "Level Up Bar", "url": "https://www.levelup.sg/"},
+    ],
+    "ZA": [
+        {"merchant": "Truth Coffee Bar", "url": "https://www.truthcoffee.com/"},
+        {"merchant": "Banana Bar Pub", "url": "https://www.facebook.com/bananabarct/"},
+    ],
+    "IN": [
+        {"merchant": "Social Bar", "url": "https://socialoffline.in/"},
+        {"merchant": "Toit Brewpub", "url": "https://www.toit.in/"},
+    ],
+}
+
+# Food Trucks & Takeaway — pizza / QSR promo & deals pages (BOGO, meal deals).
+# Prefer /deals /offers /coupons URLs; names should match takeaway tagging.
+TAKEAWAY_PACK: dict[str, list[dict[str, str]]] = {
+    "GB": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.co.uk/deals"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.co.uk/offers/"},
+        {"merchant": "Papa John's Takeaway", "url": "https://www.papajohns.co.uk/offers"},
+        {"merchant": "Subway Takeaway", "url": "https://www.subway.com/en-gb/deals"},
+        {"merchant": "KFC Takeaway", "url": "https://www.kfc.co.uk/offers"},
+        {"merchant": "McDonald's Takeaway", "url": "https://www.mcdonalds.com/gb/en-gb/offers.html"},
+    ],
+    "IE": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.ie/en/pages/deals/"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.ie/offers"},
+        {"merchant": "Papa John's Takeaway", "url": "https://www.papajohns.ie/"},
+        {"merchant": "Supermac's Takeaway", "url": "https://www.supermacs.ie/"},
+        {"merchant": "Apache Pizza Takeaway", "url": "https://www.apache.ie/"},
+        {"merchant": "Subway Takeaway", "url": "https://www.subway.com/en-ie"},
+    ],
+    "US": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.com/en/pages/order/#!/deals"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.com/deals"},
+        {"merchant": "Papa John's Takeaway", "url": "https://www.papajohns.com/deals"},
+        {"merchant": "Chipotle Takeaway", "url": "https://www.chipotle.com/"},
+        {"merchant": "Wingstop Takeaway", "url": "https://www.wingstop.com/"},
+        {"merchant": "Little Caesars Takeaway", "url": "https://littlecaesars.com/en-us/"},
+    ],
+    "CA": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.ca/en/pages/order/menu#!/menu/category/coupons/"},
+        {"merchant": "Pizza Pizza Takeaway", "url": "https://www.pizzapizza.ca/"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.ca/"},
+        {"merchant": "Subway Takeaway", "url": "https://www.subway.com/en-ca"},
+    ],
+    "AU": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.com.au/menu/deals"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.com.au/deals"},
+        {"merchant": "Crust Pizza Takeaway", "url": "https://www.crust.com.au/"},
+        {"merchant": "Hungry Jack's Takeaway", "url": "https://www.hungryjacks.com.au/menu"},
+    ],
+    "NZ": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.co.nz/"},
+        {"merchant": "Hell Pizza Takeaway", "url": "https://www.hellpizza.com/"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.co.nz/"},
+    ],
+    "DE": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.de/"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.de/"},
+    ],
+    "FR": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.fr/"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.fr/"},
+    ],
+    "ES": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.es/"},
+        {"merchant": "Telepizza Takeaway", "url": "https://www.telepizza.es/"},
+    ],
+    "NL": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.nl/"},
+        {"merchant": "New York Pizza Takeaway", "url": "https://www.newyorkpizza.nl/"},
+    ],
+    "ZA": [
+        {"merchant": "Debonairs Pizza Takeaway", "url": "https://www.debonairspizza.co.za/"},
+        {"merchant": "Roman's Pizza Takeaway", "url": "https://www.romanspizza.co.za/"},
+        {"merchant": "Chicken Licken Takeaway", "url": "https://www.chickenlicken.co.za/"},
+    ],
+    "IN": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.co.in/"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.co.in/"},
+    ],
+    "SG": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.com.sg/"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.com.sg/"},
+    ],
+    "PH": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.com.ph/"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.com.ph/"},
+        {"merchant": "Jollibee Takeaway", "url": "https://www.jollibee.com.ph/"},
+    ],
+    "TH": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominospizza.co.th/"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.co.th/"},
+    ],
+    "JP": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.jp/"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.jp/"},
+    ],
+    "BR": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.com.br/"},
+        {"merchant": "Pizza Hut Takeaway", "url": "https://www.pizzahut.com.br/"},
+    ],
+    "MX": [
+        {"merchant": "Domino's Pizza Takeaway", "url": "https://www.dominos.com.mx/"},
+        {"merchant": "Little Caesars Takeaway", "url": "https://littlecaesars.com.mx/"},
+    ],
+}
+
+# Deli's and Grocers — spend-threshold, % off, and money-off shop vouchers.
+# Prefer /offers /promotions /vouchers pages; names should match grocery tagging.
+GROCERS_PACK: dict[str, list[dict[str, str]]] = {
+    "IE": [
+        {"merchant": "Dunnes Stores", "url": "https://www.dunnesstores.com/offers"},
+        {"merchant": "Supervalu", "url": "https://shop.supervalu.ie/shopping/offers"},
+        {"merchant": "Centra", "url": "https://www.centra.ie/offers"},
+        {"merchant": "Tesco Ireland", "url": "https://www.tesco.ie/groceries/en-IE/promotions"},
+        {"merchant": "Lidl Ireland", "url": "https://www.lidl.ie/"},
+        {"merchant": "Aldi Ireland", "url": "https://www.aldi.ie/offers"},
+    ],
+    "GB": [
+        {"merchant": "Tesco", "url": "https://www.tesco.com/groceries/en-GB/promotions"},
+        {"merchant": "Sainsbury's", "url": "https://www.sainsburys.co.uk/gol-ui/promotions"},
+        {"merchant": "Asda", "url": "https://www.asda.com/groceries/offers"},
+        {"merchant": "Morrisons", "url": "https://groceries.morrisons.com/products?tags=Offer"},
+        {"merchant": "Aldi UK", "url": "https://www.aldi.co.uk/offers"},
+        {"merchant": "Lidl UK", "url": "https://www.lidl.co.uk/c/specials/s10004745"},
+        {"merchant": "Waitrose", "url": "https://www.waitrose.com/ecom/shop/offers"},
+        {"merchant": "Co-op Grocery", "url": "https://www.coop.co.uk/products/deals"},
+    ],
+    "US": [
+        {"merchant": "Walmart", "url": "https://www.walmart.com/shop/deals"},
+        {"merchant": "Kroger", "url": "https://www.kroger.com/savings/weeklyad"},
+        {"merchant": "Safeway", "url": "https://www.safeway.com/shop/deals.html"},
+        {"merchant": "Target Grocery", "url": "https://www.target.com/c/grocery-deals/-/N-5q0f4"},
+        {"merchant": "Trader Joe's", "url": "https://www.traderjoes.com/home/products"},
+        {"merchant": "Whole Foods Market", "url": "https://www.wholefoodsmarket.com/sales-flyer"},
+    ],
+    "CA": [
+        {"merchant": "Loblaws", "url": "https://www.loblaws.ca/en/offers"},
+        {"merchant": "Sobeys", "url": "https://www.sobeys.com/en/flyer/"},
+        {"merchant": "Metro Grocery", "url": "https://www.metro.ca/en/find-a-flyer"},
+        {"merchant": "Walmart Canada", "url": "https://www.walmart.ca/en/savings"},
+    ],
+    "AU": [
+        {"merchant": "Woolworths", "url": "https://www.woolworths.com.au/shop/browse/specials"},
+        {"merchant": "Coles", "url": "https://www.coles.com.au/on-special"},
+        {"merchant": "Aldi Australia", "url": "https://www.aldi.com.au/specials"},
+        {"merchant": "IGA Australia", "url": "https://www.iga.com.au/specials/"},
+    ],
+    "NZ": [
+        {"merchant": "Countdown", "url": "https://www.woolworths.co.nz/shop/specials"},
+        {"merchant": "New World", "url": "https://www.newworld.co.nz/specials"},
+        {"merchant": "Pak'nSave", "url": "https://www.paknsave.co.nz/shop/specials"},
+    ],
+    "DE": [
+        {"merchant": "Lidl Germany", "url": "https://www.lidl.de/c/angebote/s10004745"},
+        {"merchant": "Aldi Süd", "url": "https://www.aldi-sued.de/de/angebote.html"},
+        {"merchant": "REWE", "url": "https://www.rewe.de/angebote/"},
+    ],
+    "FR": [
+        {"merchant": "Carrefour France", "url": "https://www.carrefour.fr/promotions"},
+        {"merchant": "Auchan", "url": "https://www.auchan.fr/catalogue"},
+        {"merchant": "Intermarché", "url": "https://www.intermarche.com/promotions"},
+    ],
+    "ES": [
+        {"merchant": "Mercadona", "url": "https://www.mercadona.es/"},
+        {"merchant": "Carrefour Spain", "url": "https://www.carrefour.es/promociones"},
+        {"merchant": "Lidl Spain", "url": "https://www.lidl.es/"},
+    ],
+    "NL": [
+        {"merchant": "Albert Heijn", "url": "https://www.ah.nl/bonus"},
+        {"merchant": "Jumbo", "url": "https://www.jumbo.com/aanbiedingen"},
+        {"merchant": "Lidl Netherlands", "url": "https://www.lidl.nl/"},
+    ],
+    "ZA": [
+        {"merchant": "Checkers", "url": "https://www.checkers.co.za/specials"},
+        {"merchant": "Shoprite", "url": "https://www.shoprite.co.za/specials"},
+        {"merchant": "Woolworths South Africa", "url": "https://www.woolworths.co.za/cat/Food/_/N-1z13sk5"},
+    ],
+    "SG": [
+        {"merchant": "FairPrice", "url": "https://www.fairprice.com.sg/promotions"},
+        {"merchant": "Cold Storage", "url": "https://coldstorage.com.sg/promotions"},
+    ],
+    "IN": [
+        {"merchant": "Big Bazaar", "url": "https://www.bigbazaar.com/"},
+        {"merchant": "Reliance Fresh", "url": "https://www.relianceretail.com/"},
+    ],
+    "PH": [
+        {"merchant": "SM Supermarket", "url": "https://www.smsupermarket.com/"},
+        {"merchant": "Puregold", "url": "https://puregold.com.ph/"},
+    ],
+    "TH": [
+        {"merchant": "Big C", "url": "https://www.bigc.co.th/"},
+        {"merchant": "Foodland", "url": "https://www.foodland.co.th/"},
+    ],
+    "JP": [
+        {"merchant": "Aeon Grocery", "url": "https://www.aeon.info/"},
+        {"merchant": "Seiyu", "url": "https://www.seiyu.co.jp/"},
+    ],
+    "BR": [
+        {"merchant": "Pao de Acucar", "url": "https://www.paodeacucar.com/ofertas"},
+        {"merchant": "Carrefour Brazil", "url": "https://www.carrefour.com.br/promocoes"},
+    ],
+    "MX": [
+        {"merchant": "Walmart Mexico", "url": "https://www.walmart.com.mx/"},
+        {"merchant": "Soriana", "url": "https://www.soriana.com/"},
+    ],
+}
 
 # Wine regions: cellar-door / vineyard dining + tasting lunch offers.
 # Merchant names MUST include vineyard/winery/wine farm/estate tokens so
@@ -490,8 +759,26 @@ def wine_farm_sources_for(country_code: str) -> list[dict[str, str]]:
     return list(WINE_FARM_PACK.get(code, []))
 
 
+def bars_pubs_sources_for(country_code: str) -> list[dict[str, str]]:
+    """Return happy-hour / pub & bar promo sources for a market."""
+    code = country_code.strip().upper()
+    return list(BARS_PUBS_PACK.get(code, []))
+
+
+def takeaway_sources_for(country_code: str) -> list[dict[str, str]]:
+    """Return takeaway / QSR promo sources (BOGO, deals pages) for a market."""
+    code = country_code.strip().upper()
+    return list(TAKEAWAY_PACK.get(code, []))
+
+
+def grocers_sources_for(country_code: str) -> list[dict[str, str]]:
+    """Return grocery spend-threshold / % off / money-off promo sources."""
+    code = country_code.strip().upper()
+    return list(GROCERS_PACK.get(code, []))
+
+
 def hospitality_sources_for(country_code: str) -> list[dict[str, str]]:
-    """Return deduped hospitality + wine-farm sources for a market."""
+    """Return deduped hospitality + specialty pack sources for a market."""
     code = country_code.strip().upper()
     if code in HOSPITALITY_PACK:
         merged: list[dict[str, str]] = list(HOSPITALITY_PACK[code])
@@ -501,6 +788,9 @@ def hospitality_sources_for(country_code: str) -> list[dict[str, str]]:
         if region:
             merged.extend(_REGION_OVERLAYS.get(region, []))
 
+    merged.extend(bars_pubs_sources_for(code))
+    merged.extend(takeaway_sources_for(code))
+    merged.extend(grocers_sources_for(code))
     merged.extend(wine_farm_sources_for(code))
     return _dedupe_sources(merged)
 
@@ -509,7 +799,7 @@ def merge_hospitality_into_sources(
     market_sources: dict[str, list[dict[str, str]]],
     market_codes: list[str],
 ) -> dict[str, list[dict[str, str]]]:
-    """Append hospitality + wine-farm pack merchants onto each market's sources."""
+    """Append hospitality + specialty pack merchants onto each market's sources."""
     for code in market_codes:
         upper = code.strip().upper()
         existing = market_sources.setdefault(upper, [])

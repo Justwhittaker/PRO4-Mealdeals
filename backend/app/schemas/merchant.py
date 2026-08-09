@@ -39,8 +39,40 @@ class MerchantBase(BaseModel):
     stripe_customer_id: Optional[str] = Field(default=None, max_length=255)
 
 
+class TermsAcceptancePayload(BaseModel):
+    """Venue Terms acceptance captured at registration / bootstrap."""
+
+    terms_version: str = Field(..., max_length=20)
+    acceptance_source: str = Field(
+        default="merchant_registration", max_length=64
+    )
+    accepted_by_email: Optional[str] = Field(default=None, max_length=255)
+    accepted_by_name: Optional[str] = Field(default=None, max_length=255)
+    accepted_by_user_id: Optional[str] = Field(default=None, max_length=255)
+
+
 class MerchantCreate(MerchantBase):
     location_id: UUID
+    terms_acceptance: Optional[TermsAcceptancePayload] = None
+
+
+class TermsAcceptanceCreate(TermsAcceptancePayload):
+    """POST body for recording Terms acceptance on an existing merchant."""
+
+    pass
+
+
+class TermsAcceptanceRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    merchant_id: UUID
+    terms_version: str
+    accepted_at: datetime
+    acceptance_source: str
+    accepted_by_email: Optional[str] = None
+    accepted_by_name: Optional[str] = None
+    accepted_by_user_id: Optional[str] = None
 
 
 class MerchantUpdate(BaseModel):

@@ -51,6 +51,9 @@ export function SiteFooter() {
           <a href="/contact" className="transition hover:text-burgundy-500">
             Contact
           </a>
+          <a href="/terms" className="transition hover:text-burgundy-500">
+            Terms
+          </a>
           <a href="/privacy" className="transition hover:text-burgundy-500">
             Privacy Notice
           </a>
@@ -59,6 +62,9 @@ export function SiteFooter() {
             className="transition hover:text-burgundy-500"
           >
             Privacy Choices
+          </a>
+          <a href="/cookies" className="transition hover:text-burgundy-500">
+            Cookies
           </a>
           <CookieSettingsLink />
         </nav>

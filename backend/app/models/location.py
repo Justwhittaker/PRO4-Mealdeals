@@ -35,6 +35,8 @@ class Location(Base):
     )
     country_code: Mapped[str] = mapped_column(String(2), nullable=False, index=True)
     city: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    # Nested town within hub city scrape radius (e.g. Tuam under Galway).
+    area_local: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     timezone: Mapped[str] = mapped_column(String(50), nullable=False, default="UTC")
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)

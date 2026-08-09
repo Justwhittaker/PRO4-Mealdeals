@@ -21,6 +21,35 @@ results breakdown** to the user.
 
 **Project root:** workspace `PRO4-Mealdeals` / `backend` (+ `frontend`).
 
+## Automated bite-size zones (Celery Beat)
+
+Production scheduling uses **8 continental zones** (not one 12-minute mega-job):
+
+| Zone | Fires (UTC, each 6h block) |
+|------|------------------------------|
+| north_america | 00:00, 06:00, 12:00, 18:00 |
+| latin_america | +15 min |
+| western_europe | +30 min |
+| eastern_europe | +45 min |
+| africa | 01:00, 07:00, 13:00, 19:00 |
+| mena | +15 min |
+| asia | +30 min |
+| oceania | +45 min |
+
+- Config: `backend/app/scrapers/zones.py`, `backend/app/workers/celery_app.py`
+- Task: `scrape_zone_retail` in `backend/app/workers/tasks.py`
+- Manual `/scrape` still runs **full worldwide** in one pass
+
+## Hub radius + nested towns
+
+Each hub city (e.g. Galway) scrapes venues within **150 miles** via OSM. Deals
+display as **Galway - Tuam**, **Galway - Galway City** on cards/detail; URL hub
+slug stays `/ie/galway/deals/...`.
+
+- `backend/app/scrapers/hub_radius.py` — radius + town discovery
+- `backend/app/scrapers/local_discovery.py` — venue pull + `area_local` tagging
+- `locations.area_local` column (migration `014_location_area_local`)
+
 ## Before scraping
 
 1. Read and follow `.cursor/rules/hospitality-deal-scraping.mdc`.
@@ -180,6 +209,65 @@ reporting, use the **parent** label in `venue_category` / scrape tallies (not
 the leaf subcategory), unless a future scrape stores both.
 
 Do not invent new parent buckets. Map new venue types into the closest parent.
+
+
+
+
+## Independent / mom-and-pop venues — REQUIRED (all categories)
+
+Do **not** limit scrapes to national chains. Dine a Deal aims to lead by
+covering **every** in-scope venue type in focused markets — independents and
+chains alike.
+
+1. `backend/app/scrapers/local_discovery.py` discovers city-local F&B venues via
+   OpenStreetMap Overpass (restaurants, cafés, pubs/bars, takeaway, hotels,
+   small grocers/delis, wineries) that publish a real website.
+2. Results are cached in `backend/app/scrapers/data/local_venues.json` (~1 week)
+   and merged into each city scrape after pack sources.
+3. Prefer independents over chain-name matches; never invent merchants.
+4. Same pricing integrity: if no unit price, hide money and state the deal type
+   (happy hour, BOGO, spend €50 get €10 off, lunch special, etc.).
+5. Specialty packs (`BARS_PUBS_PACK`, `TAKEAWAY_PACK`, `GROCERS_PACK`,
+   `WINE_FARM_PACK`) still seed high-signal chain/promo URLs; local discovery
+   fills the long tail per city.
+
+## Grocers — spend / % off / money-off vouchers
+
+Same offer-type logic as bars and takeaway for **Deli's and Grocers**:
+
+1. Maintain `GROCERS_PACK` in `backend/app/scrapers/hospitality_pack.py`.
+2. Capture spend-threshold and checkout discounts, e.g. Dunnes Ireland
+   "spend €50 get €10 off on your shop", or "20% off your shop".
+3. Prefer `/offers` / `/promotions` / voucher pages.
+4. **Never** treat spend thresholds (€50 / €10) as a meal `deal_price` —
+   hide money in the UI and state the voucher / % off copy instead.
+
+## Bars/pubs + takeaway packs — REQUIRED
+
+Boost the historically thin **Clubs, Bars & Pubs** and **Food Trucks &
+Takeaway's** categories on every `/scrape`:
+
+1. Maintain `BARS_PUBS_PACK` and `TAKEAWAY_PACK` in
+   `backend/app/scrapers/hospitality_pack.py` (merged like `WINE_FARM_PACK`).
+2. Bars/pubs: happy-hour / drink-special pages (cocktails half price, 2-for-1,
+   evening specials). Merchant names need pub/bar/brewery/cocktail tokens.
+3. Takeaway: chain deals pages (Domino's, Pizza Hut, Papa John's, Subway, local
+   QSR). Prefer `/deals` / `/offers` URLs; names need takeaway/pizza/QSR tokens.
+4. Keep `categories.py` + `frontend/lib/categories.ts` in sync.
+5. After scrape, verify `category_tally` for Clubs/Bars and Takeaway is
+   meaningfully higher than hotel/restaurant-only runs.
+
+## Pricing — NEVER invent money
+
+If the page does not list a clear price:
+
+- Do **not** hallucinate `deal_price` / `original_price` (no template £7.50, no
+  `1.6×` fabricated "was" price).
+- Persist `0` / `0` and let the UI **hide** money; state the deal in title /
+  description instead, e.g. "All cocktails half price between 17h00 and 18h00"
+  or "Buy one get one free on large pizzas".
+- If only one price is found, show that price only — never invent a comparison
+  price.
 
 ## Wine Farms & Entertainment — REQUIRED pack + tagging
 

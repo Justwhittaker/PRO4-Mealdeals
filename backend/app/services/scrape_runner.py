@@ -17,6 +17,7 @@ from app.scrapers.global_retail import (
     TARGET_MARKETS,
     iter_market_areas,
 )
+from app.scrapers.zones import markets_for_zone
 from app.services.ingest import (
     ingest_scraped_deals,
     normalize_city,
@@ -138,3 +139,16 @@ def scrape_and_ingest_markets(
         "category_tally": report["category_tally"],
         "report": report,
     }
+
+
+def scrape_and_ingest_zone(zone_id: str) -> dict[str, Any]:
+    """
+    Bite-size continental scrape: one of eight zones (hub cities only).
+
+    Celery Beat fires these every 15 minutes within each 6-hour cycle so a
+    full worldwide refresh completes in ~2 hours without one giant job.
+    """
+    markets = markets_for_zone(zone_id)
+    if not markets:
+        raise ValueError(f"Unknown or empty scrape zone: {zone_id}")
+    return scrape_and_ingest_markets(markets)

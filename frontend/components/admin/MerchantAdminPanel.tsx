@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { publicDealPath } from "@/lib/admin-geo";
 import { staffFetch } from "@/lib/admin-client";
 import type { AdminDeal, AdminMerchant } from "@/lib/admin-api";
 
@@ -227,6 +228,22 @@ export function MerchantAdminPanel({
                         >
                           {deal.is_active ? "Deactivate" : "Activate"}
                         </Button>
+                        {merchant.location?.country_code &&
+                        merchant.location?.city ? (
+                          <Button asChild variant="outline" className="h-8 px-2 text-xs">
+                            <Link
+                              href={publicDealPath(
+                                merchant.location.country_code,
+                                merchant.location.city,
+                                deal.id,
+                              )}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Preview
+                            </Link>
+                          </Button>
+                        ) : null}
                         <Button asChild variant="outline" className="h-8 px-2 text-xs">
                           <Link href={`/admin/deals/${deal.id}/edit`}>Edit</Link>
                         </Button>

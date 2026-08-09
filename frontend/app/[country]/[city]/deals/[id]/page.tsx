@@ -59,7 +59,11 @@ export default async function DealDetailPage({ params }: PageProps) {
           country={country}
           city={city}
           title={deal.title}
-          subtitle={deal.restaurantName}
+          subtitle={
+            deal.areaLabel
+              ? `${deal.areaLabel} · ${deal.restaurantName}`
+              : deal.restaurantName
+          }
         />
 
         <article className="animate-fade-up mt-6 space-y-6">
@@ -73,13 +77,17 @@ export default async function DealDetailPage({ params }: PageProps) {
 
           <div className="flex flex-wrap items-center gap-3">
             {badge ? <Badge variant={badge.variant}>{badge.label}</Badge> : null}
-            <span className="text-2xl font-semibold text-citrus-300">
-              {formatMoney(deal.price, deal.currency)}
-            </span>
-            {deal.originalPrice && deal.originalPrice > deal.price ? (
-              <span className="text-charcoal-500 line-through">
-                {formatMoney(deal.originalPrice, deal.currency)}
-              </span>
+            {deal.price > 0 ? (
+              <>
+                <span className="text-2xl font-semibold text-citrus-300">
+                  {formatMoney(deal.price, deal.currency)}
+                </span>
+                {deal.originalPrice && deal.originalPrice > deal.price ? (
+                  <span className="text-charcoal-500 line-through">
+                    {formatMoney(deal.originalPrice, deal.currency)}
+                  </span>
+                ) : null}
+              </>
             ) : null}
           </div>
 
@@ -109,7 +117,7 @@ export default async function DealDetailPage({ params }: PageProps) {
             </p>
           ) : null}
 
-          {value.ok ? (
+          {deal.price > 0 && value.ok ? (
             <Card>
               <CardContent className="grid gap-3 p-5 sm:grid-cols-3">
                 <div>

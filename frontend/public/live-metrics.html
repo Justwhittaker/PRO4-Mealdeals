@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dine a Deal · Live metrics</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #faf8f5;
+        --card: #ffffff;
+        --text: #1c1917;
+        --muted: #57534e;
+        --line: #e7e5e4;
+        --accent: #7f1d1d;
+        --accent-soft: #fef2f2;
+        --ok: #166534;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.45;
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 1.75rem;
+        font-weight: 650;
+      }
+      .sub {
+        color: var(--muted);
+        margin: 0 0 20px;
+        font-size: 0.95rem;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      button,
+      a.btn {
+        appearance: none;
+        border: 1px solid var(--line);
+        background: var(--card);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 8px 14px;
+        font: inherit;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      button.primary,
+      a.btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .stat {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px;
+      }
+      .stat .label {
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .stat .value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-top: 4px;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      section h2 {
+        margin: 0 0 8px;
+        font-size: 1.1rem;
+      }
+      section .hint {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin: 0 0 12px;
+      }
+      .error {
+        background: var(--accent-soft);
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+      }
+      .notice {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e3a8a;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+      }
+      details {
+        border-top: 1px solid var(--line);
+        padding: 8px 0;
+      }
+      details:first-of-type {
+        border-top: 0;
+      }
+      summary {
+        cursor: pointer;
+        font-weight: 600;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      summary::-webkit-details-marker {
+        display: none;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        margin-top: 8px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--line);
+      }
+      th.num,
+      td.num {
+        text-align: right;
+      }
+      .pill {
+        display: inline-block;
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #f5f5f4;
+        color: var(--muted);
+      }
+      #status {
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+      .row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: flex-end;
+      }
+      .row-actions a {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        text-decoration: none;
+        color: var(--text);
+        background: #fff;
+      }
+      .row-actions a.primary-action {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Live metrics</h1>
+      <p class="sub">
+        Scrape inventory + database product metrics · auto-refreshes every 60s
+      </p>
+
+      <div class="toolbar">
+        <button class="primary" id="refresh">Refresh now</button>
+        <a class="btn" href="/admin">Admin sign-in</a>
+        <a
+          class="btn"
+          id="vercel-link"
+          href="https://vercel.com/justin-whittakers-projects/dineadeal/analytics"
+          target="_blank"
+          rel="noopener"
+          >Page visits (Vercel)</a
+        >
+        <span id="status">Loading…</span>
+      </div>
+
+      <div id="errors"></div>
+      <div id="page-visits" class="notice"></div>
+      <div id="summary" class="stats"></div>
+
+      <section id="scrape-section">
+        <h2>Scrape inventory</h2>
+        <p class="hint">Country → city → category from live Postgres</p>
+        <div id="scrape-summary"></div>
+        <div id="scrape-drill"></div>
+      </section>
+
+      <section id="db-section">
+        <h2>Database product metrics</h2>
+        <p class="hint">
+          Newsletter subs, merchant subscriptions, featured ads, click-throughs
+          by area
+        </p>
+        <div id="db-summary"></div>
+        <div id="db-panels"></div>
+      </section>
+
+      <section id="merchants-section">
+        <h2>Merchants</h2>
+        <p class="hint">
+          Country → city drill-down · Preview opens the public city feed
+        </p>
+        <div id="merchants-drill"></div>
+      </section>
+
+      <section id="deals-section">
+        <h2>Deals</h2>
+        <p class="hint">
+          Country → city drill-down · Preview opens the public deal page
+        </p>
+        <div id="deals-drill"></div>
+      </section>
+    </div>
+
+    <script>
+      const COUNTRY_NAMES = new Intl.DisplayNames(["en"], { type: "region" });
+
+      function countryName(code) {
+        if (!code || code === "(unknown)") return "Unknown";
+        try {
+          return COUNTRY_NAMES.of(code) || code;
+        } catch {
+          return code;
+        }
+      }
+
+      function share(n, total) {
+        if (!total) return "0%";
+        return ((n / total) * 100).toFixed(1) + "%";
+      }
+
+      function groupByCountry(rows, valueKey = "count") {
+        const map = new Map();
+        for (const row of rows) {
+          const c = row.country || "(unknown)";
+          if (!map.has(c)) map.set(c, { total: 0, cities: new Map() });
+          const g = map.get(c);
+          const n = row[valueKey] ?? row.deals ?? row.n ?? 0;
+          g.total += n;
+          const city = row.city || "(unknown)";
+          g.cities.set(city, (g.cities.get(city) || 0) + n);
+        }
+        return [...map.entries()]
+          .map(([country, { total, cities }]) => ({
+            country,
+            total,
+            cities: [...cities.entries()]
+              .map(([city, n]) => ({ city, n }))
+              .sort((a, b) => b.n - a.n),
+          }))
+          .sort((a, b) => b.total - a.total);
+      }
+
+      function renderDrill(container, groups, unit, viewTotal) {
+        container.innerHTML = "";
+        for (const g of groups) {
+          const det = document.createElement("details");
+          det.open = groups.length === 1;
+          const sum = document.createElement("summary");
+          sum.innerHTML =
+            "<span>" +
+            countryName(g.country) +
+            '</span><span class="pill">' +
+            g.total.toLocaleString() +
+            " " +
+            unit +
+            " · " +
+            share(g.total, viewTotal) +
+            " of view</span>";
+          det.appendChild(sum);
+          const table = document.createElement("table");
+          table.innerHTML =
+            "<thead><tr><th>City</th><th class=\"num\">" +
+            unit +
+            '</th><th class="num">Share of country</th></tr></thead>';
+          const tbody = document.createElement("tbody");
+          for (const c of g.cities) {
+            const tr = document.createElement("tr");
+            tr.innerHTML =
+              "<td>" +
+              c.city +
+              '</td><td class="num">' +
+              c.n.toLocaleString() +
+              '</td><td class="num">' +
+              share(c.n, g.total) +
+              "</td>";
+            tbody.appendChild(tr);
+          }
+          table.appendChild(tbody);
+          det.appendChild(table);
+          container.appendChild(det);
+        }
+      }
+
+      function routeCountrySlug(code) {
+        const c = (code || "").trim().toLowerCase();
+        if (c === "gb") return "uk";
+        return c;
+      }
+
+      function slugifyCity(city) {
+        return (city || "").trim().toLowerCase().replace(/\s+/g, "-");
+      }
+
+      function publicCityPath(countryCode, city) {
+        return "/" + routeCountrySlug(countryCode) + "/" + slugifyCity(city);
+      }
+
+      function publicDealPath(countryCode, city, dealId) {
+        return publicCityPath(countryCode, city) + "/deals/" + dealId;
+      }
+
+      function cityDisplayName(city) {
+        const value = (city || "").trim();
+        if (!value || value === "(unknown)") return "Unknown";
+        return value.replace(/[-_]/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
+      }
+
+      function groupByCountryCity(items, countryKey, cityKey) {
+        const countries = new Map();
+        for (const item of items) {
+          const country = item[countryKey] || "(unknown)";
+          const city = item[cityKey] || "(unknown)";
+          if (!countries.has(country)) countries.set(country, new Map());
+          const cities = countries.get(country);
+          if (!cities.has(city)) cities.set(city, []);
+          cities.get(city).push(item);
+        }
+        return [...countries.entries()]
+          .map(([country, cityMap]) => ({
+            country,
+            total: [...cityMap.values()].reduce((s, arr) => s + arr.length, 0),
+            cities: [...cityMap.entries()]
+              .map(([city, arr]) => ({ city, items: arr }))
+              .sort((a, b) => cityDisplayName(a.city).localeCompare(cityDisplayName(b.city))),
+          }))
+          .sort((a, b) => countryName(a.country).localeCompare(countryName(b.country)));
+      }
+
+      function renderEntityDrill(container, groups, unit, renderRow) {
+        container.innerHTML = "";
+        if (!groups.length) {
+          container.innerHTML = '<p class="hint">No rows (admin sign-in required).</p>';
+          return;
+        }
+        const viewTotal = groups.reduce((s, g) => s + g.total, 0);
+        for (const g of groups) {
+          const det = document.createElement("details");
+          det.open = groups.length === 1;
+          const sum = document.createElement("summary");
+          sum.innerHTML =
+            "<span>" +
+            countryName(g.country) +
+            '</span><span class="pill">' +
+            g.total +
+            " " +
+            unit +
+            " · " +
+            share(g.total, viewTotal) +
+            " of view</span>";
+          det.appendChild(sum);
+          for (const cityGroup of g.cities) {
+            const inner = document.createElement("details");
+            inner.style.margin = "8px 0 0 12px";
+            const innerSum = document.createElement("summary");
+            innerSum.innerHTML =
+              "<span>" +
+              cityDisplayName(cityGroup.city) +
+              '</span><span class="pill">' +
+              cityGroup.items.length +
+              " · " +
+              share(cityGroup.items.length, g.total) +
+              " of " +
+              countryName(g.country) +
+              "</span>";
+            inner.appendChild(innerSum);
+            const table = document.createElement("table");
+            table.innerHTML =
+              '<thead><tr><th>Name</th><th>Details</th><th class="num">Actions</th></tr></thead>';
+            const tbody = document.createElement("tbody");
+            for (const item of cityGroup.items) {
+              const row = renderRow(item);
+              const tr = document.createElement("tr");
+              tr.innerHTML =
+                "<td>" +
+                row.primary +
+                "</td><td>" +
+                (row.secondary || "") +
+                '</td><td class="num"><div class="row-actions">' +
+                (row.previewHref
+                  ? '<a class="primary-action" href="' +
+                    row.previewHref +
+                    '" target="_blank" rel="noopener">Preview</a>'
+                  : "") +
+                (row.manageHref
+                  ? '<a href="' + row.manageHref + '">Manage</a>'
+                  : "") +
+                "</div></td>";
+              tbody.appendChild(tr);
+            }
+            table.appendChild(tbody);
+            inner.appendChild(table);
+            det.appendChild(inner);
+          }
+          container.appendChild(det);
+        }
+      }
+
+      function statCard(label, value) {
+        return (
+          '<div class="stat"><div class="label">' +
+          label +
+          '</div><div class="value">' +
+          value +
+          "</div></div>"
+        );
+      }
+
+      function showError(msg) {
+        const el = document.getElementById("errors");
+        el.innerHTML = '<div class="error">' + msg + "</div>";
+      }
+
+      async function fetchJson(url, opts) {
+        const res = await fetch(url, {
+          credentials: "include",
+          cache: "no-store",
+          ...opts,
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(url + " → " + res.status + " " + text.slice(0, 120));
+        }
+        return res.json();
+      }
+
+      async function load() {
+        const status = document.getElementById("status");
+        document.getElementById("errors").innerHTML = "";
+        status.textContent = "Loading…";
+
+        let scrape = null;
+        let db = null;
+        let merchants = null;
+        let deals = null;
+        const errors = [];
+
+        try {
+          scrape = await fetchJson("/api/metrics/scrape-report");
+        } catch (e) {
+          errors.push("Scrape report: " + e.message);
+        }
+
+        try {
+          db = await fetchJson("/api/admin/metrics/dashboard");
+        } catch (e) {
+          errors.push(
+            "Database metrics: " +
+              e.message +
+              ' — <a href="/admin">sign in to admin</a> first.',
+          );
+        }
+
+        try {
+          const merchantPayload = await fetchJson("/api/admin/merchants?limit=500");
+          merchants = merchantPayload.results || merchantPayload;
+        } catch (e) {
+          errors.push("Merchants: " + e.message);
+        }
+
+        try {
+          deals = await fetchJson("/api/admin/deals?limit=500");
+        } catch (e) {
+          errors.push("Deals: " + e.message);
+        }
+
+        if (errors.length) {
+          showError(errors.join("<br>"));
+        }
+
+        const s = scrape?.summary || {};
+        const d = db?.summary || {};
+
+        document.getElementById("summary").innerHTML =
+          statCard("Active deals (DB)", (s.active_deals_in_db ?? "—").toLocaleString?.() ?? s.active_deals_in_db ?? "—") +
+          statCard("Scrape markets", s.markets ?? "—") +
+          statCard("Scrape areas", s.areas ?? "—") +
+          statCard("Newsletter active", d.newsletter_active ?? "—") +
+          statCard("Merchant subs", d.merchant_subs_live ?? "—") +
+          statCard("Deal clicks", d.deal_clicks ?? "—");
+
+        document.getElementById("page-visits").innerHTML =
+          "<strong>Page visits</strong> are in " +
+          '<a href="' +
+          (db?.vercel_analytics_url ||
+            "https://vercel.com/justin-whittakers-projects/dineadeal/analytics") +
+          '" target="_blank" rel="noopener">Vercel Web Analytics</a> ' +
+          "(not Postgres). Enable analytics cookie on the site; data appears after production traffic.";
+
+        if (scrape) {
+          document.getElementById("scrape-summary").innerHTML =
+            "<p>Discovered <strong>" +
+            (s.deals_discovered ?? "—") +
+            "</strong> · ingested <strong>" +
+            (s.deals_ingested ?? "—") +
+            "</strong> · marketing contacts <strong>" +
+            (s.marketing_contacts_unique ?? s.marketing_contacts_upserted ?? "—") +
+            "</strong></p>";
+
+          const breakdown = scrape.breakdown || [];
+          const total = breakdown.reduce((sum, r) => sum + (r.deals || 0), 0);
+          const byCountry = new Map();
+          for (const row of breakdown) {
+            const c = row.country || "??";
+            if (!byCountry.has(c)) byCountry.set(c, new Map());
+            const cities = byCountry.get(c);
+            const city = row.city || "Unknown";
+            if (!cities.has(city)) cities.set(city, []);
+            cities.get(city).push(row);
+          }
+
+          const drill = document.getElementById("scrape-drill");
+          drill.innerHTML = "";
+          const countryTotals = [...byCountry.entries()]
+            .map(([country, cities]) => ({
+              country,
+              total: [...cities.values()].reduce(
+                (sum, cats) => sum + cats.reduce((s, r) => s + r.deals, 0),
+                0,
+              ),
+              cities,
+            }))
+            .sort((a, b) => b.total - a.total);
+
+          for (const g of countryTotals) {
+            const det = document.createElement("details");
+            const sum = document.createElement("summary");
+            sum.innerHTML =
+              "<span>" +
+              countryName(g.country) +
+              '</span><span class="pill">' +
+              g.total +
+              " deals · " +
+              share(g.total, total) +
+              " of view</span>";
+            det.appendChild(sum);
+
+            for (const [city, cats] of [...g.cities.entries()].sort(
+              (a, b) =>
+                b[1].reduce((s, r) => s + r.deals, 0) -
+                a[1].reduce((s, r) => s + r.deals, 0),
+            )) {
+              const cityTotal = cats.reduce((s, r) => s + r.deals, 0);
+              const inner = document.createElement("details");
+              inner.style.marginLeft = "12px";
+              const innerSum = document.createElement("summary");
+              innerSum.innerHTML =
+                "<span>" +
+                city +
+                '</span><span class="pill">' +
+                cityTotal +
+                " · " +
+                share(cityTotal, g.total) +
+                " of " +
+                countryName(g.country) +
+                "</span>";
+              inner.appendChild(innerSum);
+              const table = document.createElement("table");
+              table.innerHTML =
+                '<thead><tr><th>Category</th><th class="num">Deals</th><th class="num">Share of city</th></tr></thead>';
+              const tbody = document.createElement("tbody");
+              for (const row of cats.sort((a, b) => b.deals - a.deals)) {
+                const tr = document.createElement("tr");
+                tr.innerHTML =
+                  "<td>" +
+                  row.category +
+                  '</td><td class="num">' +
+                  row.deals +
+                  '</td><td class="num">' +
+                  share(row.deals, cityTotal) +
+                  "</td>";
+                tbody.appendChild(tr);
+              }
+              table.appendChild(tbody);
+              inner.appendChild(table);
+              det.appendChild(inner);
+            }
+            drill.appendChild(det);
+          }
+        }
+
+        if (db) {
+          document.getElementById("db-summary").innerHTML =
+            "<p>Snapshot <strong>" +
+            db.as_of +
+            "</strong> · trial <strong>" +
+            (db.merchant_subs?.trial ?? 0) +
+            "</strong> · paid <strong>" +
+            (db.merchant_subs?.paid ?? 0) +
+            "</strong> · live featured ads <strong>" +
+            (d.live_featured_ads ?? 0) +
+            "</strong></p>";
+
+          const panels = document.getElementById("db-panels");
+          panels.innerHTML = "";
+
+          function panel(title, rows, unit) {
+            const sec = document.createElement("div");
+            sec.style.marginTop = "16px";
+            sec.innerHTML = "<h3 style=\"margin:0 0 8px;font-size:1rem\">" + title + "</h3>";
+            const box = document.createElement("div");
+            const mapped = rows.map((r) => ({
+              country: r.country,
+              city: r.city,
+              count: r.count ?? r.n ?? 0,
+            }));
+            const total = mapped.reduce((s, r) => s + r.count, 0);
+            renderDrill(box, groupByCountry(mapped), unit, total);
+            sec.appendChild(box);
+            panels.appendChild(sec);
+          }
+
+          panel("Click-throughs by area (engagement proxy)", db.clicks_by_area || [], "clicks");
+          panel("Newsletter subscribers by area", db.newsletter_by_area || [], "subs");
+        }
+
+        if (merchants && Array.isArray(merchants)) {
+          const merchantRows = merchants.map((m) => ({
+            ...m,
+            countryCode: m.location?.country_code || "(unknown)",
+            city: m.location?.city || "(unknown)",
+          }));
+          renderEntityDrill(
+            document.getElementById("merchants-drill"),
+            groupByCountryCity(merchantRows, "countryCode", "city"),
+            "merchants",
+            (m) => ({
+              primary: m.name,
+              secondary: (m.email || "No email") + " · " + (m.is_subscriber ? m.tier_level : "free"),
+              previewHref:
+                m.location?.country_code && m.location?.city
+                  ? publicCityPath(m.location.country_code, m.location.city)
+                  : null,
+              manageHref: "/admin/merchants/" + m.id,
+            }),
+          );
+        }
+
+        if (deals && Array.isArray(deals)) {
+          const merchantMap = new Map();
+          if (merchants && Array.isArray(merchants)) {
+            for (const m of merchants) merchantMap.set(m.id, m);
+          }
+          const dealRows = deals.map((deal) => {
+            const merchant = merchantMap.get(deal.merchant_id);
+            return {
+              ...deal,
+              merchantName: merchant?.name || deal.merchant_id.slice(0, 8),
+              countryCode: merchant?.location?.country_code || "(unknown)",
+              city: merchant?.location?.city || "(unknown)",
+            };
+          });
+          renderEntityDrill(
+            document.getElementById("deals-drill"),
+            groupByCountryCity(dealRows, "countryCode", "city"),
+            "deals",
+            (deal) => {
+              const title =
+                (deal.translations && deal.translations[0]?.title) || "Untitled deal";
+              return {
+                primary: title,
+                secondary:
+                  deal.merchantName +
+                  " · " +
+                  deal.currency_code +
+                  " " +
+                  deal.deal_price +
+                  " · " +
+                  (deal.is_active ? "active" : "inactive"),
+                previewHref:
+                  deal.countryCode && deal.city && deal.countryCode !== "(unknown)"
+                    ? publicDealPath(deal.countryCode, deal.city, deal.id)
+                    : null,
+                manageHref: "/admin/deals/" + deal.id + "/edit",
+              };
+            },
+          );
+        }
+
+        status.textContent = "Updated " + new Date().toLocaleTimeString();
+      }
+
+      document.getElementById("refresh").addEventListener("click", load);
+      load();
+      setInterval(load, 60000);
+    </script>
+  </body>
+</html>

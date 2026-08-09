@@ -181,12 +181,12 @@ const CATEGORY_RULES: { id: ParentCategoryId; pattern: RegExp }[] = [
   {
     id: "delis-grocers",
     pattern:
-      /deli|delicatessen|grocery|grocer|convenience|petrol|gas station|supermarket(?!\s*café)|hypermarket|tesco|sainsbury|woolworth|coles|walmart|lidl|aldi|carrefour|loblaw|fairprice|whole\s*foods|trader\s*joe|dunnes|centra|supervalu|countdown|new\s*world|checkers|shoprite|albert\s*heijn|\bjumbo\b|\bhema\b|big\s*c|foodland|lulu\s*hyper|migros|\bcoop\b|mercadona|rewe|\bnetto\b|rema\s*1000|spar\b|billa|delhaize|colruyt|pao\s*de\s*acucar|spinneys|prisma|k-market|casino\s*cameroon|groupe\s*casino|casino\s*supermarket|casino\s*hyper|géant\s*casino|geant\s*casino/i,
+      /deli|delicatessen|grocery|grocer|convenience|petrol|gas station|supermarket(?!\s*café)|hypermarket|tesco|sainsbury|woolworth|coles|walmart|lidl|aldi|carrefour|loblaw|fairprice|whole\s*foods|trader\s*joe|dunnes|centra|supervalu|asda|morrisons|waitrose|countdown|new\s*world|checkers|shoprite|albert\s*heijn|\bjumbo\b|\bhema\b|big\s*c|foodland|lulu\s*hyper|migros|\bcoop\b|mercadona|rewe|\bnetto\b|rema\s*1000|spar\b|billa|delhaize|colruyt|pao\s*de\s*acucar|spinneys|prisma|k-market|casino\s*cameroon|groupe\s*casino|casino\s*supermarket|casino\s*hyper|géant\s*casino|geant\s*casino/i,
   },
   {
     id: "food-trucks-takeaways",
     pattern:
-      /food\s*truck|takeaway|take-away|fast\s*food|quick.?service|drive.?through|street.?food|food\s*hall|food.?market|mobile\s*food|chipotle|kfc|subway|greggs|mcdonald|burger\s*king|dominos|\bqsr\b|jollibee|mang\s*inasal|juici\s*patties|hungry\s*jack|guzman|debonairs|hell\s*pizza|mostaza|presto|habib/i,
+      /food\s*truck|takeaway|take-away|fast\s*food|quick.?service|drive.?through|street.?food|food\s*hall|food.?market|mobile\s*food|chipotle|kfc|subway|greggs|mcdonald|burger\s*king|dominos|\bqsr\b|jollibee|mang\s*inasal|juici\s*patties|hungry\s*jack|guzman|debonairs|hell\s*pizza|mostaza|presto|habib|papa\s*john|pizza\s*hut|pizza\s*pizza|telepizza|little\s*caesars|wingstop|supermac|apache\s*pizza|crust\s*pizza|new\s*york\s*pizza|roman.?s\s*pizza|chicken\s*licken/i,
   },
   {
     id: "wine-farms-entertainment",
@@ -201,7 +201,7 @@ const CATEGORY_RULES: { id: ParentCategoryId; pattern: RegExp }[] = [
   {
     id: "clubs-bars-pubs",
     pattern:
-      /\bpub\b|gastropub|sports\s*bar|cocktail|wine\s*bar|taproom|taphouse|brewery|beer\s*garden|\bbar\b|nightclub|members.?\s*club|social\s*club|comedy\s*club|music\s*venue|wetherspoon|greene\s*king|all\s*bar\s*one|yard\s*house|buffalo\s*wild\s*wings|brewerkz|rum\s*bar|singha\s*bar|augustiner|100\s*montaditos|earls\s*kitchen/i,
+      /\bpub\b|gastropub|sports\s*bar|cocktail|wine\s*bar|taproom|taphouse|brewery|beer\s*garden|\bbar\b|nightclub|members.?\s*club|social\s*club|comedy\s*club|music\s*venue|wetherspoon|greene\s*king|all\s*bar\s*one|yard\s*house|buffalo\s*wild\s*wings|brewerkz|rum\s*bar|singha\s*bar|augustiner|100\s*montaditos|earls\s*kitchen|brewdog|o.?neill|slug\s*and\s*lettuce|revolution\s*bar|be\s*at\s*one|stonegate|hofbraeu|cactus\s*club|tgi\s*friday|hooters|dave\s*and\s*buster|bierhaus|against\s*the\s*grain|garage\s*project|hashigo|young\s*henrys|toit\s*brew/i,
   },
   {
     id: "restaurants-cafes-bistros",

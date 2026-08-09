@@ -28,6 +28,7 @@ Prioritize any of:
 
 - Daily / chef’s specials, lunch deals, early-bird menus, set menus, meal deals
 - Happy hours, drink promotions
+- Grocery spend-threshold vouchers, % off / money off the shop at checkout
 - Seasonal menus, weekday / weekend offers
 - Family deals, group packages, limited-time promotions
 
@@ -53,6 +54,8 @@ Include any venue that sells food and beverages, including:
 
 ## Implementation notes
 
+- Discover **independent / mom-and-pop** venues per city (OSM local
+  discovery), not only national chains — all hospitality categories.
 - Prefer live offer pages (`/offers`, `/specials`, `/menu`, happy-hour, lunch-deal) and `og:image` / promo imagery.
 - Keep deals **city-local** (unique clean URL per city/country) and use local currency.
 - When live HTML is blocked, still emit area-localised hospitality-style templates for in-scope venue categories — never invent non-F&B merchants.
@@ -68,3 +71,12 @@ Worldwide refresh uses full `TARGET_MARKETS` (not `only_new` unless asked). Afte
 3. Category tally — category → deals
 
 API: `POST /api/v1/scrapers/scrape?wait=true` (report in response) or `GET /api/v1/scrapers/report`.
+
+## Pricing integrity
+
+- Prefer listing **offer type** (happy hour, BOGO, half-price cocktails, meal
+  deal) over invented currency amounts.
+- If no price is parseable on the source page, leave prices unset/zero and let
+  the frontend hide money — never fabricate a deal or "was" price.
+- Grocery offers like "spend €50 get €10 off" or "20% off your shop" are
+  deal *types* — show that copy; do not map thresholds into meal prices.

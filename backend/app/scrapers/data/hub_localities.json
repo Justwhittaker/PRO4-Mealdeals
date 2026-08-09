@@ -1,0 +1,6058 @@
+{
+  "AG:St Johns": {
+    "fetched_at": 1786233600.0648756,
+    "lat": 17.1274,
+    "lon": -61.8468,
+    "places": [
+      {
+        "lat": 17.1274,
+        "lon": -61.8468,
+        "name": "St Johns",
+        "place": "city"
+      },
+      {
+        "lat": 17.2960919,
+        "lon": -62.722301,
+        "name": "Basseterre",
+        "place": "town"
+      },
+      {
+        "lat": 17.1619426,
+        "lon": -61.8215118,
+        "name": "Cedar Grove",
+        "place": "village"
+      },
+      {
+        "lat": 17.0667222,
+        "lon": -61.8768554,
+        "name": "Bolans",
+        "place": "town"
+      },
+      {
+        "lat": 17.077288,
+        "lon": -61.8683328,
+        "name": "Jennings",
+        "place": "village"
+      },
+      {
+        "lat": 17.0793042,
+        "lon": -61.8571496,
+        "name": "Ebenezer",
+        "place": "village"
+      },
+      {
+        "lat": 17.1667155,
+        "lon": -61.8297859,
+        "name": "Crosbies",
+        "place": "village"
+      },
+      {
+        "lat": 17.1683044,
+        "lon": -61.8367557,
+        "name": "Blue Waters",
+        "place": "village"
+      },
+      {
+        "lat": 17.1472686,
+        "lon": -61.8000201,
+        "name": "Coolidge",
+        "place": "village"
+      },
+      {
+        "lat": 17.1668283,
+        "lon": -61.809204,
+        "name": "Hodges Bay",
+        "place": "village"
+      },
+      {
+        "lat": 17.1271019,
+        "lon": -61.7929474,
+        "name": "Fitches Creek",
+        "place": "village"
+      },
+      {
+        "lat": 17.1207326,
+        "lon": -61.8029467,
+        "name": "Piggotts",
+        "place": "town"
+      },
+      {
+        "lat": 17.1180298,
+        "lon": -61.8836876,
+        "name": "Five Islands",
+        "place": "village"
+      },
+      {
+        "lat": 17.0956306,
+        "lon": -61.8462572,
+        "name": "Creek Side",
+        "place": "village"
+      },
+      {
+        "lat": 17.1032601,
+        "lon": -61.8460855,
+        "name": "Golden Grove",
+        "place": "village"
+      },
+      {
+        "lat": 17.1088054,
+        "lon": -61.8489793,
+        "name": "Grays Hill",
+        "place": "village"
+      },
+      {
+        "lat": 17.034937,
+        "lon": -61.8902797,
+        "name": "Crab Hill",
+        "place": "village"
+      },
+      {
+        "lat": 17.0273459,
+        "lon": -61.8862972,
+        "name": "Johnsons Point",
+        "place": "village"
+      },
+      {
+        "lat": 17.0283491,
+        "lon": -61.8761949,
+        "name": "Urlings",
+        "place": "village"
+      },
+      {
+        "lat": 17.0165987,
+        "lon": -61.8402229,
+        "name": "Old Road",
+        "place": "village"
+      },
+      {
+        "lat": 17.0493368,
+        "lon": -61.8082385,
+        "name": "John Hughes",
+        "place": "village"
+      },
+      {
+        "lat": 17.0489326,
+        "lon": -61.8191429,
+        "name": "Sawcolts",
+        "place": "village"
+      },
+      {
+        "lat": 17.0513944,
+        "lon": -61.803968,
+        "name": "Swetes",
+        "place": "village"
+      },
+      {
+        "lat": 17.0387571,
+        "lon": -61.7951103,
+        "name": "Liberta",
+        "place": "village"
+      },
+      {
+        "lat": 17.023296,
+        "lon": -61.7733451,
+        "name": "Falmouth",
+        "place": "village"
+      },
+      {
+        "lat": 17.0118205,
+        "lon": -61.7684385,
+        "name": "English Harbour",
+        "place": "town"
+      },
+      {
+        "lat": 17.0558583,
+        "lon": -61.7263084,
+        "name": "Newfield",
+        "place": "village"
+      },
+      {
+        "lat": 17.0455163,
+        "lon": -61.7248542,
+        "name": "Saint Philips",
+        "place": "village"
+      },
+      {
+        "lat": 17.0466628,
+        "lon": -61.7031162,
+        "name": "Freetown",
+        "place": "town"
+      },
+      {
+        "lat": 17.0855929,
+        "lon": -61.7079063,
+        "name": "Willikies",
+        "place": "village"
+      },
+      {
+        "lat": 17.0860852,
+        "lon": -61.7242141,
+        "name": "Glanvilles",
+        "place": "village"
+      },
+      {
+        "lat": 17.0939611,
+        "lon": -61.7243515,
+        "name": "Seatons",
+        "place": "village"
+      },
+      {
+        "lat": 17.1084322,
+        "lon": -61.7682624,
+        "name": "Parham",
+        "place": "town"
+      },
+      {
+        "lat": 17.1089224,
+        "lon": -61.8010072,
+        "name": "Gunthorpes",
+        "place": "village"
+      },
+      {
+        "lat": 17.0990782,
+        "lon": -61.8036679,
+        "name": "Lightfoot",
+        "place": "village"
+      },
+      {
+        "lat": 17.0900129,
+        "lon": -61.8035821,
+        "name": "Sea View Farm",
+        "place": "village"
+      },
+      {
+        "lat": 17.0939508,
+        "lon": -61.8161134,
+        "name": "Herberts",
+        "place": "village"
+      },
+      {
+        "lat": 17.0697744,
+        "lon": -61.8124481,
+        "name": "Buckleys",
+        "place": "village"
+      },
+      {
+        "lat": 17.070117,
+        "lon": -61.8371419,
+        "name": "Bendals",
+        "place": "village"
+      },
+      {
+        "lat": 17.0723672,
+        "lon": -61.8413902,
+        "name": "Emanual",
+        "place": "village"
+      },
+      {
+        "lat": 17.0777886,
+        "lon": -61.8440291,
+        "name": "Green Castle",
+        "place": "village"
+      },
+      {
+        "lat": 15.2912783,
+        "lon": -61.3778624,
+        "name": "Newtown",
+        "place": "suburb"
+      },
+      {
+        "lat": 15.2604939,
+        "lon": -61.376678,
+        "name": "Pointe Michel",
+        "place": "town"
+      },
+      {
+        "lat": 15.275216,
+        "lon": -61.373425,
+        "name": "Loubiere",
+        "place": "village"
+      },
+      {
+        "lat": 15.305083,
+        "lon": -61.3854155,
+        "name": "Goodwill",
+        "place": "suburb"
+      },
+      {
+        "lat": 15.3020244,
+        "lon": -61.3898959,
+        "name": "Potters Ville",
+        "place": "suburb"
+      },
+      {
+        "lat": 15.3101374,
+        "lon": -61.3849864,
+        "name": "Stockfarm",
+        "place": "suburb"
+      },
+      {
+        "lat": 15.3171657,
+        "lon": -61.3875441,
+        "name": "Fond Colé",
+        "place": "suburb"
+      },
+      {
+        "lat": 15.3083325,
+        "lon": -61.3796315,
+        "name": "Yampiece",
+        "place": "suburb"
+      },
+      {
+        "lat": 15.2659927,
+        "lon": -61.3470927,
+        "name": "Bellevue Chopin",
+        "place": "village"
+      },
+      {
+        "lat": 15.2642236,
+        "lon": -61.3260009,
+        "name": "Pichelin",
+        "place": "village"
+      },
+      {
+        "lat": 15.3237503,
+        "lon": -61.3909747,
+        "name": "Morne Daniel",
+        "place": "suburb"
+      },
+      {
+        "lat": 15.3380393,
+        "lon": -61.3886297,
+        "name": "Canefield",
+        "place": "town"
+      },
+      {
+        "lat": 15.3475066,
+        "lon": -61.3917472,
+        "name": "Massacre",
+        "place": "village"
+      },
+      {
+        "lat": 15.3633066,
+        "lon": -61.3974541,
+        "name": "Mahaut",
+        "place": "town"
+      },
+      {
+        "lat": 15.212357,
+        "lon": -61.3676566,
+        "name": "Scotts Head",
+        "place": "village"
+      },
+      {
+        "lat": 15.2236703,
+        "lon": -61.3576058,
+        "name": "Galion",
+        "place": "village"
+      },
+      {
+        "lat": 15.2331529,
+        "lon": -61.3603695,
+        "name": "Soufriere",
+        "place": "village"
+      },
+      {
+        "lat": 15.239927,
+        "lon": -61.3153342,
+        "name": "Berekua",
+        "place": "town"
+      },
+      {
+        "lat": 15.2352476,
+        "lon": -61.3334485,
+        "name": "Tête Morne",
+        "place": "village"
+      },
+      {
+        "lat": 15.2444336,
+        "lon": -61.2814673,
+        "name": "Fond St. Jean",
+        "place": "village"
+      },
+      {
+        "lat": 15.4365938,
+        "lon": -61.4363057,
+        "name": "Salisbury",
+        "place": "village"
+      },
+      {
+        "lat": 15.6143053,
+        "lon": -61.4046943,
+        "name": "Vieille Case",
+        "place": "village"
+      },
+      {
+        "lat": 15.5364632,
+        "lon": -61.2793643,
+        "name": "Marigot",
+        "place": "village"
+      },
+      {
+        "lat": 15.5637551,
+        "lon": -61.3107321,
+        "name": "Wesley",
+        "place": "village"
+      },
+      {
+        "lat": 15.5796674,
+        "lon": -61.3311087,
+        "name": "Woodford Hill",
+        "place": "village"
+      },
+      {
+        "lat": 15.5925836,
+        "lon": -61.3493294,
+        "name": "Calibishie",
+        "place": "village"
+      },
+      {
+        "lat": 15.5998689,
+        "lon": -61.397605,
+        "name": "Thibaud",
+        "place": "village"
+      },
+      {
+        "lat": 15.4063155,
+        "lon": -61.4239093,
+        "name": "Saint Joseph",
+        "place": "town"
+      },
+      {
+        "lat": 15.3972216,
+        "lon": -61.4251937,
+        "name": "Layou",
+        "place": "village"
+      },
+      {
+        "lat": 15.3718606,
+        "lon": -61.4027037,
+        "name": "Jimmit",
+        "place": "village"
+      },
+      {
+        "lat": 15.3115664,
+        "lon": -61.3452484,
+        "name": "Morne Prosper",
+        "place": "village"
+      },
+      {
+        "lat": 15.323694,
+        "lon": -61.3467932,
+        "name": "Trafalgar",
+        "place": "village"
+      },
+      {
+        "lat": 15.3132893,
+        "lon": -61.3579817,
+        "name": "Copt Hall",
+        "place": "hamlet"
+      },
+      {
+        "lat": 15.2840561,
+        "lon": -61.3704916,
+        "name": "Castle Comfort",
+        "place": "village"
+      },
+      {
+        "lat": 15.2477819,
+        "lon": -61.2847355,
+        "name": "Bagatelle",
+        "place": "village"
+      },
+      {
+        "lat": 15.2876922,
+        "lon": -61.2641361,
+        "name": "Delices",
+        "place": "village"
+      },
+      {
+        "lat": 15.3287537,
+        "lon": -61.2463692,
+        "name": "La Plaine",
+        "place": "village"
+      },
+      {
+        "lat": 15.4421277,
+        "lon": -61.2571838,
+        "name": "Castle Bruce",
+        "place": "village"
+      },
+      {
+        "lat": 15.2466506,
+        "lon": -61.3037615,
+        "name": "Dubuc",
+        "place": "village"
+      },
+      {
+        "lat": 15.2465429,
+        "lon": -61.2941914,
+        "name": "Stowe",
+        "place": "village"
+      },
+      {
+        "lat": 17.1255777,
+        "lon": -61.7571513,
+        "name": "Crabbs",
+        "place": "village"
+      },
+      {
+        "lat": 15.2544166,
+        "lon": -61.2681718,
+        "name": "Petite Savanne",
+        "place": "village"
+      },
+      {
+        "lat": 15.3083235,
+        "lon": -61.2510772,
+        "name": "Boetica",
+        "place": "village"
+      },
+      {
+        "lat": 15.361975,
+        "lon": -61.2740309,
+        "name": "Grand Fond",
+        "place": "village"
+      },
+      {
+        "lat": 15.3739552,
+        "lon": -61.2540098,
+        "name": "Rosalie",
+        "place": "village"
+      },
+      {
+        "lat": 15.3910029,
+        "lon": -61.2562414,
+        "name": "Petite Soufriere",
+        "place": "village"
+      },
+      {
+        "lat": 15.412352,
+        "lon": -61.2541814,
+        "name": "Good Hope",
+        "place": "village"
+      },
+      {
+        "lat": 15.5154255,
+        "lon": -61.2658544,
+        "name": "Atkinson",
+        "place": "village"
+      },
+      {
+        "lat": 15.4854849,
+        "lon": -61.4624925,
+        "name": "Colihaut",
+        "place": "town"
+      },
+      {
+        "lat": 15.4602139,
+        "lon": -61.45112,
+        "name": "Coulibistrie",
+        "place": "village"
+      },
+      {
+        "lat": 15.4566567,
+        "lon": -61.4473863,
+        "name": "Morne Rachette",
+        "place": "village"
+      },
+      {
+        "lat": 15.5091813,
+        "lon": -61.466827,
+        "name": "Bioche",
+        "place": "village"
+      },
+      {
+        "lat": 15.5148466,
+        "lon": -61.4691444,
+        "name": "Dublanc",
+        "place": "village"
+      },
+      {
+        "lat": 15.6308335,
+        "lon": -61.461403,
+        "name": "Capuchin",
+        "place": "village"
+      },
+      {
+        "lat": 15.5979016,
+        "lon": -61.4606081,
+        "name": "Tanetane",
+        "place": "village"
+      },
+      {
+        "lat": 15.6098092,
+        "lon": -61.4637371,
+        "name": "Toucari",
+        "place": "village"
+      },
+      {
+        "lat": 15.6157465,
+        "lon": -61.4635536,
+        "name": "Cottage",
+        "place": "village"
+      },
+      {
+        "lat": 15.6239175,
+        "lon": -61.4636512,
+        "name": "Clifton",
+        "place": "village"
+      },
+      {
+        "lat": 15.629787,
+        "lon": -61.4193642,
+        "name": "Penville",
+        "place": "village"
+      },
+      {
+        "lat": 15.5926347,
+        "lon": -61.4108499,
+        "name": "Paix Bouche",
+        "place": "village"
+      },
+      {
+        "lat": 15.5857936,
+        "lon": -61.413097,
+        "name": "Dos D'Ane",
+        "place": "village"
+      },
+      {
+        "lat": 15.5887285,
+        "lon": -61.4070459,
+        "name": "La Source",
+        "place": "village"
+      },
+      {
+        "lat": 15.5795102,
+        "lon": -61.4212509,
+        "name": "Borne",
+        "place": "village"
+      },
+      {
+        "lat": 15.5935205,
+        "lon": -61.3828026,
+        "name": "Anse Du Mé",
+        "place": "village"
+      },
+      {
+        "lat": 15.5887285,
+        "lon": -61.3753744,
+        "name": "Bense",
+        "place": "village"
+      },
+      {
+        "lat": 15.4921215,
+        "lon": -61.2775642,
+        "name": "Concord",
+        "place": "hamlet"
+      },
+      {
+        "lat": 15.4232766,
+        "lon": -61.3393098,
+        "name": "Belles",
+        "place": "village"
+      },
+      {
+        "lat": 16.0000778,
+        "lon": -61.7333373,
+        "name": "Basse-Terre",
+        "place": "town"
+      },
+      {
+        "lat": 16.2408636,
+        "lon": -61.5334077,
+        "name": "Pointe-À-Pitre",
+        "place": "city"
+      },
+      {
+        "lat": 16.3314306,
+        "lon": -61.3440148,
+        "name": "Le Moule",
+        "place": "town"
+      },
+      {
+        "lat": 15.3080491,
+        "lon": -61.3661528,
+        "name": "Louisville",
+        "place": "suburb"
+      },
+      {
+        "lat": 15.9767433,
+        "lon": -61.6441603,
+        "name": "Trois-Rivières",
+        "place": "town"
+      },
+      {
+        "lat": 15.9950443,
+        "lon": -61.6919417,
+        "name": "Gourbeyre",
+        "place": "town"
+      },
+      {
+        "lat": 18.0250713,
+        "lon": -63.0483073,
+        "name": "Philipsburg",
+        "place": "town"
+      },
+      {
+        "lat": 18.0333145,
+        "lon": -63.0640744,
+        "name": "Cul-De-Sac",
+        "place": "town"
+      },
+      {
+        "lat": 18.0352141,
+        "lon": -63.0408185,
+        "name": "Upper Prince'S Quarter",
+        "place": "village"
+      },
+      {
+        "lat": 18.0453016,
+        "lon": -63.0193491,
+        "name": "Dawn Beach",
+        "place": "village"
+      },
+      {
+        "lat": 17.482411,
+        "lon": -62.9828803,
+        "name": "Oranjestad",
+        "place": "town"
+      },
+      {
+        "lat": 17.4789127,
+        "lon": -62.9863699,
+        "name": "Lower Town",
+        "place": "suburb"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "AR:Mendoza": {
+    "fetched_at": 1786234675.5172374,
+    "lat": -32.8895,
+    "lon": -68.8458,
+    "places": [
+      {
+        "lat": -32.8895,
+        "lon": -68.8458,
+        "name": "Mendoza",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "AR:Rosario": {
+    "fetched_at": 1786234760.3111885,
+    "lat": -32.9442,
+    "lon": -60.6505,
+    "places": [
+      {
+        "lat": -32.9442,
+        "lon": -60.6505,
+        "name": "Rosario",
+        "place": "city"
+      },
+      {
+        "lat": -34.1069866,
+        "lon": -61.1328234,
+        "name": "La Trinidad",
+        "place": "village"
+      },
+      {
+        "lat": -33.3582473,
+        "lon": -60.6568433,
+        "name": "La Vanguardia",
+        "place": "village"
+      },
+      {
+        "lat": -33.7330396,
+        "lon": -60.1685881,
+        "name": "La Violeta",
+        "place": "village"
+      },
+      {
+        "lat": -32.8713908,
+        "lon": -59.4208617,
+        "name": "Lazo",
+        "place": "village"
+      },
+      {
+        "lat": -34.1656774,
+        "lon": -62.4281176,
+        "name": "Lazzarino",
+        "place": "village"
+      },
+      {
+        "lat": -34.5194325,
+        "lon": -61.3912955,
+        "name": "Leandro N. Alem",
+        "place": "village"
+      },
+      {
+        "lat": -31.1253381,
+        "lon": -61.4524214,
+        "name": "Lehmann",
+        "place": "village"
+      },
+      {
+        "lat": -32.6595751,
+        "lon": -62.297024,
+        "name": "Leones",
+        "place": "town"
+      },
+      {
+        "lat": -32.2621896,
+        "lon": -58.9053213,
+        "name": "Líbaros",
+        "place": "village"
+      },
+      {
+        "lat": -34.0446637,
+        "lon": -59.196098,
+        "name": "Lima",
+        "place": "town"
+      },
+      {
+        "lat": -31.1842135,
+        "lon": -60.747687,
+        "name": "Llambí Campbell",
+        "place": "village"
+      },
+      {
+        "lat": -31.9607452,
+        "lon": -61.1773261,
+        "name": "Loma Alta",
+        "place": "village"
+      },
+      {
+        "lat": -31.9037969,
+        "lon": -61.2770597,
+        "name": "López",
+        "place": "village"
+      },
+      {
+        "lat": -34.456031,
+        "lon": -60.178984,
+        "name": "Los Ángeles",
+        "place": "hamlet"
+      },
+      {
+        "lat": -34.3302621,
+        "lon": -58.9873067,
+        "name": "Los Cardales",
+        "place": "village"
+      },
+      {
+        "lat": -32.3223332,
+        "lon": -61.6317174,
+        "name": "Los Cardos",
+        "place": "village"
+      },
+      {
+        "lat": -34.3715789,
+        "lon": -60.6523257,
+        "name": "Los Indios",
+        "place": "hamlet"
+      },
+      {
+        "lat": -33.1023459,
+        "lon": -61.3259258,
+        "name": "Los Molinos",
+        "place": "village"
+      },
+      {
+        "lat": -33.1423474,
+        "lon": -61.6068707,
+        "name": "Los Nogales",
+        "place": "village"
+      },
+      {
+        "lat": -33.3791194,
+        "lon": -61.7121111,
+        "name": "Los Quirquinchos",
+        "place": "village"
+      },
+      {
+        "lat": -31.6641713,
+        "lon": -61.5424336,
+        "name": "Los Sembrados",
+        "place": "hamlet"
+      },
+      {
+        "lat": -32.9851183,
+        "lon": -62.0218636,
+        "name": "Los Surgentes",
+        "place": "village"
+      },
+      {
+        "lat": -32.3843457,
+        "lon": -59.5308748,
+        "name": "Lucas González",
+        "place": "village"
+      },
+      {
+        "lat": -31.6674107,
+        "lon": -59.0406996,
+        "name": "Lucas Sur",
+        "place": "hamlet"
+      },
+      {
+        "lat": -32.7126253,
+        "lon": -61.0215965,
+        "name": "Lucio V. López",
+        "place": "village"
+      },
+      {
+        "lat": -32.7797654,
+        "lon": -60.907216,
+        "name": "Luis Palacios",
+        "place": "village"
+      },
+      {
+        "lat": -34.5661734,
+        "lon": -59.1152598,
+        "name": "Luján",
+        "place": "town"
+      },
+      {
+        "lat": -31.3052518,
+        "lon": -62.1337092,
+        "name": "Estación Luxardo",
+        "place": "village"
+      },
+      {
+        "lat": -32.1721133,
+        "lon": -59.395944,
+        "name": "Maciá",
+        "place": "village"
+      },
+      {
+        "lat": -32.4568421,
+        "lon": -60.8924252,
+        "name": "Maciel",
+        "place": "village"
+      },
+      {
+        "lat": -33.7211481,
+        "lon": -62.2461083,
+        "name": "Maggiolo",
+        "place": "village"
+      },
+      {
+        "lat": -33.3173014,
+        "lon": -60.9637223,
+        "name": "Maizales",
+        "place": "hamlet"
+      },
+      {
+        "lat": -31.2673237,
+        "lon": -60.811888,
+        "name": "Manucho",
+        "place": "hamlet"
+      },
+      {
+        "lat": -34.7117022,
+        "lon": -59.544924,
+        "name": "Manuel José García",
+        "place": "hamlet"
+      },
+      {
+        "lat": -33.7645435,
+        "lon": -60.6514683,
+        "name": "Manuel Ocampo",
+        "place": "village"
+      },
+      {
+        "lat": -34.4519717,
+        "lon": -59.0069163,
+        "name": "Manzanares",
+        "place": "village"
+      },
+      {
+        "lat": -34.4823314,
+        "lon": -58.8765163,
+        "name": "Villa Astolfi",
+        "place": "suburb"
+      },
+      {
+        "lat": -32.6946933,
+        "lon": -62.104385,
+        "name": "Marcos Juárez",
+        "place": "town"
+      },
+      {
+        "lat": -33.7077973,
+        "lon": -60.5834675,
+        "name": "Mariano Benítez",
+        "place": "village"
+      },
+      {
+        "lat": -33.91385,
+        "lon": -60.8352526,
+        "name": "Mariano H. Alfonzo",
+        "place": "village"
+      },
+      {
+        "lat": -31.6692408,
+        "lon": -61.3480939,
+        "name": "San Mariano",
+        "place": "village"
+      },
+      {
+        "lat": -32.2669443,
+        "lon": -61.9060762,
+        "name": "María Susana",
+        "place": "village"
+      },
+      {
+        "lat": -34.0046409,
+        "lon": -61.9075147,
+        "name": "María Teresa",
+        "place": "village"
+      },
+      {
+        "lat": -34.3818222,
+        "lon": -58.8250914,
+        "name": "Matheu",
+        "place": "town"
+      },
+      {
+        "lat": -31.792113,
+        "lon": -60.9809266,
+        "name": "Matilde",
+        "place": "village"
+      },
+      {
+        "lat": -33.4831667,
+        "lon": -60.9561804,
+        "name": "Máximo Paz",
+        "place": "village"
+      },
+      {
+        "lat": -33.6087329,
+        "lon": -59.2775825,
+        "name": "Mazaruca",
+        "place": "hamlet"
+      },
+      {
+        "lat": -35.0716192,
+        "lon": -60.4094541,
+        "name": "Mechita",
+        "place": "village"
+      },
+      {
+        "lat": -33.4339563,
+        "lon": -59.0696478,
+        "name": "Médanos",
+        "place": "village"
+      },
+      {
+        "lat": -33.6609804,
+        "lon": -61.4571172,
+        "name": "Melincué",
+        "place": "village"
+      },
+      {
+        "lat": -34.6506717,
+        "lon": -59.4317202,
+        "name": "Mercedes",
+        "place": "town"
+      },
+      {
+        "lat": -33.5263332,
+        "lon": -61.465887,
+        "name": "Miguel Torres",
+        "place": "village"
+      },
+      {
+        "lat": -31.4992755,
+        "lon": -59.2124463,
+        "name": "Mojones Norte",
+        "place": "village"
+      },
+      {
+        "lat": -31.6315675,
+        "lon": -59.1853176,
+        "name": "Mojones Sur",
+        "place": "hamlet"
+      },
+      {
+        "lat": -32.3069907,
+        "lon": -60.4218419,
+        "name": "Molino Doll",
+        "place": "hamlet"
+      },
+      {
+        "lat": -32.360312,
+        "lon": -60.9430126,
+        "name": "Monje",
+        "place": "village"
+      },
+      {
+        "lat": -32.6112025,
+        "lon": -62.5900289,
+        "name": "Monte Leña",
+        "place": "village"
+      },
+      {
+        "lat": -33.2042607,
+        "lon": -62.6006255,
+        "name": "Monte Maíz",
+        "place": "village"
+      },
+      {
+        "lat": -31.4901564,
+        "lon": -62.1647358,
+        "name": "Monte Redondo",
+        "place": "hamlet"
+      },
+      {
+        "lat": -32.566261,
+        "lon": -61.7683388,
+        "name": "Montes De Oca",
+        "place": "village"
+      },
+      {
+        "lat": -31.5168247,
+        "lon": -60.6758789,
+        "name": "Monte Vera",
+        "place": "village"
+      },
+      {
+        "lat": -32.6414645,
+        "lon": -59.8730537,
+        "name": "Montoya",
+        "place": "hamlet"
+      },
+      {
+        "lat": -32.5928994,
+        "lon": -62.8334218,
+        "name": "Morrison",
+        "place": "village"
+      },
+      {
+        "lat": -34.7600669,
+        "lon": -60.8445036,
+        "name": "Morse",
+        "place": "village"
+      },
+      {
+        "lat": -30.948103,
+        "lon": -60.4668904,
+        "name": "Naré",
+        "place": "village"
+      },
+      {
+        "lat": -31.2674356,
+        "lon": -60.7622376,
+        "name": "Nelson",
+        "place": "village"
+      },
+      {
+        "lat": -32.3658853,
+        "lon": -62.3073864,
+        "name": "Noetinger",
+        "place": "village"
+      },
+      {
+        "lat": -32.3985574,
+        "lon": -59.787777,
+        "name": "Nogoyá",
+        "place": "town"
+      },
+      {
+        "lat": -31.1156764,
+        "lon": -61.515099,
+        "name": "Nueva Lehmann",
+        "place": "village"
+      },
+      {
+        "lat": -32.8886692,
+        "lon": -60.724921,
+        "name": "Nuevo Alberdi",
+        "place": "suburb"
+      },
+      {
+        "lat": -31.3459963,
+        "lon": -61.2343985,
+        "name": "Nuevo Torino",
+        "place": "village"
+      },
+      {
+        "lat": -34.584395,
+        "lon": -60.7019251,
+        "name": "O’Higgins",
+        "place": "village"
+      },
+      {
+        "lat": -32.3377658,
+        "lon": -59.4528539,
+        "name": "Olegario V. Andrade",
+        "place": "hamlet"
+      },
+      {
+        "lat": -34.6262241,
+        "lon": -59.2536303,
+        "name": "Olivera",
+        "place": "village"
+      },
+      {
+        "lat": -32.5764738,
+        "lon": -60.85222,
+        "name": "Oliveros",
+        "place": "village"
+      },
+      {
+        "lat": -31.010786,
+        "lon": -60.9107622,
+        "name": "María Luisa",
+        "place": "village"
+      },
+      {
+        "lat": -34.4910826,
+        "lon": -59.0754031,
+        "name": "Open Door",
+        "place": "village"
+      },
+      {
+        "lat": -32.8410457,
+        "lon": -62.8659311,
+        "name": "Ordóñez",
+        "place": "village"
+      },
+      {
+        "lat": -31.8236822,
+        "lon": -60.5158993,
+        "name": "Oro Verde",
+        "place": "village"
+      },
+      {
+        "lat": -34.7984266,
+        "lon": -60.2076837,
+        "name": "Palemón Huergo",
+        "place": "hamlet"
+      },
+      {
+        "lat": -31.7330145,
+        "lon": -60.5298511,
+        "name": "Paraná",
+        "place": "city"
+      },
+      {
+        "lat": -33.1254772,
+        "lon": -63.040249,
+        "name": "Pascanas",
+        "place": "village"
+      },
+      {
+        "lat": -31.7562036,
+        "lon": -60.1752072,
+        "name": "Paso De La Arena",
+        "place": "hamlet"
+      },
+      {
+        "lat": -31.8020814,
+        "lon": -59.1600682,
+        "name": "Paso De La Laguna",
+        "place": "village"
+      },
+      {
+        "lat": -32.7713714,
+        "lon": -58.9062744,
+        "name": "Pastor Britos",
+        "place": "hamlet"
+      },
+      {
+        "lat": -33.2432347,
+        "lon": -60.4065545,
+        "name": "Pavón",
+        "place": "village"
+      },
+      {
+        "lat": -33.3116666,
+        "lon": -60.8242434,
+        "name": "Pavón Arriba",
+        "place": "village"
+      },
+      {
+        "lat": -33.6525761,
+        "lon": -60.8902936,
+        "name": "Pearson",
+        "place": "village"
+      },
+      {
+        "lat": -33.2992467,
+        "lon": -58.7106093,
+        "name": "Perdices",
+        "place": "hamlet"
+      },
+      {
+        "lat": -32.9982237,
+        "lon": -60.7708529,
+        "name": "Pérez",
+        "place": "town"
+      },
+      {
+        "lat": -33.7702343,
+        "lon": -60.0938486,
+        "name": "Pérez Millán",
+        "place": "village"
+      },
+      {
+        "lat": -33.897495,
+        "lon": -60.575046,
+        "name": "Pergamino",
+        "place": "city"
+      },
+      {
+        "lat": -33.5383536,
+        "lon": -60.7997448,
+        "name": "Peyrano",
+        "place": "village"
+      },
+      {
+        "lat": -32.1439613,
+        "lon": -61.980515,
+        "name": "Piamonte",
+        "place": "village"
+      },
+      {
+        "lat": -34.5798848,
+        "lon": -62.3500329,
+        "name": "Pichincha",
+        "place": "hamlet"
+      },
+      {
+        "lat": -31.1855197,
+        "lon": -59.9508327,
+        "name": "Piedras Blancas",
+        "place": "village"
+      },
+      {
+        "lat": -34.4570918,
+        "lon": -58.9141609,
+        "name": "Pilar",
+        "place": "town"
+      },
+      {
+        "lat": -33.1092111,
+        "lon": -60.7966353,
+        "name": "Piñero",
+        "place": "village"
+      },
+      {
+        "lat": -33.9933863,
+        "lon": -60.7305187,
+        "name": "Pinzón",
+        "place": "village"
+      },
+      {
+        "lat": -31.3014371,
+        "lon": -62.2296713,
+        "name": "Plaza Luxardo",
+        "place": "hamlet"
+      },
+      {
+        "lat": -31.3711366,
+        "lon": -62.0982137,
+        "name": "Plaza San Francisco",
+        "place": "village"
+      },
+      {
+        "lat": -34.4928427,
+        "lon": -58.8387197,
+        "name": "Presidente Derqui",
+        "place": "town"
+      },
+      {
+        "lat": -31.2121164,
+        "lon": -61.6135175,
+        "name": "Presidente Roca",
+        "place": "village"
+      },
+      {
+        "lat": -31.1378938,
+        "lon": -60.9896847,
+        "name": "Progreso",
+        "place": "village"
+      },
+      {
+        "lat": -32.3461182,
+        "lon": -58.4439843,
+        "name": "Pronunciamiento",
+        "place": "village"
+      },
+      {
+        "lat": -30.9830804,
+        "lon": -61.0209889,
+        "name": "Providencia",
+        "place": "village"
+      },
+      {
+        "lat": -31.3874682,
+        "lon": -60.0918469,
+        "name": "Pueblo Brugo",
+        "place": "village"
+      },
+      {
+        "lat": -31.5327615,
+        "lon": -60.0501028,
+        "name": "Pueblo General Paz",
+        "place": "hamlet"
+      },
+      {
+        "lat": -33.8822805,
+        "lon": -62.8405243,
+        "name": "Pueblo Italiano",
+        "place": "village"
+      },
+      {
+        "lat": -31.1120416,
+        "lon": -59.8474599,
+        "name": "Pueblo Leguizamón",
+        "place": "hamlet"
+      },
+      {
+        "lat": -31.5869061,
+        "lon": -60.0602868,
+        "name": "Pueblo Moreno",
+        "place": "village"
+      },
+      {
+        "lat": -32.091452,
+        "lon": -58.9559185,
+        "name": "Las Moscas",
+        "place": "village"
+      },
+      {
+        "lat": -33.1724748,
+        "lon": -60.8968966,
+        "name": "Pueblo Muñoz",
+        "place": "village"
+      },
+      {
+        "lat": -32.2445231,
+        "lon": -60.9185466,
+        "name": "Puerto Aragón",
+        "place": "village"
+      },
+      {
+        "lat": -33.8275924,
+        "lon": -59.0296389,
+        "name": "Puerto Constanza",
+        "place": "hamlet"
+      },
+      {
+        "lat": -33.2211852,
+        "lon": -59.3641248,
+        "name": "Puerto Ruiz",
+        "place": "village"
+      },
+      {
+        "lat": -32.7116197,
+        "lon": -60.7341243,
+        "name": "Puerto General San Martín",
+        "place": "town"
+      },
+      {
+        "lat": -32.0540309,
+        "lon": -60.4473999,
+        "name": "Puiggari",
+        "place": "suburb"
+      },
+      {
+        "lat": -33.0176021,
+        "lon": -61.0430978,
+        "name": "Pujato",
+        "place": "village"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "AT:Innsbruck": {
+    "fetched_at": 1786235569.7127628,
+    "lat": 47.2692,
+    "lon": 11.4041,
+    "places": [
+      {
+        "lat": 47.2692,
+        "lon": 11.4041,
+        "name": "Innsbruck",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "AT:Salzburg": {
+    "fetched_at": 1786235504.3198466,
+    "lat": 47.8095,
+    "lon": 13.055,
+    "places": [
+      {
+        "lat": 47.8095,
+        "lon": 13.055,
+        "name": "Salzburg",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "AT:Vienna": {
+    "fetched_at": 1786235400.0821261,
+    "lat": 48.2082,
+    "lon": 16.3738,
+    "places": [
+      {
+        "lat": 48.2082,
+        "lon": 16.3738,
+        "name": "Vienna",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "BB:Bridgetown": {
+    "fetched_at": 1786233639.3895183,
+    "lat": 13.0975,
+    "lon": -59.6145,
+    "places": [
+      {
+        "lat": 13.1561864,
+        "lon": -61.2279621,
+        "name": "Kingstown",
+        "place": "town"
+      },
+      {
+        "lat": 13.0977832,
+        "lon": -59.6184184,
+        "name": "Bridgetown",
+        "place": "city"
+      },
+      {
+        "lat": 14.6027962,
+        "lon": -61.0676724,
+        "name": "Fort-De-France",
+        "place": "city"
+      },
+      {
+        "lat": 12.4769057,
+        "lon": -61.4473766,
+        "name": "Top Hill",
+        "place": "village"
+      },
+      {
+        "lat": 12.4736418,
+        "lon": -61.4349593,
+        "name": "Grand Bay",
+        "place": "village"
+      },
+      {
+        "lat": 12.4833286,
+        "lon": -61.4567557,
+        "name": "Hillsborough",
+        "place": "town"
+      },
+      {
+        "lat": 12.2251172,
+        "lon": -61.6379798,
+        "name": "Sauteurs",
+        "place": "town"
+      },
+      {
+        "lat": 12.1728809,
+        "lon": -61.6197047,
+        "name": "Tivoli",
+        "place": "village"
+      },
+      {
+        "lat": 13.7277133,
+        "lon": -60.9527504,
+        "name": "Vieux Fort",
+        "place": "town"
+      },
+      {
+        "lat": 13.2045859,
+        "lon": -61.2683301,
+        "name": "Layou",
+        "place": "town"
+      },
+      {
+        "lat": 13.2372216,
+        "lon": -61.272345,
+        "name": "Barrouallie",
+        "place": "town"
+      },
+      {
+        "lat": 13.2896437,
+        "lon": -61.2413945,
+        "name": "Chateaubelair",
+        "place": "town"
+      },
+      {
+        "lat": 13.2873632,
+        "lon": -61.1172404,
+        "name": "Georgetown",
+        "place": "town"
+      },
+      {
+        "lat": 13.1327782,
+        "lon": -61.1949601,
+        "name": "Calliaqua",
+        "place": "town"
+      },
+      {
+        "lat": 13.3814563,
+        "lon": -61.1707268,
+        "name": "Fancy",
+        "place": "village"
+      },
+      {
+        "lat": 13.3336202,
+        "lon": -61.1220956,
+        "name": "Overland Village",
+        "place": "village"
+      },
+      {
+        "lat": 13.1613741,
+        "lon": -61.1772327,
+        "name": "Calder Ridge Gap",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.0862388,
+        "lon": -59.5128412,
+        "name": "Lead Vale",
+        "place": "suburb"
+      },
+      {
+        "lat": 14.4816366,
+        "lon": -61.0201337,
+        "name": "Le Diamant",
+        "place": "village"
+      },
+      {
+        "lat": 14.6149952,
+        "lon": -60.9028968,
+        "name": "Le François",
+        "place": "town"
+      },
+      {
+        "lat": 13.2340306,
+        "lon": -59.6382417,
+        "name": "Mullins",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.2298384,
+        "lon": -59.6383114,
+        "name": "Gibbes",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.2141197,
+        "lon": -59.6262866,
+        "name": "Westmoreland",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.2152914,
+        "lon": -59.6388006,
+        "name": "Weston",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.1856145,
+        "lon": -59.637289,
+        "name": "Holetown",
+        "place": "town"
+      },
+      {
+        "lat": 13.2015246,
+        "lon": -59.6381053,
+        "name": "Porters",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.1863465,
+        "lon": -59.5771509,
+        "name": "Welchman Hall",
+        "place": "village"
+      },
+      {
+        "lat": 13.2500531,
+        "lon": -59.6423782,
+        "name": "Speightstown",
+        "place": "town"
+      },
+      {
+        "lat": 13.2676304,
+        "lon": -59.6210298,
+        "name": "Mile And A Quarter",
+        "place": "village"
+      },
+      {
+        "lat": 13.2865947,
+        "lon": -59.5786997,
+        "name": "Boscobelle",
+        "place": "village"
+      },
+      {
+        "lat": 13.2459239,
+        "lon": -59.5627175,
+        "name": "Belleplaine",
+        "place": "village"
+      },
+      {
+        "lat": 13.0862324,
+        "lon": -59.4714902,
+        "name": "Gemswick",
+        "place": "village"
+      },
+      {
+        "lat": 13.1777507,
+        "lon": -59.4795939,
+        "name": "Coach Hill",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.2129361,
+        "lon": -59.5227245,
+        "name": "Bathsheba",
+        "place": "village"
+      },
+      {
+        "lat": 13.2062086,
+        "lon": -59.606538,
+        "name": "Orange Hill",
+        "place": "village"
+      },
+      {
+        "lat": 13.1438989,
+        "lon": -59.6010377,
+        "name": "Jackson",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1590187,
+        "lon": -59.6136143,
+        "name": "Redmans",
+        "place": "village"
+      },
+      {
+        "lat": 13.1556255,
+        "lon": -59.6250045,
+        "name": "Thorpes",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.1319445,
+        "lon": -59.5712664,
+        "name": "Foster Hall",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.131075,
+        "lon": -59.5664138,
+        "name": "The Valley",
+        "place": "village"
+      },
+      {
+        "lat": 13.1340832,
+        "lon": -59.5394802,
+        "name": "Ellerton",
+        "place": "village"
+      },
+      {
+        "lat": 13.1200098,
+        "lon": -59.5042551,
+        "name": "Brereton",
+        "place": "village"
+      },
+      {
+        "lat": 13.1029593,
+        "lon": -59.471027,
+        "name": "Mangrove",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.095518,
+        "lon": -59.4648278,
+        "name": "St Martins",
+        "place": "village"
+      },
+      {
+        "lat": 13.1351779,
+        "lon": -59.4996523,
+        "name": "Halton",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1396386,
+        "lon": -59.4942176,
+        "name": "Cottage Vale",
+        "place": "village"
+      },
+      {
+        "lat": 13.1461691,
+        "lon": -59.499309,
+        "name": "Kendal",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.1413677,
+        "lon": -59.5029201,
+        "name": "Hill View",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.1235593,
+        "lon": -59.4969486,
+        "name": "Ebenezer",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1335694,
+        "lon": -59.4785785,
+        "name": "Padmore",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1104355,
+        "lon": -59.5469879,
+        "name": "Watts Village",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.1111878,
+        "lon": -59.5533823,
+        "name": "Stepney",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.1083457,
+        "lon": -59.5611929,
+        "name": "South District",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.1099757,
+        "lon": -59.5653128,
+        "name": "Dash Valley",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.123794,
+        "lon": -59.561311,
+        "name": "Constant",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1191709,
+        "lon": -59.5417522,
+        "name": "Carmichael",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1227039,
+        "lon": -59.5418373,
+        "name": "Turnpike",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1235652,
+        "lon": -59.5365263,
+        "name": "Buttals",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1318763,
+        "lon": -59.5215391,
+        "name": "Melverton",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.1338824,
+        "lon": -59.5152306,
+        "name": "Drax Hall Woods",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.2791601,
+        "lon": -59.5827766,
+        "name": "Mount Stepney",
+        "place": "village"
+      },
+      {
+        "lat": 13.3069969,
+        "lon": -59.5844074,
+        "name": "Pie Corner",
+        "place": "village"
+      },
+      {
+        "lat": 13.3116116,
+        "lon": -59.589171,
+        "name": "Rockfield",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3078948,
+        "lon": -59.5898577,
+        "name": "Well Road",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3156665,
+        "lon": -59.5944322,
+        "name": "Upper Salmonds",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3204651,
+        "lon": -59.6021529,
+        "name": "Bishops",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3235971,
+        "lon": -59.6036764,
+        "name": "Seaview",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3277105,
+        "lon": -59.608161,
+        "name": "Flatfield",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3208618,
+        "lon": -59.6041055,
+        "name": "Hope",
+        "place": "village"
+      },
+      {
+        "lat": 13.3200667,
+        "lon": -59.6373798,
+        "name": "Crab Hill",
+        "place": "village"
+      },
+      {
+        "lat": 13.326228,
+        "lon": -59.633803,
+        "name": "Salmond",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3168945,
+        "lon": -59.6373864,
+        "name": "Archers",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3122381,
+        "lon": -59.6360775,
+        "name": "Content",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3219476,
+        "lon": -59.6348973,
+        "name": "Grape Hall",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3285248,
+        "lon": -59.6147486,
+        "name": "Retreat",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3233361,
+        "lon": -59.617699,
+        "name": "Bright Hall",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3265845,
+        "lon": -59.6151772,
+        "name": "Connell Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3109017,
+        "lon": -59.6172162,
+        "name": "Harris",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3096488,
+        "lon": -59.6112295,
+        "name": "Spring Hall",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3147855,
+        "lon": -59.6228596,
+        "name": "Mount Poyer",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3040108,
+        "lon": -59.6098562,
+        "name": "Durham",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3002103,
+        "lon": -59.6041485,
+        "name": "Rock Hall",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3043241,
+        "lon": -59.6037837,
+        "name": "Jemmotts",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3030448,
+        "lon": -59.5966106,
+        "name": "Josey Hill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3034888,
+        "lon": -59.6000329,
+        "name": "Mount View",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3092729,
+        "lon": -59.6065517,
+        "name": "Chance Hall",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3081767,
+        "lon": -59.5956512,
+        "name": "Lowland",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.3015885,
+        "lon": -59.5861669,
+        "name": "Cave Hill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.2924002,
+        "lon": -59.6007152,
+        "name": "Alexandra",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.29559,
+        "lon": -59.5931063,
+        "name": "Lamberts",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.2907713,
+        "lon": -59.606938,
+        "name": "Mount Gay",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.2899598,
+        "lon": -59.6193789,
+        "name": "Church Hill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1966964,
+        "lon": -59.5445391,
+        "name": "Surinam",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.2003197,
+        "lon": -59.5387963,
+        "name": "Horse Hill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1932284,
+        "lon": -59.5132538,
+        "name": "Hothersal",
+        "place": "village"
+      },
+      {
+        "lat": 13.1872274,
+        "lon": -59.5242368,
+        "name": "Venture",
+        "place": "village"
+      },
+      {
+        "lat": 13.193312,
+        "lon": -59.5244118,
+        "name": "Malvern",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1796487,
+        "lon": -59.5200773,
+        "name": "Sherbourne",
+        "place": "village"
+      },
+      {
+        "lat": 13.1837436,
+        "lon": -59.5677133,
+        "name": "Clifton Hill",
+        "place": "village"
+      },
+      {
+        "lat": 13.1760969,
+        "lon": -59.5652457,
+        "name": "Clifton",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1838272,
+        "lon": -59.5555683,
+        "name": "Bushy Park",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.1792851,
+        "lon": -59.5481332,
+        "name": "Parris Hill",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.0589701,
+        "lon": -59.5185924,
+        "name": "Hopewell",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.0603079,
+        "lon": -59.5061469,
+        "name": "Chancery Lane",
+        "place": "village"
+      },
+      {
+        "lat": 13.0557511,
+        "lon": -59.5139575,
+        "name": "Ealing Park",
+        "place": "village"
+      },
+      {
+        "lat": 13.0554177,
+        "lon": -59.5250473,
+        "name": "Goodland",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.1074864,
+        "lon": -59.4860759,
+        "name": "Highland",
+        "place": "hamlet"
+      },
+      {
+        "lat": 13.2692752,
+        "lon": -59.6429084,
+        "name": "Six Mens",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.2698648,
+        "lon": -59.6202933,
+        "name": "Rose Hill",
+        "place": "village"
+      },
+      {
+        "lat": 13.2817114,
+        "lon": -59.6462839,
+        "name": "Checker Hall",
+        "place": "village"
+      },
+      {
+        "lat": 13.3004986,
+        "lon": -59.6429247,
+        "name": "Husbands",
+        "place": "village"
+      },
+      {
+        "lat": 13.0571088,
+        "lon": -59.5327219,
+        "name": "Enterprise",
+        "place": "village"
+      },
+      {
+        "lat": 13.1454277,
+        "lon": -59.6161067,
+        "name": "Clermont",
+        "place": "village"
+      },
+      {
+        "lat": 13.1586165,
+        "lon": -59.6318567,
+        "name": "Durants",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.174178,
+        "lon": -59.6289212,
+        "name": "Sandy Lane",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.2102754,
+        "lon": -59.6348537,
+        "name": "Mount Standfast",
+        "place": "village"
+      },
+      {
+        "lat": 13.20811,
+        "lon": -59.6386347,
+        "name": "The Garden",
+        "place": "suburb"
+      },
+      {
+        "lat": 13.229268,
+        "lon": -59.6249324,
+        "name": "Rock Dundo",
+        "place": "village"
+      },
+      {
+        "lat": 13.0500254,
+        "lon": -59.5182259,
+        "name": "Silver Sands",
+        "place": "village"
+      },
+      {
+        "lat": 13.0672695,
+        "lon": -59.5099728,
+        "name": "Wilcox",
+        "place": "hamlet"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "BB:Speightstown": {
+    "fetched_at": 1786233732.9524846,
+    "lat": 13.25,
+    "lon": -59.65,
+    "places": [
+      {
+        "lat": 13.25,
+        "lon": -59.65,
+        "name": "Speightstown",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "BE:Antwerp": {
+    "fetched_at": 1786235765.9037473,
+    "lat": 51.2194,
+    "lon": 4.4025,
+    "places": [
+      {
+        "lat": 51.2194,
+        "lon": 4.4025,
+        "name": "Antwerp",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "BE:Brussels": {
+    "fetched_at": 1786235664.3593826,
+    "lat": 50.8503,
+    "lon": 4.3517,
+    "places": [
+      {
+        "lat": 50.8503,
+        "lon": 4.3517,
+        "name": "Brussels",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "BR:Rio De Janeiro": {
+    "fetched_at": 1786234929.564309,
+    "lat": -22.9068,
+    "lon": -43.1729,
+    "places": [
+      {
+        "lat": -22.9110137,
+        "lon": -43.2093727,
+        "name": "Rio De Janeiro",
+        "place": "city"
+      },
+      {
+        "lat": -23.0063966,
+        "lon": -44.316326,
+        "name": "Angra Dos Reis",
+        "place": "city"
+      },
+      {
+        "lat": -22.9364,
+        "lon": -45.4622602,
+        "name": "Pindamonhangaba",
+        "place": "city"
+      },
+      {
+        "lat": -23.2196461,
+        "lon": -44.7154196,
+        "name": "Paraty",
+        "place": "town"
+      },
+      {
+        "lat": -22.7438887,
+        "lon": -43.6991998,
+        "name": "Seropédica",
+        "place": "town"
+      },
+      {
+        "lat": -22.6604221,
+        "lon": -43.0426162,
+        "name": "Magé",
+        "place": "city"
+      },
+      {
+        "lat": -22.5266308,
+        "lon": -42.9790687,
+        "name": "Guapimirim",
+        "place": "town"
+      },
+      {
+        "lat": -22.7353777,
+        "lon": -42.7202272,
+        "name": "Tanguá",
+        "place": "town"
+      },
+      {
+        "lat": -22.7114605,
+        "lon": -42.6241606,
+        "name": "Rio Bonito",
+        "place": "town"
+      },
+      {
+        "lat": -22.7496231,
+        "lon": -42.8557428,
+        "name": "Itaboraí",
+        "place": "city"
+      },
+      {
+        "lat": -22.8219014,
+        "lon": -43.0309252,
+        "name": "São Gonçalo",
+        "place": "city"
+      },
+      {
+        "lat": -22.8884,
+        "lon": -43.1147,
+        "name": "Niterói",
+        "place": "city"
+      },
+      {
+        "lat": -22.448889,
+        "lon": -45.165278,
+        "name": "Marmelópolis",
+        "place": "village"
+      },
+      {
+        "lat": -21.3425,
+        "lon": -43.378611,
+        "name": "Aracitaba",
+        "place": "village"
+      },
+      {
+        "lat": -21.245833,
+        "lon": -43.559444,
+        "name": "Santa Bárbara Do Tugúrio",
+        "place": "village"
+      },
+      {
+        "lat": -21.387426,
+        "lon": -42.6957219,
+        "name": "Cataguases",
+        "place": "town"
+      },
+      {
+        "lat": -21.8601867,
+        "lon": -43.9370352,
+        "name": "Olaria",
+        "place": "town"
+      },
+      {
+        "lat": -22.4238234,
+        "lon": -45.4524156,
+        "name": "Itajubá",
+        "place": "town"
+      },
+      {
+        "lat": -21.1313485,
+        "lon": -42.3628918,
+        "name": "Muriaé",
+        "place": "city"
+      },
+      {
+        "lat": -21.5112256,
+        "lon": -44.903813,
+        "name": "Luminárias",
+        "place": "village"
+      },
+      {
+        "lat": -21.703333,
+        "lon": -44.443889,
+        "name": "São Vicente De Minas",
+        "place": "village"
+      },
+      {
+        "lat": -21.866945,
+        "lon": -43.01,
+        "name": "Mar De Espanha",
+        "place": "town"
+      },
+      {
+        "lat": -21.770834,
+        "lon": -42.539166,
+        "name": "Volta Grande",
+        "place": "village"
+      },
+      {
+        "lat": -21.9486291,
+        "lon": -43.413564,
+        "name": "Belmiro Braga",
+        "place": "village"
+      },
+      {
+        "lat": -21.9096949,
+        "lon": -44.5216061,
+        "name": "Seritinga",
+        "place": "village"
+      },
+      {
+        "lat": -21.276945,
+        "lon": -43.025834,
+        "name": "Piraúba",
+        "place": "town"
+      },
+      {
+        "lat": -22.089444,
+        "lon": -43.8275,
+        "name": "Rio Preto",
+        "place": "village"
+      },
+      {
+        "lat": -20.975278,
+        "lon": -43.188889,
+        "name": "Dores Do Turvo",
+        "place": "village"
+      },
+      {
+        "lat": -21.1104688,
+        "lon": -44.1742937,
+        "name": "Tiradentes",
+        "place": "village"
+      },
+      {
+        "lat": -20.8571756,
+        "lon": -43.4729342,
+        "name": "Rio Espera",
+        "place": "village"
+      },
+      {
+        "lat": -20.8905837,
+        "lon": -42.3434785,
+        "name": "Miradouro",
+        "place": "village"
+      },
+      {
+        "lat": -21.9575733,
+        "lon": -44.8891463,
+        "name": "Baependi",
+        "place": "town"
+      },
+      {
+        "lat": -21.0234482,
+        "lon": -44.2233108,
+        "name": "Coronel Xavier Chaves",
+        "place": "village"
+      },
+      {
+        "lat": -21.9759554,
+        "lon": -44.6036637,
+        "name": "Aiuruoca",
+        "place": "village"
+      },
+      {
+        "lat": -21.200278,
+        "lon": -42.865,
+        "name": "Rodeiro",
+        "place": "village"
+      },
+      {
+        "lat": -21.1738872,
+        "lon": -43.0207206,
+        "name": "Tocantins",
+        "place": "town"
+      },
+      {
+        "lat": -21.8760576,
+        "lon": -42.6810473,
+        "name": "Além Paraíba",
+        "place": "town"
+      },
+      {
+        "lat": -21.95,
+        "lon": -43.166667,
+        "name": "Santana Do Deserto",
+        "place": "village"
+      },
+      {
+        "lat": -22.116389,
+        "lon": -45.054167,
+        "name": "São Lourenço",
+        "place": "town"
+      },
+      {
+        "lat": -22.390283,
+        "lon": -44.9669696,
+        "name": "Passa Quatro",
+        "place": "town"
+      },
+      {
+        "lat": -21.838333,
+        "lon": -44.808056,
+        "name": "Cruzília",
+        "place": "town"
+      },
+      {
+        "lat": -21.5878865,
+        "lon": -43.2615975,
+        "name": "Coronel Pacheco",
+        "place": "village"
+      },
+      {
+        "lat": -21.0572943,
+        "lon": -44.0788784,
+        "name": "Prados",
+        "place": "village"
+      },
+      {
+        "lat": -21.9755872,
+        "lon": -44.9311403,
+        "name": "Caxambu",
+        "place": "town"
+      },
+      {
+        "lat": -21.316667,
+        "lon": -42.810556,
+        "name": "Dona Euzébia",
+        "place": "village"
+      },
+      {
+        "lat": -21.145833,
+        "lon": -43.776389,
+        "name": "Alfredo Vasconcelos",
+        "place": "village"
+      },
+      {
+        "lat": -21.656903,
+        "lon": -42.345955,
+        "name": "Pirapetinga",
+        "place": "town"
+      },
+      {
+        "lat": -21.601389,
+        "lon": -44.104167,
+        "name": "Santana Do Garambéu",
+        "place": "village"
+      },
+      {
+        "lat": -21.9578146,
+        "lon": -43.7024953,
+        "name": "Santa Bárbara Do Monte Verde",
+        "place": "village"
+      },
+      {
+        "lat": -21.7401561,
+        "lon": -44.3090635,
+        "name": "Andrelândia",
+        "place": "town"
+      },
+      {
+        "lat": -21.911667,
+        "lon": -44.255833,
+        "name": "Arantina",
+        "place": "village"
+      },
+      {
+        "lat": -20.905278,
+        "lon": -43.365556,
+        "name": "Cipotânea",
+        "place": "village"
+      },
+      {
+        "lat": -21.6817218,
+        "lon": -44.6036995,
+        "name": "Minduri",
+        "place": "village"
+      },
+      {
+        "lat": -21.7056637,
+        "lon": -43.7492357,
+        "name": "Pedro Teixeira",
+        "place": "village"
+      },
+      {
+        "lat": -21.3753167,
+        "lon": -42.3175405,
+        "name": "Palma",
+        "place": "village"
+      },
+      {
+        "lat": -22.5342367,
+        "lon": -45.3614735,
+        "name": "Wenceslau Braz",
+        "place": "village"
+      },
+      {
+        "lat": -21.0239537,
+        "lon": -43.4133507,
+        "name": "Alto Rio Doce",
+        "place": "town"
+      },
+      {
+        "lat": -21.1514477,
+        "lon": -42.7997151,
+        "name": "Guidoval",
+        "place": "village"
+      },
+      {
+        "lat": -22.067778,
+        "lon": -45.263889,
+        "name": "Olímpio Noronha",
+        "place": "village"
+      },
+      {
+        "lat": -21.4753189,
+        "lon": -43.1250813,
+        "name": "Rio Novo",
+        "place": "village"
+      },
+      {
+        "lat": -21.5359158,
+        "lon": -43.0151428,
+        "name": "São João Nepomuceno",
+        "place": "town"
+      },
+      {
+        "lat": -21.7218272,
+        "lon": -44.9849435,
+        "name": "São Tomé Das Letras",
+        "place": "village"
+      },
+      {
+        "lat": -22.0607267,
+        "lon": -45.044957,
+        "name": "Soledade De Minas",
+        "place": "village"
+      },
+      {
+        "lat": -20.9793178,
+        "lon": -42.5107009,
+        "name": "Rosário Da Limeira",
+        "place": "village"
+      },
+      {
+        "lat": -21.842777,
+        "lon": -43.792777,
+        "name": "Lima Duarte",
+        "place": "town"
+      },
+      {
+        "lat": -21.9643721,
+        "lon": -43.3127092,
+        "name": "Simão Pereira",
+        "place": "village"
+      },
+      {
+        "lat": -20.8483109,
+        "lon": -43.2430524,
+        "name": "Brás Pires",
+        "place": "village"
+      },
+      {
+        "lat": -21.12,
+        "lon": -42.942777,
+        "name": "Ubá",
+        "place": "city"
+      },
+      {
+        "lat": -21.0250052,
+        "lon": -44.3186566,
+        "name": "Ritápolis",
+        "place": "village"
+      },
+      {
+        "lat": -21.415833,
+        "lon": -42.817778,
+        "name": "Itamarati De Minas",
+        "place": "village"
+      },
+      {
+        "lat": -21.028056,
+        "lon": -43.582778,
+        "name": "Senhora Dos Remédios",
+        "place": "town"
+      },
+      {
+        "lat": -21.997777,
+        "lon": -45.290833,
+        "name": "Jesuânia",
+        "place": "village"
+      },
+      {
+        "lat": -20.990277,
+        "lon": -43.003889,
+        "name": "Divinésia",
+        "place": "village"
+      },
+      {
+        "lat": -21.6727567,
+        "lon": -43.2206851,
+        "name": "Chácara",
+        "place": "village"
+      },
+      {
+        "lat": -20.7905386,
+        "lon": -43.4733218,
+        "name": "Lamim",
+        "place": "village"
+      },
+      {
+        "lat": -22.0041759,
+        "lon": -43.0575589,
+        "name": "Chiador",
+        "place": "village"
+      },
+      {
+        "lat": -21.063056,
+        "lon": -43.762778,
+        "name": "Ressaquinha",
+        "place": "village"
+      },
+      {
+        "lat": -20.793889,
+        "lon": -43.344166,
+        "name": "Senhora De Oliveira",
+        "place": "village"
+      },
+      {
+        "lat": -21.365278,
+        "lon": -42.477778,
+        "name": "Laranjal",
+        "place": "village"
+      },
+      {
+        "lat": -21.3132636,
+        "lon": -42.8624102,
+        "name": "Astolfo Dutra",
+        "place": "town"
+      },
+      {
+        "lat": -20.9169703,
+        "lon": -43.1001236,
+        "name": "Senador Firmino",
+        "place": "village"
+      },
+      {
+        "lat": -21.6295358,
+        "lon": -43.0195125,
+        "name": "Rochedo De Minas",
+        "place": "village"
+      },
+      {
+        "lat": -21.459444,
+        "lon": -42.967223,
+        "name": "Descoberto",
+        "place": "village"
+      },
+      {
+        "lat": -21.4679371,
+        "lon": -44.1939394,
+        "name": "Piedade Do Rio Grande",
+        "place": "village"
+      },
+      {
+        "lat": -21.0171988,
+        "lon": -42.1101106,
+        "name": "Antônio Prado De Minas",
+        "place": "village"
+      },
+      {
+        "lat": -21.01,
+        "lon": -42.840833,
+        "name": "Visconde Do Rio Branco",
+        "place": "town"
+      },
+      {
+        "lat": -21.244722,
+        "lon": -42.2375,
+        "name": "Barão De Monte Alto",
+        "place": "village"
+      },
+      {
+        "lat": -22.2957913,
+        "lon": -44.9366732,
+        "name": "Itanhandu",
+        "place": "town"
+      },
+      {
+        "lat": -21.289441,
+        "lon": -43.4175347,
+        "name": "Paiva",
+        "place": "village"
+      },
+      {
+        "lat": -21.128889,
+        "lon": -44.472223,
+        "name": "Conceição Da Barra De Minas",
+        "place": "village"
+      },
+      {
+        "lat": -21.2871462,
+        "lon": -42.5569749,
+        "name": "Santana De Cataguases",
+        "place": "village"
+      },
+      {
+        "lat": -22.333333,
+        "lon": -45.091666,
+        "name": "Virgínia",
+        "place": "village"
+      },
+      {
+        "lat": -21.5314282,
+        "lon": -42.6403534,
+        "name": "Leopoldina",
+        "place": "town"
+      },
+      {
+        "lat": -21.881078,
+        "lon": -45.0868526,
+        "name": "Conceição Do Rio Verde",
+        "place": "town"
+      },
+      {
+        "lat": -22.001667,
+        "lon": -44.461667,
+        "name": "Carvalhos",
+        "place": "village"
+      },
+      {
+        "lat": -20.7538586,
+        "lon": -42.8815888,
+        "name": "Viçosa",
+        "place": "town"
+      },
+      {
+        "lat": -21.4910462,
+        "lon": -44.6436151,
+        "name": "Carrancas",
+        "place": "village"
+      },
+      {
+        "lat": -21.741666,
+        "lon": -42.460833,
+        "name": "Estrela Dalva",
+        "place": "village"
+      },
+      {
+        "lat": -22.193889,
+        "lon": -44.972778,
+        "name": "Pouso Alto",
+        "place": "village"
+      },
+      {
+        "lat": -22.149166,
+        "lon": -44.094444,
+        "name": "Santa Rita De Jacutinga",
+        "place": "village"
+      },
+      {
+        "lat": -21.9476508,
+        "lon": -44.1905987,
+        "name": "Bom Jardim De Minas",
+        "place": "town"
+      },
+      {
+        "lat": -20.8377232,
+        "lon": -42.6559789,
+        "name": "Ervália",
+        "place": "town"
+      },
+      {
+        "lat": -22.167778,
+        "lon": -44.394722,
+        "name": "Bocaina De Minas",
+        "place": "village"
+      },
+      {
+        "lat": -21.482223,
+        "lon": -44.329723,
+        "name": "Madre De Deus De Minas",
+        "place": "village"
+      },
+      {
+        "lat": -21.605833,
+        "lon": -43.756944,
+        "name": "Bias Fortes",
+        "place": "village"
+      },
+      {
+        "lat": -22.1216655,
+        "lon": -45.1323836,
+        "name": "Carmo De Minas",
+        "place": "town"
+      },
+      {
+        "lat": -21.097549,
+        "lon": -42.1853298,
+        "name": "Eugenópolis",
+        "place": "town"
+      },
+      {
+        "lat": -20.8563255,
+        "lon": -42.8026943,
+        "name": "Coimbra",
+        "place": "village"
+      },
+      {
+        "lat": -21.1957417,
+        "lon": -42.6125153,
+        "name": "Miraí",
+        "place": "town"
+      },
+      {
+        "lat": -21.890277,
+        "lon": -44.509444,
+        "name": "Serranos",
+        "place": "village"
+      },
+      {
+        "lat": -20.8737735,
+        "lon": -42.9862733,
+        "name": "Paula Cândido",
+        "place": "village"
+      },
+      {
+        "lat": -21.153333,
+        "lon": -42.214444,
+        "name": "Patrocínio Do Muriaé",
+        "place": "village"
+      },
+      {
+        "lat": -21.5248205,
+        "lon": -42.4689256,
+        "name": "Recreio",
+        "place": "town"
+      },
+      {
+        "lat": -21.5375,
+        "lon": -43.2014,
+        "name": "Goianá",
+        "place": "village"
+      },
+      {
+        "lat": -22.209722,
+        "lon": -44.2344386,
+        "name": "Passa Vinte",
+        "place": "village"
+      },
+      {
+        "lat": -20.9221894,
+        "lon": -42.8343489,
+        "name": "São Geraldo",
+        "place": "town"
+      },
+      {
+        "lat": -21.5625,
+        "lon": -43.914722,
+        "name": "Santa Rita De Ibitipoca",
+        "place": "village"
+      },
+      {
+        "lat": -21.551389,
+        "lon": -43.509722,
+        "name": "Ewbank Da Câmara",
+        "place": "village"
+      },
+      {
+        "lat": -21.6975,
+        "lon": -42.959167,
+        "name": "Maripá De Minas",
+        "place": "village"
+      },
+      {
+        "lat": -21.2254524,
+        "lon": -43.7735087,
+        "name": "Barbacena",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "BS:Marsh Harbour": {
+    "fetched_at": 1786233954.3141952,
+    "lat": 26.5412,
+    "lon": -77.0636,
+    "places": [
+      {
+        "lat": 26.5412,
+        "lon": -77.0636,
+        "name": "Marsh Harbour",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "BS:Nassau": {
+    "fetched_at": 1786233797.258553,
+    "lat": 25.0443,
+    "lon": -77.3504,
+    "places": [
+      {
+        "lat": 25.0782266,
+        "lon": -77.3383438,
+        "name": "Nassau",
+        "place": "city"
+      },
+      {
+        "lat": 26.5382728,
+        "lon": -77.0610382,
+        "name": "Marsh Harbour",
+        "place": "town"
+      },
+      {
+        "lat": 26.6774884,
+        "lon": -77.2895287,
+        "name": "Treasure Cay",
+        "place": "town"
+      },
+      {
+        "lat": 25.1934774,
+        "lon": -76.245336,
+        "name": "Governor'S Harbour",
+        "place": "town"
+      },
+      {
+        "lat": 25.1667345,
+        "lon": -76.1760414,
+        "name": "North Palmetto Point",
+        "place": "village"
+      },
+      {
+        "lat": 25.0864501,
+        "lon": -76.1305518,
+        "name": "Savannah Sound",
+        "place": "village"
+      },
+      {
+        "lat": 24.7356082,
+        "lon": -76.2177485,
+        "name": "Wemyss Bight",
+        "place": "village"
+      },
+      {
+        "lat": 24.68728,
+        "lon": -76.2020064,
+        "name": "John Millars",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.9716817,
+        "lon": -76.1825135,
+        "name": "Tarpum Bay",
+        "place": "town"
+      },
+      {
+        "lat": 24.8644542,
+        "lon": -76.1584835,
+        "name": "Rock Sound",
+        "place": "village"
+      },
+      {
+        "lat": 25.1503974,
+        "lon": -76.1829364,
+        "name": "South Palmetto Point",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.282123,
+        "lon": -77.053684,
+        "name": "Cherokee",
+        "place": "town"
+      },
+      {
+        "lat": 26.3242219,
+        "lon": -77.0002476,
+        "name": "Little Harbour",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.6015136,
+        "lon": -77.7625222,
+        "name": "Bowens Sound Settlement",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.5465475,
+        "lon": -77.7518868,
+        "name": "Man Of War Sound Settlement",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.499947,
+        "lon": -77.7192827,
+        "name": "Cargill Creek Settlement",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.4806744,
+        "lon": -77.7232228,
+        "name": "Behring Point Settlement",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.7279213,
+        "lon": -77.7888399,
+        "name": "Andros Town",
+        "place": "village"
+      },
+      {
+        "lat": 24.8322856,
+        "lon": -77.887494,
+        "name": "Staniard Creek",
+        "place": "hamlet"
+      },
+      {
+        "lat": 25.120261,
+        "lon": -77.9951273,
+        "name": "Conch Sound Settlement",
+        "place": "hamlet"
+      },
+      {
+        "lat": 25.0662778,
+        "lon": -77.9661245,
+        "name": "Mastic Point Settlement",
+        "place": "hamlet"
+      },
+      {
+        "lat": 25.0530789,
+        "lon": -77.9783888,
+        "name": "New Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.535681,
+        "lon": -78.6953623,
+        "name": "Freeport",
+        "place": "city"
+      },
+      {
+        "lat": 26.7583146,
+        "lon": -77.3291674,
+        "name": "New Plymouth",
+        "place": "village"
+      },
+      {
+        "lat": 26.4752582,
+        "lon": -77.0929386,
+        "name": "Spring City",
+        "place": "hamlet"
+      },
+      {
+        "lat": 23.6723765,
+        "lon": -75.9847265,
+        "name": "Rolleville",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5407116,
+        "lon": -76.9594379,
+        "name": "Hope Town",
+        "place": "town"
+      },
+      {
+        "lat": 26.55396,
+        "lon": -76.9600131,
+        "name": "North End",
+        "place": "village"
+      },
+      {
+        "lat": 26.4961651,
+        "lon": -78.6744386,
+        "name": "Williams Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.611684,
+        "lon": -78.3573435,
+        "name": "Freetown",
+        "place": "town"
+      },
+      {
+        "lat": 26.6264927,
+        "lon": -78.2832236,
+        "name": "High Rock",
+        "place": "town"
+      },
+      {
+        "lat": 26.9197486,
+        "lon": -77.7906229,
+        "name": "Foxtown",
+        "place": "village"
+      },
+      {
+        "lat": 25.142596,
+        "lon": -78.0056989,
+        "name": "Nicholl'S Town",
+        "place": "town"
+      },
+      {
+        "lat": 25.748137,
+        "lon": -79.2826457,
+        "name": "Bimini Bay",
+        "place": "town"
+      },
+      {
+        "lat": 25.7341752,
+        "lon": -79.2925647,
+        "name": "Bailey Town",
+        "place": "town"
+      },
+      {
+        "lat": 25.7271964,
+        "lon": -79.2965453,
+        "name": "Alice Town",
+        "place": "town"
+      },
+      {
+        "lat": 25.7403176,
+        "lon": -79.2889588,
+        "name": "Porgy Bay",
+        "place": "town"
+      },
+      {
+        "lat": 26.61594,
+        "lon": -78.3376854,
+        "name": "Gambier Point",
+        "place": "hamlet"
+      },
+      {
+        "lat": 25.3264162,
+        "lon": -76.3654914,
+        "name": "James Cistern",
+        "place": "village"
+      },
+      {
+        "lat": 25.3503498,
+        "lon": -76.4831922,
+        "name": "Hatchet Bay",
+        "place": "village"
+      },
+      {
+        "lat": 25.3919609,
+        "lon": -76.5561942,
+        "name": "Gregory Town",
+        "place": "village"
+      },
+      {
+        "lat": 24.6528161,
+        "lon": -76.1717291,
+        "name": "Bannerman Town",
+        "place": "village"
+      },
+      {
+        "lat": 26.522667,
+        "lon": -78.6187147,
+        "name": "Smith Point",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5237636,
+        "lon": -78.6597359,
+        "name": "Lucaya",
+        "place": "village"
+      },
+      {
+        "lat": 25.1921576,
+        "lon": -76.248871,
+        "name": "Cupid'S Cay",
+        "place": "hamlet"
+      },
+      {
+        "lat": 25.3358662,
+        "lon": -76.4299592,
+        "name": "Rainbow Bay",
+        "place": "village"
+      },
+      {
+        "lat": 24.7766804,
+        "lon": -76.2154673,
+        "name": "Green Castle",
+        "place": "village"
+      },
+      {
+        "lat": 24.7763914,
+        "lon": -76.2767582,
+        "name": "Delancey Town",
+        "place": "village"
+      },
+      {
+        "lat": 24.7839428,
+        "lon": -76.2845021,
+        "name": "Deep Creek",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.7484403,
+        "lon": -76.2360508,
+        "name": "Waterford",
+        "place": "hamlet"
+      },
+      {
+        "lat": 25.4990204,
+        "lon": -76.6357341,
+        "name": "Dunmore Town",
+        "place": "village"
+      },
+      {
+        "lat": 24.163518,
+        "lon": -77.5832337,
+        "name": "Congo Town",
+        "place": "village"
+      },
+      {
+        "lat": 26.5328757,
+        "lon": -78.5979737,
+        "name": "Mather Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.504336,
+        "lon": -78.7016881,
+        "name": "Bahamia",
+        "place": "suburb"
+      },
+      {
+        "lat": 26.6168349,
+        "lon": -78.3193338,
+        "name": "Bevans Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.9121993,
+        "lon": -77.8170859,
+        "name": "Crown Haven",
+        "place": "village"
+      },
+      {
+        "lat": 24.9078435,
+        "lon": -76.1824162,
+        "name": "Tarpum Head",
+        "place": "village"
+      },
+      {
+        "lat": 23.615292,
+        "lon": -75.9155917,
+        "name": "Rokers Point Settlement",
+        "place": "hamlet"
+      },
+      {
+        "lat": 23.5868202,
+        "lon": -75.9100771,
+        "name": "Farmers Hill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 23.6325038,
+        "lon": -75.9332836,
+        "name": "Harts",
+        "place": "hamlet"
+      },
+      {
+        "lat": 23.4642108,
+        "lon": -75.7374287,
+        "name": "Rolle Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 23.490761,
+        "lon": -75.766182,
+        "name": "Michelson",
+        "place": "hamlet"
+      },
+      {
+        "lat": 23.5065235,
+        "lon": -75.7750229,
+        "name": "George Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 23.6050877,
+        "lon": -75.9792996,
+        "name": "Calvin Hill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 23.6438166,
+        "lon": -75.9447742,
+        "name": "Steventon",
+        "place": "hamlet"
+      },
+      {
+        "lat": 23.5742241,
+        "lon": -75.8672959,
+        "name": "Moss Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 25.7004821,
+        "lon": -79.3010034,
+        "name": "Port Royal",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5477737,
+        "lon": -78.7418959,
+        "name": "Queen'S Cove",
+        "place": "suburb"
+      },
+      {
+        "lat": 25.7160528,
+        "lon": -79.2979085,
+        "name": "Buccaneer",
+        "place": "village"
+      },
+      {
+        "lat": 24.0962598,
+        "lon": -76.4022591,
+        "name": "Black Point",
+        "place": "village"
+      },
+      {
+        "lat": 26.513383,
+        "lon": -78.7306796,
+        "name": "Sunrise",
+        "place": "suburb"
+      },
+      {
+        "lat": 26.5193551,
+        "lon": -78.7242967,
+        "name": "Regency Park",
+        "place": "suburb"
+      },
+      {
+        "lat": 26.5377494,
+        "lon": -78.5895116,
+        "name": "Laing Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5311644,
+        "lon": -78.7917583,
+        "name": "Bartlett Hill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5244506,
+        "lon": -78.785043,
+        "name": "Hepburn Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5270846,
+        "lon": -78.7882837,
+        "name": "Wildgoose Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5487277,
+        "lon": -78.8200263,
+        "name": "Jones Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5506345,
+        "lon": -78.8221407,
+        "name": "Martin Hill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5710455,
+        "lon": -78.8476278,
+        "name": "Holmes' Rock",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5409492,
+        "lon": -78.8063425,
+        "name": "Eight Mile Rock",
+        "place": "town"
+      },
+      {
+        "lat": 26.6519508,
+        "lon": -78.9335938,
+        "name": "Bootle Bay",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.2092555,
+        "lon": -77.5997096,
+        "name": "Driggs Hill Settlement",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.12362,
+        "lon": -77.1970639,
+        "name": "Crossing Rocks",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.2308839,
+        "lon": -75.3838085,
+        "name": "Old Bight",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.3126324,
+        "lon": -75.45721,
+        "name": "New Bight",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.647369,
+        "lon": -75.7128596,
+        "name": "Orange Creek",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.0946811,
+        "lon": -77.5485933,
+        "name": "Kemps Bay",
+        "place": "village"
+      },
+      {
+        "lat": 25.0545016,
+        "lon": -78.0415967,
+        "name": "San Andros",
+        "place": "hamlet"
+      },
+      {
+        "lat": 25.1374384,
+        "lon": -76.1316424,
+        "name": "Double Bay",
+        "place": "village"
+      },
+      {
+        "lat": 23.9472937,
+        "lon": -77.5219667,
+        "name": "Little Creek",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.6224779,
+        "lon": -75.6754967,
+        "name": "Arthur'S Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.1536658,
+        "lon": -75.5252641,
+        "name": "Hawks Nest",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.1573516,
+        "lon": -75.331692,
+        "name": "Port Howe",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.9015124,
+        "lon": -77.9363537,
+        "name": "Stafford Creek",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.8725797,
+        "lon": -77.5135737,
+        "name": "Coopers Town",
+        "place": "village"
+      },
+      {
+        "lat": 26.0257329,
+        "lon": -77.3993408,
+        "name": "Sandy Point",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5038592,
+        "lon": -78.7432498,
+        "name": "Lewis Yard",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5385055,
+        "lon": -78.7991408,
+        "name": "Hanna Hill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.2144581,
+        "lon": -77.637684,
+        "name": "Lisbon Creek",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.2768218,
+        "lon": -77.6687354,
+        "name": "Pinders",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.2874163,
+        "lon": -77.6733157,
+        "name": "Burnt Rock",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.2977343,
+        "lon": -77.6777382,
+        "name": "Moxey Town",
+        "place": "village"
+      },
+      {
+        "lat": 23.8682914,
+        "lon": -77.5161892,
+        "name": "Mars Bay",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.1087527,
+        "lon": -77.5518921,
+        "name": "The Bluff",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.7345562,
+        "lon": -77.7927116,
+        "name": "Coakley Point",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.7378961,
+        "lon": -77.7999616,
+        "name": "Calabash Bay",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.7466608,
+        "lon": -77.8105295,
+        "name": "Small Hope Bay",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.7633943,
+        "lon": -77.8342402,
+        "name": "Love Hill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 24.8787378,
+        "lon": -77.9205537,
+        "name": "Blanket Sound",
+        "place": "hamlet"
+      },
+      {
+        "lat": 25.1451972,
+        "lon": -78.0522287,
+        "name": "Lowe Sound",
+        "place": "village"
+      },
+      {
+        "lat": 25.1735845,
+        "lon": -78.0220642,
+        "name": "Morgan'S Bluff",
+        "place": "hamlet"
+      },
+      {
+        "lat": 25.133972,
+        "lon": -78.1894056,
+        "name": "Red Bay",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.4958769,
+        "lon": -78.7263268,
+        "name": "Mack Town",
+        "place": "hamlet"
+      },
+      {
+        "lat": 26.5395443,
+        "lon": -78.5879354,
+        "name": "Shoreline",
+        "place": "suburb"
+      },
+      {
+        "lat": 26.5414131,
+        "lon": -78.5836888,
+        "name": "Fortune Cay",
+        "place": "suburb"
+      },
+      {
+        "lat": 26.6484114,
+        "lon": -78.0901558,
+        "name": "Pelican Point",
+        "place": "hamlet"
+      },
+      {
+        "lat": 25.4104254,
+        "lon": -76.7828364,
+        "name": "Current Village",
+        "place": "town"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "BZ:Belize City": {
+    "fetched_at": 1786234039.9027107,
+    "lat": 17.5046,
+    "lon": -88.1962,
+    "places": [
+      {
+        "lat": 17.5046,
+        "lon": -88.1962,
+        "name": "Belize City",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "CA:Calgary": {
+    "fetched_at": 1786234513.8158445,
+    "lat": 51.0447,
+    "lon": -114.0719,
+    "places": [
+      {
+        "lat": 51.0447,
+        "lon": -114.0719,
+        "name": "Calgary",
+        "place": "city"
+      },
+      {
+        "lat": 51.28597,
+        "lon": -114.01062,
+        "name": "Airdrie",
+        "place": "city"
+      },
+      {
+        "lat": 51.1874627,
+        "lon": -114.4710708,
+        "name": "Cochrane",
+        "place": "town"
+      },
+      {
+        "lat": 51.175076,
+        "lon": -115.5720773,
+        "name": "Banff",
+        "place": "town"
+      },
+      {
+        "lat": 50.3481989,
+        "lon": -113.770256,
+        "name": "Nanton",
+        "place": "town"
+      },
+      {
+        "lat": 52.2690628,
+        "lon": -113.8141464,
+        "name": "Red Deer",
+        "place": "city"
+      },
+      {
+        "lat": 52.0274651,
+        "lon": -113.9502354,
+        "name": "Innisfail",
+        "place": "town"
+      },
+      {
+        "lat": 51.7923735,
+        "lon": -114.1130367,
+        "name": "Olds",
+        "place": "town"
+      },
+      {
+        "lat": 52.6744291,
+        "lon": -113.5771426,
+        "name": "Ponoka",
+        "place": "town"
+      },
+      {
+        "lat": 51.0435486,
+        "lon": -113.3998479,
+        "name": "Strathmore",
+        "place": "town"
+      },
+      {
+        "lat": 50.5801916,
+        "lon": -113.8709332,
+        "name": "High River",
+        "place": "town"
+      },
+      {
+        "lat": 49.7257719,
+        "lon": -113.405385,
+        "name": "Fort Macleod",
+        "place": "town"
+      },
+      {
+        "lat": 50.571027,
+        "lon": -111.893005,
+        "name": "Brooks",
+        "place": "city"
+      },
+      {
+        "lat": 49.7256552,
+        "lon": -112.6166534,
+        "name": "Coaldale",
+        "place": "town"
+      },
+      {
+        "lat": 49.7932232,
+        "lon": -112.1436569,
+        "name": "Taber",
+        "place": "town"
+      },
+      {
+        "lat": 49.7468014,
+        "lon": -112.9275821,
+        "name": "Coalhurst",
+        "place": "town"
+      },
+      {
+        "lat": 51.4316173,
+        "lon": -114.2801274,
+        "name": "Madden",
+        "place": "hamlet"
+      },
+      {
+        "lat": 51.4272738,
+        "lon": -114.0309938,
+        "name": "Crossfield",
+        "place": "town"
+      },
+      {
+        "lat": 51.5446018,
+        "lon": -114.4930074,
+        "name": "Cremona",
+        "place": "village"
+      },
+      {
+        "lat": 51.7971381,
+        "lon": -114.6394088,
+        "name": "Sundre",
+        "place": "town"
+      },
+      {
+        "lat": 52.3768803,
+        "lon": -114.9183995,
+        "name": "Rocky Mountain House",
+        "place": "town"
+      },
+      {
+        "lat": 52.3228746,
+        "lon": -112.71302,
+        "name": "Stettler",
+        "place": "town"
+      },
+      {
+        "lat": 51.3852192,
+        "lon": -113.5383076,
+        "name": "Beiseker",
+        "place": "village"
+      },
+      {
+        "lat": 50.9904543,
+        "lon": -114.5043434,
+        "name": "Redwood Meadows",
+        "place": "village"
+      },
+      {
+        "lat": 51.5622066,
+        "lon": -114.095172,
+        "name": "Carstairs",
+        "place": "town"
+      },
+      {
+        "lat": 51.6608182,
+        "lon": -114.1369027,
+        "name": "Didsbury",
+        "place": "town"
+      },
+      {
+        "lat": 51.9327066,
+        "lon": -114.0345818,
+        "name": "Bowden",
+        "place": "town"
+      },
+      {
+        "lat": 52.1407624,
+        "lon": -113.8707545,
+        "name": "Penhold",
+        "place": "town"
+      },
+      {
+        "lat": 50.0244558,
+        "lon": -114.921826,
+        "name": "Elkford",
+        "place": "town"
+      },
+      {
+        "lat": 52.6417347,
+        "lon": -114.2385994,
+        "name": "Rimbey",
+        "place": "town"
+      },
+      {
+        "lat": 49.6071847,
+        "lon": -114.4381219,
+        "name": "Blairmore",
+        "place": "suburb"
+      },
+      {
+        "lat": 49.582117,
+        "lon": -114.367722,
+        "name": "Bellevue",
+        "place": "suburb"
+      },
+      {
+        "lat": 51.766667,
+        "lon": -112.0,
+        "name": "Dowling",
+        "place": "village"
+      },
+      {
+        "lat": 52.6699978,
+        "lon": -112.2237872,
+        "name": "Heisler",
+        "place": "village"
+      },
+      {
+        "lat": 49.5251987,
+        "lon": -113.9465079,
+        "name": "Pincher Station",
+        "place": "village"
+      },
+      {
+        "lat": 50.2562009,
+        "lon": -113.6544038,
+        "name": "Parkland",
+        "place": "village"
+      },
+      {
+        "lat": 50.9084777,
+        "lon": -116.366981,
+        "name": "Spillimacheen",
+        "place": "village"
+      },
+      {
+        "lat": 50.166667,
+        "lon": -112.416667,
+        "name": "Enchant",
+        "place": "village"
+      },
+      {
+        "lat": 50.4152929,
+        "lon": -117.1242028,
+        "name": "Poplar Creek",
+        "place": "hamlet"
+      },
+      {
+        "lat": 49.5107477,
+        "lon": -115.7672772,
+        "name": "Cranbrook",
+        "place": "city"
+      },
+      {
+        "lat": 50.7481727,
+        "lon": -111.1831348,
+        "name": "Jenner",
+        "place": "hamlet"
+      },
+      {
+        "lat": 50.1966435,
+        "lon": -116.941934,
+        "name": "Argenta",
+        "place": "hamlet"
+      },
+      {
+        "lat": 49.5041747,
+        "lon": -115.062867,
+        "name": "Fernie",
+        "place": "city"
+      },
+      {
+        "lat": 50.0691049,
+        "lon": -112.2612545,
+        "name": "Retlaw",
+        "place": "hamlet"
+      },
+      {
+        "lat": 51.338675,
+        "lon": -112.4950579,
+        "name": "East Coulee",
+        "place": "suburb"
+      },
+      {
+        "lat": 51.5,
+        "lon": -111.683333,
+        "name": "Sheerness",
+        "place": "village"
+      },
+      {
+        "lat": 51.8722242,
+        "lon": -111.9881365,
+        "name": "Scapa",
+        "place": "village"
+      },
+      {
+        "lat": 51.3,
+        "lon": -112.95,
+        "name": "Rosebud",
+        "place": "village"
+      },
+      {
+        "lat": 49.2001157,
+        "lon": -113.3165704,
+        "name": "Cardston",
+        "place": "town"
+      },
+      {
+        "lat": 52.0340881,
+        "lon": -112.753278,
+        "name": "Big Valley",
+        "place": "village"
+      },
+      {
+        "lat": 50.6994525,
+        "lon": -111.6757745,
+        "name": "Patricia",
+        "place": "village"
+      },
+      {
+        "lat": 49.9121561,
+        "lon": -116.9048927,
+        "name": "Kaslo",
+        "place": "village"
+      },
+      {
+        "lat": 49.8162139,
+        "lon": -111.897471,
+        "name": "Purple Springs",
+        "place": "village"
+      },
+      {
+        "lat": 50.24272,
+        "lon": -113.1514765,
+        "name": "Champion",
+        "place": "village"
+      },
+      {
+        "lat": 49.5501366,
+        "lon": -113.7494915,
+        "name": "Brocket",
+        "place": "village"
+      },
+      {
+        "lat": 52.0929552,
+        "lon": -111.4490001,
+        "name": "Coronation",
+        "place": "town"
+      },
+      {
+        "lat": 50.85,
+        "lon": -110.95,
+        "name": "Atlee",
+        "place": "village"
+      },
+      {
+        "lat": 52.1397814,
+        "lon": -112.7477385,
+        "name": "Fenn",
+        "place": "village"
+      },
+      {
+        "lat": 49.6850876,
+        "lon": -115.9819477,
+        "name": "Kimberley",
+        "place": "city"
+      },
+      {
+        "lat": 51.1124509,
+        "lon": -112.9802089,
+        "name": "Standard",
+        "place": "village"
+      },
+      {
+        "lat": 52.1973877,
+        "lon": -113.2320403,
+        "name": "Delburne",
+        "place": "village"
+      },
+      {
+        "lat": 49.7633316,
+        "lon": -112.4451689,
+        "name": "Chin",
+        "place": "village"
+      },
+      {
+        "lat": 50.9519081,
+        "lon": -113.9087164,
+        "name": "Shepard",
+        "place": "suburb"
+      },
+      {
+        "lat": 50.466667,
+        "lon": -113.433333,
+        "name": "Ensign",
+        "place": "village"
+      },
+      {
+        "lat": 51.2156111,
+        "lon": -114.0045579,
+        "name": "Balzac",
+        "place": "village"
+      },
+      {
+        "lat": 51.133333,
+        "lon": -112.083333,
+        "name": "Finnegan",
+        "place": "village"
+      },
+      {
+        "lat": 50.9107523,
+        "lon": -114.0558442,
+        "name": "Midnapore",
+        "place": "suburb"
+      },
+      {
+        "lat": 51.5855268,
+        "lon": -112.5350833,
+        "name": "Michichi",
+        "place": "hamlet"
+      },
+      {
+        "lat": 51.85,
+        "lon": -111.616667,
+        "name": "Spondin",
+        "place": "village"
+      },
+      {
+        "lat": 51.2156206,
+        "lon": -113.65056,
+        "name": "Keoma",
+        "place": "village"
+      },
+      {
+        "lat": 51.0892766,
+        "lon": -114.1930754,
+        "name": "Bowness",
+        "place": "suburb"
+      },
+      {
+        "lat": 50.516667,
+        "lon": -117.283333,
+        "name": "Gerrard",
+        "place": "hamlet"
+      },
+      {
+        "lat": 51.433333,
+        "lon": -117.0500085,
+        "name": "Blaeberry",
+        "place": "hamlet"
+      },
+      {
+        "lat": 50.7190916,
+        "lon": -113.3267739,
+        "name": "Mossleigh",
+        "place": "village"
+      },
+      {
+        "lat": 52.4798389,
+        "lon": -116.0723391,
+        "name": "Nordegg",
+        "place": "town"
+      },
+      {
+        "lat": 51.6705703,
+        "lon": -112.2461143,
+        "name": "Hamlet Of Craigmyle",
+        "place": "hamlet"
+      },
+      {
+        "lat": 49.2881582,
+        "lon": -115.8332061,
+        "name": "Moyie",
+        "place": "hamlet"
+      },
+      {
+        "lat": 52.0005599,
+        "lon": -111.1212876,
+        "name": "Veteran",
+        "place": "village"
+      },
+      {
+        "lat": 49.9127199,
+        "lon": -115.7326226,
+        "name": "Skookumchuck",
+        "place": "hamlet"
+      },
+      {
+        "lat": 50.2458546,
+        "lon": -111.1682865,
+        "name": "Ralston",
+        "place": "village"
+      },
+      {
+        "lat": 51.6604571,
+        "lon": -112.7643778,
+        "name": "Morrin",
+        "place": "village"
+      },
+      {
+        "lat": 50.4016332,
+        "lon": -113.2632357,
+        "name": "Vulcan",
+        "place": "town"
+      },
+      {
+        "lat": 50.4508998,
+        "lon": -111.652306,
+        "name": "Tilley",
+        "place": "village"
+      },
+      {
+        "lat": 49.4164576,
+        "lon": -115.4229661,
+        "name": "Wardner",
+        "place": "village"
+      },
+      {
+        "lat": 53.1939082,
+        "lon": -114.2000839,
+        "name": "Sunnybrook",
+        "place": "village"
+      },
+      {
+        "lat": 52.3100965,
+        "lon": -114.2774695,
+        "name": "Benalto",
+        "place": "village"
+      },
+      {
+        "lat": 50.7305674,
+        "lon": -111.9055311,
+        "name": "Duchess",
+        "place": "village"
+      },
+      {
+        "lat": 52.8680426,
+        "lon": -112.2656813,
+        "name": "Daysland",
+        "place": "town"
+      },
+      {
+        "lat": 52.7884847,
+        "lon": -112.4433686,
+        "name": "Rosalind",
+        "place": "village"
+      },
+      {
+        "lat": 52.216667,
+        "lon": -111.9,
+        "name": "Castor",
+        "place": "town"
+      },
+      {
+        "lat": 49.466667,
+        "lon": -112.666667,
+        "name": "Raymond",
+        "place": "town"
+      },
+      {
+        "lat": 50.6200728,
+        "lon": -116.0760592,
+        "name": "Radium Hot Springs",
+        "place": "village"
+      },
+      {
+        "lat": 51.3961113,
+        "lon": -116.4891525,
+        "name": "Field",
+        "place": "village"
+      },
+      {
+        "lat": 52.3827381,
+        "lon": -114.603606,
+        "name": "Leslieville",
+        "place": "hamlet"
+      },
+      {
+        "lat": 52.85,
+        "lon": -114.366667,
+        "name": "Hoadley",
+        "place": "village"
+      },
+      {
+        "lat": 52.7497903,
+        "lon": -114.2922547,
+        "name": "Bluffton",
+        "place": "village"
+      },
+      {
+        "lat": 52.4771595,
+        "lon": -113.4412968,
+        "name": "Clive",
+        "place": "village"
+      },
+      {
+        "lat": 52.113054,
+        "lon": -113.1910398,
+        "name": "Lousana",
+        "place": "village"
+      },
+      {
+        "lat": 51.4952039,
+        "lon": -113.5130572,
+        "name": "Acme",
+        "place": "village"
+      },
+      {
+        "lat": 52.0943034,
+        "lon": -114.7391684,
+        "name": "Caroline",
+        "place": "village"
+      },
+      {
+        "lat": 49.4203199,
+        "lon": -112.863749,
+        "name": "Magrath",
+        "place": "town"
+      },
+      {
+        "lat": 50.8166679,
+        "lon": -112.6666735,
+        "name": "Crowfoot",
+        "place": "village"
+      },
+      {
+        "lat": 50.3377592,
+        "lon": -115.861694,
+        "name": "Fairmont Hot Springs",
+        "place": "village"
+      },
+      {
+        "lat": 50.7253685,
+        "lon": -113.975082,
+        "name": "Okotoks",
+        "place": "town"
+      },
+      {
+        "lat": 52.583333,
+        "lon": -112.966667,
+        "name": "Bashaw",
+        "place": "town"
+      },
+      {
+        "lat": 49.133333,
+        "lon": -113.6,
+        "name": "Mountain View",
+        "place": "hamlet"
+      },
+      {
+        "lat": 51.1074019,
+        "lon": -111.5920173,
+        "name": "Pollockville",
+        "place": "hamlet"
+      },
+      {
+        "lat": 51.014221,
+        "lon": -113.538367,
+        "name": "Cheadle",
+        "place": "hamlet"
+      },
+      {
+        "lat": 50.0239458,
+        "lon": -113.5800285,
+        "name": "Claresholm",
+        "place": "town"
+      },
+      {
+        "lat": 52.2561391,
+        "lon": -112.7417766,
+        "name": "Warden",
+        "place": "village"
+      },
+      {
+        "lat": 53.1107791,
+        "lon": -114.4714876,
+        "name": "Breton",
+        "place": "village"
+      },
+      {
+        "lat": 52.7649092,
+        "lon": -112.9699509,
+        "name": "Ferintosh",
+        "place": "village"
+      },
+      {
+        "lat": 50.716667,
+        "lon": -112.983333,
+        "name": "Shouldice",
+        "place": "village"
+      },
+      {
+        "lat": 51.7939057,
+        "lon": -113.6031476,
+        "name": "Torrington",
+        "place": "hamlet"
+      },
+      {
+        "lat": 50.95,
+        "lon": -112.183333,
+        "name": "Gem",
+        "place": "village"
+      },
+      {
+        "lat": 50.7550415,
+        "lon": -112.086933,
+        "name": "Rosemary",
+        "place": "village"
+      },
+      {
+        "lat": 51.9543303,
+        "lon": -112.1597311,
+        "name": "Endiang",
+        "place": "hamlet"
+      },
+      {
+        "lat": 49.56901,
+        "lon": -114.073325,
+        "name": "Cowley",
+        "place": "village"
+      },
+      {
+        "lat": 50.583333,
+        "lon": -112.05,
+        "name": "Cassils",
+        "place": "village"
+      },
+      {
+        "lat": 49.997493,
+        "lon": -113.081528,
+        "name": "Barons",
+        "place": "village"
+      },
+      {
+        "lat": 51.416667,
+        "lon": -110.8,
+        "name": "Cereal",
+        "place": "village"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "CA:Hamilton": {
+    "fetched_at": 1786234878.6349797,
+    "lat": 43.2557,
+    "lon": -79.8711,
+    "places": [
+      {
+        "lat": 43.2557,
+        "lon": -79.8711,
+        "name": "Hamilton",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "CA:Montreal": {
+    "fetched_at": 1786234431.9516826,
+    "lat": 45.5017,
+    "lon": -73.5673,
+    "places": [
+      {
+        "lat": 45.5017,
+        "lon": -73.5673,
+        "name": "Montreal",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "CA:Ottawa": {
+    "fetched_at": 1786234585.868956,
+    "lat": 45.4215,
+    "lon": -75.6972,
+    "places": [
+      {
+        "lat": 45.4215,
+        "lon": -75.6972,
+        "name": "Ottawa",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "CA:Quebec City": {
+    "fetched_at": 1786234806.8161504,
+    "lat": 46.8139,
+    "lon": -71.208,
+    "places": [
+      {
+        "lat": 46.8139,
+        "lon": -71.208,
+        "name": "Quebec City",
+        "place": "city"
+      },
+      {
+        "lat": 46.8137431,
+        "lon": -71.2084061,
+        "name": "Québec",
+        "place": "city"
+      },
+      {
+        "lat": 47.3637203,
+        "lon": -68.3288825,
+        "name": "Edmundston",
+        "place": "town"
+      },
+      {
+        "lat": 45.4828558,
+        "lon": -71.6594817,
+        "name": "East Angus",
+        "place": "town"
+      },
+      {
+        "lat": 45.2658014,
+        "lon": -72.1480686,
+        "name": "Magog",
+        "place": "town"
+      },
+      {
+        "lat": 45.1471173,
+        "lon": -72.5980707,
+        "name": "Sutton Junction",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.403271,
+        "lon": -71.889038,
+        "name": "Sherbrooke",
+        "place": "city"
+      },
+      {
+        "lat": 45.6596873,
+        "lon": -72.3410147,
+        "name": "Durham-Sud",
+        "place": "village"
+      },
+      {
+        "lat": 45.6481766,
+        "lon": -72.564952,
+        "name": "Acton Vale",
+        "place": "town"
+      },
+      {
+        "lat": 45.627484,
+        "lon": -72.940636,
+        "name": "Saint-Hyacinthe",
+        "place": "city"
+      },
+      {
+        "lat": 45.3958531,
+        "lon": -72.0122324,
+        "name": "Saint-Élie-D'Orford",
+        "place": "suburb"
+      },
+      {
+        "lat": 45.2921024,
+        "lon": -72.1114711,
+        "name": "Omerville",
+        "place": "suburb"
+      },
+      {
+        "lat": 45.3126711,
+        "lon": -72.1657822,
+        "name": "Orford",
+        "place": "village"
+      },
+      {
+        "lat": 45.1115241,
+        "lon": -72.6186317,
+        "name": "Sutton",
+        "place": "village"
+      },
+      {
+        "lat": 45.3990409,
+        "lon": -72.721834,
+        "name": "Granby",
+        "place": "city"
+      },
+      {
+        "lat": 45.4175472,
+        "lon": -73.4891432,
+        "name": "La Prairie",
+        "place": "town"
+      },
+      {
+        "lat": 45.3867947,
+        "lon": -73.5163824,
+        "name": "Candiac",
+        "place": "town"
+      },
+      {
+        "lat": 45.4554579,
+        "lon": -73.4678695,
+        "name": "Brossard",
+        "place": "town"
+      },
+      {
+        "lat": 46.0239798,
+        "lon": -73.4419936,
+        "name": "Joliette",
+        "place": "city"
+      },
+      {
+        "lat": 46.04774,
+        "lon": -73.46283,
+        "name": "Saint-Charles-Borromée",
+        "place": "suburb"
+      },
+      {
+        "lat": 46.0138485,
+        "lon": -73.3508635,
+        "name": "Saint-Thomas",
+        "place": "village"
+      },
+      {
+        "lat": 45.204806,
+        "lon": -71.6811172,
+        "name": "Sainte-Edwidge-De-Clifton",
+        "place": "village"
+      },
+      {
+        "lat": 45.1334169,
+        "lon": -71.803479,
+        "name": "Coaticook",
+        "place": "town"
+      },
+      {
+        "lat": 45.5337174,
+        "lon": -71.8041195,
+        "name": "Stoke",
+        "place": "village"
+      },
+      {
+        "lat": 45.53377,
+        "lon": -72.04834,
+        "name": "Saint-François-Xavier-De-Brompton",
+        "place": "village"
+      },
+      {
+        "lat": 46.0995503,
+        "lon": -73.420983,
+        "name": "Notre-Dame De Lourdes",
+        "place": "village"
+      },
+      {
+        "lat": 45.9592895,
+        "lon": -73.2195681,
+        "name": "Lanoraie",
+        "place": "village"
+      },
+      {
+        "lat": 46.1700019,
+        "lon": -73.4246401,
+        "name": "Saint-Félix-De-Valois",
+        "place": "village"
+      },
+      {
+        "lat": 48.3925109,
+        "lon": -71.6787145,
+        "name": "Hébertville",
+        "place": "village"
+      },
+      {
+        "lat": 48.4082729,
+        "lon": -71.7837417,
+        "name": "Lac-À-La-Croix",
+        "place": "village"
+      },
+      {
+        "lat": 45.2496697,
+        "lon": -72.0475284,
+        "name": "Sainte Catherine De Hatley",
+        "place": "village"
+      },
+      {
+        "lat": 45.275611,
+        "lon": -71.972122,
+        "name": "North Hatley",
+        "place": "village"
+      },
+      {
+        "lat": 46.282428,
+        "lon": -72.830772,
+        "name": "Yamachiche",
+        "place": "village"
+      },
+      {
+        "lat": 46.394779,
+        "lon": -72.880211,
+        "name": "Saint-Barnabé",
+        "place": "village"
+      },
+      {
+        "lat": 46.505246,
+        "lon": -72.828712,
+        "name": "Saint-Boniface",
+        "place": "village"
+      },
+      {
+        "lat": 44.7366303,
+        "lon": -71.6327336,
+        "name": "Brunswick Springs",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.5292164,
+        "lon": -68.8786506,
+        "name": "West Seboeis",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.1031085,
+        "lon": -70.748957,
+        "name": "Grants Camps",
+        "place": "hamlet"
+      },
+      {
+        "lat": 46.3055974,
+        "lon": -68.194754,
+        "name": "Howe Brook",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.1500795,
+        "lon": -71.1794718,
+        "name": "Idlewilde",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.8696178,
+        "lon": -70.4000167,
+        "name": "Madrid Junction",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.8444489,
+        "lon": -71.392983,
+        "name": "Bungy",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.3792147,
+        "lon": -70.803407,
+        "name": "Coburn Gore",
+        "place": "hamlet"
+      },
+      {
+        "lat": 46.7902836,
+        "lon": -68.156728,
+        "name": "Washburn",
+        "place": "town"
+      },
+      {
+        "lat": 44.7765222,
+        "lon": -71.7531099,
+        "name": "Wenlock",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.6860586,
+        "lon": -71.5886176,
+        "name": "Masons",
+        "place": "hamlet"
+      },
+      {
+        "lat": 47.0829733,
+        "lon": -69.0427108,
+        "name": "Allagash",
+        "place": "village"
+      },
+      {
+        "lat": 44.9232788,
+        "lon": -72.7328176,
+        "name": "Samsonville",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.7800541,
+        "lon": -70.9222958,
+        "name": "Middle Dam",
+        "place": "hamlet"
+      },
+      {
+        "lat": 46.9702469,
+        "lon": -68.5719985,
+        "name": "Winterville Plantation",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.889371,
+        "lon": -72.4286266,
+        "name": "Westfield",
+        "place": "village"
+      },
+      {
+        "lat": 45.2508874,
+        "lon": -70.2231221,
+        "name": "Spring Lake Landing",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.6237632,
+        "lon": -70.2539833,
+        "name": "Jackman",
+        "place": "village"
+      },
+      {
+        "lat": 45.0588897,
+        "lon": -69.8822288,
+        "name": "Bingham",
+        "place": "town"
+      },
+      {
+        "lat": 46.648493,
+        "lon": -68.16124,
+        "name": "Chapman",
+        "place": "village"
+      },
+      {
+        "lat": 47.1294837,
+        "lon": -68.5972677,
+        "name": "Wallagrass",
+        "place": "village"
+      },
+      {
+        "lat": 45.071096,
+        "lon": -69.891586,
+        "name": "Moscow",
+        "place": "village"
+      },
+      {
+        "lat": 44.7711201,
+        "lon": -72.0548723,
+        "name": "Westmore",
+        "place": "village"
+      },
+      {
+        "lat": 44.7535161,
+        "lon": -71.6318364,
+        "name": "Bloomfield",
+        "place": "village"
+      },
+      {
+        "lat": 45.3800501,
+        "lon": -69.1158772,
+        "name": "Williamsburg",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.3072735,
+        "lon": -69.1230984,
+        "name": "Barnard Corner",
+        "place": "hamlet"
+      },
+      {
+        "lat": 46.3783788,
+        "lon": -68.281701,
+        "name": "Hawkins",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.9985416,
+        "lon": -71.7098576,
+        "name": "Averill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.1646526,
+        "lon": -69.3575228,
+        "name": "Sangerville",
+        "place": "village"
+      },
+      {
+        "lat": 46.2989727,
+        "lon": -68.1891187,
+        "name": "Little Canada",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.9693417,
+        "lon": -72.1888427,
+        "name": "Lindsay Beach",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.8232873,
+        "lon": -72.1463616,
+        "name": "Brownington Center",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.2300541,
+        "lon": -70.2845116,
+        "name": "Spring Lake",
+        "place": "hamlet"
+      },
+      {
+        "lat": 46.922343,
+        "lon": -68.5823684,
+        "name": "Mcnally",
+        "place": "hamlet"
+      },
+      {
+        "lat": 46.2569935,
+        "lon": -68.158083,
+        "name": "Weeksboro",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.0096336,
+        "lon": -71.7944363,
+        "name": "Norton",
+        "place": "village"
+      },
+      {
+        "lat": 47.042522,
+        "lon": -68.139954,
+        "name": "Stockholm",
+        "place": "village"
+      },
+      {
+        "lat": 45.0047792,
+        "lon": -69.7253315,
+        "name": "Moody Corner",
+        "place": "hamlet"
+      },
+      {
+        "lat": 47.1667074,
+        "lon": -68.2694827,
+        "name": "Sinclair",
+        "place": "village"
+      },
+      {
+        "lat": 44.8308815,
+        "lon": -72.1717681,
+        "name": "Brownington Village",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.933893,
+        "lon": -72.6519692,
+        "name": "South Richford",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.1036661,
+        "lon": -69.6931092,
+        "name": "Mayfield Corner",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.8031044,
+        "lon": -72.1303781,
+        "name": "Evansville",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.7811103,
+        "lon": -71.13821,
+        "name": "Errol",
+        "place": "village"
+      },
+      {
+        "lat": 44.9951037,
+        "lon": -71.5327724,
+        "name": "Stewartstown",
+        "place": "town"
+      },
+      {
+        "lat": 46.1486604,
+        "lon": -68.3594763,
+        "name": "Moro",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.183489,
+        "lon": -69.2276,
+        "name": "Dover-Foxcroft",
+        "place": "town"
+      },
+      {
+        "lat": 44.6840098,
+        "lon": -71.6349279,
+        "name": "Browns Mill",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.9978306,
+        "lon": -70.8367361,
+        "name": "Pleasant Island",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.6128272,
+        "lon": -68.8169831,
+        "name": "Perkins",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.2714408,
+        "lon": -69.1167087,
+        "name": "Sebec",
+        "place": "village"
+      },
+      {
+        "lat": 44.8153796,
+        "lon": -71.8811845,
+        "name": "Island Pond",
+        "place": "village"
+      },
+      {
+        "lat": 45.0085694,
+        "lon": -71.5072002,
+        "name": "Beecher Falls",
+        "place": "hamlet"
+      },
+      {
+        "lat": 47.1711474,
+        "lon": -68.8897643,
+        "name": "Saint Francis",
+        "place": "village"
+      },
+      {
+        "lat": 45.287448,
+        "lon": -69.501572,
+        "name": "Monson",
+        "place": "village"
+      },
+      {
+        "lat": 44.806199,
+        "lon": -70.271301,
+        "name": "Avon",
+        "place": "village"
+      },
+      {
+        "lat": 46.6075421,
+        "lon": -68.2433698,
+        "name": "Walker",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.0054895,
+        "lon": -72.1413648,
+        "name": "Beebe Plain",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.3075527,
+        "lon": -70.178399,
+        "name": "Hayden Landing",
+        "place": "hamlet"
+      },
+      {
+        "lat": 46.8442083,
+        "lon": -68.1972566,
+        "name": "Perham",
+        "place": "village"
+      },
+      {
+        "lat": 44.7553337,
+        "lon": -70.8456279,
+        "name": "South Arm",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.4811608,
+        "lon": -68.9389295,
+        "name": "Packards",
+        "place": "hamlet"
+      },
+      {
+        "lat": 47.3053186,
+        "lon": -68.1519797,
+        "name": "Grand Isle",
+        "place": "village"
+      },
+      {
+        "lat": 44.9961753,
+        "lon": -71.5382942,
+        "name": "Canaan",
+        "place": "town"
+      },
+      {
+        "lat": 44.9211676,
+        "lon": -70.4103449,
+        "name": "Perham Junction",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.8579842,
+        "lon": -71.5511382,
+        "name": "Lemington",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.167447,
+        "lon": -69.3855958,
+        "name": "Guilford",
+        "place": "town"
+      },
+      {
+        "lat": 45.2728298,
+        "lon": -69.2119893,
+        "name": "Bowerbank",
+        "place": "village"
+      },
+      {
+        "lat": 44.9962373,
+        "lon": -72.8315356,
+        "name": "East Franklin",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.5139352,
+        "lon": -70.6447965,
+        "name": "Lowelltown",
+        "place": "hamlet"
+      },
+      {
+        "lat": 46.0061132,
+        "lon": -68.3045341,
+        "name": "Crystal",
+        "place": "village"
+      },
+      {
+        "lat": 45.4142162,
+        "lon": -69.0997662,
+        "name": "Mooresville",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.9106121,
+        "lon": -70.3842337,
+        "name": "East Madrid",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.9092666,
+        "lon": -71.978968,
+        "name": "Morgan Center",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.3969946,
+        "lon": -70.0361746,
+        "name": "West Forks",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.898758,
+        "lon": -72.0597319,
+        "name": "West Charleston",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.9474125,
+        "lon": -72.1339323,
+        "name": "Derby Center",
+        "place": "village"
+      },
+      {
+        "lat": 45.0098742,
+        "lon": -72.586375,
+        "name": "East Richford",
+        "place": "hamlet"
+      },
+      {
+        "lat": 44.8034297,
+        "lon": -72.2791407,
+        "name": "Irasburg",
+        "place": "village"
+      },
+      {
+        "lat": 46.5289304,
+        "lon": -68.0761414,
+        "name": "Deadmans Corner",
+        "place": "hamlet"
+      },
+      {
+        "lat": 47.3551083,
+        "lon": -68.3209866,
+        "name": "Madawaska",
+        "place": "town"
+      },
+      {
+        "lat": 45.4356057,
+        "lon": -68.9589293,
+        "name": "Schoodic",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.1194988,
+        "lon": -69.6492194,
+        "name": "Kingsbury Plantation",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.5772697,
+        "lon": -70.4564605,
+        "name": "Holeb",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.6072669,
+        "lon": -69.7975591,
+        "name": "Somerset Junction",
+        "place": "hamlet"
+      },
+      {
+        "lat": 45.1336651,
+        "lon": -69.4331038,
+        "name": "Parkman",
+        "place": "village"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "CA:Vancouver": {
+    "fetched_at": 1786234346.385976,
+    "lat": 49.2827,
+    "lon": -123.1207,
+    "places": [
+      {
+        "lat": 49.2827,
+        "lon": -123.1207,
+        "name": "Vancouver",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "IE:Dublin": {
+    "fetched_at": 1786233905.6833313,
+    "lat": 53.3498,
+    "lon": -6.2603,
+    "places": [
+      {
+        "lat": 53.3498,
+        "lon": -6.2603,
+        "name": "Dublin",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "IE:Galway": {
+    "fetched_at": 1786233354.750486,
+    "lat": 53.2707,
+    "lon": -9.0568,
+    "places": [
+      {
+        "lat": 53.2707,
+        "lon": -9.0568,
+        "name": "Galway",
+        "place": "city"
+      },
+      {
+        "lat": 51.8928821,
+        "lon": -8.5053504,
+        "name": "Victoria Cross",
+        "place": "suburb"
+      },
+      {
+        "lat": 51.9124385,
+        "lon": -8.4328014,
+        "name": "Mayfield",
+        "place": "suburb"
+      },
+      {
+        "lat": 54.3589668,
+        "lon": -7.5774441,
+        "name": "Garvary",
+        "place": "hamlet"
+      },
+      {
+        "lat": 52.2497333,
+        "lon": -6.3401152,
+        "name": "Rosslare Harbour",
+        "place": "village"
+      },
+      {
+        "lat": 53.9441461,
+        "lon": -8.0952772,
+        "name": "Carrick-On-Shannon",
+        "place": "town"
+      },
+      {
+        "lat": 53.6753208,
+        "lon": -7.9954124,
+        "name": "Ballyleague",
+        "place": "village"
+      },
+      {
+        "lat": 53.3504097,
+        "lon": -7.8490283,
+        "name": "Ballinahown",
+        "place": "village"
+      },
+      {
+        "lat": 53.3926367,
+        "lon": -7.5814989,
+        "name": "Horseleap",
+        "place": "village"
+      },
+      {
+        "lat": 52.8945265,
+        "lon": -8.1368806,
+        "name": "Kilruane",
+        "place": "village"
+      },
+      {
+        "lat": 53.3055697,
+        "lon": -6.2368608,
+        "name": "Clonskeagh",
+        "place": "suburb"
+      },
+      {
+        "lat": 53.2582951,
+        "lon": -6.1971705,
+        "name": "Ballyogan",
+        "place": "village"
+      },
+      {
+        "lat": 53.6240883,
+        "lon": -9.2220833,
+        "name": "Ballinrobe",
+        "place": "town"
+      },
+      {
+        "lat": 52.2766382,
+        "lon": -9.8644109,
+        "name": "Fenit",
+        "place": "village"
+      },
+      {
+        "lat": 53.6454553,
+        "lon": -6.3486621,
+        "name": "Bellewstown",
+        "place": "village"
+      },
+      {
+        "lat": 54.1725,
+        "lon": -9.933611,
+        "name": "An Tsraith",
+        "place": "hamlet"
+      },
+      {
+        "lat": 53.0987292,
+        "lon": -9.6511659,
+        "name": "Iaráirne",
+        "place": "hamlet"
+      },
+      {
+        "lat": 53.2203302,
+        "lon": -6.9929735,
+        "name": "Rathangan",
+        "place": "village"
+      },
+      {
+        "lat": 52.1731687,
+        "lon": -7.399231,
+        "name": "Ballylaneen",
+        "place": "hamlet"
+      },
+      {
+        "lat": 54.9506706,
+        "lon": -8.3597405,
+        "name": "An Clochán Liath",
+        "place": "town"
+      },
+      {
+        "lat": 54.3407498,
+        "lon": -6.9593554,
+        "name": "Emyvale",
+        "place": "village"
+      },
+      {
+        "lat": 54.1444001,
+        "lon": -9.7427281,
+        "name": "Bangor Erris",
+        "place": "village"
+      },
+      {
+        "lat": 53.7790044,
+        "lon": -9.6354075,
+        "name": "Murrisk",
+        "place": "village"
+      },
+      {
+        "lat": 55.2649716,
+        "lon": -8.2272976,
+        "name": "An Baile Thiar",
+        "place": "village"
+      },
+      {
+        "lat": 52.798221,
+        "lon": -6.1540035,
+        "name": "Arklow",
+        "place": "town"
+      },
+      {
+        "lat": 53.0778755,
+        "lon": -7.8987379,
+        "name": "Crinkill",
+        "place": "village"
+      },
+      {
+        "lat": 54.22411,
+        "lon": -9.9872173,
+        "name": "Béal An Mhuirthead",
+        "place": "town"
+      },
+      {
+        "lat": 51.9142741,
+        "lon": -8.1700962,
+        "name": "Midleton",
+        "place": "town"
+      },
+      {
+        "lat": 52.199722,
+        "lon": -7.021389,
+        "name": "Rossduff",
+        "place": "hamlet"
+      },
+      {
+        "lat": 52.494444,
+        "lon": -9.0630561,
+        "name": "Ardagh",
+        "place": "village"
+      },
+      {
+        "lat": 52.1441412,
+        "lon": -8.3978625,
+        "name": "Ballyhooly",
+        "place": "village"
+      },
+      {
+        "lat": 52.5897916,
+        "lon": -6.4952889,
+        "name": "Ferns",
+        "place": "town"
+      },
+      {
+        "lat": 52.9243713,
+        "lon": -8.2765168,
+        "name": "Dromineer",
+        "place": "village"
+      },
+      {
+        "lat": 53.2410294,
+        "lon": -9.5893644,
+        "name": "Pointe",
+        "place": "hamlet"
+      },
+      {
+        "lat": 53.2360108,
+        "lon": -6.4541965,
+        "name": "Brittas",
+        "place": "village"
+      },
+      {
+        "lat": 53.2911753,
+        "lon": -6.6861147,
+        "name": "Clane",
+        "place": "town"
+      },
+      {
+        "lat": 52.7104544,
+        "lon": -8.8788366,
+        "name": "Shannon",
+        "place": "town"
+      },
+      {
+        "lat": 53.0160548,
+        "lon": -7.1499661,
+        "name": "Stradbally",
+        "place": "town"
+      },
+      {
+        "lat": 52.1061973,
+        "lon": -9.7867881,
+        "name": "Killorglin",
+        "place": "town"
+      },
+      {
+        "lat": 51.9883463,
+        "lon": -9.2967956,
+        "name": "Clonkeen",
+        "place": "village"
+      },
+      {
+        "lat": 53.7500237,
+        "lon": -7.1671207,
+        "name": "Millbrook",
+        "place": "hamlet"
+      },
+      {
+        "lat": 53.3866665,
+        "lon": -9.068852,
+        "name": "Eanach Dhúin",
+        "place": "village"
+      },
+      {
+        "lat": 52.3408811,
+        "lon": -8.8560775,
+        "name": "Milford",
+        "place": "village"
+      },
+      {
+        "lat": 54.1564692,
+        "lon": -8.0057339,
+        "name": "Ballinagleragh",
+        "place": "village"
+      },
+      {
+        "lat": 54.194722,
+        "lon": -7.704444,
+        "name": "Swanlinbar",
+        "place": "village"
+      },
+      {
+        "lat": 53.2885187,
+        "lon": -9.5529889,
+        "name": "Casla",
+        "place": "village"
+      },
+      {
+        "lat": 52.3847629,
+        "lon": -9.301549,
+        "name": "Abbeyfeale",
+        "place": "town"
+      },
+      {
+        "lat": 55.0413841,
+        "lon": -7.3791898,
+        "name": "Bridgend",
+        "place": "village"
+      },
+      {
+        "lat": 54.281667,
+        "lon": -9.799722,
+        "name": "Ros Dumhach",
+        "place": "village"
+      },
+      {
+        "lat": 51.666677,
+        "lon": -8.5955782,
+        "name": "Ballinspittle",
+        "place": "village"
+      },
+      {
+        "lat": 52.6551145,
+        "lon": -6.6520502,
+        "name": "Bunclody",
+        "place": "town"
+      },
+      {
+        "lat": 53.681944,
+        "lon": -6.239167,
+        "name": "Laytown",
+        "place": "village"
+      },
+      {
+        "lat": 52.4942655,
+        "lon": -9.1476629,
+        "name": "Carrigkerry",
+        "place": "village"
+      },
+      {
+        "lat": 52.5673986,
+        "lon": -9.8753652,
+        "name": "Kilbaha",
+        "place": "hamlet"
+      },
+      {
+        "lat": 52.043889,
+        "lon": -8.424722,
+        "name": "Glenville",
+        "place": "village"
+      },
+      {
+        "lat": 54.100278,
+        "lon": -10.070278,
+        "name": "An Fód Dubh",
+        "place": "hamlet"
+      },
+      {
+        "lat": 54.9811945,
+        "lon": -8.4225429,
+        "name": "Ailt An Chorráin",
+        "place": "village"
+      },
+      {
+        "lat": 54.7990639,
+        "lon": -7.7819496,
+        "name": "Ballybofey",
+        "place": "town"
+      },
+      {
+        "lat": 54.2969425,
+        "lon": -7.0151348,
+        "name": "Tydavnet",
+        "place": "village"
+      },
+      {
+        "lat": 54.0526883,
+        "lon": -7.8003268,
+        "name": "Ballinamore",
+        "place": "town"
+      },
+      {
+        "lat": 53.2507957,
+        "lon": -6.8395794,
+        "name": "Kilmeague",
+        "place": "village"
+      },
+      {
+        "lat": 54.9517941,
+        "lon": -7.7354368,
+        "name": "Letterkenny",
+        "place": "town"
+      },
+      {
+        "lat": 52.5459637,
+        "lon": -9.4750396,
+        "name": "Ballylongford",
+        "place": "village"
+      },
+      {
+        "lat": 53.9168576,
+        "lon": -6.9707125,
+        "name": "Bailieborough",
+        "place": "town"
+      },
+      {
+        "lat": 53.9991721,
+        "lon": -8.1944669,
+        "name": "Knockvicar",
+        "place": "hamlet"
+      },
+      {
+        "lat": 55.0583559,
+        "lon": -7.4051055,
+        "name": "Burnfoot",
+        "place": "village"
+      },
+      {
+        "lat": 53.4420544,
+        "lon": -7.2441662,
+        "name": "Milltownpass",
+        "place": "village"
+      },
+      {
+        "lat": 52.8599041,
+        "lon": -7.6779118,
+        "name": "Errill",
+        "place": "village"
+      },
+      {
+        "lat": 52.23317,
+        "lon": -8.6704936,
+        "name": "Buttevant",
+        "place": "town"
+      },
+      {
+        "lat": 53.950278,
+        "lon": -8.6925,
+        "name": "Carracastle",
+        "place": "village"
+      },
+      {
+        "lat": 53.8573843,
+        "lon": -7.9206135,
+        "name": "Dromod",
+        "place": "village"
+      },
+      {
+        "lat": 53.7692495,
+        "lon": -7.1625368,
+        "name": "Oldcastle",
+        "place": "town"
+      },
+      {
+        "lat": 51.8600728,
+        "lon": -8.0027265,
+        "name": "Garryvoe",
+        "place": "village"
+      },
+      {
+        "lat": 52.805536,
+        "lon": -8.6338474,
+        "name": "Broadford",
+        "place": "village"
+      },
+      {
+        "lat": 52.3837871,
+        "lon": -6.5785299,
+        "name": "Killurin",
+        "place": "village"
+      },
+      {
+        "lat": 53.0669917,
+        "lon": -8.8195236,
+        "name": "Gort",
+        "place": "town"
+      },
+      {
+        "lat": 52.695444,
+        "lon": -6.6483943,
+        "name": "Clonegal",
+        "place": "village"
+      },
+      {
+        "lat": 53.897051,
+        "lon": -8.3022343,
+        "name": "Ballinameen",
+        "place": "village"
+      },
+      {
+        "lat": 52.8923041,
+        "lon": -7.0195019,
+        "name": "Arles",
+        "place": "village"
+      },
+      {
+        "lat": 54.1225169,
+        "lon": -7.2486101,
+        "name": "Scotshouse",
+        "place": "village"
+      },
+      {
+        "lat": 53.2660341,
+        "lon": -7.3379011,
+        "name": "Ballinagar",
+        "place": "village"
+      },
+      {
+        "lat": 52.1629541,
+        "lon": -10.3917978,
+        "name": "Baile An Éanaigh",
+        "place": "hamlet"
+      },
+      {
+        "lat": 53.15675,
+        "lon": -8.8059911,
+        "name": "Ardrahan",
+        "place": "village"
+      },
+      {
+        "lat": 52.9144763,
+        "lon": -7.3482153,
+        "name": "Abbeyleix",
+        "place": "town"
+      },
+      {
+        "lat": 52.4516236,
+        "lon": -7.2516823,
+        "name": "Hugginstown",
+        "place": "village"
+      },
+      {
+        "lat": 52.986111,
+        "lon": -8.701667,
+        "name": "Killanena",
+        "place": "hamlet"
+      },
+      {
+        "lat": 54.5494414,
+        "lon": -7.8321522,
+        "name": "Pettigo",
+        "place": "village"
+      },
+      {
+        "lat": 53.6779163,
+        "lon": -8.5786917,
+        "name": "Williamstown",
+        "place": "village"
+      },
+      {
+        "lat": 52.9480957,
+        "lon": -7.3051573,
+        "name": "Ballyroan",
+        "place": "village"
+      },
+      {
+        "lat": 54.3172593,
+        "lon": -6.8950858,
+        "name": "Glaslough",
+        "place": "village"
+      },
+      {
+        "lat": 54.2699517,
+        "lon": -8.5942985,
+        "name": "Strandhill",
+        "place": "village"
+      },
+      {
+        "lat": 53.5617282,
+        "lon": -7.7617266,
+        "name": "Ballymahon",
+        "place": "town"
+      },
+      {
+        "lat": 53.9195878,
+        "lon": -6.547758,
+        "name": "Tallanstown",
+        "place": "village"
+      },
+      {
+        "lat": 52.8807968,
+        "lon": -6.6944791,
+        "name": "Rathvilly",
+        "place": "village"
+      },
+      {
+        "lat": 52.1685671,
+        "lon": -9.7011826,
+        "name": "Castlemaine",
+        "place": "town"
+      },
+      {
+        "lat": 52.3729473,
+        "lon": -6.5832293,
+        "name": "Glynn",
+        "place": "village"
+      },
+      {
+        "lat": 53.8367877,
+        "lon": -9.1798204,
+        "name": "Manulla",
+        "place": "village"
+      },
+      {
+        "lat": 53.0223442,
+        "lon": -6.6130514,
+        "name": "Donard",
+        "place": "village"
+      },
+      {
+        "lat": 54.3306592,
+        "lon": -9.7878908,
+        "name": "Port An Chlóidh",
+        "place": "hamlet"
+      },
+      {
+        "lat": 52.7008367,
+        "lon": -9.4208264,
+        "name": "Cooraclare",
+        "place": "village"
+      },
+      {
+        "lat": 53.7142143,
+        "lon": -7.0218205,
+        "name": "Crossakeel",
+        "place": "village"
+      },
+      {
+        "lat": 53.6324953,
+        "lon": -7.6858935,
+        "name": "Carrickboy",
+        "place": "hamlet"
+      },
+      {
+        "lat": 52.7309073,
+        "lon": -9.5297119,
+        "name": "Doonbeg",
+        "place": "village"
+      },
+      {
+        "lat": 52.1804121,
+        "lon": -9.4070006,
+        "name": "Scartaglen",
+        "place": "village"
+      },
+      {
+        "lat": 54.0173966,
+        "lon": -7.7274962,
+        "name": "Drumlea",
+        "place": "hamlet"
+      },
+      {
+        "lat": 53.9013669,
+        "lon": -8.5788648,
+        "name": "Ballaghaderreen",
+        "place": "town"
+      },
+      {
+        "lat": 53.9905176,
+        "lon": -8.065392,
+        "name": "Leitrim",
+        "place": "village"
+      },
+      {
+        "lat": 53.866667,
+        "lon": -7.716667,
+        "name": "Ballinamuck",
+        "place": "village"
+      },
+      {
+        "lat": 53.525822,
+        "lon": -7.341304,
+        "name": "Mullingar",
+        "place": "town"
+      },
+      {
+        "lat": 53.6285486,
+        "lon": -6.2622712,
+        "name": "Stamullen",
+        "place": "village"
+      },
+      {
+        "lat": 52.2211436,
+        "lon": -6.9335442,
+        "name": "Duncannon",
+        "place": "village"
+      },
+      {
+        "lat": 54.1209979,
+        "lon": -7.6757968,
+        "name": "Bawnboy",
+        "place": "village"
+      },
+      {
+        "lat": 52.4755288,
+        "lon": -8.5474944,
+        "name": "Bruff",
+        "place": "village"
+      },
+      {
+        "lat": 53.3098292,
+        "lon": -6.2832703,
+        "name": "Terenure",
+        "place": "suburb"
+      },
+      {
+        "lat": 52.8004132,
+        "lon": -9.4148971,
+        "name": "Mullagh",
+        "place": "village"
+      },
+      {
+        "lat": 53.2563562,
+        "lon": -9.5850082,
+        "name": "An Caorán Mór",
+        "place": "hamlet"
+      },
+      {
+        "lat": 54.208056,
+        "lon": -9.859167,
+        "name": "Poll An Ghearráin",
+        "place": "hamlet"
+      },
+      {
+        "lat": 51.8420889,
+        "lon": -9.1269796,
+        "name": "Inchigeelagh",
+        "place": "village"
+      },
+      {
+        "lat": 52.8249081,
+        "lon": -7.8717547,
+        "name": "Killea",
+        "place": "hamlet"
+      },
+      {
+        "lat": 52.9611523,
+        "lon": -7.2017883,
+        "name": "Timahoe",
+        "place": "village"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "IE:Kilkenny": {
+    "fetched_at": 1786234283.8108096,
+    "lat": 52.6541,
+    "lon": -7.2448,
+    "places": [
+      {
+        "lat": 52.6541,
+        "lon": -7.2448,
+        "name": "Kilkenny",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "IE:Limerick": {
+    "fetched_at": 1786234115.9771159,
+    "lat": 52.6638,
+    "lon": -8.6267,
+    "places": [
+      {
+        "lat": 52.6638,
+        "lon": -8.6267,
+        "name": "Limerick",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "IE:Waterford": {
+    "fetched_at": 1786234198.0529234,
+    "lat": 52.2593,
+    "lon": -7.1101,
+    "places": [
+      {
+        "lat": 52.2593,
+        "lon": -7.1101,
+        "name": "Waterford",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  }
+}

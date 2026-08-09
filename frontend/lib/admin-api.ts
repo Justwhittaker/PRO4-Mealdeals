@@ -100,8 +100,8 @@ export type AdminDeal = {
   translations?: { title: string; description: string; language_code?: string }[];
 };
 
-export async function adminListMerchants(q?: string) {
-  const qs = new URLSearchParams({ limit: "200" });
+export async function adminListMerchants(q?: string, limit = 5000) {
+  const qs = new URLSearchParams({ limit: String(limit) });
   if (q?.trim()) qs.set("q", q.trim());
   return adminFetch<{ count: number; results: AdminMerchant[] }>(
     `/api/v1/admin/merchants?${qs}`,
@@ -132,8 +132,8 @@ export async function adminListMerchantDeals(merchantId: string) {
   );
 }
 
-export async function adminListDeals(q?: string) {
-  const qs = new URLSearchParams({ limit: "200" });
+export async function adminListDeals(q?: string, limit = 5000) {
+  const qs = new URLSearchParams({ limit: String(limit) });
   if (q?.trim()) qs.set("q", q.trim());
   return adminFetch<AdminDeal[]>(`/api/v1/admin/deals?${qs}`);
 }

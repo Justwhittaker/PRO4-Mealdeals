@@ -9,8 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requestPasswordReset } from "@/lib/api";
+import { TERMS_ACCEPT_COOKIE, TERMS_VERSION } from "@/lib/legal-config";
 
 type AuthMode = "signin" | "register" | "forgot";
+
+function setTermsAcceptCookie(version: string) {
+  const maxAge = 60 * 30; // 30 minutes — enough for OAuth round-trip
+  document.cookie = `${TERMS_ACCEPT_COOKIE}=${encodeURIComponent(version)}; path=/; max-age=${maxAge}; samesite=lax`;
+}
 
 export function DashboardSignIn() {
   const router = useRouter();
@@ -26,10 +32,14 @@ export function DashboardSignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [googleReady, setGoogleReady] = useState<boolean | null>(null);
+
+  const isRegister = mode === "register";
+  const isForgot = mode === "forgot";
 
   useEffect(() => {
     void getProviders().then((providers) => {
@@ -60,6 +70,7 @@ export function DashboardSignIn() {
     setError(null);
     setInfo(null);
     setConfirmPassword("");
+    setAcceptedTerms(false);
     if (next !== "forgot") {
       setPassword("");
     }
@@ -86,6 +97,14 @@ export function DashboardSignIn() {
     setError(null);
     setInfo(null);
 
+    if (mode === "register" && !acceptedTerms) {
+      setError(
+        "Please confirm you have read and agree to the Terms and acknowledge the Privacy Notice.",
+      );
+      setLoading(false);
+      return;
+    }
+
     if (mode === "register" && password !== confirmPassword) {
       setError("Passwords do not match.");
       setLoading(false);
@@ -101,6 +120,12 @@ export function DashboardSignIn() {
     const res = await signIn("credentials", {
       email,
       password,
+      ...(mode === "register"
+        ? {
+            termsAccepted: "true",
+            termsVersion: TERMS_VERSION,
+          }
+        : {}),
       redirect: false,
       callbackUrl: "/dashboard",
     });
@@ -129,12 +154,18 @@ export function DashboardSignIn() {
       );
       return;
     }
+    if (isRegister && !acceptedTerms) {
+      setError(
+        "Please confirm you have read and agree to the Terms and acknowledge the Privacy Notice before continuing with Google.",
+      );
+      return;
+    }
+    if (isRegister) {
+      setTermsAcceptCookie(TERMS_VERSION);
+    }
     setLoading(true);
     await signIn("google", { callbackUrl: "/dashboard" });
   }
-
-  const isRegister = mode === "register";
-  const isForgot = mode === "forgot";
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-3 py-10 text-center sm:px-6 sm:py-16 sm:text-left">
@@ -263,8 +294,60 @@ export function DashboardSignIn() {
                   </p>
                 </div>
               ) : null}
+              {isRegister ? (
+                <div className="space-y-3 rounded-md border border-charcoal-700 bg-charcoal-950/40 px-3 py-3">
+                  <label className="flex cursor-pointer items-start gap-3 text-left text-sm text-charcoal-200">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 shrink-0 rounded border-charcoal-600"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      required
+                      aria-required="true"
+                    />
+                    <span>
+                      I have read and agree to the Dine A Deal{" "}
+                      <Link
+                        href="/terms"
+                        className="font-medium text-burgundy-500 underline-offset-2 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Terms and Conditions
+                      </Link>{" "}
+                      and acknowledge the{" "}
+                      <Link
+                        href="/privacy"
+                        className="font-medium text-burgundy-500 underline-offset-2 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Privacy Notice
+                      </Link>
+                      .
+                    </span>
+                  </label>
+                  <p className="text-xs text-charcoal-500">
+                    This agreement is not consent for newsletter, third-party
+                    marketing, selling contact details, or promotional texts.
+                    Those choices are collected separately where offered
+                    (for example on the{" "}
+                    <Link
+                      href="/newsletter"
+                      className="text-burgundy-500 underline-offset-2 hover:underline"
+                    >
+                      newsletter
+                    </Link>{" "}
+                    form).
+                  </p>
+                </div>
+              ) : null}
               {error ? <p className="text-sm text-red-500">{error}</p> : null}
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || (isRegister && !acceptedTerms)}
+              >
                 {loading
                   ? isRegister
                     ? "Creating account…"
@@ -277,7 +360,11 @@ export function DashboardSignIn() {
                 type="button"
                 variant="outline"
                 className="w-full"
-                disabled={loading || googleReady === false}
+                disabled={
+                  loading ||
+                  googleReady === false ||
+                  (isRegister && !acceptedTerms)
+                }
                 onClick={() => void onGoogle()}
               >
                 Continue with Google

@@ -9,6 +9,7 @@ from app.models.location import Location
 from app.models.marketing_contact import MarketingContact
 from app.models.merchant import Merchant, MerchantCategory, TierLevel
 from app.models.newsletter import NewsletterSubscriber
+from app.models.terms_acceptance import TermsAcceptance
 from app.models.translation import DealTranslation
 from app.models.trial_claim import TrialClaim
 
@@ -25,6 +26,7 @@ __all__ = [
     "Merchant",
     "MerchantCategory",
     "NewsletterSubscriber",
+    "TermsAcceptance",
     "TierLevel",
     "TrialClaim",
 ]

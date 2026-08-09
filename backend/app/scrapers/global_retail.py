@@ -12,9 +12,10 @@ from urllib.parse import quote_plus, urljoin, urlparse
 from app.scrapers.base import BaseScraper, ScrapedDeal
 from app.scrapers.categories import categorize_venue
 from app.scrapers.deal_placeholders import resolve_dish_placeholder
+from app.scrapers.local_discovery import discover_local_venues, merge_local_sources
+from app.scrapers.hub_radius import hub_default_locality
 from app.scrapers.markets import (
     COUNTRY_ALIASES,
-    CURRENCY_PRICE_SCALE,
     DEFAULT_CITY,
     DEFAULT_CURRENCY,
     MARKET_CITIES,
@@ -38,18 +39,19 @@ __all__ = [
     "iter_market_areas",
 ]
 
-# Curated lunch-style templates used when live HTML has no parseable offers.
+# Curated offer-style templates when live HTML has no parseable offer copy.
+# NEVER invent numeric prices — leave priced=False so UI hides money and shows
+# the deal type (happy hour, BOGO, lunch special, etc.).
 # Image fallbacks are dish-aware via deal_placeholders (not per-merchant stock).
 
-_AREA_DEAL_TEMPLATES: list[dict[str, str]] = [
+_AREA_DEAL_TEMPLATES: list[dict[str, object]] = [
     {
         "title": "{merchant} Lunch Meal Deal — {city}",
         "description": (
-            "Main + side + drink combo spotted for {city}. "
-            "Prices may vary by store."
+            "Main + side + drink combo offer for {city}. "
+            "Confirm today's inclusions and price in-store or on the merchant site."
         ),
-        "original": "14.50",
-        "deal": "7.50",
+        "priced": False,
         "main": "Sandwich or wrap",
         "side": "Crisps or fruit",
         "drink": "Soft drink",
@@ -58,24 +60,157 @@ _AREA_DEAL_TEMPLATES: list[dict[str, str]] = [
         "title": "{merchant} Hot Meal Offer — {city}",
         "description": (
             "Hot lunch special near {city}. "
-            "Verify in-store before visiting."
+            "Verify offer details before visiting."
         ),
-        "original": "16.00",
-        "deal": "8.99",
+        "priced": False,
         "main": "Hot main",
         "side": "Side salad",
         "drink": "Drink",
     },
     {
         "title": "{merchant} Breakfast Bundle — {city}",
-        "description": "Breakfast meal deal for {city} shoppers.",
-        "original": "11.00",
-        "deal": "5.50",
+        "description": (
+            "Breakfast meal deal for {city}. "
+            "See merchant site for current bundle contents."
+        ),
+        "priced": False,
         "main": "Breakfast roll",
         "side": "Pastry",
         "drink": "Coffee or tea",
     },
 ]
+
+_BAR_PUB_TEMPLATES: list[dict[str, object]] = [
+    {
+        "title": "{merchant} Happy Hour — {city}",
+        "description": (
+            "Time-limited drink specials near {city} "
+            "(e.g. all cocktails half price in early evening). "
+            "Check the venue for today's hours and included drinks."
+        ),
+        "priced": False,
+        "main": "Drink special",
+        "side": "Bar snack",
+        "drink": "Happy hour pour",
+    },
+    {
+        "title": "{merchant} Evening Drink Specials — {city}",
+        "description": (
+            "Pub and bar promotions for {city}: 2-for-1, half-price pours, "
+            "or selected cocktails on special. Confirm times on arrival."
+        ),
+        "priced": False,
+        "main": "Selected drinks",
+        "side": "Sharer plate",
+        "drink": "House special",
+    },
+]
+
+_TAKEAWAY_TEMPLATES: list[dict[str, object]] = [
+    {
+        "title": "{merchant} Takeaway Deal — {city}",
+        "description": (
+            "Chain takeaway promotion for {city} — often buy-one-get-one-free, "
+            "meal deals, or limited-time pizza offers. See merchant deals page "
+            "for the current offer type (price may vary by store)."
+        ),
+        "priced": False,
+        "main": "Pizza or meal",
+        "side": "Sides",
+        "drink": "Soft drink",
+    },
+    {
+        "title": "{merchant} BOGO / Meal Offer — {city}",
+        "description": (
+            "Buy-one-get-one or multi-buy takeaway special serving {city}. "
+            "Offer is described by type rather than a fixed listed price."
+        ),
+        "priced": False,
+        "main": "Main takeaway",
+        "side": "Side",
+        "drink": "Drink",
+    },
+]
+
+_GROCER_TEMPLATES: list[dict[str, object]] = [
+    {
+        "title": "{merchant} Spend & Save — {city}",
+        "description": (
+            "Grocery voucher for {city}: spend a set amount on your shop and "
+            "get money off at checkout (e.g. spend €50 get €10 off). "
+            "Confirm the current threshold and voucher on the merchant offers page."
+        ),
+        "priced": False,
+        "main": "Grocery shop",
+        "side": "Store voucher",
+        "drink": "Checkout saving",
+    },
+    {
+        "title": "{merchant} Shop Discount — {city}",
+        "description": (
+            "Percentage or money-off promotion on your {city} grocery shop "
+            "(e.g. 20% off selected lines, or €10 off when you spend €50). "
+            "Offer type shown instead of a single meal price."
+        ),
+        "priced": False,
+        "main": "Basket special",
+        "side": "Multibuy",
+        "drink": "Checkout discount",
+    },
+]
+
+_OFFER_SNIPPET_RE = re.compile(
+    r"(?is)("
+    r"happy\s*hours?\b.{0,100}"
+    r"|all\s+cocktails?\s+half\s+price.{0,80}"
+    r"|half\s+price\s+(?:on\s+)?(?:all\s+)?(?:cocktails?|drinks?|pints?|beer).{0,80}"
+    r"|buy\s+one\s+get\s+one(?:\s+free)?.{0,80}"
+    r"|\bbogo\b.{0,60}"
+    r"|2\s*[- ]?for\s*[- ]?1\b.{0,60}"
+    r"|two\s+for\s+(?:the\s+price\s+of\s+)?one.{0,60}"
+    # Grocery spend-threshold / money-off / % off the shop
+    # e.g. Spend €50 and get €10 off / spend 50 euro get 10 euro off
+    r"|spend\s+(?:€|£|\$)?\s?\d+[\d.,]*\s*(?:euros?|eur|gbp|usd|pounds?)?\s*"
+    r"(?:(?:and|&|to)\s+)?(?:get|receive|save|enjoy)\s+"
+    r"(?:€|£|\$)?\s?\d+[\d.,]*\s*(?:euros?|eur|gbp|usd|pounds?)?\s*"
+    r"(?:%\s*)?off.{0,50}"
+    r"|(?:get|save|receive)\s+(?:€|£|\$)?\s?\d+[\d.,]*\s*"
+    r"(?:euros?|eur|pounds?)?\s*off\s+(?:when\s+you\s+)?spend\s+"
+    r"(?:€|£|\$)?\s?\d+[\d.,]*\s*(?:euros?|eur|pounds?)?.{0,40}"
+    r"|(?:€|£|\$)\s?\d+[\d.,]*\s*off\s+(?:when\s+you\s+)?"
+    r"(?:spend\s+(?:€|£|\$)?\s?\d+[\d.,]*|(?:your\s+)?(?:shop|basket|grocery)).{0,40}"
+    r"|\d+\s*%\s*off(?:\s+your\s+(?:shop|basket|grocery|entire\s+shop))?.{0,50}"
+    r"|money\s+off\s+(?:your\s+)?(?:shop|basket|grocery).{0,50}"
+    r"|voucher\s+(?:worth\s+)?(?:€|£|\$)?\s?\d+[\d.,]*.{0,40}"
+    r")"
+)
+
+_THRESHOLD_OFFER_RE = re.compile(
+    r"(?i)spend|when you spend|%\s*off|off your (?:shop|basket|grocery)|"
+    r"money off|voucher|save \d|get \d.+off"
+)
+
+
+def _templates_for_category(venue_category: str) -> list[dict[str, object]]:
+    if venue_category == "Clubs, Bars & Pubs":
+        return _BAR_PUB_TEMPLATES
+    if venue_category == "Food Trucks & Takeaway's":
+        return _TAKEAWAY_TEMPLATES
+    if venue_category == "Deli's and Grocers":
+        return _GROCER_TEMPLATES
+    return _AREA_DEAL_TEMPLATES
+
+
+def _is_threshold_or_percent_offer(snippet: str) -> bool:
+    """True when copy is spend/get-off or % off — not a unit meal price."""
+    return bool(_THRESHOLD_OFFER_RE.search(snippet or ""))
+
+
+def _clean_offer_snippet(raw: str) -> str:
+    text = re.sub(r"\s+", " ", raw).strip(" .-•|")
+    if len(text) > 220:
+        text = text[:217].rstrip() + "..."
+    return text
 
 
 class GlobalRetailScraper(BaseScraper):
@@ -103,41 +238,55 @@ class GlobalRetailScraper(BaseScraper):
         city: str | None = None,
     ) -> list[ScrapedDeal]:
         country = self._normalize_country(country_code)
-        sources = MARKET_SOURCES.get(country, [])
-        if not sources:
-            logger.info("No market sources configured for %s", country)
-            return []
-
+        sources = list(MARKET_SOURCES.get(country, []))
         currency = DEFAULT_CURRENCY.get(country, "USD")
         city_name = (city or DEFAULT_CITY.get(country, "Unknown")).replace("-", " ").title()
+
+        # Mom-and-pop / independent venues for this city (OSM + cache), all
+        # hospitality categories — not limited to national chains.
+        try:
+            local_sources = await discover_local_venues(country, city_name)
+            sources = merge_local_sources(sources, local_sources)
+        except Exception as exc:  # noqa: BLE001 — discovery must not fail scrape
+            logger.info("Local venue discovery failed for %s / %s: %s", city_name, country, exc)
+
+        if not sources:
+            logger.info("No market sources configured for %s / %s", country, city_name)
+            return []
+
         deals: list[ScrapedDeal] = []
 
         for index, source in enumerate(sources):
             live = await self._try_live_parse(source["url"], source["merchant"])
-            template = _AREA_DEAL_TEMPLATES[index % len(_AREA_DEAL_TEMPLATES)]
+            venue_category = str(
+                source.get("venue_category") or categorize_venue(source["merchant"])
+            )
+            templates = _templates_for_category(venue_category)
+            template = templates[index % len(templates)]
 
-            title = live.get("title") or template["title"].format(
+            title = live.get("title") or str(template["title"]).format(
                 merchant=source["merchant"], city=city_name
             )
-            description = live.get("description") or template["description"].format(
-                city=city_name
-            )
-            scale = Decimal(str(CURRENCY_PRICE_SCALE.get(currency, 1.0)))
-            if "original_price" in live:
-                original = Decimal(str(live["original_price"]))
-            else:
-                original = (Decimal(template["original"]) * scale).quantize(
-                    Decimal("0.01")
-                )
+            description = live.get("description") or str(
+                template["description"]
+            ).format(city=city_name)
+            if live.get("offer_snippet") and not live.get("description"):
+                description = str(live["offer_snippet"])
+
+            # Never invent prices. 0/0 means "hide pricing; show deal copy".
             if "deal_price" in live:
                 deal_price = Decimal(str(live["deal_price"]))
+                if "original_price" in live:
+                    original = Decimal(str(live["original_price"]))
+                else:
+                    # Single listed price — show it, no fabricated "was" price.
+                    original = deal_price
             else:
-                deal_price = (Decimal(template["deal"]) * scale).quantize(
-                    Decimal("0.01")
-                )
+                deal_price = Decimal("0")
+                original = Decimal("0")
+
             # FORCE photo order:
             # 1) deal/offer page  2) site landing/menu  3) dish-category generic
-            venue_category = categorize_venue(source["merchant"])
             image_url = live.get("image_url")
             if not image_url:
                 item_names = [
@@ -161,9 +310,13 @@ class GlobalRetailScraper(BaseScraper):
                 )
             logo_url = live.get("logo_url")
 
-            # Unique URL per city so the same chain can appear in multiple areas
+            area_local = str(
+                source.get("area_local") or hub_default_locality(city_name)
+            )
+            # Unique URL per hub + nested town so the same chain can appear in multiple areas
             raw_url = (
                 f"{source['url']}?city={quote_plus(city_name)}"
+                f"&locality={quote_plus(area_local)}"
                 f"&country={country}&utm_source=mealdeals_scraper"
             )
 
@@ -174,38 +327,39 @@ class GlobalRetailScraper(BaseScraper):
                 str(live["about_blurb"]) if live.get("about_blurb") else None
             )
 
+            item_price = (
+                str(deal_price.quantize(Decimal("0.01")))
+                if deal_price > 0
+                else "0"
+            )
             deals.append(
                 ScrapedDeal(
                     merchant_name=source["merchant"],
-                    title=title[:255],
-                    description=description,
+                    title=str(title)[:255],
+                    description=str(description),
                     raw_url=raw_url,
                     original_price=original,
                     deal_price=deal_price,
                     currency_code=currency,
                     country_code=country,
                     city=city_name,
+                    area_hub=city_name,
+                    area_local=area_local,
                     items=[
                         {
                             "category": "main",
-                            "item_name": template["main"],
-                            "individual_price": str(
-                                (original * Decimal("0.55")).quantize(Decimal("0.01"))
-                            ),
+                            "item_name": str(template["main"]),
+                            "individual_price": item_price,
                         },
                         {
                             "category": "side",
-                            "item_name": template["side"],
-                            "individual_price": str(
-                                (original * Decimal("0.25")).quantize(Decimal("0.01"))
-                            ),
+                            "item_name": str(template["side"]),
+                            "individual_price": "0",
                         },
                         {
                             "category": "drink",
-                            "item_name": template["drink"],
-                            "individual_price": str(
-                                (original * Decimal("0.20")).quantize(Decimal("0.01"))
-                            ),
+                            "item_name": str(template["drink"]),
+                            "individual_price": "0",
                         },
                     ],
                     language_code="en",
@@ -268,26 +422,39 @@ class GlobalRetailScraper(BaseScraper):
             soup, page_url=url, merchant=merchant, description=description
         )
 
-        prices = self._extract_prices(soup.get_text(" ", strip=True)[:8000])
+        page_text = soup.get_text(" ", strip=True)[:12000]
+        prices = self._extract_prices(page_text)
+        offer_snippet = self._extract_offer_snippet(page_text)
         result: dict[str, Decimal | str] = {}
         if title:
             result["title"] = f"{merchant}: {title}"[:255]
         if description:
             result["description"] = description[:1000]
+        elif offer_snippet:
+            result["description"] = offer_snippet[:1000]
+            result["title"] = result.get("title") or f"{merchant}: {offer_snippet}"[:255]
+        if offer_snippet:
+            result["offer_snippet"] = offer_snippet[:1000]
         if image_url:
             result["image_url"] = image_url
         if logo_url:
             result["logo_url"] = logo_url
         result.update(contact)
-        if len(prices) >= 2:
+        # Only persist prices actually found on the page — never invent a
+        # comparison / "was" price (e.g. 1.6x) when one amount is missing.
+        # Spend €50 / get €10 off (and % off shop) are offer *types*, not a
+        # meal deal unit price — keep money hidden and state the voucher copy.
+        threshold_offer = bool(
+            offer_snippet and _is_threshold_or_percent_offer(str(offer_snippet))
+        )
+        if threshold_offer:
+            pass
+        elif len(prices) >= 2:
             prices_sorted = sorted(prices)
             result["deal_price"] = prices_sorted[0]
             result["original_price"] = prices_sorted[-1]
         elif len(prices) == 1:
             result["deal_price"] = prices[0]
-            result["original_price"] = (prices[0] * Decimal("1.6")).quantize(
-                Decimal("0.01")
-            )
         self._live_cache[url] = result
         return result
 
@@ -651,6 +818,13 @@ class GlobalRetailScraper(BaseScraper):
             if absolute:
                 return absolute
         return None
+
+    def _extract_offer_snippet(self, text: str) -> str | None:
+        """Pull happy-hour / BOGO / half-price style copy when present."""
+        match = _OFFER_SNIPPET_RE.search(text or "")
+        if not match:
+            return None
+        return _clean_offer_snippet(match.group(1))
 
     def _extract_prices(self, text: str) -> list[Decimal]:
         pattern = re.compile(

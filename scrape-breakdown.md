@@ -1,3 +1,7 @@
+# Scrape breakdown (country → city → category)
+
+Generated from live report · 3921 deals · 91 markets · 383 areas
+
 | Country | City | Category | Deals |
 |---------|------|----------|-------|
 | AE | Abu Dhabi | Clubs, Bars & Pubs | 1 |
@@ -594,7 +598,7 @@
 | GB | London | Deli's and Grocers | 2 |
 | GB | London | Food Trucks & Takeaway's | 1 |
 | GB | London | Hotels, Resorts & B&B's | 2 |
-| GB | London | Restaurants, Cafe's & Bistro's | 6 |
+| GB | London | Restaurants, Cafe's & Bistro's | 4 |
 | GB | London | Wine Farms & Entertainment Venues | 3 |
 | GB | Manchester | Clubs, Bars & Pubs | 3 |
 | GB | Manchester | Deli's and Grocers | 2 |

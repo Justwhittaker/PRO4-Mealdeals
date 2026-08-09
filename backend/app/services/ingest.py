@@ -280,18 +280,27 @@ def _coords_for(country: str, city: str) -> tuple[float, float]:
     return (20.0 + (seed % 50), -10.0 + (seed % 40))
 
 
-def get_or_create_location(session: Session, country_code: str, city: str) -> Location:
+def get_or_create_location(
+    session: Session,
+    country_code: str,
+    city: str,
+    *,
+    area_local: str | None = None,
+) -> Location:
     country = normalize_country(country_code)
     city_name = normalize_city(city)
-    # Prefer the canonical city name; tolerate duplicate rows from earlier scrapes.
+    locality = (area_local or "").strip() or None
+    # Prefer the canonical hub + locality; tolerate duplicate rows from earlier scrapes.
+    stmt = select(Location).where(
+        Location.country_code == country,
+        Location.city.ilike(city_name),
+    )
+    if locality:
+        stmt = stmt.where(Location.area_local.ilike(locality))
+    else:
+        stmt = stmt.where(Location.area_local.is_(None))
     existing = session.execute(
-        select(Location)
-        .where(
-            Location.country_code == country,
-            Location.city.ilike(city_name),
-        )
-        .order_by(Location.city.asc(), Location.id.asc())
-        .limit(1)
+        stmt.order_by(Location.city.asc(), Location.id.asc()).limit(1)
     ).scalar_one_or_none()
     if existing:
         return existing
@@ -301,6 +310,7 @@ def get_or_create_location(session: Session, country_code: str, city: str) -> Lo
         id=uuid.uuid4(),
         country_code=country,
         city=city_name,
+        area_local=locality,
         timezone=CITY_TIMEZONES.get(
             (country, city_name), _COUNTRY_TIMEZONES.get(country, "UTC")
         ),
@@ -394,12 +404,22 @@ def upsert_scraped_deal(session: Session, scraped: ScrapedDeal) -> Deal:
         merchant = session.get(Merchant, existing.merchant_id)
         if merchant is not None:
             _apply_scraped_merchant_profile(merchant, scraped)
+            # Refresh nested locality when hub/town labels improve on re-scrape.
+            country = normalize_country(scraped.country_code)
+            hub = normalize_city(scraped.area_hub or scraped.city)
+            locality = (scraped.area_local or "").strip() or None
+            location = get_or_create_location(
+                session, country, hub, area_local=locality
+            )
+            if merchant.location_id != location.id:
+                merchant.location_id = location.id
         session.flush()
         return existing
 
     country = normalize_country(scraped.country_code)
-    city = normalize_city(scraped.city)
-    location = get_or_create_location(session, country, city)
+    hub = normalize_city(scraped.area_hub or scraped.city)
+    locality = (scraped.area_local or "").strip() or None
+    location = get_or_create_location(session, country, hub, area_local=locality)
     merchant = get_or_create_scraped_merchant(
         session,
         name=scraped.merchant_name,

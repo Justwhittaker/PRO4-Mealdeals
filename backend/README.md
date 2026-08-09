@@ -76,12 +76,15 @@ score = tier_weight + proximity + freshness - scrape_penalty + tier_priority_sco
 
 `app/services/affiliate.py` strips tracking params for `clean_url`, then tags destinations for Amazon, Booking.com, Awin, CJ, Impact, and Rakuten using env-configurable publisher IDs.
 
-## Celery beat (stubs)
+## Celery beat
 
 | Schedule | Task |
 |----------|------|
 | Hourly `:15` | `update_currency_rates` |
-| Every 6 hours | `scrape_global_retail` |
+| 8 continental zones, 15 min apart each 6h UTC | `scrape_zone_retail` (`zones.py`) |
+| Friday 09:00 UTC | `send_weekly_specials` |
+
+Manual full worldwide scrape: `POST /api/v1/scrapers/scrape?wait=true`.
 
 ## Local (no Docker)
 

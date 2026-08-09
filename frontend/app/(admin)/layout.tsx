@@ -30,6 +30,9 @@ export default async function AdminLayout({
             <Link href="/admin/deals" className="hover:text-burgundy-600">
               All deals
             </Link>
+            <Link href="/live-metrics.html" className="hover:text-burgundy-600">
+              Live metrics
+            </Link>
             <Link href="/" className="hover:text-burgundy-600">
               Public site
             </Link>

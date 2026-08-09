@@ -99,6 +99,7 @@ class DealDetailRead(DealRead):
     tier_level: TierLevel = TierLevel.FREE
     is_subscriber: bool = False
     city: Optional[str] = None
+    area_local: Optional[str] = None
     country_code: Optional[str] = None
 
 
@@ -127,6 +128,7 @@ class DealFeedItem(BaseModel):
     created_at: datetime
     expires_at: Optional[datetime] = None
     city: Optional[str] = None
+    area_local: Optional[str] = None
     country_code: Optional[str] = None
     tier_level: TierLevel = TierLevel.FREE
     is_subscriber: bool = False

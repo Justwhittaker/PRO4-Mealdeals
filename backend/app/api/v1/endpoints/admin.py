@@ -17,6 +17,7 @@ from app.models.location import Location
 from app.models.merchant import PAID_DEAL_SLOT_LIMIT, Merchant, TierLevel
 from app.models.translation import DealTranslation
 from app.schemas.deal import DealCreate, DealRead, DealUpdate
+from app.schemas.dashboard_metrics import DashboardMetricsRead
 from app.schemas.merchant import (
     MerchantCreate,
     MerchantListResponse,
@@ -25,6 +26,7 @@ from app.schemas.merchant import (
     MerchantUpdate,
 )
 from app.services.affiliate import build_affiliate_urls
+from app.services.dashboard_metrics import build_dashboard_metrics
 from app.services.deal_copy import clean_deal_description
 from app.scrapers.categories import venue_category_id
 
@@ -106,13 +108,19 @@ async def admin_health(_: AdminKey) -> dict[str, str]:
     return {"status": "ok", "scope": "admin"}
 
 
+@router.get("/metrics/dashboard", response_model=DashboardMetricsRead)
+async def admin_dashboard_metrics(_: AdminKey, db: DbSession) -> DashboardMetricsRead:
+    """Live DB metrics for staff dashboards (newsletter, subs, featured ads, clicks)."""
+    return await build_dashboard_metrics(db)
+
+
 @router.get("/merchants", response_model=MerchantListResponse)
 async def admin_list_merchants(
     _: AdminKey,
     db: DbSession,
     q: Optional[str] = Query(default=None, description="Search name or email"),
     skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=100, ge=1, le=500),
+    limit: int = Query(default=100, ge=1, le=5000),
 ) -> MerchantListResponse:
     stmt = select(Merchant).options(selectinload(Merchant.location))
     if q and q.strip():
@@ -249,7 +257,7 @@ async def admin_list_deals(
     merchant_id: Optional[UUID] = None,
     q: Optional[str] = Query(default=None),
     skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=100, ge=1, le=500),
+    limit: int = Query(default=100, ge=1, le=5000),
 ) -> List[DealRead]:
     stmt = (
         select(Deal)

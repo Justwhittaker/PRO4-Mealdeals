@@ -9,6 +9,7 @@ from celery import Celery
 from celery.schedules import crontab
 
 from app.core.config import get_settings
+from app.scrapers.zones import SCRAPE_ZONES, ZONE_BEAT_SLOTS, ZONE_ORDER, validate_zone_coverage
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -33,10 +34,6 @@ celery_app.conf.update(
             "task": "app.workers.tasks.update_currency_rates",
             "schedule": crontab(minute=15),
         },
-        "scrape-global-retail-every-6h": {
-            "task": "app.workers.tasks.scrape_global_retail",
-            "schedule": crontab(minute=0, hour="*/6"),
-        },
         # Weekly specials — every Friday 09:00 UTC
         "send-weekly-specials-friday": {
             "task": "app.workers.tasks.send_weekly_specials",
@@ -44,3 +41,30 @@ celery_app.conf.update(
         },
     },
 )
+
+# Eight continental zone scrapes every 6 hours, staggered 15 minutes apart.
+# Cycle blocks: 00:00–01:45, 06:00–07:45, 12:00–13:45, 18:00–19:45 UTC.
+try:
+    validate_zone_coverage()
+except RuntimeError as exc:
+    logger.warning("Scrape zone coverage incomplete: %s", exc)
+
+for zone_id in ZONE_ORDER:
+    minute, hour_offset = ZONE_BEAT_SLOTS[zone_id]
+    label = SCRAPE_ZONES[zone_id]["label"]
+    celery_app.conf.beat_schedule[f"scrape-zone-{zone_id}"] = {
+        "task": "app.workers.tasks.scrape_zone_retail",
+        "schedule": crontab(
+            minute=minute,
+            hour=[h + hour_offset for h in (0, 6, 12, 18)],
+        ),
+        "kwargs": {"zone_id": zone_id},
+        "options": {"expires": 60 * 60 * 3},
+    }
+    logger.info(
+        "Registered beat scrape zone %s (%s) at +%sh%02sm each 6h cycle",
+        zone_id,
+        label,
+        hour_offset,
+        minute,
+    )
