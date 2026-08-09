@@ -319,11 +319,25 @@
     "lon": -59.65,
     "sources": []
   },
+  "BE:Antwerp": {
+    "fetched_at": 1786235765.901729,
+    "lat": 51.2194,
+    "locality_version": 2,
+    "lon": 4.4025,
+    "sources": []
+  },
   "BE:Brussels": {
     "fetched_at": 1786235664.345268,
     "lat": 50.8503,
     "locality_version": 2,
     "lon": 4.3517,
+    "sources": []
+  },
+  "BE:Ghent": {
+    "fetched_at": 1786235830.6348383,
+    "lat": 51.0543,
+    "locality_version": 2,
+    "lon": 3.7174,
     "sources": []
   },
   "BS:Freeport": {
@@ -646,6 +660,41 @@
     "fetched_at": 1786234724.080697,
     "lat": 49.8951,
     "lon": -97.1384,
+    "sources": []
+  },
+  "CH:Bern": {
+    "fetched_at": 1786236041.7831469,
+    "lat": 46.948,
+    "locality_version": 2,
+    "lon": 7.4474,
+    "sources": []
+  },
+  "CH:Geneva": {
+    "fetched_at": 1786235973.9102354,
+    "lat": 46.2044,
+    "locality_version": 2,
+    "lon": 6.1432,
+    "sources": []
+  },
+  "CH:Zurich": {
+    "fetched_at": 1786235898.0238664,
+    "lat": 47.3769,
+    "locality_version": 2,
+    "lon": 8.5417,
+    "sources": []
+  },
+  "CZ:Prague": {
+    "fetched_at": 1786236300.0433497,
+    "lat": 50.0755,
+    "locality_version": 2,
+    "lon": 14.4378,
+    "sources": []
+  },
+  "DE:Berlin": {
+    "fetched_at": 1786236138.756599,
+    "lat": 52.52,
+    "locality_version": 2,
+    "lon": 13.405,
     "sources": []
   }
 }

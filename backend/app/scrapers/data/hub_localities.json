@@ -2281,6 +2281,20 @@
     ],
     "radius_miles": 150
   },
+  "BE:Ghent": {
+    "fetched_at": 1786235830.6379848,
+    "lat": 51.0543,
+    "lon": 3.7174,
+    "places": [
+      {
+        "lat": 51.0543,
+        "lon": 3.7174,
+        "name": "Ghent",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
   "BR:Rio De Janeiro": {
     "fetched_at": 1786234929.564309,
     "lat": -22.9068,
@@ -5266,6 +5280,90 @@
         "lat": 49.2827,
         "lon": -123.1207,
         "name": "Vancouver",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "CH:Bern": {
+    "fetched_at": 1786236041.7918446,
+    "lat": 46.948,
+    "lon": 7.4474,
+    "places": [
+      {
+        "lat": 46.948,
+        "lon": 7.4474,
+        "name": "Bern",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "CH:Geneva": {
+    "fetched_at": 1786235973.9174404,
+    "lat": 46.2044,
+    "lon": 6.1432,
+    "places": [
+      {
+        "lat": 46.2044,
+        "lon": 6.1432,
+        "name": "Geneva",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "CH:Zurich": {
+    "fetched_at": 1786235898.0265589,
+    "lat": 47.3769,
+    "lon": 8.5417,
+    "places": [
+      {
+        "lat": 47.3769,
+        "lon": 8.5417,
+        "name": "Zurich",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "DE:Berlin": {
+    "fetched_at": 1786236138.7667782,
+    "lat": 52.52,
+    "lon": 13.405,
+    "places": [
+      {
+        "lat": 52.52,
+        "lon": 13.405,
+        "name": "Berlin",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "DE:Hamburg": {
+    "fetched_at": 1786236351.5073931,
+    "lat": 53.5511,
+    "lon": 9.9937,
+    "places": [
+      {
+        "lat": 53.5511,
+        "lon": 9.9937,
+        "name": "Hamburg",
+        "place": "city"
+      }
+    ],
+    "radius_miles": 150
+  },
+  "DE:Munich": {
+    "fetched_at": 1786236251.0230436,
+    "lat": 48.1351,
+    "lon": 11.582,
+    "places": [
+      {
+        "lat": 48.1351,
+        "lon": 11.582,
+        "name": "Munich",
         "place": "city"
       }
     ],
