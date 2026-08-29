@@ -2,6 +2,10 @@ import type { ReactNode } from "react";
 import { DealCard, type DealCardProps } from "@/components/deals/DealCard";
 import { InFeedAd } from "@/components/ads/InFeedAd";
 import { SidebarAd } from "@/components/ads/SidebarAd";
+import {
+  getAdSenseSidebarSlotId,
+  isAdSenseLive,
+} from "@/lib/adsense";
 import { rankDeals } from "@/lib/priority";
 
 interface DealFeedProps {
@@ -32,17 +36,29 @@ export function DealFeed({
   }
 
   const items: ReactNode[] = [];
+  const denseEnoughForAds = ranked.length >= 8;
   ranked.forEach((deal, index) => {
     items.push(<DealCard key={deal.id} {...deal} />);
-    if ((index + 1) % 5 === 0) {
+    if (
+      denseEnoughForAds &&
+      (index + 1) % 5 === 0 &&
+      index + 1 < ranked.length
+    ) {
       items.push(<InFeedAd key={`ad-${index}`} />);
     }
   });
 
+  const sidebar =
+    showSidebarAd && denseEnoughForAds && isAdSenseLive() && getAdSenseSidebarSlotId();
+
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
+    <div
+      className={
+        sidebar ? "grid gap-8 lg:grid-cols-[1fr_280px]" : undefined
+      }
+    >
       <div className="grid gap-5 sm:grid-cols-2">{items}</div>
-      {showSidebarAd ? (
+      {sidebar ? (
         <div className="hidden lg:block">
           <SidebarAd />
         </div>

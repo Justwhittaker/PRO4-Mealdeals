@@ -4,6 +4,7 @@ import { LocationHeader } from "@/components/deals/LocationHeader";
 import { CurrencySelector } from "@/components/deals/CurrencySelector";
 import { RadiusSelector } from "@/components/deals/RadiusSelector";
 import { AreaDealGrid } from "@/components/deals/AreaDealGrid";
+import { PublisherExplainer } from "@/components/landing/PublisherExplainer";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { LocationDealsBar } from "@/components/geo/LocationDealsBar";
@@ -116,6 +117,8 @@ export default async function CityPage({ params, searchParams }: PageProps) {
             </Suspense>
           </div>
         </div>
+
+        <PublisherExplainer areaLabel={`${cityLabel}, ${countryLabel}`} />
 
         <NewsletterDealGate>
           {!feed.ok ? (

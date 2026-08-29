@@ -1,29 +1,9 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  NEWSLETTER_ACCESS_EVENT,
-  isNewsletterSubscribedLocally,
-  openNewsletterSignup,
-} from "@/lib/newsletter-storage";
-
-function subscribeNewsletterAccess(onStoreChange: () => void): () => void {
-  window.addEventListener(NEWSLETTER_ACCESS_EVENT, onStoreChange);
-  window.addEventListener("storage", onStoreChange);
-  return () => {
-    window.removeEventListener(NEWSLETTER_ACCESS_EVENT, onStoreChange);
-    window.removeEventListener("storage", onStoreChange);
-  };
-}
-
-function getNewsletterAccessSnapshot(): boolean {
-  return isNewsletterSubscribedLocally();
-}
-
-function getNewsletterAccessServerSnapshot(): boolean {
-  return false;
-}
+import { useNewsletterAccess } from "@/components/newsletter/useNewsletterAccess";
+import { openNewsletterSignup } from "@/lib/newsletter-storage";
 
 interface NewsletterDealGateProps {
   children: ReactNode;
@@ -39,16 +19,7 @@ export function NewsletterDealGate({
   children,
   compact = false,
 }: NewsletterDealGateProps) {
-  const [ready, setReady] = useState(false);
-  const unlocked = useSyncExternalStore(
-    subscribeNewsletterAccess,
-    getNewsletterAccessSnapshot,
-    getNewsletterAccessServerSnapshot,
-  );
-
-  useEffect(() => {
-    setReady(true);
-  }, []);
+  const { ready, unlocked } = useNewsletterAccess();
 
   // Avoid flashing the lock CTA for returning subscribers during hydration.
   if (!ready) {

@@ -4,6 +4,7 @@ import { LocationHeader } from "@/components/deals/LocationHeader";
 import { CurrencySelector } from "@/components/deals/CurrencySelector";
 import { RadiusSelector } from "@/components/deals/RadiusSelector";
 import { AreaDealGrid } from "@/components/deals/AreaDealGrid";
+import { PublisherExplainer } from "@/components/landing/PublisherExplainer";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { CitySearchBar } from "@/components/geo/CitySearchBar";
@@ -104,6 +105,8 @@ export default async function CountryPage({ params, searchParams }: PageProps) {
             ))}
           </div>
         ) : null}
+
+        <PublisherExplainer areaLabel={countryLabel} />
 
         <NewsletterDealGate>
           {!feed.ok ? (

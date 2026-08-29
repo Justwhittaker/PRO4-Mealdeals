@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import { AdvertCarousel } from "@/components/landing/AdvertCarousel";
 import { LandingSearch } from "@/components/landing/LandingSearch";
 import { RestaurantSearch } from "@/components/landing/RestaurantSearch";
+import { PublisherExplainer } from "@/components/landing/PublisherExplainer";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { GeoBootstrap } from "@/components/geo/GeoBootstrap";
 import { LocationDealsBar } from "@/components/geo/LocationDealsBar";
@@ -107,6 +108,8 @@ export default async function HomePage({
             </div>
           </div>
         </section>
+
+        <PublisherExplainer areaLabel={countryLabel} />
 
         <section className="relative z-0 mx-auto w-full max-w-[90rem] px-3 py-5 sm:px-6 sm:py-6">
           <NewsletterDealGate>

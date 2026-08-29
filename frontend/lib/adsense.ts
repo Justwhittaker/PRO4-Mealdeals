@@ -66,22 +66,58 @@ export function hasAdSenseSlots(): boolean {
 }
 
 /**
- * Use Google Auto ads when the publisher is set but slot IDs are not yet created.
- * Manual InFeed/Sidebar units take over once slot env vars exist.
+ * Auto ads place units on every screen, including forms, gates, and overlays.
+ * Keep this off — only manual in-feed / sidebar slots next to deal lists.
  */
 export function shouldUseAdSenseAutoAds(): boolean {
-  return isAdSenseConfigured() && !hasAdSenseSlots();
+  return false;
+}
+
+const ADSENSE_RESERVED_ROOTS = new Set([
+  "dashboard",
+  "contact",
+  "newsletter",
+  "privacy",
+  "cookies",
+  "terms",
+  "about",
+  "go",
+  "api",
+  "admin",
+]);
+
+/**
+ * Pages without a deal inventory (forms, legal, auth, marketing).
+ * AdSense must not load here — policy: ads on screens without publisher content.
+ */
+export function isAdSenseBlockedPath(pathname: string | null): boolean {
+  return !isAdSenseListingPath(pathname);
+}
+
+/**
+ * Homepage, country, and city listing pages only.
+ * Deal detail, admin, dashboard, and legal/form routes stay ad-free.
+ */
+export function isAdSenseListingPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  const path = pathname.split("?")[0]?.toLowerCase() ?? "";
+  const parts = path.split("/").filter(Boolean);
+  if (parts.length === 0) return true;
+  if (ADSENSE_RESERVED_ROOTS.has(parts[0]!)) return false;
+  return parts.length === 1 || parts.length === 2;
 }
 
 /**
  * Live AdSense script when:
- * - publisher ID is configured (slots optional — Auto ads covers first connect)
+ * - publisher ID is configured
+ * - at least one manual slot ID exists (no Auto ads)
  * - site has a public https URL AdSense can crawl
  * - not forced off via NEXT_PUBLIC_ADSENSE_ENABLED=false
  */
 export function isAdSenseLive(): boolean {
   if (process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "false") return false;
   if (!isAdSenseConfigured()) return false;
+  if (!hasAdSenseSlots()) return false;
   if (!isAdSenseEligibleAppUrl()) return false;
   // Explicit opt-in once domain is ready (avoids accidental live calls pre-launch)
   if (process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "true") return true;

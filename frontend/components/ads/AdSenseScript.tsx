@@ -1,31 +1,52 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useMarketingConsent } from "@/components/cookie/CookieConsentProvider";
+import { useNewsletterAccess } from "@/components/newsletter/useNewsletterAccess";
 import {
   getAdSenseClientId,
+  isAdSenseListingPath,
   isAdSenseLive,
 } from "@/lib/adsense";
-import { useMarketingConsent } from "@/components/cookie/CookieConsentProvider";
 
 const SCRIPT_ATTR = "data-dineadeal-adsense";
+
+function removeAdSenseScript(): void {
+  document
+    .querySelectorAll(`script[${SCRIPT_ATTR}]`)
+    .forEach((node) => node.remove());
+}
 
 /**
  * Loads AdSense via a plain <script> in document.head (no next/script).
  * Avoids Next's data-nscript attribute that triggers:
  * "AdSense head tag doesn't support data-nscript attribute."
  *
- * Loads only when marketing cookie consent is granted and AdSense is live.
+ * Loads only when:
+ * - marketing cookie consent is granted
+ * - AdSense is live with manual slot IDs (no Auto ads)
+ * - the route is a country/city listing page (not detail, forms, or auth)
+ * - this device has unlocked deals via the newsletter
  */
 export function AdSenseScript() {
+  const pathname = usePathname();
   const marketingAllowed = useMarketingConsent();
+  const { ready, unlocked } = useNewsletterAccess();
   const live = isAdSenseLive();
   const clientId = getAdSenseClientId();
+  const onListing = isAdSenseListingPath(pathname);
+  const allowScript =
+    ready &&
+    unlocked &&
+    marketingAllowed &&
+    live &&
+    Boolean(clientId) &&
+    onListing;
 
   useEffect(() => {
-    if (!marketingAllowed || !live || !clientId) {
-      document
-        .querySelectorAll(`script[${SCRIPT_ATTR}]`)
-        .forEach((node) => node.remove());
+    if (!allowScript || !clientId) {
+      removeAdSenseScript();
       return;
     }
 
@@ -43,7 +64,7 @@ export function AdSenseScript() {
     return () => {
       script.remove();
     };
-  }, [marketingAllowed, live, clientId]);
+  }, [allowScript, clientId]);
 
   return null;
 }

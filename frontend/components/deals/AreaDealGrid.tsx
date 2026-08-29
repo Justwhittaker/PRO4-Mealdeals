@@ -1,3 +1,4 @@
+import { InFeedAd } from "@/components/ads/InFeedAd";
 import { DealCard, type DealCardProps } from "@/components/deals/DealCard";
 import {
   groupDealsByCategory,
@@ -116,7 +117,7 @@ export function AreaDealGrid({
         </p>
       </div>
 
-      {sections.map((section) => (
+      {sections.map((section, index) => (
         <div key={section.id} className="space-y-4">
           {section.label ? (
             <h4 className="font-display text-lg text-charcoal-100 sm:text-xl">
@@ -130,6 +131,7 @@ export function AreaDealGrid({
               </li>
             ))}
           </ul>
+          {listed.length >= 8 && index === 0 ? <InFeedAd /> : null}
         </div>
       ))}
     </div>

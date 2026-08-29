@@ -19,11 +19,29 @@ export default function ContactPage() {
         <h1 className="mt-2 font-display text-3xl text-charcoal-50 sm:text-4xl">
           Contact us
         </h1>
-        <p className="mx-auto mt-3 max-w-prose text-sm text-charcoal-300">
-          Free Priority months can only be used once per email, business name,
-          or venue location. If registration failed and you think that&apos;s
-          wrong — or you need help with billing — send us a message below.
-        </p>
+        <div className="mx-auto mt-3 max-w-prose space-y-3 text-left text-sm leading-relaxed text-charcoal-300">
+          <p>
+            Dine A Deal lists dining offers from restaurants, hotels, bars, and
+            cafés. Use this page when a listing looks wrong, a Priority
+            subscription needs a hand, or you are checking free-month
+            eligibility. We read every message and reply from{" "}
+            <span className="whitespace-nowrap">just.whittaker@gmail.com</span>.
+          </p>
+          <p>
+            Free Priority months can only be used once per email, business name,
+            or venue location. If registration failed and you think that&apos;s
+            wrong — or you need help with billing — send us a message below.
+            For privacy or cookie questions, see the{" "}
+            <Link href="/privacy" className="text-burgundy-600 hover:underline">
+              Privacy Notice
+            </Link>{" "}
+            and{" "}
+            <Link href="/cookies" className="text-burgundy-600 hover:underline">
+              Cookie Policy
+            </Link>
+            .
+          </p>
+        </div>
 
         <div className="mt-8 text-left">
           <ContactForm />

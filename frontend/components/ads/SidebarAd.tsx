@@ -1,6 +1,5 @@
 "use client";
 
-import { AdPlaceholder } from "@/components/ads/AdPlaceholder";
 import { AdUnit } from "@/components/ads/AdUnit";
 import { useMarketingConsent } from "@/components/cookie/CookieConsentProvider";
 import {
@@ -9,6 +8,7 @@ import {
   isAdSenseLive,
 } from "@/lib/adsense";
 
+/** Sidebar unit beside deal lists. Renders nothing unless a live slot can fill. */
 export function SidebarAd() {
   const marketingAllowed = useMarketingConsent();
   const live = isAdSenseLive();
@@ -16,34 +16,24 @@ export function SidebarAd() {
   const slotId = getAdSenseSidebarSlotId();
   const showAd = marketingAllowed && live && clientId && slotId;
 
+  if (!showAd) return null;
+
   return (
     <aside
       className="sticky top-24 overflow-hidden rounded-xl border border-charcoal-700/60 bg-charcoal-900/50"
       aria-label="Sponsored sidebar"
     >
       <div className="flex min-h-[250px] w-full items-center justify-center p-4">
-        {showAd ? (
-          <AdUnit>
-            <ins
-              className="adsbygoogle"
-              style={{ display: "block", width: "100%" }}
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-              data-ad-client={clientId}
-              data-ad-slot={slotId}
-            />
-          </AdUnit>
-        ) : (
-          <AdPlaceholder
-            label="Sticky ad"
-            hint={
-              marketingAllowed
-                ? "Ads unlock on the live site URL"
-                : "Enable marketing cookies in Cookie settings to show ads"
-            }
-            minHeight={250}
+        <AdUnit>
+          <ins
+            className="adsbygoogle"
+            style={{ display: "block", width: "100%" }}
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+            data-ad-client={clientId}
+            data-ad-slot={slotId}
           />
-        )}
+        </AdUnit>
       </div>
     </aside>
   );
