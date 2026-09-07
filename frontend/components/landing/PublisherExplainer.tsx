@@ -4,7 +4,7 @@ interface PublisherExplainerProps {
 
 /**
  * Always-visible publisher copy for AdSense / crawlers.
- * Deal inventory stays behind the newsletter gate; this section does not.
+ * Sits above the public deal grid on listing pages.
  */
 export function PublisherExplainer({ areaLabel }: PublisherExplainerProps) {
   const where = areaLabel ? ` in ${areaLabel}` : " near you";
@@ -38,9 +38,9 @@ export function PublisherExplainer({ areaLabel }: PublisherExplainerProps) {
         <p>
           Browse by country and city, then filter by category (meals, wine and
           entertainment, hotels, groceries, bars, takeaway). Weekly Hot Deals
-          email readers unlock the full inventory on this device; the pages
-          below explain signup, privacy, and how to contact us if a listing
-          looks wrong.
+          is an optional email roundup for readers who want offers sent to
+          their inbox. Privacy, cookies, and contact pages explain how to
+          manage that signup or report a listing that looks wrong.
         </p>
       </div>
     </section>

@@ -33,7 +33,7 @@ export function NewsletterAuthIntro({
       <p className="mt-3 text-sm leading-relaxed text-charcoal-300">
         {signedIn
           ? "You're on the list on this device. Manage your subscription below — unsubscribe pauses weekly emails, but your record stays so you can come back anytime."
-          : "New readers sign up with first name, surname, email, and location. Already on the list? Sign in with your email to restore deals on this device. Unsubscribe pauses emails — your record stays so you can come back anytime."}
+          : "New readers sign up with first name, surname, email, and location. Already on the list? Sign in with your email to restore Weekly Hot Deals on this device. Unsubscribe pauses emails — your record stays so you can come back anytime."}
       </p>
     </div>
   );

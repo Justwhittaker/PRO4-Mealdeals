@@ -27,7 +27,7 @@ function removeAdSenseScript(): void {
  * - marketing cookie consent is granted
  * - AdSense is live with manual slot IDs (no Auto ads)
  * - the route is a country/city listing page (not detail, forms, or auth)
- * - this device has unlocked deals via the newsletter
+ * - this device has joined the newsletter (ads sit beside public listings)
  */
 export function AdSenseScript() {
   const pathname = usePathname();

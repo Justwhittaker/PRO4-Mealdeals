@@ -5,6 +5,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { NewsletterAuthIntro } from "@/components/newsletter/NewsletterAuthIntro";
 import { NewsletterAuthPanel } from "@/components/newsletter/NewsletterAuthPanel";
+import { isAdCrawler } from "@/lib/crawlers";
 import {
   NEWSLETTER_OPEN_EVENT,
   markNewsletterPopupDismissed,
@@ -16,6 +17,7 @@ export function NewsletterPopup() {
   const titleId = useId();
 
   useEffect(() => {
+    if (isAdCrawler(navigator.userAgent)) return;
     if (!shouldShowNewsletterPopup()) return;
     const timer = window.setTimeout(() => setOpen(true), 1200);
     return () => window.clearTimeout(timer);

@@ -43,19 +43,19 @@ export default function NewsletterPortalPage({
         </h2>
         <div className="mt-4 space-y-3 text-sm leading-relaxed text-charcoal-300 sm:text-base">
           <p>
-            The newsletter is how Dine A Deal readers unlock the live inventory
-            of restaurant, hotel, and bar offers for their city. After you sign
-            up (or sign in on a new device), this browser can browse listings
-            by country, city, and category — meals, wine and entertainment,
-            hotels, groceries, bars, and takeaway.
+            Weekly Hot Deals is the optional email roundup for Dine A Deal
+            readers. After you sign up (or sign in on a new device), we remember
+            your city on this browser and send featured restaurant, hotel, and
+            bar offers — meals, wine and entertainment, hotels, groceries,
+            bars, and takeaway.
           </p>
           <p>
-            We send a weekly roundup of featured subscriber deals and public
-            listings near the location you choose. You can unsubscribe from any
-            email or from this portal. We do not sell a voucher; you redeem
-            with the venue using the details on each listing. Ads, when shown,
-            only appear beside unlocked deal grids — never on this signup
-            screen.
+            Listings on the site are public to browse. The newsletter is extra:
+            a weekly digest near the location you choose. You can unsubscribe
+            from any email or from this portal. We do not sell a voucher; you
+            redeem with the venue using the details on each listing. Ads, when
+            shown, only appear beside deal grids on listing pages — never on
+            this signup screen.
           </p>
         </div>
       </section>

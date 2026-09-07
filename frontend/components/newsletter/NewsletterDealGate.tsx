@@ -12,60 +12,49 @@ interface NewsletterDealGateProps {
 }
 
 /**
- * Locks deal inventory until the visitor is a newsletter reader on this device.
- * Dismissing the popup does not unlock — only signup / sign-in does.
+ * Deal listings always render in the HTML (SSR + first paint) so crawlers
+ * and AdSense reviewers see real inventory. Unsigned visitors still get a
+ * signup banner and the newsletter popup — the grid is no longer replaced.
  */
 export function NewsletterDealGate({
   children,
   compact = false,
 }: NewsletterDealGateProps) {
   const { ready, unlocked } = useNewsletterAccess();
-
-  // Avoid flashing the lock CTA for returning subscribers during hydration.
-  if (!ready) {
-    return (
-      <div
-        className={
-          compact ? "min-h-[12rem]" : "mx-auto min-h-[16rem] max-w-xl"
-        }
-        aria-busy="true"
-      />
-    );
-  }
-
-  if (unlocked) return <>{children}</>;
+  const showBanner = ready && !unlocked;
 
   return (
-    <div
-      className={
-        compact
-          ? "rounded-md border border-charcoal-700 bg-white px-6 py-10 text-center shadow-sm"
-          : "mx-auto max-w-xl rounded-md border border-charcoal-700 bg-white px-6 py-14 text-center shadow-sm"
-      }
-      role="region"
-      aria-label="Newsletter required"
-    >
-      <p className="text-[10px] font-medium uppercase tracking-wider text-burgundy-500">
-        Weekly Hot Deals
-      </p>
-      <h2 className="mt-2 font-display text-2xl text-charcoal-50 sm:text-3xl">
-        Newsletter signup required
-      </h2>
-      <p className="mt-3 text-sm leading-relaxed text-charcoal-300 sm:text-base">
-        To see your hot new deals in your area, make sure you sign up for the
-        newsletter.
-      </p>
-      <Button
-        type="button"
-        className="mt-6"
-        onClick={() => openNewsletterSignup()}
-      >
-        Sign up for the newsletter
-      </Button>
-      <p className="mt-3 text-xs text-charcoal-400">
-        Already subscribed? Use Sign in in the popup or the mail icon in the
-        header.
-      </p>
+    <div>
+      {showBanner ? (
+        <div
+          className={
+            compact
+              ? "mb-6 rounded-md border border-charcoal-700 bg-white px-4 py-5 text-center shadow-sm"
+              : "mb-8 rounded-md border border-charcoal-700 bg-white px-6 py-6 text-center shadow-sm"
+          }
+          role="region"
+          aria-label="Weekly Hot Deals newsletter"
+        >
+          <p className="text-[10px] font-medium uppercase tracking-wider text-burgundy-500">
+            Weekly Hot Deals
+          </p>
+          <h2 className="mt-2 font-display text-xl text-charcoal-50 sm:text-2xl">
+            Get the weekly roundup in your inbox
+          </h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-charcoal-300">
+            Listings below are public. Sign up to save your city on this device
+            and receive Weekly Hot Deals by email.
+          </p>
+          <Button
+            type="button"
+            className="mt-4"
+            onClick={() => openNewsletterSignup()}
+          >
+            Sign up for the newsletter
+          </Button>
+        </div>
+      ) : null}
+      {children}
     </div>
   );
 }

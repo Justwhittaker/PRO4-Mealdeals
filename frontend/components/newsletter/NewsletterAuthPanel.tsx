@@ -217,7 +217,7 @@ export function NewsletterAuthPanel({
       {view === "signup" ? (
         <>
           <p className="text-xs text-charcoal-300">
-            New here? Join Weekly Hot Deals to unlock listings on this device.
+            New here? Join Weekly Hot Deals for the weekly email roundup.
           </p>
           <NewsletterSignupForm
             mode="subscribe"
