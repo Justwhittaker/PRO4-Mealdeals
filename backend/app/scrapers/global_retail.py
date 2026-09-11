@@ -7,7 +7,7 @@ import logging
 import re
 from decimal import Decimal, InvalidOperation
 from typing import Any
-from urllib.parse import quote_plus, urljoin, urlparse
+from urllib.parse import urljoin, urlparse
 
 from app.scrapers.base import BaseScraper, ScrapedDeal
 from app.scrapers.categories import categorize_venue
@@ -24,6 +24,7 @@ from app.scrapers.markets import (
     TARGET_MARKETS,
     iter_market_areas,
 )
+from app.services.affiliate import with_scrape_identity
 
 logger = logging.getLogger(__name__)
 
@@ -213,6 +214,41 @@ def _clean_offer_snippet(raw: str) -> str:
     return text
 
 
+# Prefer these paths when the configured source is a venue homepage.
+_OFFER_PATHS: tuple[str, ...] = (
+    "/offers",
+    "/specials",
+    "/deals",
+    "/promotions",
+    "/menu",
+)
+_OFFER_PATH_RE = re.compile(
+    r"(?i)/(?:offers?|specials?|deals?|promotions?|coupons?|vouchers?"
+    r"|menu|happy-?hour|meal-?deals?)"
+)
+_GENERIC_LANDING_PATHS = frozenset(
+    {"/", "/home", "/index.html", "/index.php", "/index.htm"}
+)
+
+
+def looks_like_offer_url(url: str) -> bool:
+    """True when the URL path or hash already points at an offer/menu page."""
+    parsed = urlparse(url or "")
+    haystack = f"{parsed.path or ''}#{parsed.fragment or ''}"
+    return bool(_OFFER_PATH_RE.search(haystack))
+
+
+def is_generic_landing_url(url: str) -> bool:
+    """True when the URL is a site root / home page, not a specific offer."""
+    if looks_like_offer_url(url):
+        return False
+    parsed = urlparse(url or "")
+    if parsed.fragment:
+        return False
+    path = (parsed.path or "/").rstrip("/") or "/"
+    return path in _GENERIC_LANDING_PATHS
+
+
 class GlobalRetailScraper(BaseScraper):
     """
     Skims public promo pages when reachable, otherwise publishes
@@ -257,7 +293,9 @@ class GlobalRetailScraper(BaseScraper):
         deals: list[ScrapedDeal] = []
 
         for index, source in enumerate(sources):
-            live = await self._try_live_parse(source["url"], source["merchant"])
+            destination_url, live = await self._resolve_offer_destination(
+                source["url"], source["merchant"]
+            )
             venue_category = str(
                 source.get("venue_category") or categorize_venue(source["merchant"])
             )
@@ -305,7 +343,7 @@ class GlobalRetailScraper(BaseScraper):
                 logger.info(
                     "No site image for %s (%s) — dish placeholder '%s'",
                     source["merchant"],
-                    urlparse(source["url"]).netloc,
+                    urlparse(destination_url).netloc,
                     dish_key,
                 )
             logo_url = live.get("logo_url")
@@ -313,11 +351,13 @@ class GlobalRetailScraper(BaseScraper):
             area_local = str(
                 source.get("area_local") or hub_default_locality(city_name)
             )
-            # Unique URL per hub + nested town so the same chain can appear in multiple areas
-            raw_url = (
-                f"{source['url']}?city={quote_plus(city_name)}"
-                f"&locality={quote_plus(area_local)}"
-                f"&country={country}&utm_source=mealdeals_scraper"
+            # Identity params keep the same chain unique per hub/town in ingest.
+            # Click-through strips them so the visitor opens the offer URL.
+            raw_url = with_scrape_identity(
+                destination_url,
+                city=city_name,
+                locality=area_local,
+                country=country,
             )
 
             website = str(live.get("website") or source["url"]).split("?")[0]
@@ -375,6 +415,42 @@ class GlobalRetailScraper(BaseScraper):
 
         logger.info("Scraped %d deals for %s / %s", len(deals), city_name, country)
         return deals
+
+    def _merge_live(
+        self,
+        primary: dict[str, Decimal | str],
+        fallback: dict[str, Decimal | str],
+    ) -> dict[str, Decimal | str]:
+        merged = dict(fallback)
+        merged.update(
+            {key: value for key, value in primary.items() if value not in (None, "")}
+        )
+        return merged
+
+    async def _resolve_offer_destination(
+        self, source_url: str, merchant: str
+    ) -> tuple[str, dict[str, Decimal | str]]:
+        """Prefer a live offer/menu URL over a venue homepage when reachable."""
+        homepage_live = await self._try_live_parse(source_url, merchant)
+        # Keep configured promo/menu deep links; only probe from a site root.
+        if looks_like_offer_url(source_url) or not is_generic_landing_url(source_url):
+            return source_url, homepage_live
+
+        parsed = urlparse(source_url)
+        if not parsed.scheme or not parsed.netloc:
+            return source_url, homepage_live
+        origin = f"{parsed.scheme}://{parsed.netloc}"
+
+        for path in _OFFER_PATHS:
+            candidate = urljoin(f"{origin}/", path.lstrip("/"))
+            probed = await self._try_live_parse(candidate, merchant)
+            if not probed:
+                continue
+            if probed.get("offer_snippet"):
+                # Keep homepage contact/media when the offer page omits them.
+                return candidate, self._merge_live(probed, homepage_live)
+
+        return source_url, homepage_live
 
     async def _try_live_parse(
         self, url: str, merchant: str

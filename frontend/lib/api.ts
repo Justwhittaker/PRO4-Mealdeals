@@ -30,7 +30,7 @@ export interface Deal {
   distanceKm?: number | null;
   createdAt: string;
   affiliateUrl?: string | null;
-  /** Destination without tracking params — preferred for display. */
+  /** Destination without tracking / scrape-identity params — use for outbound. */
   cleanUrl?: string | null;
   category?: string;
   savingsPercent?: number;

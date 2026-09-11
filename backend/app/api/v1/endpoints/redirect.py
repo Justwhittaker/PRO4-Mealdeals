@@ -13,6 +13,7 @@ from sqlalchemy import text
 from app.api.dependencies import DbSession, RedisClient
 from app.core.config import get_settings
 from app.models.deal import Deal
+from app.services.affiliate import resolve_click_target
 
 router = APIRouter(tags=["redirect"])
 
@@ -43,13 +44,17 @@ async def go_redirect(
     redis: RedisClient,
 ) -> RedirectResponse:
     """
-    Lookup deal affiliate_url, async-log the click to Redis + Postgres, HTTP 302.
+    Lookup deal destination URL, sanitize scrape identity params, log click, HTTP 302.
     """
     deal = await db.get(Deal, deal_id)
     if deal is None or not deal.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
 
-    target = deal.affiliate_url or deal.clean_url or deal.scraped_raw_url
+    target = resolve_click_target(
+        scraped_raw_url=deal.scraped_raw_url,
+        affiliate_url=deal.affiliate_url,
+        clean_url=deal.clean_url,
+    )
     if not target:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

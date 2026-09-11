@@ -42,7 +42,8 @@ export default async function DealDetailPage({ params }: PageProps) {
   const deal = result.data;
   const badge = dealBadge(deal);
   const value = await fetchValueCalculator(id);
-  const websiteUrl = deal.cleanUrl || deal.affiliateUrl || null;
+  const claimHref = `/go/${deal.id}`;
+  const websiteUrl = deal.affiliateUrl || deal.cleanUrl || null;
   let websiteLabel = websiteUrl;
   if (websiteUrl) {
     try {
@@ -101,7 +102,7 @@ export default async function DealDetailPage({ params }: PageProps) {
             <p className="text-sm text-charcoal-300">
               Website:{" "}
               <a
-                href={websiteUrl}
+                href={claimHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-burgundy-600 underline-offset-2 hover:underline break-all"
@@ -151,7 +152,7 @@ export default async function DealDetailPage({ params }: PageProps) {
           <div className="flex flex-wrap gap-3 pt-2">
             <Button asChild size="lg">
               <a
-                href={`/go/${deal.id}`}
+                href={claimHref}
                 target="_blank"
                 rel="noopener noreferrer"
               >
