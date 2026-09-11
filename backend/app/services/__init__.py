@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from app.services.affiliate import build_affiliate_urls, strip_tracking_params, wrap_affiliate_url
+from app.services.affiliate import (
+    build_affiliate_urls,
+    outbound_destination_url,
+    resolve_click_target,
+    strip_tracking_params,
+    wrap_affiliate_url,
+)
 from app.services.currency import CurrencyService
 from app.services.ranking import compute_feed_score
 
@@ -10,6 +16,8 @@ __all__ = [
     "CurrencyService",
     "build_affiliate_urls",
     "compute_feed_score",
+    "outbound_destination_url",
+    "resolve_click_target",
     "strip_tracking_params",
     "wrap_affiliate_url",
 ]
