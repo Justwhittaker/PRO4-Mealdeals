@@ -1,9 +1,8 @@
 # Dine A Deal API — Render Blueprint
 # Dashboard: https://dashboard.render.com
 #
-# Free stack: web + postgres + redis. Scheduled scrapes run via GitHub Actions
-# (.github/workflows/scrape-zones.yml) — no paid Celery worker required.
-# Optional: run Celery on a home NUC via backend/docker-compose.nuc.yml
+# Free stack: web + postgres + redis. Primary scrapes: NUC Celery Beat
+# (backend/docker-compose.nuc.yml). GitHub Actions: weekly email only.
 services:
   - type: web
     name: dineadeal-api

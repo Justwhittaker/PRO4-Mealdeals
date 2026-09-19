@@ -19,17 +19,11 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-import httpx
-
 logger = logging.getLogger(__name__)
 
 _CACHE_PATH = Path(__file__).resolve().parent / "data" / "local_venues.json"
-_OVERPASS_ENDPOINTS = (
-    "https://overpass.kumi.systems/api/interpreter",
-    "https://overpass-api.de/api/interpreter",
-)
-
 from app.scrapers.catchment_hubs import hub_catchment_profile
+from app.scrapers.overpass_client import post_overpass_query
 from app.scrapers.hub_radius import (
     HUB_SATELLITE_SEEDS,
     SATELLITE_MAX_KM,
@@ -177,38 +171,17 @@ async def _fetch_winery_overpass(
     lat: float, lon: float, *, radius_m: int = 25_000, limit: int = 40
 ) -> list[dict[str, Any]]:
     query = _winery_overpass_query(lat, lon, radius_m=radius_m, limit=limit)
-    async with httpx.AsyncClient(timeout=45.0) as client:
-        for endpoint in _OVERPASS_ENDPOINTS:
-            try:
-                response = await client.post(endpoint, data={"data": query})
-                response.raise_for_status()
-                return list(response.json().get("elements") or [])
-            except Exception as exc:  # noqa: BLE001
-                logger.info("Winery Overpass failed via %s: %s", endpoint, exc)
-    return []
+    return await post_overpass_query(query, timeout=45.0, log_label="Winery Overpass")
 
 
 async def _fetch_overpass_around(
     lat: float, lon: float, *, radius_m: int, limit: int
 ) -> list[dict[str, Any]]:
     query = _overpass_query(lat, lon, radius_m, limit=limit)
-    last_exc: Exception | None = None
-    async with httpx.AsyncClient(timeout=45.0) as client:
-        for attempt in range(2):
-            for endpoint in _OVERPASS_ENDPOINTS:
-                try:
-                    response = await client.post(endpoint, data={"data": query})
-                    response.raise_for_status()
-                    payload = response.json()
-                    return list(payload.get("elements") or [])
-                except Exception as exc:  # noqa: BLE001 — fall through endpoints
-                    last_exc = exc
-                    logger.info("Overpass failed via %s: %s", endpoint, exc)
-            if attempt == 0:
-                await asyncio.sleep(1.5)
-    if last_exc:
-        logger.info("Local discovery skipped (Overpass unavailable): %s", last_exc)
-    return []
+    elements = await post_overpass_query(query, timeout=45.0, log_label="Local Overpass")
+    if not elements:
+        logger.info("Local discovery skipped (Overpass unavailable) for radius=%sm", radius_m)
+    return elements
 
 
 def _sample_points(
@@ -284,7 +257,7 @@ async def _fetch_overpass_for_hub(
     per_point = max(12, _MAX_PER_LOCALITY * 3)
     for idx, (label, plat, plon, radius_m) in enumerate(points):
         if idx > 0:
-            await asyncio.sleep(0.8)
+            await asyncio.sleep(1.2)
         batch = await _fetch_overpass_around(
             plat, plon, radius_m=radius_m, limit=per_point
         )

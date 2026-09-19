@@ -47,7 +47,9 @@ async def go_redirect(
     Lookup deal affiliate_url, async-log the click to Redis + Postgres, HTTP 302.
     """
     deal = await db.get(Deal, deal_id)
-    if deal is None or not deal.is_active:
+    now = datetime.now(timezone.utc)
+    expired = deal is not None and deal.expires_at is not None and deal.expires_at <= now
+    if deal is None or not deal.is_active or expired:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
 
     raw_target = deal.affiliate_url or deal.clean_url or deal.scraped_raw_url

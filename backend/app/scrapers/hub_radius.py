@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-import httpx
+from app.scrapers.overpass_client import post_overpass_query
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +27,6 @@ SATELLITE_MAX_KM = 85.0
 
 _CACHE_PATH = Path(__file__).resolve().parent / "data" / "hub_localities.json"
 _CACHE_TTL_SECONDS = 60 * 60 * 24 * 14  # 2 weeks
-
-_OVERPASS_ENDPOINTS = (
-    "https://overpass.kumi.systems/api/interpreter",
-    "https://overpass-api.de/api/interpreter",
-)
 
 # Known satellite towns (lat/lon) merged with OSM discovery — ensures Tuam, Athenry, etc.
 HUB_SATELLITE_SEEDS: dict[tuple[str, str], list[dict[str, float | str]]] = {
@@ -258,20 +253,13 @@ async def _fetch_places(lat: float, lon: float) -> list[dict[str, Any]]:
 out center tags 500;
 """.strip()
 
-    payload: dict[str, Any] = {"elements": []}
-    async with httpx.AsyncClient(timeout=65.0) as client:
-        for endpoint in _OVERPASS_ENDPOINTS:
-            try:
-                response = await client.post(endpoint, data={"data": query})
-                response.raise_for_status()
-                payload = response.json()
-                break
-            except Exception as exc:  # noqa: BLE001
-                logger.info("Hub locality Overpass failed via %s: %s", endpoint, exc)
+    elements = await post_overpass_query(
+        query, timeout=65.0, log_label="Hub locality Overpass"
+    )
 
     places: list[dict[str, Any]] = []
     seen: set[str] = set()
-    for element in payload.get("elements") or []:
+    for element in elements:
         tags = element.get("tags") or {}
         if not isinstance(tags, dict):
             continue

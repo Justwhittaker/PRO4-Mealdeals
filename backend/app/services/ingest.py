@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Sequence
 
@@ -11,6 +12,7 @@ from geoalchemy2.elements import WKTElement
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.config import get_settings
 from app.models.deal import Deal, DealItem, ItemCategory
 from app.models.location import Location
 from app.models.merchant import Merchant, MerchantCategory, TierLevel
@@ -372,6 +374,64 @@ def get_or_create_scraped_merchant(
     return merchant
 
 
+def _scraped_deal_expires_at() -> datetime:
+    days = get_settings().scraped_deal_ttl_days
+    return datetime.now(timezone.utc) + timedelta(days=days)
+
+
+def _seen_clean_urls(scraped_deals: Sequence[ScrapedDeal]) -> set[str]:
+    seen: set[str] = set()
+    for scraped in scraped_deals:
+        clean_url, _ = build_affiliate_urls(scraped.raw_url)
+        if clean_url:
+            seen.add(clean_url)
+    return seen
+
+
+def deactivate_stale_scraped_deals_for_hub(
+    session: Session,
+    country_code: str,
+    hub_city: str,
+    scraped_deals: Sequence[ScrapedDeal],
+) -> int:
+    """
+    Drop scraped deals under a hub that were not seen in the latest hub pass.
+
+    Subscriber-posted deals are never touched.
+    """
+    country = normalize_country(country_code)
+    hub = normalize_city(hub_city)
+    seen = _seen_clean_urls(scraped_deals)
+    now = datetime.now(timezone.utc)
+
+    stmt = (
+        select(Deal)
+        .join(Merchant, Deal.merchant_id == Merchant.id)
+        .join(Location, Merchant.location_id == Location.id)
+        .where(Merchant.is_subscriber.is_(False))
+        .where(Deal.scraped_raw_url.isnot(None))
+        .where(Deal.is_active.is_(True))
+        .where(Location.country_code == country)
+        .where(Location.city.ilike(hub))
+    )
+    deactivated = 0
+    for deal in session.scalars(stmt).all():
+        if deal.clean_url and deal.clean_url in seen:
+            continue
+        deal.is_active = False
+        deal.expires_at = now
+        deactivated += 1
+
+    if deactivated:
+        logger.info(
+            "Deactivated %d stale scraped deals for %s/%s",
+            deactivated,
+            country,
+            hub,
+        )
+    return deactivated
+
+
 def _item_category(raw: str) -> ItemCategory:
     try:
         return ItemCategory(raw.lower())
@@ -450,6 +510,7 @@ def upsert_scraped_deal(session: Session, scraped: ScrapedDeal) -> Deal | None:
         existing.affiliate_url = affiliate_url
         existing.scraped_raw_url = scraped.raw_url
         existing.is_active = True
+        existing.expires_at = _scraped_deal_expires_at()
         if scraped.image_url:
             existing.image_url = scraped.image_url[:500]
         existing.venue_category = venue_category_id(
@@ -497,6 +558,7 @@ def upsert_scraped_deal(session: Session, scraped: ScrapedDeal) -> Deal | None:
             scraped.venue_category, merchant_name=scraped.merchant_name
         ),
         is_active=True,
+        expires_at=_scraped_deal_expires_at(),
         tier_priority_score=0,
     )
     session.add(deal)
@@ -540,3 +602,34 @@ def ingest_scraped_deals(session: Session, deals: Sequence[ScrapedDeal]) -> int:
     session.commit()
     logger.info("Ingested %d scraped deals", count)
     return count
+
+
+def ingest_hub_scrape(
+    session: Session,
+    country_code: str,
+    hub_city: str,
+    deals: Sequence[ScrapedDeal],
+) -> dict[str, int]:
+    """Ingest one hub pass, drop stale scraped deals for that hub, commit."""
+    ingested = 0
+    for scraped in deals:
+        try:
+            if upsert_scraped_deal(session, scraped) is None:
+                continue
+            ingested += 1
+        except Exception:
+            logger.exception(
+                "Failed to ingest scraped deal from %s", scraped.merchant_name
+            )
+    stale = deactivate_stale_scraped_deals_for_hub(
+        session, country_code, hub_city, deals
+    )
+    session.commit()
+    logger.info(
+        "Hub %s/%s: ingested=%d stale_deactivated=%d",
+        normalize_country(country_code),
+        normalize_city(hub_city),
+        ingested,
+        stale,
+    )
+    return {"ingested": ingested, "stale_deactivated": stale}

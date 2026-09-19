@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Query
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
@@ -13,6 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import get_settings
 from app.models.deal import Deal
 from app.scrapers.global_retail import NEW_MARKETS, TARGET_MARKETS, iter_market_areas
+from app.scrapers.overpass_client import fetch_overpass_direct
 from app.scrapers.markets import MARKET_CITIES
 from app.services.scrape_report import build_scrape_report
 from app.services.scrape_runner import scrape_and_ingest_area, scrape_and_ingest_markets
@@ -335,3 +336,35 @@ class PlanInfo(BaseModel):
 async def priority_plan_info() -> PlanInfo:
     """Public plan copy for the merchant portal."""
     return PlanInfo()
+
+
+class OverpassProxyRequest(BaseModel):
+    query: str = Field(..., min_length=8, max_length=12000)
+
+
+class OverpassProxyResponse(BaseModel):
+    elements: list[dict[str, Any]]
+
+
+@router.post("/internal/overpass", response_model=OverpassProxyResponse)
+async def overpass_proxy_endpoint(
+    body: OverpassProxyRequest,
+    x_scrape_internal_secret: str | None = Header(default=None),
+) -> OverpassProxyResponse:
+    """
+    Forward Overpass QL for NUC workers when home ISPs block overpass-api.de.
+
+    Authenticate with header X-Scrape-Internal-Secret = REVALIDATE_SECRET.
+    """
+    secret = (_settings.revalidate_secret or "").strip()
+    if not secret or x_scrape_internal_secret != secret:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
+        )
+    elements = await fetch_overpass_direct(
+        body.query,
+        timeout=60.0,
+        log_label="Overpass proxy",
+    )
+    return OverpassProxyResponse(elements=elements)

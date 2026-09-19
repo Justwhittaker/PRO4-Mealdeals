@@ -30,17 +30,26 @@ celery_app.conf.update(
     task_track_started=True,
     worker_prefetch_multiplier=1,
     beat_schedule={
+        "expire-past-due-deals-hourly": {
+            "task": "app.workers.tasks.expire_past_due_deals",
+            "schedule": crontab(minute=30),
+        },
         "update-currency-rates-hourly": {
             "task": "app.workers.tasks.update_currency_rates",
             "schedule": crontab(minute=15),
         },
-        # Weekly specials — every Friday 09:00 UTC
-        "send-weekly-specials-friday": {
-            "task": "app.workers.tasks.send_weekly_specials",
-            "schedule": crontab(minute=0, hour=9, day_of_week="fri"),
-        },
     },
 )
+
+if settings.celery_weekly_email_enabled:
+    celery_app.conf.beat_schedule["send-weekly-specials-friday"] = {
+        "task": "app.workers.tasks.send_weekly_specials",
+        "schedule": crontab(minute=0, hour=9, day_of_week="fri"),
+    }
+else:
+    logger.info(
+        "Celery weekly email beat disabled (CELERY_WEEKLY_EMAIL_ENABLED=false)"
+    )
 
 # Eight continental zone scrapes every 6 hours, staggered 15 minutes apart.
 # Cycle blocks: 00:00–01:45, 06:00–07:45, 12:00–13:45, 18:00–19:45 UTC.

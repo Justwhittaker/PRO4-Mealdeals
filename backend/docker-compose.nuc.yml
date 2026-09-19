@@ -1,10 +1,16 @@
-# Standalone Celery worker for a home NUC talking to Render cloud Postgres + Redis.
-# Does NOT start local postgres/redis/api and has no depends_on.
+# Primary scrape engine — always-on NUC → Render cloud Postgres + Redis.
 #
-# Usage (from ~/MealDeals/backend on the NUC):
-#   cp .env.example .env   # then put External Render URLs in .env
-#   docker compose -f docker-compose.nuc.yml up -d --build
-#   docker compose -f docker-compose.nuc.yml logs -f celery-worker
+# Setup on the NUC:
+#   cd ~/MealDeals/backend   # git pull PRO4-Mealdeals
+#   cp .env.nuc.example .env
+#   # Fill Render *External* DATABASE_URL_SYNC, Redis, REVALIDATE_SECRET
+#   chmod +x scripts/nuc-up.sh scripts/nuc-celery-health.sh
+#   ./scripts/nuc-up.sh
+#
+# Health alerts (optional): cp scripts/nuc-health.env.example scripts/nuc-health.env
+#   crontab: */15 * * * * ~/MealDeals/backend/scripts/nuc-celery-health.sh
+#
+# GitHub Actions runs weekly email only — scrape cron is disabled there.
 
 services:
   celery-worker:
@@ -12,13 +18,16 @@ services:
     container_name: mealdeals-celery-nuc
     env_file:
       - .env
-    # No hardcoded DATABASE_*/REDIS_*/CELERY_* — all come from .env
     environment:
       APP_ENV: production
       DEBUG: "false"
       FRONTEND_BASE_URL: https://dineadeal.com
-      # REVALIDATE_SECRET — set in .env (same as Vercel) for post-scrape cache bust
+      DEEP_SCRAPE_ENABLED: "true"
+      DEEP_SCRAPE_MAX_EXTRA_FETCHES: "4"
+      CELERY_WEEKLY_EMAIL_ENABLED: "false"
     restart: unless-stopped
+    volumes:
+      - celerybeat-data:/app/data
     command:
       - celery
       - -A
@@ -26,4 +35,10 @@ services:
       - worker
       - --beat
       - --loglevel=info
-      - --concurrency=3
+      # One zone scrape at a time — parallel workers flood Overpass and get blocked.
+      - --concurrency=1
+      - -s
+      - /app/data/celerybeat-schedule
+
+volumes:
+  celerybeat-data:

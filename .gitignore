@@ -6,6 +6,7 @@ core.python*
 .env
 .env.*
 !.env.example
+!backend/.env.nuc.example
 mealdeals/.env
 !backend/alembic/env.py
 .venv/
@@ -37,4 +38,6 @@ backend/.mypy_cache/
 .DS_Store
 .idea/
 .vscode/
-*.logbackend/celerybeat-schedule
+*.log
+backend/celerybeat-schedule
+backend/data/

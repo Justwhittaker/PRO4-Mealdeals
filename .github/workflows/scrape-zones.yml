@@ -1,5 +1,5 @@
-# Free scheduled scrapes — no Render Celery worker ($7/mo) required.
-# Mirrors the eight ZONE_BEAT_SLOTS (every 15 min within each 6-hour UTC cycle).
+# Manual / emergency zone scrapes only — primary scheduler is NUC Celery Beat
+# (backend/docker-compose.nuc.yml). Do not re-enable schedule while NUC is live.
 #
 # Required GitHub repo secrets (Settings → Secrets and variables → Actions):
 #   DATABASE_URL_SYNC  — Render Postgres *External* URL (dineadeal-db → Connect → External)
@@ -10,8 +10,6 @@
 name: Scrape zones
 
 on:
-  schedule:
-    - cron: "0,15,30,45 * * * *"
   workflow_dispatch:
     inputs:
       zone_id:

@@ -13,6 +13,7 @@ from app.models.currency import Currency
 from app.models.newsletter import NewsletterSubscriber
 from app.scrapers.global_retail import TARGET_MARKETS, iter_market_areas
 from app.scrapers.markets import CURRENCY_RATES
+from app.services.deal_expiry import expire_past_due_deals
 from app.services.newsletter import send_weekly_special_to_subscriber
 from app.services.scrape_runner import scrape_and_ingest_area, scrape_and_ingest_markets, scrape_and_ingest_zone
 from app.scrapers.zones import SCRAPE_ZONES, markets_for_zone
@@ -25,6 +26,18 @@ _sync_engine = create_engine(settings.database_url_sync, pool_pre_ping=True)
 SyncSessionLocal = sessionmaker(bind=_sync_engine, autocommit=False, autoflush=False)
 
 _STUB_RATES: dict[str, tuple[str, str]] = CURRENCY_RATES
+
+
+@celery_app.task(name="app.workers.tasks.expire_past_due_deals")
+def expire_past_due_deals_task() -> dict[str, int]:
+    """Hourly: hide scraped deals past expires_at from the public feed."""
+    from app.services.frontend_revalidate import revalidate_after_scrape
+
+    with SyncSessionLocal() as session:
+        count = expire_past_due_deals(session)
+    if count > 0:
+        revalidate_after_scrape(areas=set())
+    return {"expired": count}
 
 
 @celery_app.task(name="app.workers.tasks.update_currency_rates")

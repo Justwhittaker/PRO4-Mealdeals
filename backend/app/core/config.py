@@ -105,6 +105,15 @@ class Settings(BaseSettings):
     # Shared with Vercel REVALIDATE_SECRET — POST /api/revalidate after scrapes.
     revalidate_secret: str = Field(default="")
 
+    # NUC home networks often block Overpass — proxy via Render API instead.
+    overpass_proxy_url: str = Field(default="")
+
+    # NUC Celery Beat: disable when GitHub Actions sends weekly specials instead.
+    celery_weekly_email_enabled: bool = Field(default=True)
+
+    # Scraped deals: extended on each re-scrape; hidden from feed after expiry.
+    scraped_deal_ttl_days: int = Field(default=14, ge=1, le=90)
+
     # Resend HTTPS API (preferred on Render free — SMTP ports are blocked there)
     resend_api_key: str = Field(default="")
     resend_from_email: str = Field(

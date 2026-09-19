@@ -20,7 +20,7 @@ from app.scrapers.global_retail import (
 from app.scrapers.zones import markets_for_zone
 from app.services.frontend_revalidate import revalidate_after_scrape
 from app.services.ingest import (
-    ingest_scraped_deals,
+    ingest_hub_scrape,
     normalize_city,
     normalize_country,
 )
@@ -49,6 +49,22 @@ def _run_coro(coro: Any) -> Any:
         return pool.submit(asyncio.run, coro).result()
 
 
+def _live_revalidate(country: str, city: str, *, ingested: int, stale: int) -> dict[str, Any]:
+    """Bust site cache after each hub so new deals appear while the zone still runs."""
+    if ingested <= 0 and stale <= 0:
+        return {"skipped": True, "reason": "no_changes"}
+    result = revalidate_after_scrape(areas={(country, city)})
+    logger.info(
+        "Live revalidate %s/%s ingested=%s stale=%s → %s",
+        country,
+        city,
+        ingested,
+        stale,
+        result,
+    )
+    return result
+
+
 def scrape_and_ingest_area(country_code: str, city: str) -> dict[str, int | str]:
     """Scrape + persist deals for one city. Safe to call from FastAPI or Celery."""
     country = normalize_country(country_code)
@@ -60,14 +76,20 @@ def scrape_and_ingest_area(country_code: str, city: str) -> dict[str, int | str]
 
     deals = _run_coro(_run())
     with _Session() as session:
-        ingested = ingest_scraped_deals(session, deals)
+        hub_result = ingest_hub_scrape(session, country, city_name, deals)
         contacts = ingest_marketing_contacts_from_deals(session, deals)
-    revalidate = revalidate_after_scrape(areas={(country, city_name)})
+    revalidate = _live_revalidate(
+        country,
+        city_name,
+        ingested=hub_result["ingested"],
+        stale=hub_result["stale_deactivated"],
+    )
     return {
         "country_code": country,
         "city": city_name,
         "discovered": len(deals),
-        "ingested": ingested,
+        "ingested": hub_result["ingested"],
+        "stale_deactivated": hub_result["stale_deactivated"],
         "marketing_contacts": contacts,
         "frontend_revalidate": revalidate,
     }
@@ -79,8 +101,7 @@ def scrape_and_ingest_markets(
     """
     Scrape every configured city for the given markets (default: worldwide targets).
 
-    Reuses one scraper instance so live merchant HTML is cached across cities.
-    Returns run counters plus a full report payload for the /scrape skill.
+    Processes hub-by-hub: scrape → ingest → drop stale → revalidate the site live.
     """
     started = time.perf_counter()
     markets = country_codes or list(TARGET_MARKETS)
@@ -88,37 +109,49 @@ def scrape_and_ingest_markets(
     scraper = GlobalRetailScraper()
     discovered = 0
     ingested = 0
+    stale_total = 0
     contacts = 0
     by_country: dict[str, int] = {code: 0 for code in markets}
     breakdown_batches: list[list[dict[str, Any]]] = []
+    revalidate_runs = 0
 
-    async def _scrape_all() -> list[tuple[str, str, list]]:
-        out: list[tuple[str, str, list]] = []
-        for country, city in areas:
-            deals = await scraper.scrape(country, city)
-            out.append((country, city, deals))
-        return out
+    for country, city in areas:
+        async def _run(c: str = country, t: str = city) -> list:
+            return await scraper.scrape(c, t)
 
-    batches = _run_coro(_scrape_all())
-    with _Session() as session:
-        for country, city, deals in batches:
-            discovered += len(deals)
-            count = ingest_scraped_deals(session, deals)
+        deals = _run_coro(_run())
+        discovered += len(deals)
+
+        with _Session() as session:
+            hub_result = ingest_hub_scrape(session, country, city, deals)
             contact_count = ingest_marketing_contacts_from_deals(session, deals)
-            ingested += count
-            contacts += contact_count
-            by_country[country] = by_country.get(country, 0) + count
-            breakdown_batches.append(breakdown_from_scraped_deals(deals))
-            logger.info(
-                "%s/%s: discovered=%s ingested=%s contacts=%s",
-                country,
-                city,
-                len(deals),
-                count,
-                contact_count,
-            )
 
-        runtime_seconds = round(time.perf_counter() - started, 1)
+        count = hub_result["ingested"]
+        stale = hub_result["stale_deactivated"]
+        ingested += count
+        stale_total += stale
+        contacts += contact_count
+        by_country[country] = by_country.get(country, 0) + count
+        breakdown_batches.append(breakdown_from_scraped_deals(deals))
+
+        revalidate = _live_revalidate(
+            country, city, ingested=count, stale=stale
+        )
+        if not revalidate.get("skipped"):
+            revalidate_runs += 1
+
+        logger.info(
+            "%s/%s: discovered=%s ingested=%s stale=%s contacts=%s",
+            country,
+            city,
+            len(deals),
+            count,
+            stale,
+            contact_count,
+        )
+
+    runtime_seconds = round(time.perf_counter() - started, 1)
+    with _Session() as session:
         report = build_scrape_report(
             session,
             discovered=discovered,
@@ -129,14 +162,12 @@ def scrape_and_ingest_markets(
             run_breakdown=merge_breakdown_rows(breakdown_batches),
         )
 
-    scraped_areas = {(country, city) for country, city, _ in batches}
-    revalidate = revalidate_after_scrape(areas=scraped_areas)
-
     return {
         "areas": len(areas),
         "markets": len(markets),
         "discovered": discovered,
         "ingested": ingested,
+        "stale_deactivated": stale_total,
         "marketing_contacts": contacts,
         "marketing_contacts_unique": report["summary"]["marketing_contacts_unique"],
         "runtime_seconds": runtime_seconds,
@@ -144,7 +175,7 @@ def scrape_and_ingest_markets(
         "breakdown": report["breakdown"],
         "category_tally": report["category_tally"],
         "report": report,
-        "frontend_revalidate": revalidate,
+        "frontend_revalidate_runs": revalidate_runs,
     }
 
 
