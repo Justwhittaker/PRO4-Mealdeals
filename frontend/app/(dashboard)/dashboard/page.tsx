@@ -121,9 +121,8 @@ export default async function DealOfTheCenturyPage({
             <p className="mt-1 text-sm text-charcoal-400">
               Start with a free month (card on file), then{" "}
               {formatMoney(amounts.monthly, currency)}/month. Or pay{" "}
-              {formatMoney(amounts.promoThreeMonths, currency)} now — that&apos;s
-              3 months at 50% off (
-              {formatMoney(amounts.monthly / 2, currency)}×3), then{" "}
+              {formatMoney(amounts.promoThreeMonths, currency)} now — 3 months at
+              50% off (half of {formatMoney(amounts.monthly, currency)}×3), then{" "}
               {formatMoney(amounts.monthly, currency)}/mo.
             </p>
           </div>

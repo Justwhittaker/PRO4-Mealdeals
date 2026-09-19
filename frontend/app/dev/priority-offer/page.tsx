@@ -21,7 +21,7 @@ export default function PriorityOfferPreviewPage() {
         </h1>
         <p className="mt-2 text-sm text-charcoal-400">
           Start with a free month (card on file), then £17.17/month. Or pay
-          £25.76 now — that&apos;s 3 months at 50% off (£8.59×3), then £17.17/mo.
+          £25.76 now — 3 months at 50% off (half of £17.17×3), then £17.17/mo.
         </p>
         <p className="mt-2 text-xs text-charcoal-500">
           Checkout buttons are wired but may fail without Stripe/session — copy

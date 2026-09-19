@@ -40,7 +40,7 @@ export function BillingActions({
   const [contactHint, setContactHint] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
 
-  const promoMonthlyEquivalent = monthlyAmount / 2;
+  const promoFullPrice = monthlyAmount * 3;
 
   async function checkout(kind: PriorityCheckoutKind) {
     setLoading(kind);
@@ -171,10 +171,10 @@ export function BillingActions({
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-charcoal-300">
-            {formatMoney(promoAmount, currency)} = 3 months at 50% off (
-            {formatMoney(promoMonthlyEquivalent, currency)}×3), then{" "}
-            {formatMoney(monthlyAmount, currency)}/mo. Full price would be{" "}
-            {formatMoney(monthlyAmount * 3, currency)}.
+            {formatMoney(promoAmount, currency)} = 3 months at 50% off (half of{" "}
+            {formatMoney(monthlyAmount, currency)}×3 — normally{" "}
+            {formatMoney(promoFullPrice, currency)}), then{" "}
+            {formatMoney(monthlyAmount, currency)}/mo.
           </p>
           <Button
             className="h-auto min-h-11 w-full whitespace-normal px-4 py-2.5 text-center text-sm leading-snug tracking-wide"
