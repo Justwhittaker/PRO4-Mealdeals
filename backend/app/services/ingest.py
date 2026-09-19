@@ -379,6 +379,45 @@ def _item_category(raw: str) -> ItemCategory:
         return ItemCategory.MAIN
 
 
+def _refresh_deal_translation(
+    session: Session, deal: Deal, scraped: ScrapedDeal
+) -> None:
+    lang = scraped.language_code or "en"
+    existing_tr = next(
+        (t for t in (deal.translations or []) if t.language_code == lang),
+        None,
+    )
+    if existing_tr:
+        existing_tr.title = scraped.title[:255]
+        existing_tr.description = scraped.description
+        return
+    session.add(
+        DealTranslation(
+            deal_id=deal.id,
+            language_code=lang,
+            title=scraped.title[:255],
+            description=scraped.description,
+        )
+    )
+
+
+def _refresh_deal_items(session: Session, deal: Deal, scraped: ScrapedDeal) -> None:
+    if not scraped.items:
+        return
+    for item in list(deal.items or []):
+        session.delete(item)
+    for item in scraped.items:
+        session.add(
+            DealItem(
+                id=uuid.uuid4(),
+                deal_id=deal.id,
+                category=_item_category(str(item.get("category", "main"))),
+                item_name=str(item.get("item_name", "Item"))[:255],
+                individual_price=Decimal(str(item.get("individual_price", "0"))),
+            )
+        )
+
+
 def upsert_scraped_deal(session: Session, scraped: ScrapedDeal) -> Deal | None:
     """Insert or refresh a scraped deal (matched on clean_url)."""
     clean_url, affiliate_url = build_affiliate_urls(scraped.raw_url)
@@ -428,6 +467,8 @@ def upsert_scraped_deal(session: Session, scraped: ScrapedDeal) -> Deal | None:
             )
             if merchant.location_id != location.id:
                 merchant.location_id = location.id
+        _refresh_deal_translation(session, existing, scraped)
+        _refresh_deal_items(session, existing, scraped)
         session.flush()
         return existing
 

@@ -16,6 +16,8 @@ services:
     environment:
       APP_ENV: production
       DEBUG: "false"
+      FRONTEND_BASE_URL: https://dineadeal.com
+      # REVALIDATE_SECRET — set in .env (same as Vercel) for post-scrape cache bust
     restart: unless-stopped
     command:
       - celery

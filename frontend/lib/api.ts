@@ -1,5 +1,6 @@
 import type { CurrencyCode } from "./currency";
 import { formatAreaLabel, slugifyCity } from "@/lib/area-label";
+import { cityDealsTag, DEALS_TAG, dealTag } from "@/lib/cache-tags";
 import { cleanDealDescription, cleanMediaUrl } from "@/lib/deal-media";
 import type { DealLinkKind } from "@/lib/deal-link";
 import type { TierLevel } from "./priority";
@@ -204,7 +205,9 @@ function mapValueCalculator(
 
 async function apiFetch<T>(
   path: string,
-  init?: RequestInit & { next?: { revalidate?: number | false } },
+  init?: RequestInit & {
+    next?: { revalidate?: number | false; tags?: string[] };
+  },
 ): Promise<ApiResult<T>> {
   const url = `${API_URL.replace(/\/$/, "")}${path}`;
   try {
@@ -293,9 +296,13 @@ export async function fetchDealsFeed(
   qs.set("auto_scrape", "true");
 
   const query = qs.toString();
+  const feedTags = [DEALS_TAG];
+  if (params.country && params.city) {
+    feedTags.push(cityDealsTag(params.country, params.city));
+  }
   const result = await apiFetch<{ results?: BackendDealFeedItem[] } | BackendDealFeedItem[]>(
     `/api/v1/deals/feed${query ? `?${query}` : ""}`,
-    { cache: "no-store" },
+    { next: { tags: feedTags } },
   );
 
   if (!result.ok) return result;
@@ -339,7 +346,9 @@ export async function fetchDeal(
     outbound_url?: string | null;
     link_kind?: DealLinkKind | null;
     cta_label?: string | null;
-  }>(`/api/v1/deals/${id}`);
+  }>(`/api/v1/deals/${id}`, {
+    next: { tags: [DEALS_TAG, dealTag(id)] },
+  });
 
   if (!result.ok) return result;
 

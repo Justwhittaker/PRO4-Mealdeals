@@ -1,0 +1,45 @@
+# Free scheduled scrapes — no Render Celery worker ($7/mo) required.
+# Mirrors the eight ZONE_BEAT_SLOTS (every 15 min within each 6-hour UTC cycle).
+#
+# Required GitHub repo secrets (Settings → Secrets and variables → Actions):
+#   DATABASE_URL_SYNC  — Render Postgres *External* URL (dineadeal-db → Connect → External)
+#   REVALIDATE_SECRET  — same value as Vercel + dineadeal-api
+#
+# Optional: FRONTEND_BASE_URL (defaults to https://dineadeal.com in code)
+
+name: Scrape zones
+
+on:
+  schedule:
+    - cron: "0,15,30,45 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: scrape-zones
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Scrape current zone + revalidate site
+        env:
+          APP_ENV: production
+          DATABASE_URL_SYNC: ${{ secrets.DATABASE_URL_SYNC }}
+          REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+          FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL || 'https://dineadeal.com' }}
+          DEEP_SCRAPE_ENABLED: "true"
+          DEEP_SCRAPE_MAX_EXTRA_FETCHES: "4"
+        run: python backend/scripts/pick_and_scrape_zone.py

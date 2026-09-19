@@ -18,6 +18,7 @@ from app.scrapers.global_retail import (
     iter_market_areas,
 )
 from app.scrapers.zones import markets_for_zone
+from app.services.frontend_revalidate import revalidate_after_scrape
 from app.services.ingest import (
     ingest_scraped_deals,
     normalize_city,
@@ -61,12 +62,14 @@ def scrape_and_ingest_area(country_code: str, city: str) -> dict[str, int | str]
     with _Session() as session:
         ingested = ingest_scraped_deals(session, deals)
         contacts = ingest_marketing_contacts_from_deals(session, deals)
+    revalidate = revalidate_after_scrape(areas={(country, city_name)})
     return {
         "country_code": country,
         "city": city_name,
         "discovered": len(deals),
         "ingested": ingested,
         "marketing_contacts": contacts,
+        "frontend_revalidate": revalidate,
     }
 
 
@@ -126,6 +129,9 @@ def scrape_and_ingest_markets(
             run_breakdown=merge_breakdown_rows(breakdown_batches),
         )
 
+    scraped_areas = {(country, city) for country, city, _ in batches}
+    revalidate = revalidate_after_scrape(areas=scraped_areas)
+
     return {
         "areas": len(areas),
         "markets": len(markets),
@@ -138,6 +144,7 @@ def scrape_and_ingest_markets(
         "breakdown": report["breakdown"],
         "category_tally": report["category_tally"],
         "report": report,
+        "frontend_revalidate": revalidate,
     }
 
 

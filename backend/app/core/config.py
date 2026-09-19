@@ -102,6 +102,9 @@ class Settings(BaseSettings):
     # Public site URL (unsubscribe / deal links in emails)
     frontend_base_url: str = Field(default="https://dineadeal.com")
 
+    # Shared with Vercel REVALIDATE_SECRET — POST /api/revalidate after scrapes.
+    revalidate_secret: str = Field(default="")
+
     # Resend HTTPS API (preferred on Render free — SMTP ports are blocked there)
     resend_api_key: str = Field(default="")
     resend_from_email: str = Field(
