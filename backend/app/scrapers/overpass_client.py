@@ -13,11 +13,13 @@ from app.core.config import get_settings
 logger = logging.getLogger(__name__)
 
 # Public mirrors — used by Render API and dev machines with open outbound HTTPS.
+# openstreetmap.fr first: fast and reliable; kumi often hangs; de fails fast when blocked.
 OVERPASS_ENDPOINTS: tuple[str, ...] = (
-    "https://overpass.kumi.systems/api/interpreter",
-    "https://overpass-api.de/api/interpreter",
     "https://overpass.openstreetmap.fr/api/interpreter",
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
 )
+
 
 _OVERPASS_SEMAPHORE = asyncio.Semaphore(1)
 _RETRY_DELAYS_SEC: tuple[float, ...] = (0.0, 2.0, 5.0)
@@ -37,7 +39,9 @@ async def _post_direct(
     for attempt, delay in enumerate(_RETRY_DELAYS_SEC):
         if delay:
             await asyncio.sleep(delay)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        read_sec = min(max(timeout, 15.0), 90.0)
+        http_timeout = httpx.Timeout(connect=8.0, read=read_sec, write=10.0, pool=5.0)
+        async with httpx.AsyncClient(timeout=http_timeout) as client:
             for endpoint in OVERPASS_ENDPOINTS:
                 try:
                     response = await client.post(endpoint, data={"data": query})
