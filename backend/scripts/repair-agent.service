@@ -8,8 +8,8 @@ Type=simple
 WorkingDirectory=%h/MealDeals/backend/scripts
 Environment=REPAIR_AGENT_ENV=%h/MealDeals/backend/scripts/repair-agent.env
 ExecStart=%h/MealDeals/backend/scripts/.venv-repair/bin/python -m repair_agent.bot
-Restart=on-failure
-RestartSec=10
+Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=default.target
