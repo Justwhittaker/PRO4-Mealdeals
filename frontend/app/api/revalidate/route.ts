@@ -33,8 +33,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const tags = [...new Set((body.tags ?? []).map((t) => t.trim()).filter(Boolean))];
-  const paths = [...new Set((body.paths ?? []).map((p) => p.trim()).filter(Boolean))];
+  const tags = Array.from(
+    new Set((body.tags ?? []).map((t) => t.trim()).filter(Boolean)),
+  );
+  const paths = Array.from(
+    new Set((body.paths ?? []).map((p) => p.trim()).filter(Boolean)),
+  );
 
   for (const tag of tags) {
     revalidateTag(tag);
