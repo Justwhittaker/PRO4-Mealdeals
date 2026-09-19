@@ -196,6 +196,9 @@ def build_merchant_outreach_email(
         f"About Dine A Deal: {base}/about",
         f"Browse deals: {base}",
         "",
+        "Kindest regards,",
+        "The DineADeal team",
+        "",
         "—",
         "You're receiving this because we found public contact details while indexing "
         "hospitality deals.",
@@ -203,11 +206,17 @@ def build_merchant_outreach_email(
     ]
     text_body = "\n".join(line for line in lines if line is not None)
 
+    logo_mark = f"{base}/logo-dineadeal.png"
+    logo_wordmark = f"{base}/logo-wordmark.png"
+
     html_body = f"""<!DOCTYPE html>
 <html><body style="font-family:Georgia,serif;color:#1a1a1a;max-width:560px;margin:0 auto;padding:24px">
-  <h1 style="font-family:Arial,sans-serif;color:#7a1f2b;font-size:22px;text-transform:uppercase;letter-spacing:0.04em">
-    Dine A Deal
-  </h1>
+  <p style="margin:0 0 24px">
+    <a href="{base}" style="text-decoration:none;display:inline-block">
+      <img src="{logo_mark}" alt="" width="48" height="48" style="display:inline-block;vertical-align:middle;border:0" />
+      <img src="{logo_wordmark}" alt="Dine A Deal" width="180" height="48" style="display:inline-block;vertical-align:middle;border:0;margin-left:8px" />
+    </a>
+  </p>
   <p>Hello {greeting},</p>
   <p>
     Did you know <strong>Dine A Deal</strong> already found your business in
@@ -237,6 +246,10 @@ def build_merchant_outreach_email(
   <p style="font-size:14px;margin-top:20px">
     <a href="{base}/about">About Dine A Deal</a> ·
     <a href="{base}">Browse deals</a>
+  </p>
+  <p style="margin-top:28px;line-height:1.5">
+    Kindest regards,<br />
+    <strong>The DineADeal team</strong>
   </p>
   <p style="margin-top:28px;font-size:12px;color:#666">
     Public contact details were found while indexing hospitality deals.
