@@ -13,7 +13,10 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import get_settings
 from app.models.deal import Deal
 from app.scrapers.global_retail import NEW_MARKETS, TARGET_MARKETS, iter_market_areas
-from app.scrapers.overpass_client import fetch_overpass_direct
+from app.scrapers.overpass_client import (
+    PROXY_OVERPASS_WALL_SECONDS,
+    fetch_overpass_for_proxy,
+)
 from app.scrapers.markets import MARKET_CITIES
 from app.services.scrape_report import build_scrape_report
 from app.services.scrape_runner import scrape_and_ingest_area, scrape_and_ingest_markets
@@ -362,9 +365,11 @@ async def overpass_proxy_endpoint(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Unauthorized",
         )
-    elements = await fetch_overpass_direct(
-        body.query,
-        timeout=60.0,
-        log_label="Overpass proxy",
-    )
+    try:
+        elements = await asyncio.wait_for(
+            fetch_overpass_for_proxy(body.query, log_label="Overpass proxy"),
+            timeout=PROXY_OVERPASS_WALL_SECONDS,
+        )
+    except asyncio.TimeoutError:
+        elements = []
     return OverpassProxyResponse(elements=elements)

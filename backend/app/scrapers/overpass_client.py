@@ -13,16 +13,21 @@ from app.core.config import get_settings
 logger = logging.getLogger(__name__)
 
 # Public mirrors — used by Render API and dev machines with open outbound HTTPS.
-# openstreetmap.fr first: fast and reliable; kumi often hangs; de fails fast when blocked.
+# openstreetmap.fr first: fast and reliable; de fails fast when blocked.
+# kumi.systems omitted — often hangs 60s+ with no response.
 OVERPASS_ENDPOINTS: tuple[str, ...] = (
     "https://overpass.openstreetmap.fr/api/interpreter",
     "https://overpass-api.de/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
 )
 
+# NUC proxy calls must finish before client timeouts (~30s curl -m 30).
+PROXY_OVERPASS_WALL_SECONDS = 22.0
+PROXY_HTTP_READ_SECONDS = 12.0
+NUC_PROXY_CLIENT_SECONDS = 25.0
 
 _OVERPASS_SEMAPHORE = asyncio.Semaphore(1)
 _RETRY_DELAYS_SEC: tuple[float, ...] = (0.0, 2.0, 5.0)
+_PROXY_RETRY_DELAYS_SEC: tuple[float, ...] = (0.0,)
 
 
 def _internal_secret() -> str:
@@ -34,13 +39,17 @@ async def _post_direct(
     *,
     timeout: float,
     log_label: str,
+    retry_delays: tuple[float, ...] = _RETRY_DELAYS_SEC,
+    read_cap: float | None = None,
 ) -> list[dict[str, Any]]:
     last_exc: Exception | None = None
-    for attempt, delay in enumerate(_RETRY_DELAYS_SEC):
+    for attempt, delay in enumerate(retry_delays):
         if delay:
             await asyncio.sleep(delay)
         read_sec = min(max(timeout, 15.0), 90.0)
-        http_timeout = httpx.Timeout(connect=8.0, read=read_sec, write=10.0, pool=5.0)
+        if read_cap is not None:
+            read_sec = min(read_sec, read_cap)
+        http_timeout = httpx.Timeout(connect=5.0, read=read_sec, write=10.0, pool=5.0)
         async with httpx.AsyncClient(timeout=http_timeout) as client:
             for endpoint in OVERPASS_ENDPOINTS:
                 try:
@@ -80,8 +89,9 @@ async def _post_via_render_proxy(
         )
         return []
 
+    client_timeout = min(max(timeout, 15.0), NUC_PROXY_CLIENT_SECONDS)
     try:
-        async with httpx.AsyncClient(timeout=timeout + 15.0) as client:
+        async with httpx.AsyncClient(timeout=client_timeout) as client:
             response = await client.post(
                 proxy_url,
                 json={"query": query},
@@ -105,6 +115,22 @@ async def fetch_overpass_direct(
     """Query public Overpass mirrors (Render API / dev machines)."""
     async with _OVERPASS_SEMAPHORE:
         return await _post_direct(query, timeout=timeout, log_label=log_label)
+
+
+async def fetch_overpass_for_proxy(
+    query: str,
+    *,
+    log_label: str = "Overpass proxy",
+) -> list[dict[str, Any]]:
+    """Fast Overpass fetch for NUC proxy — must respond within ~25s."""
+    async with _OVERPASS_SEMAPHORE:
+        return await _post_direct(
+            query,
+            timeout=PROXY_HTTP_READ_SECONDS,
+            log_label=log_label,
+            retry_delays=_PROXY_RETRY_DELAYS_SEC,
+            read_cap=PROXY_HTTP_READ_SECONDS,
+        )
 
 
 async def post_overpass_query(
