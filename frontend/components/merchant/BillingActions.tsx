@@ -40,6 +40,8 @@ export function BillingActions({
   const [contactHint, setContactHint] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
 
+  const promoMonthlyEquivalent = monthlyAmount / 2;
+
   async function checkout(kind: PriorityCheckoutKind) {
     setLoading(kind);
     setError(null);
@@ -69,8 +71,11 @@ export function BillingActions({
 
   return (
     <div className="space-y-6">
-      <Card className="border-burgundy-300/40">
+      <Card className="border-burgundy-500/50 shadow-sm">
         <CardHeader>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-burgundy-500">
+            Recommended
+          </p>
           <CardTitle className="text-xl">Priority Slots</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -78,7 +83,9 @@ export function BillingActions({
             Prices shown in{" "}
             <span className="font-medium text-charcoal-50">{currency}</span>{" "}
             for your area. You get{" "}
-            <span className="text-burgundy-600">{DEAL_SLOT_LIMIT} active deal slots</span>{" "}
+            <span className="text-burgundy-600">
+              {DEAL_SLOT_LIMIT} active deal slots
+            </span>{" "}
             that rank above scraped listings.
           </p>
 
@@ -98,7 +105,7 @@ export function BillingActions({
           ) : null}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-charcoal-700 bg-white p-4">
+            <div className="rounded-xl border border-burgundy-500/40 bg-white p-4">
               <p className="text-xs uppercase tracking-wider text-charcoal-500">
                 First month
               </p>
@@ -129,9 +136,7 @@ export function BillingActions({
             disabled={loading !== null || !trialEligible || Boolean(isSubscriber)}
             onClick={() => void checkout("trial")}
           >
-            {loading === "trial"
-              ? "Redirecting…"
-              : "Start monthly Priority — first month free"}
+            {loading === "trial" ? "Redirecting…" : "Start free month"}
           </Button>
           {!trialEligible ? (
             <p className="text-sm text-amber-800">
@@ -146,7 +151,7 @@ export function BillingActions({
             </p>
           ) : (
             <p className="text-xs text-charcoal-500">
-              This starts a monthly subscription with the first month free. Add a
+              Primary option: monthly Priority with the first month free. Add a
               card at checkout — we charge{" "}
               {formatMoney(monthlyAmount, currency)}/month after 30 days unless
               you cancel in the portal.
@@ -155,26 +160,24 @@ export function BillingActions({
         </CardContent>
       </Card>
 
-      <Card className="border-burgundy-500/30">
-        <CardHeader>
-          <CardTitle className="text-xl">
-            Pay now — 50% off your next 3 months
+      <Card className="border-charcoal-700/80 bg-charcoal-950/20">
+        <CardHeader className="pb-2">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-charcoal-500">
+            Or pay upfront
+          </p>
+          <CardTitle className="text-lg text-charcoal-100">
+            Pay now — 50% off 3 months
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-charcoal-300">
-            Sign up and pay now for Priority. We&apos;ll throw in{" "}
-            <span className="font-medium text-charcoal-50">50% off</span> the
-            next three months —{" "}
-            <span className="font-medium text-burgundy-600">
-              {formatMoney(promoAmount, currency)}
-            </span>{" "}
-            total (instead of{" "}
-            {formatMoney(monthlyAmount * 3, currency)}), then continue at{" "}
-            {formatMoney(monthlyAmount, currency)}/month.
+          <p className="text-sm text-charcoal-300">
+            {formatMoney(promoAmount, currency)} = 3 months at 50% off (
+            {formatMoney(promoMonthlyEquivalent, currency)}×3), then{" "}
+            {formatMoney(monthlyAmount, currency)}/mo. Full price would be{" "}
+            {formatMoney(monthlyAmount * 3, currency)}.
           </p>
           <Button
-            className="h-auto min-h-12 w-full whitespace-normal px-4 py-3 text-center text-sm leading-snug tracking-wide sm:px-6 sm:text-base"
+            className="h-auto min-h-11 w-full whitespace-normal px-4 py-2.5 text-center text-sm leading-snug tracking-wide"
             size="lg"
             variant="outline"
             disabled={loading !== null || Boolean(isSubscriber)}
@@ -182,7 +185,7 @@ export function BillingActions({
           >
             {loading === "promo"
               ? "Redirecting…"
-              : `Pay ${formatMoney(promoAmount, currency)} now — unlock 3 months`}
+              : `Pay ${formatMoney(promoAmount, currency)} now`}
           </Button>
         </CardContent>
       </Card>
