@@ -29,12 +29,29 @@ from app.schemas.deal import (
 )
 from app.services.affiliate import build_affiliate_urls
 from app.services.deal_copy import clean_deal_description
+from app.services.deal_link import LinkKind, cta_label_for_link, outbound_link_meta
 from app.services.ingest import normalize_city, normalize_country
 from app.services.ranking import compute_feed_score
 from app.services.scrape_runner import scrape_and_ingest_area
 from app.scrapers.categories import venue_category_id
 
 router = APIRouter(prefix="/deals", tags=["deals"])
+
+
+def _public_link_fields(
+    deal: Deal,
+    merchant_name: str,
+) -> dict[str, str | LinkKind | None]:
+    outbound, link_kind = outbound_link_meta(
+        affiliate_url=deal.affiliate_url,
+        clean_url=deal.clean_url,
+        scraped_raw_url=deal.scraped_raw_url,
+    )
+    return {
+        "outbound_url": outbound,
+        "link_kind": link_kind,
+        "cta_label": cta_label_for_link(link_kind, merchant_name),
+    }
 
 
 @router.post("", response_model=DealRead, status_code=status.HTTP_201_CREATED)
@@ -304,6 +321,7 @@ async def deals_feed(
             if converted_price is not None:
                 converted_currency = override
 
+        link_fields = _public_link_fields(deal, merchant.name)
         feed_items.append(
             DealFeedItem(
                 id=deal.id,
@@ -336,6 +354,7 @@ async def deals_feed(
                 country_code=location.country_code,
                 tier_level=merchant.tier_level,
                 is_subscriber=merchant.is_subscriber,
+                **link_fields,
             )
         )
 
@@ -602,6 +621,7 @@ async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
             )
         ).scalar_one_or_none()
         about_blurb = contact
+    link_fields = _public_link_fields(deal, merchant.name)
     return DealDetailRead(
         id=deal.id,
         merchant_id=deal.merchant_id,
@@ -629,6 +649,7 @@ async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
         city=location.city,
         area_local=location.area_local,
         country_code=location.country_code,
+        **link_fields,
     )
 
 

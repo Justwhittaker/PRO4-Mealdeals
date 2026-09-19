@@ -65,7 +65,7 @@ services:
     region: frankfurt
     branch: master
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: cd backend && celery -A app.workers.celery_app.celery_app worker --loglevel=info --concurrency=1
+    startCommand: cd backend && celery -A app.workers.celery_app.celery_app worker --beat --loglevel=info --concurrency=2
     envVars:
       - key: APP_ENV
         value: production
@@ -75,6 +75,10 @@ services:
         value: "3.12.8"
       - key: SECRET_KEY
         generateValue: true
+      - key: DEEP_SCRAPE_ENABLED
+        value: "true"
+      - key: DEEP_SCRAPE_MAX_EXTRA_FETCHES
+        value: "4"
       - key: DATABASE_URL
         fromDatabase:
           name: dineadeal-db

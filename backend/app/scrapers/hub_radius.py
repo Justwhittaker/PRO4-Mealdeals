@@ -63,6 +63,21 @@ HUB_SATELLITE_SEEDS: dict[tuple[str, str], list[dict[str, float | str]]] = {
         {"name": "Slough", "lat": 51.5105, "lon": -0.5950, "place": "town"},
         {"name": "Reading", "lat": 51.4543, "lon": -0.9781, "place": "town"},
     ],
+    ("US", "Napa Valley"): [
+        {"name": "Yountville", "lat": 38.4019, "lon": -122.3608, "place": "town"},
+        {"name": "St Helena", "lat": 38.5052, "lon": -122.4703, "place": "town"},
+        {"name": "Calistoga", "lat": 38.5788, "lon": -122.5797, "place": "town"},
+        {"name": "American Canyon", "lat": 38.1749, "lon": -122.2608, "place": "town"},
+    ],
+    ("US", "Sonoma"): [
+        {"name": "Healdsburg", "lat": 38.6105, "lon": -122.8692, "place": "town"},
+        {"name": "Petaluma", "lat": 38.2324, "lon": -122.6367, "place": "town"},
+        {"name": "Sebastopol", "lat": 38.4021, "lon": -122.8239, "place": "town"},
+    ],
+    ("US", "Santa Barbara"): [
+        {"name": "Santa Ynez", "lat": 34.6144, "lon": -120.0799, "place": "town"},
+        {"name": "Solvang", "lat": 34.5958, "lon": -120.1376, "place": "town"},
+    ],
 }
 
 _PLACE_TYPE_RANK = {

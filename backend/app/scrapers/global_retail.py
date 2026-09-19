@@ -9,7 +9,10 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 from urllib.parse import quote_plus, urljoin, urlparse
 
+from app.core.config import get_settings
 from app.scrapers.base import BaseScraper, ScrapedDeal
+from app.scrapers.offer_links import extract_offer_url_from_soup, resolve_offer_url
+from app.scrapers.source_filters import dedupe_chain_sources_for_hub
 from app.scrapers.categories import categorize_venue
 from app.scrapers.deal_placeholders import resolve_dish_placeholder
 from app.scrapers.local_discovery import discover_local_venues, merge_local_sources
@@ -227,6 +230,7 @@ class GlobalRetailScraper(BaseScraper):
         self._live_cache: dict[str, dict[str, Decimal | str]] = {}
         # Homepage media fallbacks keyed by origin (scheme://host).
         self._site_media_cache: dict[str, dict[str, str]] = {}
+        self._offer_url_cache: dict[str, str | None] = {}
 
     def _normalize_country(self, country_code: str) -> str:
         upper = country_code.strip().upper()
@@ -254,10 +258,21 @@ class GlobalRetailScraper(BaseScraper):
             logger.info("No market sources configured for %s / %s", country, city_name)
             return []
 
+        sources = dedupe_chain_sources_for_hub(sources, hub=city_name)
+
         deals: list[ScrapedDeal] = []
+
+        settings = get_settings()
 
         for index, source in enumerate(sources):
             live = await self._try_live_parse(source["url"], source["merchant"])
+            deal_source_url = str(live.get("offer_url") or source["url"])
+            if settings.deep_scrape_enabled and not live.get("offer_url"):
+                resolved = await self._resolve_offer_url(source["url"])
+                if resolved:
+                    deal_source_url = resolved
+                    live = await self._try_live_parse(resolved, source["merchant"])
+                    live["offer_url"] = resolved
             venue_category = str(
                 source.get("venue_category") or categorize_venue(source["merchant"])
             )
@@ -315,7 +330,7 @@ class GlobalRetailScraper(BaseScraper):
             )
             # Unique URL per hub + nested town so the same chain can appear in multiple areas
             raw_url = (
-                f"{source['url']}?city={quote_plus(city_name)}"
+                f"{deal_source_url}?city={quote_plus(city_name)}"
                 f"&locality={quote_plus(area_local)}"
                 f"&country={country}&utm_source=mealdeals_scraper"
             )
@@ -455,8 +470,28 @@ class GlobalRetailScraper(BaseScraper):
             result["original_price"] = prices_sorted[-1]
         elif len(prices) == 1:
             result["deal_price"] = prices[0]
+        if get_settings().deep_scrape_enabled:
+            offer = extract_offer_url_from_soup(soup, page_url=url)
+            if offer:
+                result["offer_url"] = offer
+
         self._live_cache[url] = result
         return result
+
+    async def _resolve_offer_url(self, base_url: str) -> str | None:
+        if base_url in self._offer_url_cache:
+            return self._offer_url_cache[base_url]
+        settings = get_settings()
+        resolved = await resolve_offer_url(
+            base_url,
+            self.fetch_html,
+            parse_soup=self.parse_soup,
+            max_extra_fetches=settings.deep_scrape_max_extra_fetches,
+        )
+        self._offer_url_cache[base_url] = resolved
+        if resolved and resolved != base_url:
+            logger.info("Deep scrape resolved offer URL: %s → %s", base_url, resolved)
+        return resolved
 
     async def _fetch_site_media(self, page_url: str) -> dict[str, str]:
         """Fallback: content photo + logo from homepage / menu / about paths."""

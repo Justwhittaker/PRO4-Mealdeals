@@ -1,700 +1,2641 @@
 {
+  "AE:Abu Dhabi": {
+    "fetched_at": 1787996079.1489365,
+    "lat": 24.4539,
+    "locality_version": 4,
+    "lon": 54.3773,
+    "sources": []
+  },
+  "AE:Dubai": {
+    "fetched_at": 1787996004.051234,
+    "lat": 25.2048,
+    "locality_version": 4,
+    "lon": 55.2708,
+    "sources": []
+  },
+  "AE:Sharjah": {
+    "fetched_at": 1787996128.5212476,
+    "lat": 25.3463,
+    "locality_version": 4,
+    "lon": 55.4209,
+    "sources": []
+  },
   "AG:St Johns": {
-    "fetched_at": 1786233600.063833,
+    "fetched_at": 1788004800.2786796,
     "lat": 17.1274,
+    "locality_version": 2,
     "lon": -61.8468,
     "sources": []
   },
+  "AR:Buenos Aires": {
+    "fetched_at": 1787996286.0845551,
+    "lat": -34.6037,
+    "locality_version": 4,
+    "lon": -58.3816,
+    "sources": []
+  },
+  "AR:Cordoba": {
+    "fetched_at": 1788005748.9791648,
+    "lat": -31.4201,
+    "locality_version": 2,
+    "lon": -64.1888,
+    "sources": []
+  },
+  "AR:Mendoza": {
+    "fetched_at": 1788005789.9688902,
+    "lat": -32.8895,
+    "locality_version": 2,
+    "lon": -68.8458,
+    "sources": []
+  },
+  "AR:Rosario": {
+    "fetched_at": 1788005820.3782578,
+    "lat": -32.9442,
+    "locality_version": 2,
+    "lon": -60.6505,
+    "sources": []
+  },
   "AT:Innsbruck": {
-    "fetched_at": 1786235569.7047524,
+    "fetched_at": 1788006607.6790314,
     "lat": 47.2692,
     "locality_version": 2,
     "lon": 11.4041,
     "sources": []
   },
   "AT:Salzburg": {
-    "fetched_at": 1786235504.3171117,
+    "fetched_at": 1788006604.0179753,
     "lat": 47.8095,
     "locality_version": 2,
     "lon": 13.055,
     "sources": []
   },
   "AT:Vienna": {
-    "fetched_at": 1786235400.0779192,
+    "fetched_at": 1788006600.018712,
     "lat": 48.2082,
     "locality_version": 2,
     "lon": 16.3738,
     "sources": []
   },
+  "AU:Adelaide": {
+    "fetched_at": 1788011226.2321827,
+    "lat": -34.9285,
+    "locality_version": 2,
+    "lon": 138.6007,
+    "sources": []
+  },
+  "AU:Brisbane": {
+    "fetched_at": 1788011213.7304022,
+    "lat": -27.4698,
+    "locality_version": 2,
+    "lon": 153.0251,
+    "sources": []
+  },
+  "AU:Cairns": {
+    "fetched_at": 1788011427.3556232,
+    "lat": -16.9186,
+    "locality_version": 2,
+    "lon": 145.7781,
+    "sources": []
+  },
+  "AU:Canberra": {
+    "fetched_at": 1788011241.0470557,
+    "lat": -35.2809,
+    "locality_version": 2,
+    "lon": 149.13,
+    "sources": []
+  },
+  "AU:Darwin": {
+    "fetched_at": 1788011440.3542492,
+    "lat": -12.4634,
+    "locality_version": 2,
+    "lon": 130.8456,
+    "sources": []
+  },
+  "AU:Geelong": {
+    "fetched_at": 1788011390.7158287,
+    "lat": -38.1499,
+    "locality_version": 2,
+    "lon": 144.3617,
+    "sources": []
+  },
+  "AU:Gold Coast": {
+    "fetched_at": 1788011279.8097017,
+    "lat": -28.0167,
+    "locality_version": 2,
+    "lon": 153.4,
+    "sources": []
+  },
+  "AU:Hobart": {
+    "fetched_at": 1788011243.559264,
+    "lat": -42.8821,
+    "locality_version": 2,
+    "lon": 147.3272,
+    "sources": []
+  },
+  "AU:Melbourne": {
+    "fetched_at": 1788011165.24472,
+    "lat": -37.8136,
+    "locality_version": 2,
+    "lon": 144.9631,
+    "sources": []
+  },
+  "AU:Newcastle": {
+    "fetched_at": 1788011313.9329853,
+    "lat": -32.9283,
+    "locality_version": 2,
+    "lon": 151.7817,
+    "sources": []
+  },
+  "AU:Perth": {
+    "fetched_at": 1788011222.9959195,
+    "lat": -31.9505,
+    "locality_version": 2,
+    "lon": 115.8605,
+    "sources": []
+  },
+  "AU:Sunshine Coast": {
+    "fetched_at": 1788011514.551882,
+    "lat": -26.65,
+    "locality_version": 2,
+    "lon": 153.0667,
+    "sources": []
+  },
+  "AU:Sydney": {
+    "fetched_at": 1788011100.0258658,
+    "lat": -33.8688,
+    "locality_version": 2,
+    "lon": 151.2093,
+    "sources": []
+  },
+  "AU:Townsville": {
+    "fetched_at": 1788011475.6832545,
+    "lat": -19.259,
+    "locality_version": 2,
+    "lon": 146.8169,
+    "sources": []
+  },
+  "AU:Wollongong": {
+    "fetched_at": 1788011350.208906,
+    "lat": -34.4278,
+    "locality_version": 2,
+    "lon": 150.8931,
+    "sources": []
+  },
   "BB:Bridgetown": {
-    "fetched_at": 1786233639.3860338,
+    "fetched_at": 1788004846.1705775,
     "lat": 13.0975,
+    "locality_version": 2,
     "lon": -59.6145,
-    "sources": [
-      {
-        "area_local": "Bridgetown City",
-        "merchant": "Harbour Lights",
-        "source_kind": "local_independent",
-        "url": "https://www.harbourlightsbarbados.com",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Fort-De-France",
-        "merchant": "Snack Elizé",
-        "source_kind": "local_independent",
-        "url": "https://snackelize.com",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Le Diamant",
-        "merchant": "U Express",
-        "source_kind": "local_independent",
-        "url": "https://www.magasins-u.com/magasin/uexpress-lediamantcherry.m30842",
-        "venue_category": "Deli's and Grocers"
-      },
-      {
-        "area_local": "Le Marin",
-        "merchant": "Mango Bay",
-        "source_kind": "local_independent",
-        "url": "https://restaurant-mangobay.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Soufriere",
-        "merchant": "Downtown Hotel",
-        "source_kind": "local_independent",
-        "url": "https://downtownhotelslu.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Le Diamant",
-        "merchant": "Domaine de l'Oasis",
-        "source_kind": "local_independent",
-        "url": "https://domainedeloasis.fr",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Vieux Fort",
-        "merchant": "Dr Freeza;Felly Belly",
-        "source_kind": "local_independent",
-        "url": "http://fellybelly.com",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Vieux Fort",
-        "merchant": "G's Marina Mart",
-        "source_kind": "local_independent",
-        "url": "https://glacesupermarkets.com",
-        "venue_category": "Deli's and Grocers"
-      },
-      {
-        "area_local": "Speightstown",
-        "merchant": "Island Plates",
-        "source_kind": "local_independent",
-        "url": "https://www.islandplatesbb.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Hillsborough",
-        "merchant": "Green Roof Inn",
-        "source_kind": "local_independent",
-        "url": "http://www.greenroofinn.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Fort-De-France",
-        "merchant": "Le Cloud",
-        "source_kind": "local_independent",
-        "url": "https://www.cloudrooftopbar.com",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Fort-De-France",
-        "merchant": "Tacos legend Kerlys",
-        "source_kind": "local_independent",
-        "url": "https://fr-fr.facebook.com/TacosLegend.Martinique",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Vieux Fort",
-        "merchant": "Lena's Country Mart",
-        "source_kind": "local_independent",
-        "url": "https://captainclifftours.wixsite.com/captainclifftours",
-        "venue_category": "Deli's and Grocers"
-      },
-      {
-        "area_local": "Speightstown",
-        "merchant": "The Orange Street Grocer",
-        "source_kind": "local_independent",
-        "url": "https://www.theorangestreetgrocer.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Padmore",
-        "merchant": "Pollards Mill",
-        "source_kind": "local_independent",
-        "url": "https://www.pollardsmill.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Bridgetown City",
-        "merchant": "La Cabane",
-        "source_kind": "local_independent",
-        "url": "https://www.lacabanebarbados.com",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Fort-De-France",
-        "merchant": "BKB Chicken & Burger",
-        "source_kind": "local_independent",
-        "url": "https://m.facebook.com/bkbpouletbokay/photos/a.1807217916168837.1073741829.1488529711370994/2015371065353520/?type=3&source=44",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Le Diamant",
-        "merchant": "La Guérande",
-        "source_kind": "local_independent",
-        "url": "https://boulangerielaguerande.fr",
-        "venue_category": "Deli's and Grocers"
-      },
-      {
-        "area_local": "Bridgetown",
-        "merchant": "Chefette Restaurants - Fontabelle",
-        "source_kind": "local_independent",
-        "url": "https://www.chefette.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Ealing Park",
-        "merchant": "Gemini House Bed & Breakfast",
-        "source_kind": "local_independent",
-        "url": "https://www.geminihouse.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Bridgetown",
-        "merchant": "Paloma",
-        "source_kind": "local_independent",
-        "url": "https://palomabarbados.com",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Ducos",
-        "merchant": "Big Fernand - Ducos",
-        "source_kind": "local_independent",
-        "url": "https://restaurants.bigfernand.com/martinique-genipa",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Vieux Fort",
-        "merchant": "it's alive",
-        "source_kind": "local_independent",
-        "url": "https://www.itsaliveslu.com",
-        "venue_category": "Deli's and Grocers"
-      },
-      {
-        "area_local": "Bridgetown",
-        "merchant": "Rascals of the Caribbean Restaurant",
-        "source_kind": "local_independent",
-        "url": "https://rascalswaterpark.com/menu",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Vieux Fort",
-        "merchant": "La Haut Resort",
-        "source_kind": "local_independent",
-        "url": "https://www.lahaut.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Bridgetown",
-        "merchant": "The Happy Hour Spot",
-        "source_kind": "local_independent",
-        "url": "https://thehappyhourspotbb.com",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Fort-De-France",
-        "merchant": "Snack élizé",
-        "source_kind": "local_independent",
-        "url": "https://www.elize.fr/www",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Bridgetown City",
-        "merchant": "Poinsettia Mart",
-        "source_kind": "local_independent",
-        "url": "https://poinsettiamart.weebly.com",
-        "venue_category": "Deli's and Grocers"
-      },
-      {
-        "area_local": "Fort-De-France",
-        "merchant": "Hippopotamus",
-        "source_kind": "local_independent",
-        "url": "http://galleria.mq/boutique/fiche/hippopotamus",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Vieux Fort",
-        "merchant": "Stonefield Estate Resort",
-        "source_kind": "local_independent",
-        "url": "https://www.stonefieldresort.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Worthing",
-        "merchant": "Lucky Horseshoe Saloon & Steakhouse",
-        "source_kind": "local_independent",
-        "url": "http://luckyhorseshoe.bb",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Fort-De-France",
-        "merchant": "Pizza Aldo",
-        "source_kind": "local_independent",
-        "url": "https://www.pizza-aldo-cluny.fr",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Sainte-Luce",
-        "merchant": "Les Artisans Du Pain",
-        "source_kind": "local_independent",
-        "url": "https://www.petitscommerces.fr/page/les-artisans-du-pain",
-        "venue_category": "Deli's and Grocers"
-      },
-      {
-        "area_local": "Port Elizabeth, Admiralty Bay, Belmont",
-        "merchant": "Frangipani Beach Bar & Restaurant",
-        "source_kind": "local_independent",
-        "url": "https://frangipanibequia.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Vieux Fort",
-        "merchant": "Unique Vacations Limited Call Centre",
-        "source_kind": "local_independent",
-        "url": "https://www.sandals.com/contact/worldwide.cfm",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Bridgetown",
-        "merchant": "The Boatyard",
-        "source_kind": "local_independent",
-        "url": "https://www.theboatyard.com",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Bridgetown",
-        "merchant": "Savvy On The Bay",
-        "source_kind": "local_independent",
-        "url": "https://www.savvyonthebay.com",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Fort-De-France",
-        "merchant": "Carrefour",
-        "source_kind": "local_chain",
-        "url": "https://carrefour-martinique.com/nos-magasins",
-        "venue_category": "Deli's and Grocers"
-      },
-      {
-        "area_local": "Vieux Fort",
-        "merchant": "Sea Island Cotton Shop;The Bread Basket (BB's)",
-        "source_kind": "local_independent",
-        "url": "http://seaislandstlucia.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Barbados",
-        "merchant": "Ocean Two Resort & Residences",
-        "source_kind": "local_independent",
-        "url": "http://www.oceantwobarbados.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      }
-    ]
+    "sources": []
   },
   "BB:Speightstown": {
-    "fetched_at": 1786233732.9515755,
+    "fetched_at": 1788004926.900198,
     "lat": 13.25,
+    "locality_version": 2,
     "lon": -59.65,
     "sources": []
   },
   "BE:Antwerp": {
-    "fetched_at": 1786235765.901729,
+    "fetched_at": 1788006614.0508783,
     "lat": 51.2194,
     "locality_version": 2,
     "lon": 4.4025,
     "sources": []
   },
   "BE:Brussels": {
-    "fetched_at": 1786235664.345268,
+    "fetched_at": 1788006609.2879531,
     "lat": 50.8503,
     "locality_version": 2,
     "lon": 4.3517,
     "sources": []
   },
   "BE:Ghent": {
-    "fetched_at": 1786235830.6348383,
+    "fetched_at": 1788006616.4901752,
     "lat": 51.0543,
     "locality_version": 2,
     "lon": 3.7174,
     "sources": []
   },
+  "BR:Belo Horizonte": {
+    "fetched_at": 1788006015.3650336,
+    "lat": -19.9167,
+    "locality_version": 2,
+    "lon": -43.9345,
+    "sources": []
+  },
+  "BR:Brasilia": {
+    "fetched_at": 1788005951.3513918,
+    "lat": -15.8267,
+    "locality_version": 2,
+    "lon": -47.9218,
+    "sources": []
+  },
+  "BR:Rio De Janeiro": {
+    "fetched_at": 1788005915.6882055,
+    "lat": -22.9068,
+    "locality_version": 2,
+    "lon": -43.1729,
+    "sources": []
+  },
+  "BR:Salvador": {
+    "fetched_at": 1788005984.3023658,
+    "lat": -12.9777,
+    "locality_version": 2,
+    "lon": -38.5016,
+    "sources": []
+  },
+  "BR:Sao Paulo": {
+    "fetched_at": 1788005860.6973934,
+    "lat": -23.5505,
+    "locality_version": 2,
+    "lon": -46.6333,
+    "sources": []
+  },
   "BS:Freeport": {
-    "fetched_at": 1786233868.7362971,
+    "fetched_at": 1788005007.9563255,
     "lat": 26.5333,
+    "locality_version": 2,
     "lon": -78.7,
     "sources": []
   },
   "BS:Marsh Harbour": {
-    "fetched_at": 1786233954.3093889,
+    "fetched_at": 1788005049.7515464,
     "lat": 26.5412,
+    "locality_version": 2,
     "lon": -77.0636,
     "sources": []
   },
   "BS:Nassau": {
-    "fetched_at": 1786233797.2511356,
+    "fetched_at": 1788004966.9819536,
     "lat": 25.0443,
+    "locality_version": 2,
     "lon": -77.3504,
-    "sources": [
-      {
-        "area_local": "Hope Town",
-        "merchant": "Ray’s Place Lounge",
-        "source_kind": "local_independent",
-        "url": "https://hopetownlodge.com",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "George Town",
-        "merchant": "Chat 'N' Chill Beach Bar & Grill",
-        "source_kind": "local_independent",
-        "url": "http://www.http://www.chatnchill.com",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Nassau City",
-        "merchant": "Da Market Centre",
-        "source_kind": "local_independent",
-        "url": "https://www.damarketcentre.com",
-        "venue_category": "Deli's and Grocers"
-      },
-      {
-        "area_local": "Nassau",
-        "merchant": "Señor Frog's",
-        "source_kind": "local_independent",
-        "url": "https://senorfrogs.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Williams Town",
-        "merchant": "Ocean Reef Yacht Club & Resort",
-        "source_kind": "local_independent",
-        "url": "http://www.oryc.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Nassau",
-        "merchant": "Pirate Republic Brewing",
-        "source_kind": "local_independent",
-        "url": "https://piraterepublicbahamas.com",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Nassau City",
-        "merchant": "Popeyes",
-        "source_kind": "local_independent",
-        "url": "https://www.popeyesbahamas.com",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Nassau City",
-        "merchant": "Cost Right",
-        "source_kind": "local_independent",
-        "url": "https://amlfoods.com",
-        "venue_category": "Deli's and Grocers"
-      },
-      {
-        "area_local": "High Rock",
-        "merchant": "Bishop's Beach Club",
-        "source_kind": "local_independent",
-        "url": "http://bishopsresort.net",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Great Exuma",
-        "merchant": "Exuma Palms Hotel",
-        "source_kind": "local_independent",
-        "url": "http://www.exumapalms.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Dunmore Town",
-        "merchant": "The Elbow Room",
-        "source_kind": "local_independent",
-        "url": "https://instagram.com/elbowroomharbourisland?igshid=YmMyMTA2M2Y=",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Nassau City",
-        "merchant": "Marco's Pizza",
-        "source_kind": "local_independent",
-        "url": "https://www.marcos.com",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Nassau City",
-        "merchant": "Bahamas Wholesale Agencies Limited",
-        "source_kind": "local_independent",
-        "url": "https://www.bahamaswholesale.com",
-        "venue_category": "Deli's and Grocers"
-      },
-      {
-        "area_local": "Foxtown",
-        "merchant": "Da Valley Restaurant & Bar",
-        "source_kind": "local_independent",
-        "url": "https://www.ronaldsrentals.com/valley_restaurant.htm",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Freeport",
-        "merchant": "Royal Islander Hotel",
-        "source_kind": "local_independent",
-        "url": "http://www.royalislanderhotel.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Nassau City",
-        "merchant": "Cheetah’s Lounge",
-        "source_kind": "local_independent",
-        "url": "https://cheetahslounge.com",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Nassau City",
-        "merchant": "Bistro Express",
-        "source_kind": "local_independent",
-        "url": "https://bahamianbistro.com",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Lucaya",
-        "merchant": "L'Elmo di Ottone",
-        "source_kind": "local_independent",
-        "url": "https://elmodiottone.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Black Point",
-        "merchant": "Staniel Cay Yacht Club",
-        "source_kind": "local_independent",
-        "url": "https://www.stanielcay.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Little Harbour",
-        "merchant": "Pete's Pub and Gallery",
-        "source_kind": "local_independent",
-        "url": "https://www.petespub.com",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Nassau City",
-        "merchant": "Bamboo Shack",
-        "source_kind": "local_independent",
-        "url": "https://www.facebook.com/TheBambooShack",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Nassau",
-        "merchant": "Sharkeez Bar & Grill",
-        "source_kind": "local_independent",
-        "url": "https://www.sharkeezcaribbean.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Deep Creek",
-        "merchant": "Cape Eleuthera Resort & Marina",
-        "source_kind": "local_independent",
-        "url": "https://www.capeeleuthera.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Lucaya",
-        "merchant": "Bones Bar",
-        "source_kind": "local_independent",
-        "url": "https://www.bones-bar.com",
-        "venue_category": "Clubs, Bars & Pubs"
-      },
-      {
-        "area_local": "Nassau City",
-        "merchant": "Subway",
-        "source_kind": "local_chain",
-        "url": "https://www.subway.com",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Nassau",
-        "merchant": "The Pier",
-        "source_kind": "local_independent",
-        "url": "https://thepierbahamas.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Rokers Point Settlement",
-        "merchant": "Grand Isle Resort & Residences",
-        "source_kind": "local_independent",
-        "url": "https://grandisleresort.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Nassau City",
-        "merchant": "McDonald's",
-        "source_kind": "local_chain",
-        "url": "https://www.mcdonalds.com",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "Nassau",
-        "merchant": "Louis & Steen's New Orleans Coffee",
-        "source_kind": "local_independent",
-        "url": "https://louisandsteens.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "George Town",
-        "merchant": "Hideaways Exuma",
-        "source_kind": "local_independent",
-        "url": "https://www.hideawayspalmbay.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      },
-      {
-        "area_local": "Nassau City",
-        "merchant": "Wendy's",
-        "source_kind": "local_chain",
-        "url": "https://wendysbahamas.com",
-        "venue_category": "Food Trucks & Takeaway's"
-      },
-      {
-        "area_local": "New Plymouth",
-        "merchant": "Sundowners Bar & Restaurant",
-        "source_kind": "local_independent",
-        "url": "http://sundownersbar.com",
-        "venue_category": "Restaurants, Cafe's & Bistro's"
-      },
-      {
-        "area_local": "Nassau",
-        "merchant": "Ocean West Boutique Hotel",
-        "source_kind": "local_independent",
-        "url": "https://oceanwestbahamas.com",
-        "venue_category": "Hotels, Resorts & B&B's"
-      }
-    ]
+    "sources": []
+  },
+  "BW:Francistown": {
+    "fetched_at": 1788008450.497361,
+    "lat": -21.1702,
+    "locality_version": 2,
+    "lon": 27.5079,
+    "sources": []
+  },
+  "BW:Gaborone": {
+    "fetched_at": 1788008400.036342,
+    "lat": -24.6282,
+    "locality_version": 2,
+    "lon": 25.9231,
+    "sources": []
   },
   "BZ:Belize City": {
-    "fetched_at": 1786234039.8842528,
+    "fetched_at": 1788005085.4732785,
     "lat": 17.5046,
+    "locality_version": 2,
     "lon": -88.1962,
     "sources": []
   },
   "BZ:Belmopan": {
-    "fetched_at": 1786234105.6067967,
+    "fetched_at": 1788005093.3068132,
     "lat": 17.2514,
+    "locality_version": 2,
     "lon": -88.759,
     "sources": []
   },
   "BZ:San Ignacio": {
-    "fetched_at": 1786234187.6312354,
+    "fetched_at": 1788005107.296959,
     "lat": 17.1588,
+    "locality_version": 2,
     "lon": -89.0696,
     "sources": []
   },
+  "CA:Brampton": {
+    "fetched_at": 1788005629.0243084,
+    "lat": 43.7315,
+    "locality_version": 2,
+    "lon": -79.7624,
+    "sources": []
+  },
   "CA:Calgary": {
-    "fetched_at": 1786234513.807213,
+    "fetched_at": 1788005262.4474497,
     "lat": 51.0447,
+    "locality_version": 2,
     "lon": -114.0719,
     "sources": []
   },
   "CA:Edmonton": {
-    "fetched_at": 1786234672.2754874,
+    "fetched_at": 1788005305.6960247,
     "lat": 53.5461,
+    "locality_version": 2,
     "lon": -113.4938,
     "sources": []
   },
+  "CA:Halifax": {
+    "fetched_at": 1788005457.0570726,
+    "lat": 44.6488,
+    "locality_version": 2,
+    "lon": -63.5752,
+    "sources": []
+  },
   "CA:Hamilton": {
-    "fetched_at": 1786234878.6296632,
+    "fetched_at": 1788005421.80364,
     "lat": 43.2557,
+    "locality_version": 2,
     "lon": -79.8711,
     "sources": []
   },
+  "CA:Kitchener": {
+    "fetched_at": 1788005585.609809,
+    "lat": 43.4516,
+    "locality_version": 2,
+    "lon": -80.4925,
+    "sources": []
+  },
+  "CA:London": {
+    "fetched_at": 1788005569.069332,
+    "lat": 42.9849,
+    "locality_version": 2,
+    "lon": -81.2453,
+    "sources": []
+  },
+  "CA:Mississauga": {
+    "fetched_at": 1788005622.072256,
+    "lat": 43.589,
+    "locality_version": 2,
+    "lon": -79.6441,
+    "sources": []
+  },
   "CA:Montreal": {
-    "fetched_at": 1786234431.949911,
+    "fetched_at": 1788005226.9549007,
     "lat": 45.5017,
+    "locality_version": 2,
     "lon": -73.5673,
     "sources": []
   },
   "CA:Ottawa": {
-    "fetched_at": 1786234585.8631518,
+    "fetched_at": 1788005269.2130203,
     "lat": 45.4215,
+    "locality_version": 2,
     "lon": -75.6972,
     "sources": []
   },
   "CA:Quebec City": {
-    "fetched_at": 1786234806.813625,
+    "fetched_at": 1788005377.253876,
     "lat": 46.8139,
+    "locality_version": 2,
     "lon": -71.208,
     "sources": []
   },
+  "CA:Regina": {
+    "fetched_at": 1788005533.7870195,
+    "lat": 50.4452,
+    "locality_version": 2,
+    "lon": -104.6189,
+    "sources": []
+  },
+  "CA:Saskatoon": {
+    "fetched_at": 1788005497.5714533,
+    "lat": 52.1332,
+    "locality_version": 2,
+    "lon": -106.67,
+    "sources": []
+  },
+  "CA:Surrey": {
+    "fetched_at": 1788005668.3724213,
+    "lat": 49.1913,
+    "locality_version": 2,
+    "lon": -122.849,
+    "sources": []
+  },
   "CA:Toronto": {
-    "fetched_at": 1786234250.9947689,
+    "fetched_at": 1788005181.6895638,
     "lat": 43.6532,
+    "locality_version": 2,
     "lon": -79.3832,
     "sources": []
   },
   "CA:Vancouver": {
-    "fetched_at": 1786234346.3848238,
+    "fetched_at": 1788005219.8528538,
     "lat": 49.2827,
+    "locality_version": 2,
     "lon": -123.1207,
     "sources": []
   },
+  "CA:Victoria": {
+    "fetched_at": 1788005494.275811,
+    "lat": 48.4284,
+    "locality_version": 2,
+    "lon": -123.3656,
+    "sources": []
+  },
   "CA:Winnipeg": {
-    "fetched_at": 1786234724.080697,
+    "fetched_at": 1788005341.0450006,
     "lat": 49.8951,
+    "locality_version": 2,
     "lon": -97.1384,
     "sources": []
   },
   "CH:Bern": {
-    "fetched_at": 1786236041.7831469,
+    "fetched_at": 1788006623.7945113,
     "lat": 46.948,
     "locality_version": 2,
     "lon": 7.4474,
     "sources": []
   },
   "CH:Geneva": {
-    "fetched_at": 1786235973.9102354,
+    "fetched_at": 1788006622.5093157,
     "lat": 46.2044,
     "locality_version": 2,
     "lon": 6.1432,
     "sources": []
   },
   "CH:Zurich": {
-    "fetched_at": 1786235898.0238664,
+    "fetched_at": 1788006616.9229214,
     "lat": 47.3769,
     "locality_version": 2,
     "lon": 8.5417,
     "sources": []
   },
+  "CL:Concepcion": {
+    "fetched_at": 1787998619.2757409,
+    "lat": -36.8201,
+    "locality_version": 4,
+    "lon": -73.0444,
+    "sources": []
+  },
+  "CL:Santiago": {
+    "fetched_at": 1788006050.93664,
+    "lat": -33.4489,
+    "locality_version": 2,
+    "lon": -70.6693,
+    "sources": []
+  },
+  "CL:Valparaiso": {
+    "fetched_at": 1787998569.434175,
+    "lat": -33.0472,
+    "locality_version": 4,
+    "lon": -71.6127,
+    "sources": []
+  },
+  "CM:Douala": {
+    "fetched_at": 1788008474.5072672,
+    "lat": 4.0511,
+    "locality_version": 2,
+    "lon": 9.7679,
+    "sources": []
+  },
+  "CM:Yaounde": {
+    "fetched_at": 1788008481.1303918,
+    "lat": 3.848,
+    "locality_version": 2,
+    "lon": 11.5021,
+    "sources": []
+  },
+  "CN:Beijing": {
+    "fetched_at": 1788010268.7038527,
+    "lat": 39.9042,
+    "locality_version": 2,
+    "lon": 116.4074,
+    "sources": []
+  },
+  "CN:Chengdu": {
+    "fetched_at": 1788010346.0132327,
+    "lat": 30.5728,
+    "locality_version": 2,
+    "lon": 104.0668,
+    "sources": []
+  },
+  "CN:Guangzhou": {
+    "fetched_at": 1788010298.330217,
+    "lat": 23.1291,
+    "locality_version": 2,
+    "lon": 113.2644,
+    "sources": []
+  },
+  "CN:Shanghai": {
+    "fetched_at": 1788010200.052252,
+    "lat": 31.2304,
+    "locality_version": 2,
+    "lon": 121.4737,
+    "sources": []
+  },
+  "CN:Shenzhen": {
+    "fetched_at": 1788010308.7896783,
+    "lat": 22.5431,
+    "locality_version": 2,
+    "lon": 114.0579,
+    "sources": []
+  },
+  "CO:Bogota": {
+    "fetched_at": 1787999138.611281,
+    "lat": 4.711,
+    "locality_version": 4,
+    "lon": -74.0721,
+    "sources": []
+  },
+  "CO:Cali": {
+    "fetched_at": 1787999291.4093852,
+    "lat": 3.4516,
+    "locality_version": 4,
+    "lon": -76.532,
+    "sources": []
+  },
+  "CO:Cartagena": {
+    "fetched_at": 1787999405.0085378,
+    "lat": 10.391,
+    "locality_version": 4,
+    "lon": -75.4794,
+    "sources": []
+  },
+  "CO:Medellin": {
+    "fetched_at": 1787999238.1468077,
+    "lat": 6.2476,
+    "locality_version": 4,
+    "lon": -75.5658,
+    "sources": []
+  },
+  "CZ:Brno": {
+    "fetched_at": 1788007506.7891266,
+    "lat": 49.1951,
+    "locality_version": 2,
+    "lon": 16.6068,
+    "sources": []
+  },
+  "CZ:Ostrava": {
+    "fetched_at": 1788007542.0159178,
+    "lat": 49.8209,
+    "locality_version": 2,
+    "lon": 18.2625,
+    "sources": []
+  },
   "CZ:Prague": {
-    "fetched_at": 1786236300.0433497,
+    "fetched_at": 1788007500.0543208,
     "lat": 50.0755,
     "locality_version": 2,
     "lon": 14.4378,
     "sources": []
   },
   "DE:Berlin": {
-    "fetched_at": 1786236138.756599,
+    "fetched_at": 1788006624.0849273,
     "lat": 52.52,
     "locality_version": 2,
     "lon": 13.405,
+    "sources": []
+  },
+  "DE:Cologne": {
+    "fetched_at": 1788006639.0761814,
+    "lat": 50.9375,
+    "locality_version": 2,
+    "lon": 6.9603,
+    "sources": []
+  },
+  "DE:Frankfurt": {
+    "fetched_at": 1788006642.3056164,
+    "lat": 50.1109,
+    "locality_version": 2,
+    "lon": 8.6821,
+    "sources": []
+  },
+  "DE:Hamburg": {
+    "fetched_at": 1788006636.7991688,
+    "lat": 53.5511,
+    "locality_version": 2,
+    "lon": 9.9937,
+    "sources": []
+  },
+  "DE:Munich": {
+    "fetched_at": 1788006635.3319383,
+    "lat": 48.1351,
+    "locality_version": 2,
+    "lon": 11.582,
+    "sources": []
+  },
+  "DK:Aarhus": {
+    "fetched_at": 1788006656.783079,
+    "lat": 56.1629,
+    "locality_version": 2,
+    "lon": 10.2039,
+    "sources": []
+  },
+  "DK:Copenhagen": {
+    "fetched_at": 1788006643.5573993,
+    "lat": 55.6761,
+    "locality_version": 2,
+    "lon": 12.5683,
+    "sources": []
+  },
+  "DK:Odense": {
+    "fetched_at": 1788006661.0338047,
+    "lat": 55.4038,
+    "locality_version": 2,
+    "lon": 10.4024,
+    "sources": []
+  },
+  "EG:Alexandria": {
+    "fetched_at": 1788009513.157793,
+    "lat": 31.2001,
+    "locality_version": 2,
+    "lon": 29.9187,
+    "sources": []
+  },
+  "EG:Cairo": {
+    "fetched_at": 1788001055.8898554,
+    "lat": 30.0444,
+    "locality_version": 4,
+    "lon": 31.2357,
+    "sources": []
+  },
+  "EG:Giza": {
+    "fetched_at": 1788009549.7173193,
+    "lat": 30.0131,
+    "locality_version": 2,
+    "lon": 31.2089,
+    "sources": []
+  },
+  "ES:Barcelona": {
+    "fetched_at": 1788001104.2264483,
+    "lat": 41.3874,
+    "locality_version": 4,
+    "lon": 2.1686,
+    "sources": []
+  },
+  "ES:Bilbao": {
+    "fetched_at": 1788001125.0934718,
+    "lat": 43.263,
+    "locality_version": 4,
+    "lon": -2.935,
+    "sources": []
+  },
+  "ES:Madrid": {
+    "fetched_at": 1788006661.3406582,
+    "lat": 40.4168,
+    "locality_version": 2,
+    "lon": -3.7038,
+    "sources": []
+  },
+  "ES:Seville": {
+    "fetched_at": 1788001122.732081,
+    "lat": 37.3891,
+    "locality_version": 4,
+    "lon": -5.9845,
+    "sources": []
+  },
+  "ES:Valencia": {
+    "fetched_at": 1788001111.4733603,
+    "lat": 39.4699,
+    "locality_version": 4,
+    "lon": -0.3763,
+    "sources": []
+  },
+  "FI:Helsinki": {
+    "fetched_at": 1788001132.3663042,
+    "lat": 60.1699,
+    "locality_version": 4,
+    "lon": 24.9384,
+    "sources": []
+  },
+  "FI:Tampere": {
+    "fetched_at": 1788001149.703288,
+    "lat": 61.4978,
+    "locality_version": 4,
+    "lon": 23.761,
+    "sources": []
+  },
+  "FI:Turku": {
+    "fetched_at": 1788001157.702022,
+    "lat": 60.4518,
+    "locality_version": 4,
+    "lon": 22.2666,
+    "sources": []
+  },
+  "FJ:Lautoka": {
+    "fetched_at": 1788001173.629989,
+    "lat": -17.6167,
+    "locality_version": 4,
+    "lon": 177.45,
+    "sources": []
+  },
+  "FJ:Nadi": {
+    "fetched_at": 1788001170.3866675,
+    "lat": -17.7765,
+    "locality_version": 4,
+    "lon": 177.4356,
+    "sources": []
+  },
+  "FJ:Suva": {
+    "fetched_at": 1788001160.8204005,
+    "lat": -18.1416,
+    "locality_version": 4,
+    "lon": 178.4419,
+    "sources": []
+  },
+  "FM:Kolonia": {
+    "fetched_at": 1788001185.0795832,
+    "lat": 6.964,
+    "locality_version": 4,
+    "lon": 158.208,
+    "sources": []
+  },
+  "FM:Palikir": {
+    "fetched_at": 1788001177.6039815,
+    "lat": 6.9248,
+    "locality_version": 4,
+    "lon": 158.161,
+    "sources": []
+  },
+  "FR:Bordeaux": {
+    "fetched_at": 1788006752.7655132,
+    "lat": 44.8378,
+    "locality_version": 2,
+    "lon": -0.5792,
+    "sources": []
+  },
+  "FR:Lyon": {
+    "fetched_at": 1788006714.003943,
+    "lat": 45.764,
+    "locality_version": 2,
+    "lon": 4.8357,
+    "sources": []
+  },
+  "FR:Marseille": {
+    "fetched_at": 1788006749.2939575,
+    "lat": 43.2965,
+    "locality_version": 2,
+    "lon": 5.3698,
+    "sources": []
+  },
+  "FR:Nice": {
+    "fetched_at": 1788006750.5179005,
+    "lat": 43.7102,
+    "locality_version": 2,
+    "lon": 7.262,
+    "sources": []
+  },
+  "FR:Paris": {
+    "fetched_at": 1788001193.4828596,
+    "lat": 48.8566,
+    "locality_version": 4,
+    "lon": 2.3522,
+    "sources": []
+  },
+  "GB:Aberdeen": {
+    "fetched_at": 1788007071.432255,
+    "lat": 57.1497,
+    "locality_version": 2,
+    "lon": -2.0943,
+    "sources": []
+  },
+  "GB:Bath": {
+    "fetched_at": 1788007096.4554815,
+    "lat": 51.3811,
+    "locality_version": 2,
+    "lon": -2.359,
+    "sources": []
+  },
+  "GB:Belfast": {
+    "fetched_at": 1788006937.4055054,
+    "lat": 54.5973,
+    "locality_version": 2,
+    "lon": -5.9301,
+    "sources": []
+  },
+  "GB:Birmingham": {
+    "fetched_at": 1788006908.396232,
+    "lat": 52.4862,
+    "locality_version": 2,
+    "lon": -1.8904,
+    "sources": []
+  },
+  "GB:Brighton": {
+    "fetched_at": 1788006992.415177,
+    "lat": 50.8225,
+    "locality_version": 2,
+    "lon": -0.1372,
+    "sources": []
+  },
+  "GB:Bristol": {
+    "fetched_at": 1788006920.9143097,
+    "lat": 51.4545,
+    "locality_version": 2,
+    "lon": -2.5879,
+    "sources": []
+  },
+  "GB:Cambridge": {
+    "fetched_at": 1788007024.9271626,
+    "lat": 52.2053,
+    "locality_version": 2,
+    "lon": 0.1218,
+    "sources": []
+  },
+  "GB:Cardiff": {
+    "fetched_at": 1788006937.0414824,
+    "lat": 51.4816,
+    "locality_version": 2,
+    "lon": -3.1791,
+    "sources": []
+  },
+  "GB:Coventry": {
+    "fetched_at": 1788007014.9731748,
+    "lat": 52.4068,
+    "locality_version": 2,
+    "lon": -1.5197,
+    "sources": []
+  },
+  "GB:Edinburgh": {
+    "fetched_at": 1788006913.3509974,
+    "lat": 55.9533,
+    "locality_version": 2,
+    "lon": -3.1883,
+    "sources": []
+  },
+  "GB:Glasgow": {
+    "fetched_at": 1788006908.9805305,
+    "lat": 55.8642,
+    "locality_version": 2,
+    "lon": -4.2518,
+    "sources": []
+  },
+  "GB:Leeds": {
+    "fetched_at": 1788006908.6597927,
+    "lat": 53.8008,
+    "locality_version": 2,
+    "lon": -1.5491,
+    "sources": []
+  },
+  "GB:Leicester": {
+    "fetched_at": 1788006992.075739,
+    "lat": 52.6369,
+    "locality_version": 2,
+    "lon": -1.1398,
+    "sources": []
+  },
+  "GB:Liverpool": {
+    "fetched_at": 1788006915.6657014,
+    "lat": 53.4084,
+    "locality_version": 2,
+    "lon": -2.9916,
+    "sources": []
+  },
+  "GB:Manchester": {
+    "fetched_at": 1788006904.0483549,
+    "lat": 53.4808,
+    "locality_version": 2,
+    "lon": -2.2426,
+    "sources": []
+  },
+  "GB:Newcastle": {
+    "fetched_at": 1788006925.808478,
+    "lat": 54.9783,
+    "locality_version": 2,
+    "lon": -1.6178,
+    "sources": []
+  },
+  "GB:Nottingham": {
+    "fetched_at": 1788006972.604577,
+    "lat": 52.9548,
+    "locality_version": 2,
+    "lon": -1.1581,
+    "sources": []
+  },
+  "GB:Oxford": {
+    "fetched_at": 1788007060.1762269,
+    "lat": 51.752,
+    "locality_version": 2,
+    "lon": -1.2577,
+    "sources": []
+  },
+  "GB:Plymouth": {
+    "fetched_at": 1788007090.6843276,
+    "lat": 50.3755,
+    "locality_version": 2,
+    "lon": -4.1427,
+    "sources": []
+  },
+  "GB:Reading": {
+    "fetched_at": 1788007019.2292995,
+    "lat": 51.4543,
+    "locality_version": 2,
+    "lon": -0.9781,
+    "sources": []
+  },
+  "GB:Sheffield": {
+    "fetched_at": 1788006922.5487268,
+    "lat": 53.3811,
+    "locality_version": 2,
+    "lon": -1.4701,
+    "sources": []
+  },
+  "GB:Southampton": {
+    "fetched_at": 1788006995.6852484,
+    "lat": 50.9097,
+    "locality_version": 2,
+    "lon": -1.4044,
+    "sources": []
+  },
+  "GB:Swansea": {
+    "fetched_at": 1788007093.9384375,
+    "lat": 51.6214,
+    "locality_version": 2,
+    "lon": -3.9436,
+    "sources": []
+  },
+  "GB:York": {
+    "fetched_at": 1788007096.197655,
+    "lat": 53.96,
+    "locality_version": 2,
+    "lon": -1.0873,
+    "sources": []
+  },
+  "GD:St Georges": {
+    "fetched_at": 1788005673.5294452,
+    "lat": 12.056,
+    "locality_version": 2,
+    "lon": -61.7486,
+    "sources": []
+  },
+  "GH:Accra": {
+    "fetched_at": 1788008491.4449956,
+    "lat": 5.6037,
+    "locality_version": 2,
+    "lon": -0.187,
+    "sources": []
+  },
+  "GH:Kumasi": {
+    "fetched_at": 1788008531.2526968,
+    "lat": 6.6885,
+    "locality_version": 2,
+    "lon": -1.6244,
+    "sources": []
+  },
+  "GH:Tamale": {
+    "fetched_at": 1788008565.4228992,
+    "lat": 9.4008,
+    "locality_version": 2,
+    "lon": -0.8393,
+    "sources": []
+  },
+  "GM:Banjul": {
+    "fetched_at": 1788008604.1425703,
+    "lat": 13.4549,
+    "locality_version": 2,
+    "lon": -16.579,
+    "sources": []
+  },
+  "GM:Serekunda": {
+    "fetched_at": 1788008650.1696656,
+    "lat": 13.438,
+    "locality_version": 2,
+    "lon": -16.678,
+    "sources": []
+  },
+  "GR:Athens": {
+    "fetched_at": 1788007096.752532,
+    "lat": 37.9838,
+    "locality_version": 2,
+    "lon": 23.7275,
+    "sources": []
+  },
+  "GR:Heraklion": {
+    "fetched_at": 1788007097.7447011,
+    "lat": 35.3387,
+    "locality_version": 2,
+    "lon": 25.1442,
+    "sources": []
+  },
+  "GR:Thessaloniki": {
+    "fetched_at": 1788007097.4905388,
+    "lat": 40.6401,
+    "locality_version": 2,
+    "lon": 22.9444,
+    "sources": []
+  },
+  "GY:Georgetown": {
+    "fetched_at": 1788001344.1615427,
+    "lat": 6.8013,
+    "locality_version": 4,
+    "lon": -58.1551,
+    "sources": []
+  },
+  "GY:Linden": {
+    "fetched_at": 1788001358.8852034,
+    "lat": 6.0,
+    "locality_version": 4,
+    "lon": -58.3,
+    "sources": []
+  },
+  "HR:Dubrovnik": {
+    "fetched_at": 1788007132.695046,
+    "lat": 42.6507,
+    "locality_version": 2,
+    "lon": 18.0944,
+    "sources": []
+  },
+  "HR:Split": {
+    "fetched_at": 1788007130.2286808,
+    "lat": 43.5081,
+    "locality_version": 2,
+    "lon": 16.4402,
+    "sources": []
+  },
+  "HR:Zagreb": {
+    "fetched_at": 1788007109.4058447,
+    "lat": 45.815,
+    "locality_version": 2,
+    "lon": 15.9819,
+    "sources": []
+  },
+  "ID:Bali": {
+    "fetched_at": 1788010477.6584668,
+    "lat": -8.4095,
+    "locality_version": 2,
+    "lon": 115.1889,
+    "sources": []
+  },
+  "ID:Bandung": {
+    "fetched_at": 1788010435.4878232,
+    "lat": -6.9175,
+    "locality_version": 2,
+    "lon": 107.6191,
+    "sources": []
+  },
+  "ID:Jakarta": {
+    "fetched_at": 1788010381.4077682,
+    "lat": -6.2088,
+    "locality_version": 2,
+    "lon": 106.8456,
+    "sources": []
+  },
+  "ID:Medan": {
+    "fetched_at": 1788010480.6493566,
+    "lat": 3.5952,
+    "locality_version": 2,
+    "lon": 98.6722,
+    "sources": []
+  },
+  "ID:Surabaya": {
+    "fetched_at": 1788010400.086431,
+    "lat": -7.2575,
+    "locality_version": 2,
+    "lon": 112.7521,
+    "sources": []
+  },
+  "IE:Cork": {
+    "fetched_at": 1788007204.6167908,
+    "lat": 51.8985,
+    "locality_version": 2,
+    "lon": -8.4756,
+    "sources": []
+  },
+  "IE:Drogheda": {
+    "fetched_at": 1788007286.407141,
+    "lat": 53.7179,
+    "locality_version": 2,
+    "lon": -6.3561,
+    "sources": []
+  },
+  "IE:Dublin": {
+    "fetched_at": 1788007143.9499965,
+    "lat": 53.3498,
+    "locality_version": 2,
+    "lon": -6.2603,
+    "sources": []
+  },
+  "IE:Dundalk": {
+    "fetched_at": 1788007286.710046,
+    "lat": 54.0043,
+    "locality_version": 2,
+    "lon": -6.4129,
+    "sources": []
+  },
+  "IE:Galway": {
+    "fetched_at": 1788007205.8746972,
+    "lat": 53.2707,
+    "locality_version": 2,
+    "lon": -9.0568,
+    "sources": []
+  },
+  "IE:Kilkenny": {
+    "fetched_at": 1788007250.8499732,
+    "lat": 52.6541,
+    "locality_version": 2,
+    "lon": -7.2448,
+    "sources": []
+  },
+  "IE:Limerick": {
+    "fetched_at": 1788007208.1185548,
+    "lat": 52.6638,
+    "locality_version": 2,
+    "lon": -8.6267,
+    "sources": []
+  },
+  "IE:Sligo": {
+    "fetched_at": 1788007286.1445053,
+    "lat": 54.2766,
+    "locality_version": 2,
+    "lon": -8.4761,
+    "sources": []
+  },
+  "IE:Waterford": {
+    "fetched_at": 1788007243.373257,
+    "lat": 52.2593,
+    "locality_version": 2,
+    "lon": -7.1101,
+    "sources": []
+  },
+  "IE:Wexford": {
+    "fetched_at": 1788007289.1801112,
+    "lat": 52.3369,
+    "locality_version": 2,
+    "lon": -6.4633,
+    "sources": []
+  },
+  "IL:Haifa": {
+    "fetched_at": 1788009667.9203897,
+    "lat": 32.794,
+    "locality_version": 2,
+    "lon": 34.9896,
+    "sources": []
+  },
+  "IL:Jerusalem": {
+    "fetched_at": 1788009620.3903482,
+    "lat": 31.7683,
+    "locality_version": 2,
+    "lon": 35.2137,
+    "sources": []
+  },
+  "IL:Tel Aviv": {
+    "fetched_at": 1788009557.8381395,
+    "lat": 32.0853,
+    "locality_version": 2,
+    "lon": 34.7818,
+    "sources": []
+  },
+  "IN:Bangalore": {
+    "fetched_at": 1788010558.7118428,
+    "lat": 12.9716,
+    "locality_version": 2,
+    "lon": 77.5946,
+    "sources": []
+  },
+  "IN:Chennai": {
+    "fetched_at": 1788010598.7822402,
+    "lat": 13.0827,
+    "locality_version": 2,
+    "lon": 80.2707,
+    "sources": []
+  },
+  "IN:Delhi": {
+    "fetched_at": 1788010551.7791567,
+    "lat": 28.6139,
+    "locality_version": 2,
+    "lon": 77.209,
+    "sources": []
+  },
+  "IN:Hyderabad": {
+    "fetched_at": 1788010561.5834925,
+    "lat": 17.385,
+    "locality_version": 2,
+    "lon": 78.4867,
+    "sources": []
+  },
+  "IN:Kolkata": {
+    "fetched_at": 1788010600.8980994,
+    "lat": 22.5726,
+    "locality_version": 2,
+    "lon": 88.3639,
+    "sources": []
+  },
+  "IN:Mumbai": {
+    "fetched_at": 1788010516.906272,
+    "lat": 19.076,
+    "locality_version": 2,
+    "lon": 72.8777,
+    "sources": []
+  },
+  "IN:Pune": {
+    "fetched_at": 1788010637.3910434,
+    "lat": 18.5204,
+    "locality_version": 2,
+    "lon": 73.8567,
+    "sources": []
+  },
+  "IS:Akureyri": {
+    "fetched_at": 1788007299.613034,
+    "lat": 65.6835,
+    "locality_version": 2,
+    "lon": -18.1262,
+    "sources": []
+  },
+  "IS:Reykjavik": {
+    "fetched_at": 1788007296.6014495,
+    "lat": 64.1466,
+    "locality_version": 2,
+    "lon": -21.9426,
+    "sources": []
+  },
+  "IT:Florence": {
+    "fetched_at": 1788007316.9719257,
+    "lat": 43.7696,
+    "locality_version": 2,
+    "lon": 11.2558,
+    "sources": []
+  },
+  "IT:Milan": {
+    "fetched_at": 1788007310.767043,
+    "lat": 45.4642,
+    "locality_version": 2,
+    "lon": 9.19,
+    "sources": []
+  },
+  "IT:Naples": {
+    "fetched_at": 1788007315.38396,
+    "lat": 40.8518,
+    "locality_version": 2,
+    "lon": 14.2681,
+    "sources": []
+  },
+  "IT:Rome": {
+    "fetched_at": 1788007302.999314,
+    "lat": 41.9028,
+    "locality_version": 2,
+    "lon": 12.4964,
+    "sources": []
+  },
+  "IT:Turin": {
+    "fetched_at": 1788007320.397026,
+    "lat": 45.0703,
+    "locality_version": 2,
+    "lon": 7.6869,
+    "sources": []
+  },
+  "JM:Kingston": {
+    "fetched_at": 1788005709.8712082,
+    "lat": 17.9714,
+    "locality_version": 2,
+    "lon": -76.7931,
+    "sources": []
+  },
+  "JM:Montego Bay": {
+    "fetched_at": 1787995631.6568165,
+    "lat": 18.4762,
+    "locality_version": 4,
+    "lon": -77.8939,
+    "sources": []
+  },
+  "JM:Negril": {
+    "fetched_at": 1787995938.2279077,
+    "lat": 18.2686,
+    "locality_version": 4,
+    "lon": -78.348,
+    "sources": []
+  },
+  "JM:Ocho Rios": {
+    "fetched_at": 1787995765.5221338,
+    "lat": 18.4074,
+    "locality_version": 4,
+    "lon": -77.1031,
+    "sources": []
+  },
+  "JM:Spanish Town": {
+    "fetched_at": 1787995867.4695673,
+    "lat": 17.9911,
+    "locality_version": 4,
+    "lon": -76.9574,
+    "sources": []
+  },
+  "JO:Amman": {
+    "fetched_at": 1788009703.1851225,
+    "lat": 31.9454,
+    "locality_version": 2,
+    "lon": 35.9284,
+    "sources": []
+  },
+  "JO:Aqaba": {
+    "fetched_at": 1788009787.9020135,
+    "lat": 29.532,
+    "locality_version": 2,
+    "lon": 35.0063,
+    "sources": []
+  },
+  "JO:Irbid": {
+    "fetched_at": 1788009750.412181,
+    "lat": 32.5556,
+    "locality_version": 2,
+    "lon": 35.85,
+    "sources": []
+  },
+  "JP:Kyoto": {
+    "fetched_at": 1788010758.567671,
+    "lat": 35.0116,
+    "locality_version": 2,
+    "lon": 135.7681,
+    "sources": []
+  },
+  "JP:Nagoya": {
+    "fetched_at": 1788010833.1830852,
+    "lat": 35.1815,
+    "locality_version": 2,
+    "lon": 136.9066,
+    "sources": []
+  },
+  "JP:Osaka": {
+    "fetched_at": 1788010722.2765293,
+    "lat": 34.6937,
+    "locality_version": 2,
+    "lon": 135.5023,
+    "sources": []
+  },
+  "JP:Tokyo": {
+    "fetched_at": 1788010643.1483095,
+    "lat": 35.6762,
+    "locality_version": 2,
+    "lon": 139.6503,
+    "sources": []
+  },
+  "JP:Yokohama": {
+    "fetched_at": 1788010796.976438,
+    "lat": 35.4437,
+    "locality_version": 2,
+    "lon": 139.638,
+    "sources": []
+  },
+  "KE:Kisumu": {
+    "fetched_at": 1788008825.8415954,
+    "lat": -0.0917,
+    "locality_version": 2,
+    "lon": 34.768,
+    "sources": []
+  },
+  "KE:Mombasa": {
+    "fetched_at": 1788008755.5294333,
+    "lat": -4.0435,
+    "locality_version": 2,
+    "lon": 39.6682,
+    "sources": []
+  },
+  "KE:Nairobi": {
+    "fetched_at": 1788008693.268996,
+    "lat": -1.2921,
+    "locality_version": 2,
+    "lon": 36.8219,
+    "sources": []
+  },
+  "KE:Nakuru": {
+    "fetched_at": 1788008866.1618345,
+    "lat": -0.3031,
+    "locality_version": 2,
+    "lon": 36.08,
+    "sources": []
+  },
+  "KI:Tarawa": {
+    "fetched_at": 1788002102.3381708,
+    "lat": 1.4518,
+    "locality_version": 4,
+    "lon": 172.9717,
+    "sources": []
+  },
+  "KN:Basseterre": {
+    "fetched_at": 1788002131.1318734,
+    "lat": 17.3026,
+    "locality_version": 4,
+    "lon": -62.7177,
+    "sources": []
+  },
+  "KR:Busan": {
+    "fetched_at": 1788010892.944339,
+    "lat": 35.1796,
+    "locality_version": 2,
+    "lon": 129.0756,
+    "sources": []
+  },
+  "KR:Daegu": {
+    "fetched_at": 1788010937.5297525,
+    "lat": 35.8714,
+    "locality_version": 2,
+    "lon": 128.6014,
+    "sources": []
+  },
+  "KR:Incheon": {
+    "fetched_at": 1788010932.8504207,
+    "lat": 37.4563,
+    "locality_version": 2,
+    "lon": 126.7052,
+    "sources": []
+  },
+  "KR:Seoul": {
+    "fetched_at": 1788010879.423601,
+    "lat": 37.5665,
+    "locality_version": 2,
+    "lon": 126.978,
+    "sources": []
+  },
+  "LR:Monrovia": {
+    "fetched_at": 1788008943.287796,
+    "lat": 6.3156,
+    "locality_version": 2,
+    "lon": -10.8074,
+    "sources": []
+  },
+  "LS:Maseru": {
+    "fetched_at": 1788008982.5398743,
+    "lat": -29.31,
+    "locality_version": 2,
+    "lon": 27.48,
+    "sources": []
+  },
+  "MA:Casablanca": {
+    "fetched_at": 1788009801.172858,
+    "lat": 33.5731,
+    "locality_version": 2,
+    "lon": -7.5898,
+    "sources": []
+  },
+  "MA:Marrakesh": {
+    "fetched_at": 1788002326.6024783,
+    "lat": 31.6295,
+    "locality_version": 4,
+    "lon": -7.9811,
+    "sources": []
+  },
+  "MA:Rabat": {
+    "fetched_at": 1788002303.577805,
+    "lat": 34.0209,
+    "locality_version": 4,
+    "lon": -6.8416,
+    "sources": []
+  },
+  "MA:Tangier": {
+    "fetched_at": 1788002328.5783093,
+    "lat": 35.7595,
+    "locality_version": 4,
+    "lon": -5.834,
+    "sources": []
+  },
+  "MH:Majuro": {
+    "fetched_at": 1788002331.564082,
+    "lat": 7.0897,
+    "locality_version": 4,
+    "lon": 171.3803,
+    "sources": []
+  },
+  "MT:Sliema": {
+    "fetched_at": 1788007325.5826323,
+    "lat": 35.9122,
+    "locality_version": 2,
+    "lon": 14.5042,
+    "sources": []
+  },
+  "MT:St Julians": {
+    "fetched_at": 1788007327.155872,
+    "lat": 35.9182,
+    "locality_version": 2,
+    "lon": 14.4898,
+    "sources": []
+  },
+  "MT:Valletta": {
+    "fetched_at": 1788007320.925732,
+    "lat": 35.8989,
+    "locality_version": 2,
+    "lon": 14.5146,
+    "sources": []
+  },
+  "MW:Blantyre": {
+    "fetched_at": 1788009090.4042437,
+    "lat": -15.7861,
+    "locality_version": 2,
+    "lon": 35.0058,
+    "sources": []
+  },
+  "MW:Lilongwe": {
+    "fetched_at": 1788009054.0735216,
+    "lat": -13.9626,
+    "locality_version": 2,
+    "lon": 33.7741,
+    "sources": []
+  },
+  "MX:Cancun": {
+    "fetched_at": 1788002576.09324,
+    "lat": 21.1619,
+    "locality_version": 4,
+    "lon": -86.8515,
+    "sources": []
+  },
+  "MX:Guadalajara": {
+    "fetched_at": 1788002471.0712986,
+    "lat": 20.6597,
+    "locality_version": 4,
+    "lon": -103.3496,
+    "sources": []
+  },
+  "MX:Mexico City": {
+    "fetched_at": 1788002450.5029254,
+    "lat": 19.4326,
+    "locality_version": 4,
+    "lon": -99.1332,
+    "sources": []
+  },
+  "MX:Monterrey": {
+    "fetched_at": 1788002541.394975,
+    "lat": 25.6866,
+    "locality_version": 4,
+    "lon": -100.3161,
+    "sources": []
+  },
+  "MX:Tijuana": {
+    "fetched_at": 1788002628.0694854,
+    "lat": 32.5149,
+    "locality_version": 4,
+    "lon": -117.0382,
+    "sources": []
+  },
+  "MY:Johor Bahru": {
+    "fetched_at": 1788011028.7519097,
+    "lat": 1.4927,
+    "locality_version": 2,
+    "lon": 103.7414,
+    "sources": []
+  },
+  "MY:Kota Kinabalu": {
+    "fetched_at": 1788011066.9066682,
+    "lat": 5.9804,
+    "locality_version": 2,
+    "lon": 116.0735,
+    "sources": []
+  },
+  "MY:Kuala Lumpur": {
+    "fetched_at": 1788010983.7474983,
+    "lat": 3.139,
+    "locality_version": 2,
+    "lon": 101.6869,
+    "sources": []
+  },
+  "MY:Penang": {
+    "fetched_at": 1788010991.5224369,
+    "lat": 5.4164,
+    "locality_version": 2,
+    "lon": 100.3327,
+    "sources": []
+  },
+  "NA:Swakopmund": {
+    "fetched_at": 1788009162.316653,
+    "lat": -22.6783,
+    "locality_version": 2,
+    "lon": 14.5266,
+    "sources": []
+  },
+  "NA:Windhoek": {
+    "fetched_at": 1788009126.650723,
+    "lat": -22.5609,
+    "locality_version": 2,
+    "lon": 17.0658,
+    "sources": []
+  },
+  "NG:Abuja": {
+    "fetched_at": 1788009257.2844663,
+    "lat": 9.0765,
+    "locality_version": 2,
+    "lon": 7.3986,
+    "sources": []
+  },
+  "NG:Ibadan": {
+    "fetched_at": 1788009369.160096,
+    "lat": 7.3775,
+    "locality_version": 2,
+    "lon": 3.947,
+    "sources": []
+  },
+  "NG:Kano": {
+    "fetched_at": 1788009407.3969855,
+    "lat": 12.0022,
+    "locality_version": 2,
+    "lon": 8.592,
+    "sources": []
+  },
+  "NG:Lagos": {
+    "fetched_at": 1788009197.552757,
+    "lat": 6.5244,
+    "locality_version": 2,
+    "lon": 3.3792,
+    "sources": []
+  },
+  "NG:Port Harcourt": {
+    "fetched_at": 1788009292.5646322,
+    "lat": 4.8156,
+    "locality_version": 2,
+    "lon": 7.0498,
+    "sources": []
+  },
+  "NL:Amsterdam": {
+    "fetched_at": 1788007330.5003724,
+    "lat": 52.3676,
+    "locality_version": 2,
+    "lon": 4.9041,
+    "sources": []
+  },
+  "NL:Eindhoven": {
+    "fetched_at": 1788007349.7950997,
+    "lat": 51.4416,
+    "locality_version": 2,
+    "lon": 5.4697,
+    "sources": []
+  },
+  "NL:Groningen": {
+    "fetched_at": 1788007352.1541874,
+    "lat": 53.2194,
+    "locality_version": 2,
+    "lon": 6.5665,
+    "sources": []
+  },
+  "NL:Haarlem": {
+    "fetched_at": 1788007357.1680026,
+    "lat": 52.3874,
+    "locality_version": 2,
+    "lon": 4.6462,
+    "sources": []
+  },
+  "NL:Leiden": {
+    "fetched_at": 1788007362.3979368,
+    "lat": 52.1601,
+    "locality_version": 2,
+    "lon": 4.497,
+    "sources": []
+  },
+  "NL:Maastricht": {
+    "fetched_at": 1788007355.1152704,
+    "lat": 50.8514,
+    "locality_version": 2,
+    "lon": 5.6909,
+    "sources": []
+  },
+  "NL:Rotterdam": {
+    "fetched_at": 1788007339.2774534,
+    "lat": 51.9244,
+    "locality_version": 2,
+    "lon": 4.4777,
+    "sources": []
+  },
+  "NL:The Hague": {
+    "fetched_at": 1788007346.9189363,
+    "lat": 52.0705,
+    "locality_version": 2,
+    "lon": 4.3007,
+    "sources": []
+  },
+  "NL:Tilburg": {
+    "fetched_at": 1788007358.9749014,
+    "lat": 51.5555,
+    "locality_version": 2,
+    "lon": 5.0913,
+    "sources": []
+  },
+  "NL:Utrecht": {
+    "fetched_at": 1788007349.342233,
+    "lat": 52.0907,
+    "locality_version": 2,
+    "lon": 5.1214,
+    "sources": []
+  },
+  "NO:Bergen": {
+    "fetched_at": 1788007367.3841906,
+    "lat": 60.3913,
+    "locality_version": 2,
+    "lon": 5.3221,
+    "sources": []
+  },
+  "NO:Oslo": {
+    "fetched_at": 1788007363.68093,
+    "lat": 59.9139,
+    "locality_version": 2,
+    "lon": 10.7522,
+    "sources": []
+  },
+  "NO:Trondheim": {
+    "fetched_at": 1788007371.995177,
+    "lat": 63.4305,
+    "locality_version": 2,
+    "lon": 10.3951,
+    "sources": []
+  },
+  "NR:Yaren": {
+    "fetched_at": 1788003946.605238,
+    "lat": -0.5477,
+    "locality_version": 4,
+    "lon": 166.9209,
+    "sources": []
+  },
+  "NZ:Auckland": {
+    "fetched_at": 1787991819.2121427,
+    "lat": -36.8485,
+    "locality_version": 4,
+    "lon": 174.7633,
+    "sources": []
+  },
+  "NZ:Christchurch": {
+    "fetched_at": 1788011923.4143906,
+    "lat": -43.5321,
+    "locality_version": 2,
+    "lon": 172.6362,
+    "sources": []
+  },
+  "NZ:Dunedin": {
+    "fetched_at": 1788012041.55446,
+    "lat": -45.8788,
+    "locality_version": 2,
+    "lon": 170.5028,
+    "sources": []
+  },
+  "NZ:Hamilton": {
+    "fetched_at": 1788011958.6674383,
+    "lat": -37.787,
+    "locality_version": 2,
+    "lon": 175.2793,
+    "sources": []
+  },
+  "NZ:Napier": {
+    "fetched_at": 1788012164.1686697,
+    "lat": -39.4928,
+    "locality_version": 2,
+    "lon": 176.912,
+    "sources": []
+  },
+  "NZ:Nelson": {
+    "fetched_at": 1788012204.8658235,
+    "lat": -41.2706,
+    "locality_version": 2,
+    "lon": 173.284,
+    "sources": []
+  },
+  "NZ:Palmerston North": {
+    "fetched_at": 1788012120.808297,
+    "lat": -40.3523,
+    "locality_version": 2,
+    "lon": 175.6082,
+    "sources": []
+  },
+  "NZ:Queenstown": {
+    "fetched_at": 1788012084.2411714,
+    "lat": -45.0312,
+    "locality_version": 2,
+    "lon": 168.6626,
+    "sources": []
+  },
+  "NZ:Tauranga": {
+    "fetched_at": 1788011994.956418,
+    "lat": -37.6878,
+    "locality_version": 2,
+    "lon": 176.1651,
+    "sources": []
+  },
+  "NZ:Wellington": {
+    "fetched_at": 1788011890.6655557,
+    "lat": -41.2865,
+    "locality_version": 2,
+    "lon": 174.7762,
+    "sources": []
+  },
+  "PG:Lae": {
+    "fetched_at": 1788012279.6144645,
+    "lat": -6.722,
+    "locality_version": 2,
+    "lon": 146.9847,
+    "sources": []
+  },
+  "PG:Port Moresby": {
+    "fetched_at": 1788012241.3678942,
+    "lat": -9.4438,
+    "locality_version": 2,
+    "lon": 147.1803,
+    "sources": []
+  },
+  "PH:Angeles": {
+    "fetched_at": 1787993945.9628851,
+    "lat": 15.1449,
+    "locality_version": 4,
+    "lon": 120.5887,
+    "sources": []
+  },
+  "PH:Bacolod": {
+    "fetched_at": 1787993755.779941,
+    "lat": 10.6765,
+    "locality_version": 4,
+    "lon": 122.9509,
+    "sources": []
+  },
+  "PH:Baguio": {
+    "fetched_at": 1787993850.8992171,
+    "lat": 16.4023,
+    "locality_version": 4,
+    "lon": 120.596,
+    "sources": []
+  },
+  "PH:Cagayan De Oro": {
+    "fetched_at": 1787993741.8003113,
+    "lat": 8.4542,
+    "locality_version": 4,
+    "lon": 124.6319,
+    "sources": []
+  },
+  "PH:Cebu": {
+    "fetched_at": 1787993328.6825836,
+    "lat": 10.3157,
+    "locality_version": 4,
+    "lon": 123.8854,
+    "sources": []
+  },
+  "PH:Davao": {
+    "fetched_at": 1787993425.044968,
+    "lat": 7.1907,
+    "locality_version": 4,
+    "lon": 125.4553,
+    "sources": []
+  },
+  "PH:Iloilo": {
+    "fetched_at": 1787993647.191536,
+    "lat": 10.7202,
+    "locality_version": 4,
+    "lon": 122.5621,
+    "sources": []
+  },
+  "PH:Makati": {
+    "fetched_at": 1787993481.1387799,
+    "lat": 14.5547,
+    "locality_version": 4,
+    "lon": 121.0244,
+    "sources": []
+  },
+  "PH:Manila": {
+    "fetched_at": 1788011069.8778172,
+    "lat": 14.5995,
+    "locality_version": 2,
+    "lon": 120.9842,
+    "sources": []
+  },
+  "PH:Pasig": {
+    "fetched_at": 1787993529.3758268,
+    "lat": 14.5764,
+    "locality_version": 4,
+    "lon": 121.0851,
+    "sources": []
+  },
+  "PH:Quezon City": {
+    "fetched_at": 1787993319.9563737,
+    "lat": 14.676,
+    "locality_version": 4,
+    "lon": 121.0437,
+    "sources": []
+  },
+  "PH:Taguig": {
+    "fetched_at": 1787993588.5191345,
+    "lat": 14.5176,
+    "locality_version": 4,
+    "lon": 121.0509,
+    "sources": []
+  },
+  "PK:Islamabad": {
+    "fetched_at": 1788004424.7835414,
+    "lat": 33.6844,
+    "locality_version": 4,
+    "lon": 73.0479,
+    "sources": []
+  },
+  "PK:Karachi": {
+    "fetched_at": 1788004152.3963814,
+    "lat": 24.8607,
+    "locality_version": 4,
+    "lon": 67.0011,
+    "sources": []
+  },
+  "PK:Lahore": {
+    "fetched_at": 1788004307.853316,
+    "lat": 31.5204,
+    "locality_version": 4,
+    "lon": 74.3587,
+    "sources": []
+  },
+  "PK:Rawalpindi": {
+    "fetched_at": 1788004481.0880878,
+    "lat": 33.5651,
+    "locality_version": 4,
+    "lon": 73.0169,
+    "sources": []
+  },
+  "PL:Gdansk": {
+    "fetched_at": 1788007585.4147267,
+    "lat": 54.352,
+    "locality_version": 2,
+    "lon": 18.6466,
+    "sources": []
+  },
+  "PL:Krakow": {
+    "fetched_at": 1788007583.1536977,
+    "lat": 50.0647,
+    "locality_version": 2,
+    "lon": 19.945,
+    "sources": []
+  },
+  "PL:Warsaw": {
+    "fetched_at": 1788007577.231504,
+    "lat": 52.2297,
+    "locality_version": 2,
+    "lon": 21.0122,
+    "sources": []
+  },
+  "PL:Wroclaw": {
+    "fetched_at": 1788007585.7335277,
+    "lat": 51.1079,
+    "locality_version": 2,
+    "lon": 17.0385,
+    "sources": []
+  },
+  "PT:Faro": {
+    "fetched_at": 1787987125.694765,
+    "lat": 37.0194,
+    "locality_version": 2,
+    "lon": -7.9322,
+    "sources": []
+  },
+  "PT:Lisbon": {
+    "fetched_at": 1787987279.6597083,
+    "lat": 38.7223,
+    "locality_version": 2,
+    "lon": -9.1393,
+    "sources": []
+  },
+  "PT:Porto": {
+    "fetched_at": 1787987120.1599982,
+    "lat": 41.1579,
+    "locality_version": 2,
+    "lon": -8.6291,
+    "sources": []
+  },
+  "PW:Koror": {
+    "fetched_at": 1787990311.6101494,
+    "lat": 7.3419,
+    "locality_version": 2,
+    "lon": 134.477,
+    "sources": []
+  },
+  "PW:Ngerulmud": {
+    "fetched_at": 1787990306.3158603,
+    "lat": 7.5004,
+    "locality_version": 2,
+    "lon": 134.6243,
+    "sources": []
+  },
+  "QA:Al Rayyan": {
+    "fetched_at": 1787987847.1964295,
+    "lat": 25.2919,
+    "locality_version": 2,
+    "lon": 51.4244,
+    "sources": []
+  },
+  "QA:Doha": {
+    "fetched_at": 1787987819.4273052,
+    "lat": 25.2854,
+    "locality_version": 2,
+    "lon": 51.531,
+    "sources": []
+  },
+  "RW:Kigali": {
+    "fetched_at": 1788009477.592983,
+    "lat": -1.9441,
+    "locality_version": 2,
+    "lon": 30.0619,
+    "sources": []
+  },
+  "SB:Honiara": {
+    "fetched_at": 1787990314.1010618,
+    "lat": -9.4456,
+    "locality_version": 2,
+    "lon": 159.9729,
+    "sources": []
+  },
+  "SE:Gothenburg": {
+    "fetched_at": 1787987143.5579193,
+    "lat": 57.7089,
+    "locality_version": 2,
+    "lon": 11.9746,
+    "sources": []
+  },
+  "SE:Malmo": {
+    "fetched_at": 1787987149.0966694,
+    "lat": 55.605,
+    "locality_version": 2,
+    "lon": 13.0038,
+    "sources": []
+  },
+  "SE:Stockholm": {
+    "fetched_at": 1787987130.2051692,
+    "lat": 59.3293,
+    "locality_version": 2,
+    "lon": 18.0686,
+    "sources": []
+  },
+  "SI:Ljubljana": {
+    "fetched_at": 1788007377.9661791,
+    "lat": 46.0569,
+    "locality_version": 2,
+    "lon": 14.5058,
+    "sources": []
+  },
+  "SI:Maribor": {
+    "fetched_at": 1788007384.7284303,
+    "lat": 46.5547,
+    "locality_version": 2,
+    "lon": 15.6459,
+    "sources": []
+  },
+  "SK:Bratislava": {
+    "fetched_at": 1788007585.9918697,
+    "lat": 48.1486,
+    "locality_version": 2,
+    "lon": 17.1077,
+    "sources": []
+  },
+  "SK:Kosice": {
+    "fetched_at": 1788007586.717805,
+    "lat": 48.7164,
+    "locality_version": 2,
+    "lon": 21.2611,
+    "sources": []
+  },
+  "SZ:Manzini": {
+    "fetched_at": 1788006408.8176603,
+    "lat": -26.498,
+    "locality_version": 4,
+    "lon": 31.38,
+    "sources": []
+  },
+  "SZ:Mbabane": {
+    "fetched_at": 1788006404.443646,
+    "lat": -26.3054,
+    "locality_version": 4,
+    "lon": 31.1367,
+    "sources": []
+  },
+  "TH:Bangkok": {
+    "fetched_at": 1787994005.476505,
+    "lat": 13.7563,
+    "locality_version": 4,
+    "lon": 100.5018,
+    "sources": []
+  },
+  "TH:Chiang Mai": {
+    "fetched_at": 1788011566.0134046,
+    "lat": 18.7883,
+    "locality_version": 2,
+    "lon": 98.9853,
+    "sources": []
+  },
+  "TH:Chiang Rai": {
+    "fetched_at": 1788011653.181137,
+    "lat": 19.9105,
+    "locality_version": 2,
+    "lon": 99.8406,
+    "sources": []
+  },
+  "TH:Hat Yai": {
+    "fetched_at": 1788011689.4938471,
+    "lat": 7.0086,
+    "locality_version": 2,
+    "lon": 100.4767,
+    "sources": []
+  },
+  "TH:Hua Hin": {
+    "fetched_at": 1788011703.963079,
+    "lat": 12.5684,
+    "locality_version": 2,
+    "lon": 99.9577,
+    "sources": []
+  },
+  "TH:Khon Kaen": {
+    "fetched_at": 1788011699.8750396,
+    "lat": 16.4322,
+    "locality_version": 2,
+    "lon": 102.8236,
+    "sources": []
+  },
+  "TH:Krabi": {
+    "fetched_at": 1788011774.1484354,
+    "lat": 8.0863,
+    "locality_version": 2,
+    "lon": 98.9063,
+    "sources": []
+  },
+  "TH:Pattaya": {
+    "fetched_at": 1788011645.3494835,
+    "lat": 12.9236,
+    "locality_version": 2,
+    "lon": 100.8825,
+    "sources": []
+  },
+  "TH:Phuket": {
+    "fetched_at": 1788011605.8577695,
+    "lat": 7.8804,
+    "locality_version": 2,
+    "lon": 98.3923,
+    "sources": []
+  },
+  "TH:Udon Thani": {
+    "fetched_at": 1788011781.3674963,
+    "lat": 17.4156,
+    "locality_version": 2,
+    "lon": 102.7872,
+    "sources": []
+  },
+  "TN:Sfax": {
+    "fetched_at": 1788010024.7678418,
+    "lat": 34.7398,
+    "locality_version": 2,
+    "lon": 10.76,
+    "sources": []
+  },
+  "TN:Sousse": {
+    "fetched_at": 1788010060.0284925,
+    "lat": 35.8245,
+    "locality_version": 2,
+    "lon": 10.6346,
+    "sources": []
+  },
+  "TN:Tunis": {
+    "fetched_at": 1788009975.7745645,
+    "lat": 36.8065,
+    "locality_version": 2,
+    "lon": 10.1815,
+    "sources": []
+  },
+  "TO:Nukualofa": {
+    "fetched_at": 1788012291.5636554,
+    "lat": -21.1394,
+    "locality_version": 2,
+    "lon": -175.2018,
+    "sources": []
+  },
+  "TR:Ankara": {
+    "fetched_at": 1788010138.968437,
+    "lat": 39.9334,
+    "locality_version": 2,
+    "lon": 32.8597,
+    "sources": []
+  },
+  "TR:Antalya": {
+    "fetched_at": 1788006465.269702,
+    "lat": 36.8969,
+    "locality_version": 4,
+    "lon": 30.7133,
+    "sources": []
+  },
+  "TR:Istanbul": {
+    "fetched_at": 1788010095.2972546,
+    "lat": 41.0082,
+    "locality_version": 2,
+    "lon": 28.9784,
+    "sources": []
+  },
+  "TR:Izmir": {
+    "fetched_at": 1788010142.7504106,
+    "lat": 38.4237,
+    "locality_version": 2,
+    "lon": 27.1428,
+    "sources": []
+  },
+  "TT:Chaguanas": {
+    "fetched_at": 1788006497.5146563,
+    "lat": 10.5167,
+    "locality_version": 4,
+    "lon": -61.4167,
+    "sources": []
+  },
+  "TT:Port Of Spain": {
+    "fetched_at": 1788006473.5133686,
+    "lat": 10.6596,
+    "locality_version": 4,
+    "lon": -61.5086,
+    "sources": []
+  },
+  "TT:San Fernando": {
+    "fetched_at": 1788006493.3206513,
+    "lat": 10.2833,
+    "locality_version": 4,
+    "lon": -61.4667,
+    "sources": []
+  },
+  "TV:Funafuti": {
+    "fetched_at": 1788012332.0779955,
+    "lat": -8.5243,
+    "locality_version": 2,
+    "lon": 179.1942,
+    "sources": []
+  },
+  "UG:Entebbe": {
+    "fetched_at": 1788006513.154371,
+    "lat": 0.0512,
+    "locality_version": 4,
+    "lon": 32.4637,
+    "sources": []
+  },
+  "UG:Jinja": {
+    "fetched_at": 1788006517.0946436,
+    "lat": 0.4244,
+    "locality_version": 4,
+    "lon": 33.2041,
+    "sources": []
+  },
+  "UG:Kampala": {
+    "fetched_at": 1788006503.4878404,
+    "lat": 0.3476,
+    "locality_version": 4,
+    "lon": 32.5825,
+    "sources": []
+  },
+  "US:Atlanta": {
+    "fetched_at": 1788006340.2237918,
+    "lat": 33.749,
+    "locality_version": 2,
+    "lon": -84.388,
+    "sources": []
+  },
+  "US:Austin": {
+    "fetched_at": 1788006315.6789088,
+    "lat": 30.2672,
+    "locality_version": 2,
+    "lon": -97.7431,
+    "sources": []
+  },
+  "US:Boston": {
+    "fetched_at": 1788006329.3110564,
+    "lat": 42.3601,
+    "locality_version": 2,
+    "lon": -71.0589,
+    "sources": []
+  },
+  "US:Charlotte": {
+    "fetched_at": 1788006343.0885286,
+    "lat": 35.2271,
+    "locality_version": 2,
+    "lon": -80.8431,
+    "sources": []
+  },
+  "US:Chicago": {
+    "fetched_at": 1788006278.0527034,
+    "lat": 41.8781,
+    "locality_version": 2,
+    "lon": -87.6298,
+    "sources": []
+  },
+  "US:Cincinnati": {
+    "fetched_at": 1787990726.823175,
+    "lat": 39.1031,
+    "locality_version": 4,
+    "lon": -84.512,
+    "sources": []
+  },
+  "US:Cleveland": {
+    "fetched_at": 1788006380.823399,
+    "lat": 41.4993,
+    "locality_version": 2,
+    "lon": -81.6944,
+    "sources": []
+  },
+  "US:Columbus": {
+    "fetched_at": 1788006397.8792934,
+    "lat": 39.9612,
+    "locality_version": 2,
+    "lon": -82.9988,
+    "sources": []
+  },
+  "US:Dallas": {
+    "fetched_at": 1788006310.065222,
+    "lat": 32.7767,
+    "locality_version": 2,
+    "lon": -96.797,
+    "sources": []
+  },
+  "US:Denver": {
+    "fetched_at": 1788006329.0075223,
+    "lat": 39.7392,
+    "locality_version": 2,
+    "lon": -104.9903,
+    "sources": []
+  },
+  "US:Detroit": {
+    "fetched_at": 1788006334.9934235,
+    "lat": 42.3314,
+    "locality_version": 2,
+    "lon": -83.0458,
+    "sources": []
+  },
+  "US:Honolulu": {
+    "fetched_at": 1788006394.7589767,
+    "lat": 21.3069,
+    "locality_version": 2,
+    "lon": -157.8583,
+    "sources": []
+  },
+  "US:Houston": {
+    "fetched_at": 1788006278.4939392,
+    "lat": 29.7604,
+    "locality_version": 2,
+    "lon": -95.3698,
+    "sources": []
+  },
+  "US:Indianapolis": {
+    "fetched_at": 1787990721.5921366,
+    "lat": 39.7684,
+    "locality_version": 4,
+    "lon": -86.1581,
+    "sources": []
+  },
+  "US:Jacksonville": {
+    "fetched_at": 1788006315.9428272,
+    "lat": 30.3322,
+    "locality_version": 2,
+    "lon": -81.6557,
+    "sources": []
+  },
+  "US:Kansas City": {
+    "fetched_at": 1788006385.440656,
+    "lat": 39.0997,
+    "locality_version": 2,
+    "lon": -94.5786,
+    "sources": []
+  },
+  "US:Las Vegas": {
+    "fetched_at": 1788006336.6208093,
+    "lat": 36.1699,
+    "locality_version": 2,
+    "lon": -115.1398,
+    "sources": []
+  },
+  "US:Los Angeles": {
+    "fetched_at": 1788006275.8027515,
+    "lat": 34.0522,
+    "locality_version": 2,
+    "lon": -118.2437,
+    "sources": []
+  },
+  "US:Miami": {
+    "fetched_at": 1788006337.9207034,
+    "lat": 25.7617,
+    "locality_version": 2,
+    "lon": -80.1918,
+    "sources": []
+  },
+  "US:Milwaukee": {
+    "fetched_at": 1787990730.7412798,
+    "lat": 43.0389,
+    "locality_version": 4,
+    "lon": -87.9065,
+    "sources": []
+  },
+  "US:Minneapolis": {
+    "fetched_at": 1788006341.806554,
+    "lat": 44.9778,
+    "locality_version": 2,
+    "lon": -93.265,
+    "sources": []
+  },
+  "US:Nashville": {
+    "fetched_at": 1788006334.6194782,
+    "lat": 36.1627,
+    "locality_version": 2,
+    "lon": -86.7816,
+    "sources": []
+  },
+  "US:New Orleans": {
+    "fetched_at": 1788006395.0602798,
+    "lat": 29.9511,
+    "locality_version": 2,
+    "lon": -90.0715,
+    "sources": []
+  },
+  "US:Orlando": {
+    "fetched_at": 1788006345.60988,
+    "lat": 28.5383,
+    "locality_version": 2,
+    "lon": -81.3792,
+    "sources": []
+  },
+  "US:Philadelphia": {
+    "fetched_at": 1788006279.0778396,
+    "lat": 39.9526,
+    "locality_version": 2,
+    "lon": -75.1652,
+    "sources": []
+  },
+  "US:Phoenix": {
+    "fetched_at": 1788006278.7740908,
+    "lat": 33.4484,
+    "locality_version": 2,
+    "lon": -112.074,
+    "sources": []
+  },
+  "US:Pittsburgh": {
+    "fetched_at": 1788006381.154508,
+    "lat": 40.4406,
+    "locality_version": 2,
+    "lon": -79.9959,
+    "sources": []
+  },
+  "US:Portland": {
+    "fetched_at": 1788006336.2781436,
+    "lat": 45.5152,
+    "locality_version": 2,
+    "lon": -122.6784,
+    "sources": []
+  },
+  "US:Raleigh": {
+    "fetched_at": 1788006395.3979356,
+    "lat": 35.7796,
+    "locality_version": 2,
+    "lon": -78.6382,
+    "sources": []
+  },
+  "US:Sacramento": {
+    "fetched_at": 1788006387.0437708,
+    "lat": 38.5816,
+    "locality_version": 2,
+    "lon": -121.4944,
+    "sources": []
+  },
+  "US:Salt Lake City": {
+    "fetched_at": 1788006390.5217483,
+    "lat": 40.7608,
+    "locality_version": 2,
+    "lon": -111.891,
+    "sources": []
+  },
+  "US:San Antonio": {
+    "fetched_at": 1788006290.580339,
+    "lat": 29.4241,
+    "locality_version": 2,
+    "lon": -98.4936,
+    "sources": []
+  },
+  "US:San Diego": {
+    "fetched_at": 1788006309.8029861,
+    "lat": 32.7157,
+    "locality_version": 2,
+    "lon": -117.1611,
+    "sources": []
+  },
+  "US:San Francisco": {
+    "fetched_at": 1788006317.476406,
+    "lat": 37.7749,
+    "locality_version": 2,
+    "lon": -122.4194,
+    "sources": []
+  },
+  "US:San Jose": {
+    "fetched_at": 1788006314.4319575,
+    "lat": 37.3382,
+    "locality_version": 2,
+    "lon": -121.8863,
+    "sources": []
+  },
+  "US:Seattle": {
+    "fetched_at": 1788006317.7528074,
+    "lat": 47.6062,
+    "locality_version": 2,
+    "lon": -122.3321,
+    "sources": []
+  },
+  "US:St Louis": {
+    "fetched_at": 1788006385.7607381,
+    "lat": 38.627,
+    "locality_version": 2,
+    "lon": -90.1994,
+    "sources": []
+  },
+  "US:Tampa": {
+    "fetched_at": 1788006345.3383508,
+    "lat": 27.9506,
+    "locality_version": 2,
+    "lon": -82.4572,
+    "sources": []
+  },
+  "US:Washington": {
+    "fetched_at": 1788006341.5342412,
+    "lat": 38.9072,
+    "locality_version": 2,
+    "lon": -77.0369,
+    "sources": []
+  },
+  "VC:Kingstown": {
+    "fetched_at": 1788006539.466197,
+    "lat": 13.16,
+    "locality_version": 4,
+    "lon": -61.2248,
+    "sources": []
+  },
+  "VN:Da Nang": {
+    "fetched_at": 1788011831.3891566,
+    "lat": 16.0544,
+    "locality_version": 2,
+    "lon": 108.2022,
+    "sources": []
+  },
+  "VN:Hanoi": {
+    "fetched_at": 1788011794.1723218,
+    "lat": 21.0278,
+    "locality_version": 2,
+    "lon": 105.8342,
+    "sources": []
+  },
+  "VN:Ho Chi Minh City": {
+    "fetched_at": 1788011783.5925982,
+    "lat": 10.8231,
+    "locality_version": 2,
+    "lon": 106.6297,
+    "sources": []
+  },
+  "VN:Nha Trang": {
+    "fetched_at": 1788011868.8708024,
+    "lat": 12.2388,
+    "locality_version": 2,
+    "lon": 109.1967,
+    "sources": []
+  },
+  "VU:Port Vila": {
+    "fetched_at": 1787990321.166749,
+    "lat": -17.7333,
+    "locality_version": 2,
+    "lon": 168.3273,
+    "sources": []
+  },
+  "WS:Apia": {
+    "fetched_at": 1787964915.4359097,
+    "lat": -13.8333,
+    "locality_version": 2,
+    "lon": -171.7667,
+    "sources": []
+  },
+  "ZA:Cape Town": {
+    "fetched_at": 1788006663.427798,
+    "lat": -33.9249,
+    "locality_version": 4,
+    "lon": 18.4241,
+    "sources": []
+  },
+  "ZA:Durban": {
+    "fetched_at": 1787987175.7693198,
+    "lat": -29.8587,
+    "locality_version": 2,
+    "lon": 31.0218,
+    "sources": []
+  },
+  "ZA:Johannesburg": {
+    "fetched_at": 1787987167.2290041,
+    "lat": -26.2041,
+    "locality_version": 2,
+    "lon": 28.0473,
+    "sources": []
+  },
+  "ZA:Port Elizabeth": {
+    "fetched_at": 1787987182.8567498,
+    "lat": -33.9608,
+    "locality_version": 2,
+    "lon": 25.6022,
+    "sources": []
+  },
+  "ZA:Pretoria": {
+    "fetched_at": 1787987180.3293054,
+    "lat": -25.7479,
+    "locality_version": 2,
+    "lon": 28.2293,
+    "sources": []
+  },
+  "ZM:Kitwe": {
+    "fetched_at": 1788009909.316877,
+    "lat": -12.8024,
+    "locality_version": 2,
+    "lon": 28.2132,
+    "sources": []
+  },
+  "ZM:Lusaka": {
+    "fetched_at": 1788009861.461526,
+    "lat": -15.3875,
+    "locality_version": 2,
+    "lon": 28.3228,
+    "sources": []
+  },
+  "ZM:Ndola": {
+    "fetched_at": 1788009866.5984433,
+    "lat": -12.9587,
+    "locality_version": 2,
+    "lon": 28.6366,
+    "sources": []
+  },
+  "ZW:Bulawayo": {
+    "fetched_at": 1788006825.1071928,
+    "lat": -20.1486,
+    "locality_version": 4,
+    "lon": 28.5806,
+    "sources": []
+  },
+  "ZW:Harare": {
+    "fetched_at": 1788009914.482426,
+    "lat": -17.8252,
+    "locality_version": 2,
+    "lon": 31.0335,
     "sources": []
   }
 }

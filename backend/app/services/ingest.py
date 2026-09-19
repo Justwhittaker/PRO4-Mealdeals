@@ -17,11 +17,13 @@ from app.models.merchant import Merchant, MerchantCategory, TierLevel
 from app.models.translation import DealTranslation
 from app.scrapers.base import ScrapedDeal
 from app.scrapers.categories import venue_category_id
+from app.scrapers.catchment_hubs import CATCHMENT_COORDS
 from app.scrapers.markets import (
     CITY_COORDS as NEW_CITY_COORDS,
     COUNTRY_TIMEZONES as MARKET_COUNTRY_TIMEZONES,
 )
 from app.services.affiliate import build_affiliate_urls
+from app.services.deal_link import check_url_reachable, normalize_outbound_url
 
 logger = logging.getLogger(__name__)
 
@@ -198,6 +200,7 @@ CITY_COORDS: dict[tuple[str, str], tuple[float, float]] = {
     ("JM", "Negril"): (18.2686, -78.3480),
 }
 CITY_COORDS.update(NEW_CITY_COORDS)
+CITY_COORDS.update(CATCHMENT_COORDS)
 
 _COUNTRY_TIMEZONES: dict[str, str] = {
     "GB": "Europe/London",
@@ -376,7 +379,7 @@ def _item_category(raw: str) -> ItemCategory:
         return ItemCategory.MAIN
 
 
-def upsert_scraped_deal(session: Session, scraped: ScrapedDeal) -> Deal:
+def upsert_scraped_deal(session: Session, scraped: ScrapedDeal) -> Deal | None:
     """Insert or refresh a scraped deal (matched on clean_url)."""
     clean_url, affiliate_url = build_affiliate_urls(scraped.raw_url)
 
@@ -388,6 +391,18 @@ def upsert_scraped_deal(session: Session, scraped: ScrapedDeal) -> Deal:
             .options(selectinload(Deal.items), selectinload(Deal.translations))
             .limit(1)
         ).scalar_one_or_none()
+
+    outbound = normalize_outbound_url(affiliate_url or clean_url or scraped.raw_url)
+    if not outbound or not check_url_reachable(outbound):
+        logger.info(
+            "Skipping scraped deal (unreachable URL): %s → %s",
+            scraped.merchant_name,
+            outbound or scraped.raw_url,
+        )
+        if existing is not None:
+            existing.is_active = False
+            session.flush()
+        return None
 
     if existing:
         existing.original_price = scraped.original_price
@@ -474,7 +489,8 @@ def ingest_scraped_deals(session: Session, deals: Sequence[ScrapedDeal]) -> int:
     count = 0
     for scraped in deals:
         try:
-            upsert_scraped_deal(session, scraped)
+            if upsert_scraped_deal(session, scraped) is None:
+                continue
             count += 1
         except Exception:
             logger.exception(

@@ -1020,6 +1020,8 @@ def iter_market_areas(
     country_codes: list[str] | None = None,
 ) -> list[tuple[str, str]]:
     """Flatten (country, city) pairs for worldwide scraping."""
+    from app.scrapers.catchment_hubs import catchment_cities_for
+
     codes = country_codes or TARGET_MARKETS
     areas: list[tuple[str, str]] = []
     for code in codes:
@@ -1027,6 +1029,8 @@ def iter_market_areas(
         cities = MARKET_CITIES.get(upper) or [DEFAULT_CITY.get(upper, "Unknown")]
         for city in cities:
             areas.append((upper, city))
+        for extra in catchment_cities_for(upper, cities):
+            areas.append((upper, extra))
     return areas
 
 # Multiply GBP-ish template prices (~7.50) into local currency ballpark.

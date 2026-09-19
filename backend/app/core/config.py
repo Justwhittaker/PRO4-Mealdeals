@@ -84,6 +84,10 @@ class Settings(BaseSettings):
     # Click log TTL in Redis (seconds)
     click_log_ttl: int = 86400 * 7
 
+    # Deep scrape: follow /deals /offers pages and extract offer links (extra HTTP).
+    deep_scrape_enabled: bool = Field(default=True)
+    deep_scrape_max_extra_fetches: int = Field(default=4, ge=1, le=8)
+
     # CORS origins as comma-separated string (avoids pydantic-settings list JSON decode).
     cors_origins: str = Field(
         default="http://localhost:3000,http://127.0.0.1:3000"

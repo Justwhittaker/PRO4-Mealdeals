@@ -1,0 +1,27 @@
+# Standalone Celery worker for a home NUC talking to Render cloud Postgres + Redis.
+# Does NOT start local postgres/redis/api and has no depends_on.
+#
+# Usage (from ~/MealDeals/backend on the NUC):
+#   cp .env.example .env   # then put External Render URLs in .env
+#   docker compose -f docker-compose.nuc.yml up -d --build
+#   docker compose -f docker-compose.nuc.yml logs -f celery-worker
+
+services:
+  celery-worker:
+    build: .
+    container_name: mealdeals-celery-nuc
+    env_file:
+      - .env
+    # No hardcoded DATABASE_*/REDIS_*/CELERY_* — all come from .env
+    environment:
+      APP_ENV: production
+      DEBUG: "false"
+    restart: unless-stopped
+    command:
+      - celery
+      - -A
+      - app.workers.celery_app.celery_app
+      - worker
+      - --beat
+      - --loglevel=info
+      - --concurrency=3

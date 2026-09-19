@@ -7,6 +7,7 @@ import { DealHeroMedia } from "@/components/deals/DealHeroMedia";
 import { LocationHeader } from "@/components/deals/LocationHeader";
 import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { fetchDeal, fetchValueCalculator } from "@/lib/api";
+import { dealCtaLabel, dealLinkHint } from "@/lib/deal-link";
 import { formatMoney } from "@/lib/currency";
 import { cityDisplayLabel } from "@/lib/geo";
 import { dealBadge } from "@/lib/priority";
@@ -42,7 +43,11 @@ export default async function DealDetailPage({ params }: PageProps) {
   const deal = result.data;
   const badge = dealBadge(deal);
   const value = await fetchValueCalculator(id);
-  const websiteUrl = deal.cleanUrl || deal.affiliateUrl || null;
+  const websiteUrl =
+    deal.outboundUrl || deal.cleanUrl || deal.affiliateUrl || null;
+  const ctaLabel =
+    deal.ctaLabel ?? dealCtaLabel(deal.linkKind, deal.restaurantName);
+  const linkHint = dealLinkHint(deal.linkKind);
   let websiteLabel = websiteUrl;
   if (websiteUrl) {
     try {
@@ -148,21 +153,26 @@ export default async function DealDetailPage({ params }: PageProps) {
             </Card>
           ) : null}
 
-          <div className="flex flex-wrap gap-3 pt-2">
-            <Button asChild size="lg">
-              <a
-                href={`/go/${deal.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Claim this deal
-              </a>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href={`/${country}/${city}`}>
-                More in {cityDisplayLabel(country, city)}
-              </Link>
-            </Button>
+          <div className="space-y-2 pt-2">
+            <div className="flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <a
+                  href={`/go/${deal.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {ctaLabel}
+                </a>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link href={`/${country}/${city}`}>
+                  More in {cityDisplayLabel(country, city)}
+                </Link>
+              </Button>
+            </div>
+            {linkHint ? (
+              <p className="text-sm text-charcoal-400">{linkHint}</p>
+            ) : null}
           </div>
         </article>
       </NewsletterDealGate>

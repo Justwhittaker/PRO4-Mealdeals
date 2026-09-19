@@ -1,6 +1,7 @@
 import type { CurrencyCode } from "./currency";
 import { formatAreaLabel, slugifyCity } from "@/lib/area-label";
 import { cleanDealDescription, cleanMediaUrl } from "@/lib/deal-media";
+import type { DealLinkKind } from "@/lib/deal-link";
 import type { TierLevel } from "./priority";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -32,6 +33,10 @@ export interface Deal {
   affiliateUrl?: string | null;
   /** Destination without tracking params — preferred for display. */
   cleanUrl?: string | null;
+  /** Scrubbed click-through URL (no scraper dedup params). */
+  outboundUrl?: string | null;
+  linkKind?: DealLinkKind | null;
+  ctaLabel?: string | null;
   category?: string;
   savingsPercent?: number;
 }
@@ -90,6 +95,9 @@ interface BackendDealFeedItem {
   country_code?: string | null;
   tier_level?: string;
   is_subscriber?: boolean;
+  outbound_url?: string | null;
+  link_kind?: DealLinkKind | null;
+  cta_label?: string | null;
 }
 
 interface BackendValueCalculator {
@@ -167,6 +175,9 @@ function mapFeedItem(
     createdAt: item.created_at,
     affiliateUrl: item.affiliate_url ?? null,
     cleanUrl: item.clean_url ?? null,
+    outboundUrl: item.outbound_url ?? null,
+    linkKind: item.link_kind ?? null,
+    ctaLabel: item.cta_label ?? null,
     imageUrl: cleanMediaUrl(item.image_url),
     logoUrl: cleanMediaUrl(item.logo_url),
     category: item.venue_category ?? undefined,
@@ -325,6 +336,9 @@ export async function fetchDeal(
     city?: string | null;
     area_local?: string | null;
     country_code?: string | null;
+    outbound_url?: string | null;
+    link_kind?: DealLinkKind | null;
+    cta_label?: string | null;
   }>(`/api/v1/deals/${id}`);
 
   if (!result.ok) return result;
@@ -363,6 +377,9 @@ export async function fetchDeal(
       createdAt: d.created_at,
       affiliateUrl: d.affiliate_url ?? null,
       cleanUrl: d.clean_url ?? null,
+      outboundUrl: d.outbound_url ?? null,
+      linkKind: d.link_kind ?? null,
+      ctaLabel: d.cta_label ?? null,
       imageUrl: cleanMediaUrl(d.image_url),
       logoUrl: cleanMediaUrl(d.logo_url),
       category: d.venue_category ?? undefined,

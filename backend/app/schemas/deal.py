@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.deal import ItemCategory
 from app.models.merchant import TierLevel
+from app.services.deal_link import LinkKind
 
 
 class DealItemBase(BaseModel):
@@ -101,6 +102,9 @@ class DealDetailRead(DealRead):
     city: Optional[str] = None
     area_local: Optional[str] = None
     country_code: Optional[str] = None
+    outbound_url: Optional[str] = None
+    link_kind: LinkKind = LinkKind.HOMEPAGE
+    cta_label: Optional[str] = None
 
 
 class DealFeedItem(BaseModel):
@@ -132,6 +136,9 @@ class DealFeedItem(BaseModel):
     country_code: Optional[str] = None
     tier_level: TierLevel = TierLevel.FREE
     is_subscriber: bool = False
+    outbound_url: Optional[str] = None
+    link_kind: LinkKind = LinkKind.HOMEPAGE
+    cta_label: Optional[str] = None
 
 
 class DealFeedResponse(BaseModel):

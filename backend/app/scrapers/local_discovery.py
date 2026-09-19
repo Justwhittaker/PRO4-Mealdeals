@@ -29,6 +29,7 @@ _OVERPASS_ENDPOINTS = (
     "https://overpass-api.de/api/interpreter",
 )
 
+from app.scrapers.catchment_hubs import hub_catchment_profile
 from app.scrapers.hub_radius import (
     HUB_SATELLITE_SEEDS,
     SATELLITE_MAX_KM,
@@ -37,6 +38,7 @@ from app.scrapers.hub_radius import (
     haversine_km,
     hub_default_locality,
 )
+from app.scrapers.source_filters import is_national_chain, source_host
 
 # Hub scrape: venues within 150 miles; cap per hub keeps zone jobs bite-sized.
 _MAX_PER_HUB = 48
@@ -44,7 +46,7 @@ _MAX_PER_CATEGORY = 8
 _MAX_PER_LOCALITY = 8
 _CACHE_TTL_SECONDS = 60 * 60 * 24 * 7  # 1 week
 # Bump when hub/town assignment logic changes so cached sources re-label.
-_LOCALITY_VERSION = 4
+_LOCALITY_VERSION = 5
 # Sample venues around hub centre + satellite towns (not one 150mi flood).
 _HUB_SAMPLE_RADIUS_M = 12_000
 _TOWN_SAMPLE_RADIUS_M = 8_000
@@ -154,6 +156,36 @@ def _overpass_query(lat: float, lon: float, radius_m: int, *, limit: int) -> str
 );
 out center tags {limit};
 """.strip()
+
+
+def _winery_overpass_query(lat: float, lon: float, *, radius_m: int, limit: int) -> str:
+    return f"""
+[out:json][timeout:35];
+(
+  node["craft"="winery"]["website"](around:{radius_m},{lat},{lon});
+  way["craft"="winery"]["website"](around:{radius_m},{lat},{lon});
+  node["tourism"="winery"]["website"](around:{radius_m},{lat},{lon});
+  way["tourism"="winery"]["website"](around:{radius_m},{lat},{lon});
+  node["amenity"="winery"]["website"](around:{radius_m},{lat},{lon});
+  way["amenity"="winery"]["website"](around:{radius_m},{lat},{lon});
+);
+out center tags {limit};
+""".strip()
+
+
+async def _fetch_winery_overpass(
+    lat: float, lon: float, *, radius_m: int = 25_000, limit: int = 40
+) -> list[dict[str, Any]]:
+    query = _winery_overpass_query(lat, lon, radius_m=radius_m, limit=limit)
+    async with httpx.AsyncClient(timeout=45.0) as client:
+        for endpoint in _OVERPASS_ENDPOINTS:
+            try:
+                response = await client.post(endpoint, data={"data": query})
+                response.raise_for_status()
+                return list(response.json().get("elements") or [])
+            except Exception as exc:  # noqa: BLE001
+                logger.info("Winery Overpass failed via %s: %s", endpoint, exc)
+    return []
 
 
 async def _fetch_overpass_around(
@@ -279,14 +311,20 @@ def _select_independents(
     *,
     hub: str,
     localities: list[dict[str, Any]],
+    category_cap_overrides: dict[str, int] | None = None,
+    category_priority: list[str] | None = None,
 ) -> list[dict[str, str]]:
-    """Dedupe, prefer non-chains, balance categories, return scrape sources."""
+    """Dedupe independents, balance categories, return scrape sources."""
     by_category: dict[str, list[dict[str, str]]] = {}
     seen_urls: set[str] = set()
     seen_names: set[str] = set()
 
+    cap_overrides = category_cap_overrides or {}
+
+    def _category_cap(category: str) -> int:
+        return cap_overrides.get(category, _MAX_PER_CATEGORY)
+
     independents: list[dict[str, Any]] = []
-    chains: list[dict[str, Any]] = []
 
     for element in elements:
         tags = element.get("tags") or {}
@@ -298,8 +336,11 @@ def _select_independents(
         category = _category_from_tags(str_tags)
         if not name or not website or not category:
             continue
+        # National chains are covered once per hub from pack sources + deep scrape.
+        if _is_likely_chain(name):
+            continue
         name_key = name.lower()
-        host = urlparse(website).netloc.lower()
+        host = source_host(website)
         if name_key in seen_names or host in seen_urls:
             continue
         seen_names.add(name_key)
@@ -320,19 +361,16 @@ def _select_independents(
             "independent": not _is_likely_chain(name),
             "area_local": area_local,
         }
-        if row["independent"]:
-            independents.append(row)
-        else:
-            chains.append(row)
+        independents.append(row)
 
     # Round-robin across categories so pubs/takeaways/grocers are not crowded
     # out by the denser restaurant layer in OSM. Also cap per locality so
     # Galway City does not absorb the whole hub budget.
     pools: dict[str, list[dict[str, Any]]] = {}
-    for row in independents + chains:
+    for row in independents:
         pools.setdefault(row["venue_category"], []).append(row)
 
-    priority = [
+    priority = category_priority or [
         "Clubs, Bars & Pubs",
         "Food Trucks & Takeaway's",
         "Deli's and Grocers",
@@ -352,7 +390,7 @@ def _select_independents(
         progressed = False
         for category in priority:
             bucket = by_category.setdefault(category, [])
-            if len(bucket) >= _MAX_PER_CATEGORY:
+            if len(bucket) >= _category_cap(category):
                 continue
             pool = pools.get(category) or []
             if not pool:
@@ -376,9 +414,7 @@ def _select_independents(
                     "url": row["url"],
                     "venue_category": category,
                     "area_local": row.get("area_local"),
-                    "source_kind": "local_independent"
-                    if row["independent"]
-                    else "local_chain",
+                    "source_kind": "local_independent",
                 }
             )
             progressed = True
@@ -444,7 +480,37 @@ async def discover_local_venues(
         lon=lon,
         localities=localities,
     )
-    sources = _select_independents(elements, hub=city_name, localities=localities)
+    profile = hub_catchment_profile(country, city_name)
+    if profile and profile.winery_boost:
+        winery_elements = await _fetch_winery_overpass(lat, lon)
+        seen_ids = {f"{e.get('type')}:{e.get('id')}" for e in elements}
+        for element in winery_elements:
+            eid = f"{element.get('type')}:{element.get('id')}"
+            if eid not in seen_ids:
+                seen_ids.add(eid)
+                elements.append(element)
+
+    category_priority = None
+    category_caps = None
+    if profile:
+        category_caps = profile.category_cap_overrides or None
+        if profile.winery_boost:
+            category_priority = [
+                "Wine Farms & Entertainment Venues",
+                "Restaurants, Cafe's & Bistro's",
+                "Hotels, Resorts & B&B's",
+                "Clubs, Bars & Pubs",
+                "Food Trucks & Takeaway's",
+                "Deli's and Grocers",
+            ]
+
+    sources = _select_independents(
+        elements,
+        hub=city_name,
+        localities=localities,
+        category_cap_overrides=category_caps,
+        category_priority=category_priority,
+    )
     cache[cache_key] = {
         "fetched_at": now,
         "locality_version": _LOCALITY_VERSION,
@@ -471,18 +537,22 @@ def merge_local_sources(
     pack_sources: list[dict[str, str]],
     local_sources: list[dict[str, str]],
 ) -> list[dict[str, str]]:
-    """Append local independents after pack/chain sources (deduped by name)."""
+    """Append local independents after pack/chain sources (deduped by name/host)."""
     seen = {s["merchant"].strip().lower() for s in pack_sources if s.get("merchant")}
+    pack_hosts = {source_host(s["url"]) for s in pack_sources if s.get("url")}
     merged = [dict(s) for s in pack_sources]
     for source in local_sources:
         name = (source.get("merchant") or "").strip()
         url = (source.get("url") or "").strip()
         if not name or not url:
             continue
+        if is_national_chain(name, source) or source_host(url) in pack_hosts:
+            continue
         key = name.lower()
         if key in seen:
             continue
         seen.add(key)
+        pack_hosts.add(source_host(url))
         row = {"merchant": name, "url": url}
         if source.get("source_kind"):
             row["source_kind"] = str(source["source_kind"])

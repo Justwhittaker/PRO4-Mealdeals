@@ -13,6 +13,7 @@ from sqlalchemy import text
 from app.api.dependencies import DbSession, RedisClient
 from app.core.config import get_settings
 from app.models.deal import Deal
+from app.services.deal_link import normalize_outbound_url
 
 router = APIRouter(tags=["redirect"])
 
@@ -49,7 +50,8 @@ async def go_redirect(
     if deal is None or not deal.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
 
-    target = deal.affiliate_url or deal.clean_url or deal.scraped_raw_url
+    raw_target = deal.affiliate_url or deal.clean_url or deal.scraped_raw_url
+    target = normalize_outbound_url(raw_target) or raw_target
     if not target:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
