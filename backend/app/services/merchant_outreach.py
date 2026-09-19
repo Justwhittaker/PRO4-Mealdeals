@@ -21,6 +21,12 @@ from app.services.marketing_contacts import _clean_email
 
 logger = logging.getLogger(__name__)
 
+ABOUT_US_BLURB = (
+    "We're all about the thrill of a great deal — hunting down tasty savings near you, "
+    "and giving hotels, businesses, and grocers a cheerful, flat-rate stage to shout "
+    "about their offers (no voucher cut, allowing businesses to keep all their earnings)."
+)
+
 _SKIP_EMAIL_RE = re.compile(
     r"^(noreply|no-reply|donotreply|mailer-daemon|postmaster|admin|webmaster|"
     r"support|help|info@example|test@)",
@@ -41,11 +47,6 @@ def outreach_unsubscribe_url(token: str) -> str:
 def merchant_dashboard_url() -> str:
     settings = get_settings()
     return f"{settings.frontend_base_url.rstrip('/')}/dashboard"
-
-
-def newsletter_signup_url() -> str:
-    settings = get_settings()
-    return f"{settings.frontend_base_url.rstrip('/')}/newsletter"
 
 
 def _contact_greeting(contact: MarketingContact) -> str:
@@ -141,9 +142,10 @@ def build_merchant_outreach_email(
     country = contact.country_code.upper()
     unsub = outreach_unsubscribe_url(unsubscribe_token)
     dashboard = merchant_dashboard_url()
-    newsletter = newsletter_signup_url()
 
-    subject = f"Dine A Deal found your {city} listing — free traffic for your deals"
+    subject = (
+        f"We found your {city} deal on Dine A Deal — keep 100% of what you earn"
+    )
 
     deal_hint = ""
     if contact.source_url:
@@ -152,21 +154,26 @@ def build_merchant_outreach_email(
     lines = [
         f"Hello {greeting},",
         "",
-        f"Did you know Dine A Deal already found your business in {city}, {country}?",
-        "We list meal deals and dining offers for hungry locals — and we'd love to send "
-        "more traffic to your site.",
+        f"Did you know Dine A Deal already found your business in {city}, {country}? "
+        "We'd love to send more hungry locals to your site.",
         deal_hint.rstrip(),
         "",
-        "What we offer merchants:",
+        "About us",
         "",
-        "• Free to join — create your merchant profile and list deals at no cost.",
+        ABOUT_US_BLURB,
+        "",
+        "What that means for you:",
+        "",
+        "• Free to join — list your deals on a flat-rate stage, no voucher cut.",
         "• Priority hero placement — subscribers get top slots above scraped listings "
-        "(€20/month intro plan with 3 priority deal slots).",
-        "• Weekly newsletter — reach subscribers who opted in for dining deals in their city.",
+        "(€20/month intro with 3 priority deal slots).",
+        "• Weekly newsletter — reach diners who opted in for specials in their city.",
+        "• You keep what you earn — we don't take a slice of redemptions.",
         "",
         f"Claim your listing: {dashboard}",
-        f"Newsletter info: {newsletter}",
-        f"Browse the site: {base}",
+        f"About Dine A Deal: {base}/about",
+        f"Browse deals: {base}",
+        "",
         "",
         "—",
         "You're receiving this because we found public contact details while indexing "
@@ -183,18 +190,22 @@ def build_merchant_outreach_email(
   <p>Hello {greeting},</p>
   <p>
     Did you know <strong>Dine A Deal</strong> already found your business in
-    <strong>{city}, {country}</strong>? We list meal deals for locals — and we'd love to
-    send more traffic to your site.
+    <strong>{city}, {country}</strong>? We'd love to send more hungry locals to your site.
   </p>
   {"<p><a href=\"" + contact.source_url + "\">View where we found your listing</a></p>" if contact.source_url else ""}
   <h2 style="font-family:Arial,sans-serif;color:#7a1f2b;font-size:16px;margin-top:24px">
-    What we offer merchants
+    About us
+  </h2>
+  <p style="line-height:1.6;color:#333">{ABOUT_US_BLURB}</p>
+  <h2 style="font-family:Arial,sans-serif;color:#7a1f2b;font-size:16px;margin-top:24px">
+    What that means for you
   </h2>
   <ul style="padding-left:18px;line-height:1.6">
-    <li><strong>Free to join</strong> — create your profile and list deals at no cost.</li>
+    <li><strong>Free to join</strong> — list deals on a flat-rate stage, no voucher cut.</li>
     <li><strong>Priority hero placement</strong> — subscribers rank above scraped listings
       (€20/month intro with 3 priority deal slots).</li>
     <li><strong>Weekly newsletter</strong> — reach diners who opted in for city specials.</li>
+    <li><strong>You keep what you earn</strong> — we don't take a slice of redemptions.</li>
   </ul>
   <p style="margin-top:24px">
     <a href="{dashboard}" style="display:inline-block;background:#7a1f2b;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px;font-family:Arial,sans-serif;font-weight:600">
@@ -202,8 +213,8 @@ def build_merchant_outreach_email(
     </a>
   </p>
   <p style="font-size:14px;margin-top:20px">
-    <a href="{newsletter}">Newsletter for diners</a> ·
-    <a href="{base}">Browse Dine A Deal</a>
+    <a href="{base}/about">About Dine A Deal</a> ·
+    <a href="{base}">Browse deals</a>
   </p>
   <p style="margin-top:28px;font-size:12px;color:#666">
     Public contact details were found while indexing hospitality deals.
