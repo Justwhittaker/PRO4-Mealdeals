@@ -1,0 +1,66 @@
+# Send one preview merchant outreach email (uses GitHub RESEND secrets).
+
+name: Merchant outreach test email
+
+on:
+  workflow_dispatch:
+    inputs:
+      to_email:
+        description: Inbox to receive the preview
+        required: false
+        default: just.whittaker@gmail.com
+
+jobs:
+  send-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Send preview email
+        working-directory: backend
+        env:
+          APP_ENV: production
+          FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL || 'https://dineadeal.com' }}
+          PUBLIC_API_BASE_URL: ${{ vars.PUBLIC_API_BASE_URL || 'https://dineadeal-api.onrender.com' }}
+          CONTACT_TO_EMAIL: ${{ github.event.inputs.to_email }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL || 'Dine A Deal <onboarding@resend.dev>' }}
+          MERCHANT_OUTREACH_REPLY_TO: ${{ vars.MERCHANT_OUTREACH_REPLY_TO || 'hello@dineadeal.com' }}
+        run: |
+          python -c "
+          from app.core.config import get_settings
+          from app.services.email import is_email_configured, send_email
+          from app.services.merchant_outreach import build_merchant_outreach_email
+
+          class Preview:
+              business_name = 'Galway Test Bistro'
+              city = 'Galway'
+              country_code = 'IE'
+              source_url = 'https://dineadeal.com/about'
+
+          settings = get_settings()
+          to = settings.contact_to_email
+          subject, text, html = build_merchant_outreach_email(
+              Preview(), unsubscribe_token='preview-test'
+          )
+          ok = send_email(
+              to_email=to,
+              subject='[TEST] ' + subject,
+              text_body=text,
+              html_body=html,
+              reply_to=settings.merchant_outreach_reply_to,
+          )
+          print({'sent': ok, 'to': to, 'configured': is_email_configured()})
+          if not ok:
+              raise SystemExit(1)
+          "
