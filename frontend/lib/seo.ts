@@ -25,6 +25,7 @@ const RESERVED_GEO_SLUGS = new Set([
   "api",
   "admin",
   "sitemap",
+  "sitemaps",
   "robots",
   "ads",
   "llms",
