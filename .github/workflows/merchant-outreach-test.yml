@@ -38,6 +38,9 @@ jobs:
           MERCHANT_OUTREACH_REPLY_TO: ${{ vars.MERCHANT_OUTREACH_REPLY_TO || 'hello@dineadeal.com' }}
         run: |
           python -c "
+          import secrets
+          from datetime import datetime, timezone
+
           from app.core.config import get_settings
           from app.services.email import is_email_configured, send_email
           from app.services.merchant_outreach import build_merchant_outreach_email
@@ -53,17 +56,21 @@ jobs:
           base = settings.frontend_base_url.rstrip('/')
           to = settings.contact_to_email
           listing_url = f'{base}/ie/galway/deals'
+          send_ref = secrets.token_urlsafe(8)
+          stamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
           subject, text, html = build_merchant_outreach_email(
               Preview(),
               unsubscribe_token='preview-test',
               listing_url=listing_url,
+              send_ref=send_ref,
           )
           ok = send_email(
               to_email=to,
-              subject='[TEST] ' + subject,
+              subject=f'[TEST {stamp}] ' + subject,
               text_body=text,
               html_body=html,
               reply_to=settings.merchant_outreach_reply_to,
+              headers={'X-Entity-Ref-ID': send_ref},
           )
           print({'sent': ok, 'to': to, 'configured': is_email_configured()})
           if not ok:

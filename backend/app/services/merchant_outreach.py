@@ -300,15 +300,18 @@ def build_merchant_outreach_email(
     *,
     unsubscribe_token: str,
     listing_url: str | None = None,
+    send_ref: str | None = None,
 ) -> tuple[str, str, str]:
     """Subject, plain text, HTML for one business outreach message."""
     settings = get_settings()
     base = settings.frontend_base_url.rstrip("/")
     greeting = _contact_greeting(contact)
+    business_name = (contact.business_name or "your business").strip()
     city = contact.city or "your area"
     country = contact.country_code.upper()
     unsub = outreach_unsubscribe_url(unsubscribe_token)
     dashboard = merchant_dashboard_url()
+    ref = send_ref or secrets.token_urlsafe(8)
 
     subject = (
         f"We found your {city} deal on Dine A Deal — keep 100% of what you earn"
@@ -321,7 +324,7 @@ def build_merchant_outreach_email(
     lines = [
         f"Hello {greeting},",
         "",
-        f"Did you know Dine A Deal already found your business in {city}, {country}? "
+        f"Did you know Dine A Deal already found {business_name} in {city}, {country}? "
         "We'd love to send more hungry locals to your site.",
         deal_hint.rstrip(),
         "",
@@ -359,8 +362,14 @@ def build_merchant_outreach_email(
             "View your listing on Dine A Deal</a></p>"
         )
 
+    preheader = f"{business_name} in {city} — your Dine A Deal listing · {ref}"
+
     html_body = f"""<!DOCTYPE html>
 <html><body style="font-family:Georgia,serif;color:#1a1a1a;max-width:560px;margin:0 auto;padding:24px">
+  <!-- dineadeal-outreach:{ref} -->
+  <div style="display:none!important;visibility:hidden;opacity:0;height:0;width:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#ffffff">
+    {preheader}
+  </div>
   <p style="margin:0 0 24px">
     <a href="{base}" style="text-decoration:none;display:inline-block">
       <img src="{logo_mark}" alt="" width="48" height="48" style="display:inline-block;vertical-align:middle;border:0" />
@@ -369,8 +378,9 @@ def build_merchant_outreach_email(
   </p>
   <p>Hello {greeting},</p>
   <p>
-    Did you know <strong>Dine A Deal</strong> already found your business in
-    <strong>{city}, {country}</strong>? We'd love to send more hungry locals to your site.
+    Did you know <strong>Dine A Deal</strong> already found
+    <strong>{business_name}</strong> in <strong>{city}, {country}</strong>?
+    We'd love to send more hungry locals to your site.
   </p>
   {listing_link_html}
   <h2 style="font-family:Arial,sans-serif;color:#7a1f2b;font-size:16px;margin-top:24px">
@@ -421,10 +431,13 @@ def send_outreach_to_contact(
 
     token = ensure_outreach_token(contact)
     listing_url = resolve_dineadeal_listing_url(session, contact)
+    send_ref = secrets.token_urlsafe(8)
+    unsub = outreach_unsubscribe_url(token)
     subject, text_body, html_body = build_merchant_outreach_email(
         contact,
         unsubscribe_token=token,
         listing_url=listing_url,
+        send_ref=send_ref,
     )
     settings = get_settings()
     ok = send_email(
@@ -433,6 +446,11 @@ def send_outreach_to_contact(
         text_body=text_body,
         html_body=html_body,
         reply_to=settings.merchant_outreach_reply_to,
+        headers={
+            "X-Entity-Ref-ID": send_ref,
+            "List-Unsubscribe": f"<{unsub}>",
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
     )
     if ok:
         contact.last_outreach_sent_at = _utcnow()
