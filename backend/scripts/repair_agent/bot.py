@@ -53,7 +53,11 @@ def _allowed(update: Update, cfg: Config) -> bool:
 
 async def _deny(update: Update) -> None:
     if update.message:
-        await update.message.reply_text("Unauthorized.")
+        uid = update.effective_user.id if update.effective_user else "?"
+        await update.message.reply_text(
+            f"Unauthorized.\nYour Telegram user id is: {uid}\n"
+            "Put that number in TELEGRAM_ALLOWED_USER_IDS in repair-agent.env"
+        )
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
