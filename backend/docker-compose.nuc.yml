@@ -28,17 +28,15 @@ services:
     restart: unless-stopped
     volumes:
       - celerybeat-data:/app/data
+    # Start as root briefly so /app/data volume is writable by appuser (Beat schedule).
+    user: "0:0"
     command:
-      - celery
-      - -A
-      - app.workers.celery_app.celery_app
-      - worker
-      - --beat
-      - --loglevel=info
-      # One zone scrape at a time — parallel workers flood Overpass and get blocked.
-      - --concurrency=1
-      - -s
-      - /app/data/celerybeat-schedule
+      - sh
+      - -c
+      - |
+        mkdir -p /app/data
+        chown -R appuser:appuser /app/data
+        exec su appuser -s /bin/sh -c 'exec celery -A app.workers.celery_app.celery_app worker --beat --loglevel=info --concurrency=1 -s /app/data/celerybeat-schedule'
 
 volumes:
   celerybeat-data:

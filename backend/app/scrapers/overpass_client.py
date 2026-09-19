@@ -25,6 +25,10 @@ PROXY_OVERPASS_WALL_SECONDS = 22.0
 PROXY_HTTP_READ_SECONDS = 12.0
 NUC_PROXY_CLIENT_SECONDS = 25.0
 
+_OVERPASS_HEADERS = {
+    "User-Agent": "DineADeal/1.0 (+https://dineadeal.com; contact@dineadeal.com)",
+}
+
 _OVERPASS_SEMAPHORE = asyncio.Semaphore(1)
 _RETRY_DELAYS_SEC: tuple[float, ...] = (0.0, 2.0, 5.0)
 _PROXY_RETRY_DELAYS_SEC: tuple[float, ...] = (0.0,)
@@ -53,7 +57,11 @@ async def _post_direct(
         async with httpx.AsyncClient(timeout=http_timeout) as client:
             for endpoint in OVERPASS_ENDPOINTS:
                 try:
-                    response = await client.post(endpoint, data={"data": query})
+                    response = await client.post(
+                        endpoint,
+                        data={"data": query},
+                        headers=_OVERPASS_HEADERS,
+                    )
                     response.raise_for_status()
                     payload = response.json()
                     if not isinstance(payload, dict):
