@@ -16,6 +16,9 @@ import csv
 import sys
 from pathlib import Path
 
+# Allow `python scripts/import_marketing_contacts_csv.py` from backend/ or Docker /app.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
