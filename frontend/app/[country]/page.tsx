@@ -34,9 +34,12 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import {
   breadcrumbJsonLd,
   countryListingMetadata,
+  hasFeedFilterParams,
   isIndexableCountrySlug,
   itemListJsonLd,
   listingPath,
+  withFeaturedDealDescription,
+  withNoIndexFollow,
 } from "@/lib/seo";
 import { BRAND_NAME } from "@/lib/brand";
 
@@ -52,11 +55,27 @@ interface PageProps {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: PageProps): Promise<Metadata> {
   if (!isIndexableCountrySlug(params.country)) {
     return { robots: { index: false, follow: false } };
   }
-  return countryListingMetadata(params.country);
+  const feed = await fetchDealsFeed(
+    buildDealFeedParams({
+      scope: "country",
+      country: params.country,
+      currency: currencyForCountry(params.country),
+      sort: "score",
+    }),
+  );
+  let meta = withFeaturedDealDescription(
+    countryListingMetadata(params.country),
+    feed.ok ? feed.data : [],
+  );
+  if (hasFeedFilterParams(searchParams)) {
+    meta = withNoIndexFollow(meta);
+  }
+  return meta;
 }
 
 export default async function CountryPage({ params, searchParams }: PageProps) {

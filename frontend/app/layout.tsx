@@ -46,11 +46,13 @@ export const metadata: Metadata = {
     locale: "en_GB",
     title: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
     description: HOME_DESCRIPTION,
+    images: [{ url: "/logo-dineadeal.png", alt: `${BRAND_NAME} — ${BRAND_TAGLINE}` }],
   },
   twitter: {
     card: "summary",
     title: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
     description: HOME_DESCRIPTION,
+    images: ["/logo-dineadeal.png"],
   },
   icons: {
     // Prefer .ico for Chrome/Safari URL-bar; PNG fallbacks for tabs/PWA.
@@ -75,7 +77,7 @@ export default function RootLayout({
   const crawler = isAdCrawler(headers().get("user-agent"));
 
   return (
-    <html lang="en" className={`${oswald.variable} ${crimson.variable}`}>
+    <html lang="en-GB" className={`${oswald.variable} ${crimson.variable}`}>
       <body className="min-h-screen max-w-[100vw] overflow-x-clip font-sans">
         <CookieConsentProvider>
           <AdSenseScript />

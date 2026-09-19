@@ -1,4 +1,12 @@
 {
   "framework": "nextjs",
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.dineadeal.com" }],
+      "destination": "https://dineadeal.com/:path*",
+      "permanent": true
+    }
+  ]
 }

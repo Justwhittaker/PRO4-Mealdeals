@@ -32,8 +32,11 @@ import { parseFeedSort, parseRadiusMiles } from "@/lib/radius";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   HOME_DESCRIPTION,
+  hasFeedFilterParams,
+  itemListJsonLd,
   publicPageMetadata,
   websiteJsonLd,
+  withNoIndexFollow,
 } from "@/lib/seo";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/brand";
 
@@ -68,12 +71,17 @@ function resolveHomeLocation(): {
   };
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  return publicPageMetadata({
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: { radius?: string; sort?: string; category?: string };
+}): Promise<Metadata> {
+  const meta = publicPageMetadata({
     title: { absolute: `${BRAND_NAME} — ${BRAND_TAGLINE}` },
     description: HOME_DESCRIPTION,
     path: "/",
   });
+  return hasFeedFilterParams(searchParams) ? withNoIndexFollow(meta) : meta;
 }
 
 export default async function HomePage({
@@ -113,11 +121,19 @@ export default async function HomePage({
       <GeoBootstrap enabled={needsClientGeo} />
 
       <main className="w-full max-w-[100vw] overflow-x-clip">
-        <JsonLd data={websiteJsonLd()} />
+        <JsonLd
+          data={[
+            websiteJsonLd(),
+            itemListJsonLd(`Dining deals across ${countryLabel}`, listed),
+          ]}
+        />
         <h1 className="animate-fade-up w-full bg-white px-3 py-3 text-center font-display text-lg text-charcoal-50 sm:px-6 sm:text-2xl">
+          {BRAND_TAGLINE}
+        </h1>
+        <p className="bg-white px-3 pb-3 text-center text-sm text-charcoal-400 sm:px-6">
           HOT DEALS across {countryLabel} — all categories
           {hubLabel ? ` (near ${hubLabel})` : ""}.
-        </h1>
+        </p>
         <section className="hero-atmosphere grain relative z-10 w-full border-b border-charcoal-700">
           <div className="relative z-10 w-full px-3 py-4 sm:px-6 sm:py-5">
             <div className="animate-fade-up opacity-0 [animation-delay:120ms] [animation-fill-mode:forwards]">

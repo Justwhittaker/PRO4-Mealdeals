@@ -222,6 +222,14 @@ export function isKnownMarketCountry(code: string): boolean {
   return MARKET_COUNTRY_CODES.has(code.trim().toLowerCase());
 }
 
+/** True when the city is in the scrape-market catalog for that country. */
+export function isKnownMarketCity(country: string, city: string): boolean {
+  const countryKey = normalizeCountrySlug(country);
+  const cityKey = city.trim().toLowerCase().replace(/\s+/g, "-");
+  if (!countryKey || !cityKey) return false;
+  return Boolean(CITY_SEARCH_LABELS[`${countryKey}/${cityKey}`]);
+}
+
 /** All 91 scrape markets, each with nested cities. */
 export function listCountries(): CountryOption[] {
   return MARKET_COUNTRIES.map((m) => ({

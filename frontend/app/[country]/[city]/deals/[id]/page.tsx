@@ -17,6 +17,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import {
   breadcrumbJsonLd,
   dealListingMetadata,
+  isIndexableCountrySlug,
   isReservedGeoSlug,
   listingPath,
   offerJsonLd,
@@ -30,7 +31,11 @@ interface PageProps {
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  if (isReservedGeoSlug(params.country) || isReservedGeoSlug(params.city)) {
+  if (
+    isReservedGeoSlug(params.country) ||
+    isReservedGeoSlug(params.city) ||
+    !isIndexableCountrySlug(params.country)
+  ) {
     return { robots: { index: false, follow: false } };
   }
   const result = await fetchDeal(params.id, {
@@ -45,7 +50,13 @@ export async function generateMetadata({
 
 export default async function DealDetailPage({ params }: PageProps) {
   const { country, city, id } = params;
-  if (isReservedGeoSlug(country) || isReservedGeoSlug(city)) notFound();
+  if (
+    isReservedGeoSlug(country) ||
+    isReservedGeoSlug(city) ||
+    !isIndexableCountrySlug(country)
+  ) {
+    notFound();
+  }
   const result = await fetchDeal(id, { country, city });
 
   if (!result.ok) {

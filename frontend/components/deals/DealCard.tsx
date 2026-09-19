@@ -53,7 +53,7 @@ export function DealCard(deal: DealCardProps) {
             imageUrl={deal.imageUrl}
             logoUrl={deal.logoUrl}
             restaurantName={deal.restaurantName}
-            imageAlt={`${deal.title} — ${deal.restaurantName}`}
+            imageAlt={`${deal.title} — ${deal.restaurantName} in ${deal.city.replace(/-/g, " ")}`}
             aspectClassName="aspect-[16/10]"
             hoverZoom
           />

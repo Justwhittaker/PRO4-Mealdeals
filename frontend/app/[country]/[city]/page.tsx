@@ -40,9 +40,12 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import {
   breadcrumbJsonLd,
   cityListingMetadata,
+  hasFeedFilterParams,
   isIndexableCitySlug,
   itemListJsonLd,
   listingPath,
+  withFeaturedDealDescription,
+  withNoIndexFollow,
 } from "@/lib/seo";
 import { BRAND_NAME } from "@/lib/brand";
 
@@ -58,11 +61,28 @@ interface PageProps {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: PageProps): Promise<Metadata> {
   if (!isIndexableCitySlug(params.country, params.city)) {
     return { robots: { index: false, follow: false } };
   }
-  return cityListingMetadata(params.country, params.city);
+  const feed = await fetchDealsFeed(
+    buildDealFeedParams({
+      scope: "city",
+      country: params.country,
+      city: params.city,
+      currency: currencyForCountry(params.country),
+      sort: "score",
+    }),
+  );
+  let meta = withFeaturedDealDescription(
+    cityListingMetadata(params.country, params.city),
+    feed.ok ? feed.data : [],
+  );
+  if (hasFeedFilterParams(searchParams)) {
+    meta = withNoIndexFollow(meta);
+  }
+  return meta;
 }
 
 export default async function CityPage({ params, searchParams }: PageProps) {

@@ -108,6 +108,7 @@ export function AdvertCarousel({ deals }: AdvertCarouselProps) {
                 imageUrl={deal.imageUrl}
                 logoUrl={deal.logoUrl}
                 restaurantName={deal.restaurantName}
+                imageAlt={`${deal.title} — ${deal.restaurantName} in ${deal.city.replace(/-/g, " ")}`}
                 aspectClassName="h-[55%] w-full"
               />
               <div className="space-y-1 p-3 lg:space-y-1.5 lg:p-4">

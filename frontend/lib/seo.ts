@@ -4,6 +4,7 @@ import { BRAND_NAME, BRAND_SITE_URL } from "@/lib/brand";
 import {
   cityDisplayLabel,
   countrySearchLabel,
+  isKnownMarketCity,
   isKnownMarketCountry,
   listCountries,
   normalizeCountrySlug,
@@ -71,7 +72,73 @@ export function isIndexableCountrySlug(slug: string): boolean {
 export function isIndexableCitySlug(country: string, city: string): boolean {
   if (!isIndexableCountrySlug(country)) return false;
   if (isReservedGeoSlug(city)) return false;
-  return true;
+  return isKnownMarketCity(country, city);
+}
+
+/** Query filters are extra copies of the clean listing URL. */
+export function hasFeedFilterParams(searchParams?: {
+  currency?: string;
+  sort?: string;
+  category?: string;
+  radius?: string;
+}): boolean {
+  if (!searchParams) return false;
+  return Boolean(
+    searchParams.currency ||
+      searchParams.sort ||
+      searchParams.category ||
+      searchParams.radius,
+  );
+}
+
+export function withNoIndexFollow(meta: Metadata): Metadata {
+  return {
+    ...meta,
+    robots: { index: false, follow: true },
+  };
+}
+
+export function withFeaturedDealDescription(
+  meta: Metadata,
+  samples: Array<{ title: string; restaurantName: string }>,
+): Metadata {
+  if (!samples.length || typeof meta.description !== "string") return meta;
+  const featured = samples
+    .slice(0, 2)
+    .map((deal) => `${deal.title} at ${deal.restaurantName}`)
+    .join("; ");
+  const description = `${meta.description} Featured: ${featured}.`.slice(0, 160);
+  return {
+    ...meta,
+    description,
+    openGraph: meta.openGraph
+      ? { ...meta.openGraph, description }
+      : { description },
+    twitter: meta.twitter ? { ...meta.twitter, description } : { description },
+  };
+}
+
+const DEFAULT_OG_IMAGE = "/logo-dineadeal.png";
+
+const MAJOR_HREFLANG: Record<string, string> = {
+  uk: "en-GB",
+  ie: "en-IE",
+  us: "en-US",
+  au: "en-AU",
+  ca: "en-CA",
+  nz: "en-NZ",
+  za: "en-ZA",
+};
+
+export function marketHreflangLanguages(): Record<string, string> {
+  const languages: Record<string, string> = {
+    "x-default": absoluteUrl("/"),
+    en: absoluteUrl("/"),
+  };
+  for (const [slug, locale] of Object.entries(MAJOR_HREFLANG)) {
+    languages[locale] = absoluteUrl(listingPath(slug));
+  }
+  return languages;
 }
 
 export function publicPageMetadata(opts: {
@@ -87,12 +154,15 @@ export function publicPageMetadata(opts: {
       ? `${opts.title} · ${BRAND_NAME}`
       : opts.title.absolute;
   const index = opts.index ?? true;
-  const image = opts.image?.trim() || undefined;
+  const image = opts.image?.trim() || DEFAULT_OG_IMAGE;
 
   return {
     title: opts.title,
     description: opts.description,
-    alternates: { canonical: url },
+    alternates: {
+      canonical: url,
+      languages: marketHreflangLanguages(),
+    },
     robots: index
       ? { index: true, follow: true }
       : { index: false, follow: false },
@@ -103,13 +173,13 @@ export function publicPageMetadata(opts: {
       title: fullTitle,
       description: opts.description,
       url,
-      ...(image ? { images: [{ url: image }] } : {}),
+      images: [{ url: image, alt: fullTitle }],
     },
     twitter: {
-      card: image ? "summary_large_image" : "summary",
+      card: image === DEFAULT_OG_IMAGE ? "summary" : "summary_large_image",
       title: fullTitle,
       description: opts.description,
-      ...(image ? { images: [image] } : {}),
+      images: [image],
     },
   };
 }
