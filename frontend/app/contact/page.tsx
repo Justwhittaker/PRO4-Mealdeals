@@ -1,13 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ContactForm } from "@/components/contact/ContactForm";
 import { BrandLogo } from "@/components/landing/BrandLogo";
 import { SiteFooter } from "@/components/landing/SiteFooter";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata: Metadata = publicPageMetadata({
   title: "Contact us",
   description:
     "Contact Dine A Deal about Priority subscriptions, free-month eligibility, or billing.",
-};
+  path: "/contact",
+});
 
 export default function ContactPage() {
   return (

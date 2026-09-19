@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { LocationHeader } from "@/components/deals/LocationHeader";
 import { CurrencySelector } from "@/components/deals/CurrencySelector";
@@ -34,6 +36,15 @@ import {
 } from "@/lib/deal-feed-query";
 import { areaListingDeals } from "@/lib/priority";
 import { parseFeedSort, parseRadiusMiles } from "@/lib/radius";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  breadcrumbJsonLd,
+  cityListingMetadata,
+  isIndexableCitySlug,
+  itemListJsonLd,
+  listingPath,
+} from "@/lib/seo";
+import { BRAND_NAME } from "@/lib/brand";
 
 interface PageProps {
   params: { country: string; city: string };
@@ -45,7 +56,17 @@ interface PageProps {
   };
 }
 
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  if (!isIndexableCitySlug(params.country, params.city)) {
+    return { robots: { index: false, follow: false } };
+  }
+  return cityListingMetadata(params.country, params.city);
+}
+
 export default async function CityPage({ params, searchParams }: PageProps) {
+  if (!isIndexableCitySlug(params.country, params.city)) notFound();
   const { country, city } = params;
   const localCurrency = currencyForCountry(country);
   const currency: CurrencyCode = isCurrencyCode(searchParams.currency)
@@ -119,6 +140,17 @@ export default async function CityPage({ params, searchParams }: PageProps) {
         </div>
 
         <PublisherExplainer areaLabel={`${cityLabel}, ${countryLabel}`} />
+
+        <JsonLd
+          data={[
+            breadcrumbJsonLd([
+              { name: BRAND_NAME, path: "/" },
+              { name: countryLabel, path: listingPath(country) },
+              { name: cityLabel, path: listingPath(country, city) },
+            ]),
+            itemListJsonLd(`Dining deals in ${cityLabel}`, deals),
+          ]}
+        />
 
         <NewsletterDealGate>
           {!feed.ok ? (

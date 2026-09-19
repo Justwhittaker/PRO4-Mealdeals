@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   Bell,
@@ -8,12 +9,14 @@ import {
   Smartphone,
 } from "lucide-react";
 import { SiteFooter } from "@/components/landing/SiteFooter";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata: Metadata = publicPageMetadata({
   title: "About us",
   description:
     "Dine a Deal services — digital marketing, SEO, content creation — and the marketing gurus, hoteliers, and developers working for you.",
-};
+  path: "/about",
+});
 
 const SERVICES = [
   {

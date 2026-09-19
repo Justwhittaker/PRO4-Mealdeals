@@ -1,12 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { BRAND_CONTACT_EMAIL } from "@/lib/brand";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata: Metadata = publicPageMetadata({
   title: "Privacy Choices",
   description:
     "Withdraw marketing permission or stop future sale or sharing of your information with CheddaCheeze T/A Dine A Deal.",
-};
+  path: "/privacy/choices",
+});
 
 export default function PrivacyChoicesPage() {
   return (

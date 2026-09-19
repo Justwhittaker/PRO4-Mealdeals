@@ -203,6 +203,25 @@ export interface CountryOption {
   cities: CityOption[];
 }
 
+const MARKET_COUNTRY_CODES = new Set(
+  MARKET_COUNTRIES.flatMap((m) => {
+    const codes = [m.code, m.iso.toLowerCase()];
+    if (m.code === "uk") codes.push("gb");
+    return codes;
+  }),
+);
+
+/** Route slug for a country (`gb` → `uk`). */
+export function normalizeCountrySlug(code: string): string {
+  const key = code.trim().toLowerCase();
+  return key === "gb" ? "uk" : key;
+}
+
+/** True when the slug is a configured scrape market (ISO or route code). */
+export function isKnownMarketCountry(code: string): boolean {
+  return MARKET_COUNTRY_CODES.has(code.trim().toLowerCase());
+}
+
 /** All 91 scrape markets, each with nested cities. */
 export function listCountries(): CountryOption[] {
   return MARKET_COUNTRIES.map((m) => ({

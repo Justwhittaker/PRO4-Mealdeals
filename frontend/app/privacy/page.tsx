@@ -1,11 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { SiteFooter } from "@/components/landing/SiteFooter";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata: Metadata = publicPageMetadata({
   title: "Privacy Notice",
   description:
     "Privacy Notice for CheddaCheeze T/A Dine A Deal — including third-party marketing and compensated data sharing.",
-};
+  path: "/privacy",
+});
 
 export default function PrivacyNoticePage() {
   return (

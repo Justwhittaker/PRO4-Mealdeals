@@ -1,11 +1,14 @@
+import type { Metadata } from "next";
 import { NewsletterPortalClient } from "@/components/newsletter/NewsletterPortalClient";
 import { SiteFooter } from "@/components/landing/SiteFooter";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata: Metadata = publicPageMetadata({
   title: "Weekly Hot Deals newsletter",
   description:
     "Sign up or sign in for Dine A Deal Weekly Hot Deals. New readers join with name, email, and location; returning readers sign in with email on a new device.",
-};
+  path: "/newsletter",
+});
 
 export default function NewsletterPortalPage({
   searchParams,

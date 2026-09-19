@@ -105,9 +105,9 @@ export function AreaDealGrid({
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h3 className="font-display text-xl text-charcoal-50 sm:text-2xl">
+          <h2 className="font-display text-xl text-charcoal-50 sm:text-2xl">
             All deals{cityLabel ? ` near ${cityLabel}` : ""}
-          </h3>
+          </h2>
           {subtitle ? (
             <p className="mt-1 text-sm text-charcoal-400">{subtitle}</p>
           ) : null}
@@ -120,9 +120,9 @@ export function AreaDealGrid({
       {sections.map((section, index) => (
         <div key={section.id} className="space-y-4">
           {section.label ? (
-            <h4 className="font-display text-lg text-charcoal-100 sm:text-xl">
+            <h3 className="font-display text-lg text-charcoal-100 sm:text-xl">
               {section.label}
-            </h4>
+            </h3>
           ) : null}
           <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {section.deals.map((deal) => (

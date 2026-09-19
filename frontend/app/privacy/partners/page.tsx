@@ -1,11 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { SiteFooter } from "@/components/landing/SiteFooter";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata: Metadata = publicPageMetadata({
   title: "Partner information",
   description:
     "Categories of third-party marketing recipients for CheddaCheeze T/A Dine A Deal.",
-};
+  path: "/privacy/partners",
+});
 
 const CATEGORIES = [
   "Retail and consumer products",

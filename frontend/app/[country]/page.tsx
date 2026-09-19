@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { LocationHeader } from "@/components/deals/LocationHeader";
 import { CurrencySelector } from "@/components/deals/CurrencySelector";
 import { RadiusSelector } from "@/components/deals/RadiusSelector";
@@ -28,6 +30,15 @@ import {
 } from "@/lib/deal-feed-query";
 import { areaListingDeals } from "@/lib/priority";
 import { parseFeedSort, parseRadiusMiles } from "@/lib/radius";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  breadcrumbJsonLd,
+  countryListingMetadata,
+  isIndexableCountrySlug,
+  itemListJsonLd,
+  listingPath,
+} from "@/lib/seo";
+import { BRAND_NAME } from "@/lib/brand";
 
 interface PageProps {
   params: { country: string };
@@ -39,7 +50,17 @@ interface PageProps {
   };
 }
 
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  if (!isIndexableCountrySlug(params.country)) {
+    return { robots: { index: false, follow: false } };
+  }
+  return countryListingMetadata(params.country);
+}
+
 export default async function CountryPage({ params, searchParams }: PageProps) {
+  if (!isIndexableCountrySlug(params.country)) notFound();
   const { country } = params;
   const localCurrency = currencyForCountry(country);
   const currency: CurrencyCode = isCurrencyCode(searchParams.currency)
@@ -107,6 +128,16 @@ export default async function CountryPage({ params, searchParams }: PageProps) {
         ) : null}
 
         <PublisherExplainer areaLabel={countryLabel} />
+
+        <JsonLd
+          data={[
+            breadcrumbJsonLd([
+              { name: BRAND_NAME, path: "/" },
+              { name: countryLabel, path: listingPath(country) },
+            ]),
+            itemListJsonLd(`Dining deals across ${countryLabel}`, deals),
+          ]}
+        />
 
         <NewsletterDealGate>
           {!feed.ok ? (

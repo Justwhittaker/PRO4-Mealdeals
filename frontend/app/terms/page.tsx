@@ -1,14 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalRichText } from "@/components/legal/LegalRichText";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { legalConfig, TERMS_VERSION } from "@/lib/legal-config";
+import { publicPageMetadata } from "@/lib/seo";
 import termsSections from "@/lib/terms-sections-data.json";
 
-export const metadata = {
-  title: "Terms and Conditions | Dine A Deal",
+export const metadata: Metadata = publicPageMetadata({
+  title: "Terms and Conditions",
   description:
     "Terms governing the use of Dine A Deal by consumers, venues, advertisers and business users.",
-};
+  path: "/terms",
+});
 
 type TermsBlock =
   | { type: "p"; text: string }

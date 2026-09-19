@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
 import { AdvertCarousel } from "@/components/landing/AdvertCarousel";
@@ -28,6 +29,13 @@ import {
 import { buildDealFeedParams } from "@/lib/deal-feed-query";
 import { areaListingDeals } from "@/lib/priority";
 import { parseFeedSort, parseRadiusMiles } from "@/lib/radius";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  HOME_DESCRIPTION,
+  publicPageMetadata,
+  websiteJsonLd,
+} from "@/lib/seo";
+import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/brand";
 
 function resolveHomeLocation(): {
   target: ReturnType<typeof defaultGeoTarget>;
@@ -58,6 +66,14 @@ function resolveHomeLocation(): {
     source: pref ? (source ?? "geo") : "fallback",
     needsClientGeo: true,
   };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  return publicPageMetadata({
+    title: { absolute: `${BRAND_NAME} — ${BRAND_TAGLINE}` },
+    description: HOME_DESCRIPTION,
+    path: "/",
+  });
 }
 
 export default async function HomePage({
@@ -97,10 +113,11 @@ export default async function HomePage({
       <GeoBootstrap enabled={needsClientGeo} />
 
       <main className="w-full max-w-[100vw] overflow-x-clip">
-        <p className="animate-fade-up w-full bg-white px-3 py-3 text-center font-display text-lg text-charcoal-50 sm:px-6 sm:text-2xl">
+        <JsonLd data={websiteJsonLd()} />
+        <h1 className="animate-fade-up w-full bg-white px-3 py-3 text-center font-display text-lg text-charcoal-50 sm:px-6 sm:text-2xl">
           HOT DEALS across {countryLabel} — all categories
           {hubLabel ? ` (near ${hubLabel})` : ""}.
-        </p>
+        </h1>
         <section className="hero-atmosphere grain relative z-10 w-full border-b border-charcoal-700">
           <div className="relative z-10 w-full px-3 py-4 sm:px-6 sm:py-5">
             <div className="animate-fade-up opacity-0 [animation-delay:120ms] [animation-fill-mode:forwards]">

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
@@ -6,6 +7,10 @@ import { LogoutButton } from "@/components/auth/LogoutButton";
 import { authOptions } from "@/lib/auth";
 import { fetchMerchantProfile } from "@/lib/api";
 import { DashboardSignIn } from "./sign-in";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function DashboardLayout({
   children,

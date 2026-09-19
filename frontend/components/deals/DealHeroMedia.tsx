@@ -7,6 +7,8 @@ interface DealHeroMediaProps {
   imageUrl?: string | null;
   logoUrl?: string | null;
   restaurantName?: string;
+  /** Accessible description of the deal photo. Empty if purely decorative. */
+  imageAlt?: string;
   /** Aspect ratio utility class, e.g. aspect-[16/10] */
   aspectClassName?: string;
   /** Extra classes on the outer frame */
@@ -25,6 +27,7 @@ export function DealHeroMedia({
   imageUrl,
   logoUrl,
   restaurantName,
+  imageAlt,
   aspectClassName = "aspect-[16/9]",
   className = "",
   hoverZoom = false,
@@ -52,6 +55,9 @@ export function DealHeroMedia({
   const imgClass = hoverZoom
     ? "h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
     : "h-full w-full object-cover";
+  const photoAlt =
+    imageAlt?.trim() ||
+    (restaurantName ? `${restaurantName} dining deal` : "");
 
   return (
     <div
@@ -62,7 +68,7 @@ export function DealHeroMedia({
         <img
           key={primarySrc}
           src={primarySrc}
-          alt=""
+          alt={photoAlt}
           className={imgClass}
           referrerPolicy="no-referrer"
           loading="lazy"
@@ -74,7 +80,7 @@ export function DealHeroMedia({
         <img
           key={DEAL_IMAGE_FALLBACK}
           src={DEAL_IMAGE_FALLBACK}
-          alt=""
+          alt={photoAlt}
           className={imgClass}
           loading="lazy"
           decoding="async"

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,15 +10,41 @@ import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { fetchDeal, fetchValueCalculator } from "@/lib/api";
 import { dealCtaLabel, dealLinkHint } from "@/lib/deal-link";
 import { formatMoney } from "@/lib/currency";
-import { cityDisplayLabel } from "@/lib/geo";
+import { cityDisplayLabel, countrySearchLabel } from "@/lib/geo";
 import { dealBadge } from "@/lib/priority";
+import { JsonLd } from "@/components/seo/JsonLd";
+import {
+  breadcrumbJsonLd,
+  dealListingMetadata,
+  isReservedGeoSlug,
+  listingPath,
+  offerJsonLd,
+} from "@/lib/seo";
+import { BRAND_NAME } from "@/lib/brand";
 
 interface PageProps {
   params: { country: string; city: string; id: string };
 }
 
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  if (isReservedGeoSlug(params.country) || isReservedGeoSlug(params.city)) {
+    return { robots: { index: false, follow: false } };
+  }
+  const result = await fetchDeal(params.id, {
+    country: params.country,
+    city: params.city,
+  });
+  if (!result.ok) {
+    return { robots: { index: false, follow: false } };
+  }
+  return dealListingMetadata(result.data, params.country, params.city);
+}
+
 export default async function DealDetailPage({ params }: PageProps) {
   const { country, city, id } = params;
+  if (isReservedGeoSlug(country) || isReservedGeoSlug(city)) notFound();
   const result = await fetchDeal(id, { country, city });
 
   if (!result.ok) {
@@ -57,8 +84,22 @@ export default async function DealDetailPage({ params }: PageProps) {
     }
   }
 
+  const cityLabel = cityDisplayLabel(country, city);
+  const countryLabel = countrySearchLabel(country);
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <JsonLd
+        data={[
+          breadcrumbJsonLd([
+            { name: BRAND_NAME, path: "/" },
+            { name: countryLabel, path: listingPath(country) },
+            { name: cityLabel, path: listingPath(country, city) },
+            { name: deal.title, path: listingPath(country, city, deal.id) },
+          ]),
+          offerJsonLd(deal, country, city),
+        ]}
+      />
       <NewsletterDealGate compact>
         <LocationHeader
           country={country}
@@ -76,6 +117,7 @@ export default async function DealDetailPage({ params }: PageProps) {
             imageUrl={deal.imageUrl}
             logoUrl={deal.logoUrl}
             restaurantName={deal.restaurantName}
+            imageAlt={`${deal.title} — ${deal.restaurantName} in ${cityLabel}`}
             aspectClassName="aspect-[16/9]"
             className="rounded-2xl border border-charcoal-700"
           />

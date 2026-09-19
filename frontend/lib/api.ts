@@ -64,6 +64,8 @@ export interface FeedParams {
   /** score = featured first; distance = nearest first */
   sort?: "score" | "distance";
   limit?: number;
+  /** Backend defaults to true. Sitemap and metadata fetches must pass false. */
+  autoScrape?: boolean;
 }
 
 export type ApiResult<T> =
@@ -292,8 +294,7 @@ export async function fetchDealsFeed(
   }
   if (params.sort) qs.set("sort", params.sort);
   if (params.limit != null) qs.set("limit", String(params.limit));
-  // Backend defaults to true; keep explicit so empty city pages auto-scrape.
-  qs.set("auto_scrape", "true");
+  qs.set("auto_scrape", params.autoScrape === false ? "false" : "true");
 
   const query = qs.toString();
   const feedTags = [DEALS_TAG];

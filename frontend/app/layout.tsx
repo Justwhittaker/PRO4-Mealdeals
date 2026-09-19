@@ -11,6 +11,7 @@ import { NewsletterPopup } from "@/components/newsletter/NewsletterPopup";
 import { getAdSenseClientId, isAdSenseConfigured } from "@/lib/adsense";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/brand";
 import { isAdCrawler } from "@/lib/crawlers";
+import { HOME_DESCRIPTION } from "@/lib/seo";
 import "./globals.css";
 
 const oswald = Oswald({
@@ -35,11 +36,22 @@ export const metadata: Metadata = {
     default: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
     template: `%s · ${BRAND_NAME}`,
   },
-  description:
-    "Find dining deals near you across cities worldwide. Restaurants advertise on a flat-rate platform — no voucher cut.",
+  description: HOME_DESCRIPTION,
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "https://dineadeal.com",
   ),
+  openGraph: {
+    type: "website",
+    siteName: BRAND_NAME,
+    locale: "en_GB",
+    title: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
+    description: HOME_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary",
+    title: `${BRAND_NAME} — ${BRAND_TAGLINE}`,
+    description: HOME_DESCRIPTION,
+  },
   icons: {
     // Prefer .ico for Chrome/Safari URL-bar; PNG fallbacks for tabs/PWA.
     icon: [

@@ -31,10 +31,19 @@ export function LocationHeader({
         >
           {countryLabel}
         </Link>
-        {cityLabel ? (
+        {cityLabel && city ? (
           <>
             <span aria-hidden>/</span>
-            <span className="text-charcoal-200">{cityLabel}</span>
+            {title ? (
+              <Link
+                href={`/${country}/${city}`}
+                className="hover:text-citrus-400 transition-colors"
+              >
+                {cityLabel}
+              </Link>
+            ) : (
+              <span className="text-charcoal-200">{cityLabel}</span>
+            )}
           </>
         ) : null}
       </nav>

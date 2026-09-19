@@ -1,10 +1,16 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { UnsubscribeClient } from "@/components/newsletter/UnsubscribeClient";
 import { SiteFooter } from "@/components/landing/SiteFooter";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata: Metadata = publicPageMetadata({
   title: "Unsubscribe from Weekly Hot Deals",
-};
+  description:
+    "Unsubscribe from the Dine A Deal Weekly Hot Deals newsletter.",
+  path: "/newsletter/unsubscribe",
+  index: false,
+});
 
 export default function NewsletterUnsubscribePage() {
   return (

@@ -1,13 +1,16 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CookieSettingsLink } from "@/components/cookie/CookieSettingsLink";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { BRAND_NAME } from "@/lib/brand";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Cookie Policy | Dine A Deal",
+export const metadata: Metadata = publicPageMetadata({
+  title: "Cookie Policy",
   description:
     "How Dine A Deal uses cookies and similar technologies, and how you can manage your preferences.",
-};
+  path: "/cookies",
+});
 
 export default function CookiePolicyPage() {
   return (
