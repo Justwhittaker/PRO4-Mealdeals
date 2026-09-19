@@ -40,6 +40,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "https://dineadeal.com",
   ),
+  verification: {
+    google: "ssmV4FvDAcNjtCIFDnboapf0iUEjVR361mdkZPOO2FM",
+  },
   openGraph: {
     type: "website",
     siteName: BRAND_NAME,
