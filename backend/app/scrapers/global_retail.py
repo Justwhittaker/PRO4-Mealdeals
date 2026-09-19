@@ -230,6 +230,8 @@ class GlobalRetailScraper(BaseScraper):
         self._live_cache: dict[str, dict[str, Decimal | str]] = {}
         # Homepage media fallbacks keyed by origin (scheme://host).
         self._site_media_cache: dict[str, dict[str, str]] = {}
+        # Contact fallbacks (email/phone/about) keyed by origin.
+        self._site_contact_cache: dict[str, dict[str, str]] = {}
         self._offer_url_cache: dict[str, str | None] = {}
 
     def _normalize_country(self, country_code: str) -> str:
@@ -337,7 +339,11 @@ class GlobalRetailScraper(BaseScraper):
 
             website = str(live.get("website") or source["url"]).split("?")[0]
             phone = str(live["phone"]) if live.get("phone") else None
+            if not phone and source.get("phone"):
+                phone = str(source["phone"])[:64]
             email = str(live["email"]) if live.get("email") else None
+            if not email and source.get("email"):
+                email = str(source["email"])[:255]
             about_blurb = (
                 str(live["about_blurb"]) if live.get("about_blurb") else None
             )
@@ -436,6 +442,13 @@ class GlobalRetailScraper(BaseScraper):
         contact = self._extract_business_contact(
             soup, page_url=url, merchant=merchant, description=description
         )
+        if (not contact.get("email") or not contact.get("phone")) and get_settings().deep_contact_scrape_enabled:
+            site_contact = await self._fetch_site_contact(
+                url, merchant=merchant, description=description
+            )
+            for key in ("email", "phone", "about_blurb", "business_name", "website"):
+                if site_contact.get(key) and not contact.get(key):
+                    contact[key] = site_contact[key]
 
         page_text = soup.get_text(" ", strip=True)[:12000]
         prices = self._extract_prices(page_text)
@@ -528,6 +541,139 @@ class GlobalRetailScraper(BaseScraper):
         self._site_media_cache[origin] = media
         return media
 
+    async def _fetch_site_contact(
+        self,
+        page_url: str,
+        *,
+        merchant: str,
+        description: str | None,
+    ) -> dict[str, str]:
+        """When the offer page lacks email/phone, skim /contact|/about|/."""
+        parsed = urlparse(page_url)
+        if not parsed.scheme or not parsed.netloc:
+            return {}
+        origin = f"{parsed.scheme}://{parsed.netloc}"
+        if origin in self._site_contact_cache:
+            return self._site_contact_cache[origin]
+
+        settings = get_settings()
+        max_fetches = settings.deep_contact_max_extra_fetches
+        if max_fetches <= 0:
+            self._site_contact_cache[origin] = {}
+            return {}
+
+        contact: dict[str, str] = {}
+        paths = ("/contact", "/contact-us", "/about", "/about-us", "/")
+        fetches = 0
+        for path in paths:
+            if fetches >= max_fetches:
+                break
+            if contact.get("email") and contact.get("phone"):
+                break
+            candidate_url = f"{origin}{path}"
+            if candidate_url.rstrip("/") == page_url.rstrip("/"):
+                continue
+            try:
+                html = await self.fetch_html(candidate_url)
+            except Exception as exc:
+                logger.info("Site contact fetch skipped for %s: %s", candidate_url, exc)
+                continue
+            fetches += 1
+            if not html or len(html) < 200:
+                continue
+            soup = self.parse_soup(html)
+            found = self._extract_business_contact(
+                soup,
+                page_url=candidate_url,
+                merchant=merchant,
+                description=description,
+            )
+            for key in ("email", "phone", "about_blurb", "business_name", "website"):
+                if found.get(key) and not contact.get(key):
+                    contact[key] = found[key]
+
+        self._site_contact_cache[origin] = contact
+        return contact
+
+    @staticmethod
+    def _normalize_email_candidate(raw: str) -> str | None:
+        value = (
+            raw.strip()
+            .replace("&#64;", "@")
+            .replace("&64;", "@")
+            .replace("[at]", "@")
+            .replace("(at)", "@")
+            .replace(" at ", "@")
+            .replace(" AT ", "@")
+        )
+        value = value.split("?")[0].split(",")[0].strip().lower()
+        if value.startswith("mailto:"):
+            value = value[7:]
+        if not re.fullmatch(r"[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}", value):
+            return None
+        local, _, domain = value.partition("@")
+        junk_local = {
+            "noreply",
+            "no-reply",
+            "donotreply",
+            "do-not-reply",
+            "mailer-daemon",
+            "postmaster",
+        }
+        junk_domain = {
+            "example.com",
+            "example.org",
+            "test.com",
+            "email.com",
+            "sentry.io",
+            "wixpress.com",
+            "schema.org",
+        }
+        if local in junk_local or domain in junk_domain:
+            return None
+        if local.endswith((".png", ".jpg", ".gif", ".webp", ".svg")):
+            return None
+        if len(value) > 254:
+            return None
+        return value[:255]
+
+    def _iter_jsonld_nodes(self, data: Any) -> list[dict[str, Any]]:
+        nodes: list[dict[str, Any]] = []
+
+        def walk(obj: Any) -> None:
+            if isinstance(obj, list):
+                for item in obj:
+                    walk(item)
+                return
+            if not isinstance(obj, dict):
+                return
+            nodes.append(obj)
+            if "@graph" in obj:
+                walk(obj["@graph"])
+
+        walk(data)
+        return nodes
+
+    def _emails_from_jsonld_node(self, node: dict[str, Any]) -> list[str]:
+        found: list[str] = []
+
+        def add(raw: Any) -> None:
+            if isinstance(raw, str):
+                cleaned = self._normalize_email_candidate(raw)
+                if cleaned:
+                    found.append(cleaned)
+            elif isinstance(raw, list):
+                for item in raw:
+                    add(item)
+
+        add(node.get("email"))
+        contact = node.get("contactPoint") or node.get("contactpoint")
+        points = contact if isinstance(contact, list) else ([contact] if contact else [])
+        for point in points:
+            if isinstance(point, dict):
+                add(point.get("email"))
+        return found
+
     def _extract_business_contact(
         self,
         soup: Any,
@@ -541,24 +687,20 @@ class GlobalRetailScraper(BaseScraper):
             "website": f"{urlparse(page_url).scheme}://{urlparse(page_url).netloc}/"
         }
 
-        # JSON-LD LocalBusiness / Organization / Restaurant
         for script in soup.find_all("script", attrs={"type": "application/ld+json"}):
             raw = script.string or script.get_text() or ""
             try:
                 data = json.loads(raw)
             except (json.JSONDecodeError, TypeError):
                 continue
-            nodes = data if isinstance(data, list) else [data]
-            for node in nodes:
-                if not isinstance(node, dict):
-                    continue
+            for node in self._iter_jsonld_nodes(data):
                 typ = node.get("@type")
                 types = (
                     [typ]
                     if isinstance(typ, str)
                     else (typ if isinstance(typ, list) else [])
                 )
-                if not any(
+                type_ok = any(
                     str(t).lower()
                     in {
                         "localbusiness",
@@ -570,34 +712,64 @@ class GlobalRetailScraper(BaseScraper):
                         "hotel",
                     }
                     for t in types
-                ):
-                    # Still accept if contact fields present
-                    if not (node.get("telephone") or node.get("email")):
-                        continue
+                )
+                emails = self._emails_from_jsonld_node(node)
+                if not type_ok and not (node.get("telephone") or emails):
+                    continue
                 if node.get("name") and not out.get("business_name"):
                     out["business_name"] = str(node["name"])[:255]
                 if node.get("url") and str(node["url"]).startswith("http"):
                     out["website"] = str(node["url"])[:500]
-                if node.get("telephone"):
+                if node.get("telephone") and not out.get("phone"):
                     out["phone"] = str(node["telephone"])[:64]
-                if node.get("email"):
-                    out["email"] = str(node["email"])[:255]
+                if emails and not out.get("email"):
+                    out["email"] = emails[0]
                 about = node.get("description") or node.get("disambiguatingDescription")
                 if about and not out.get("about_blurb"):
                     out["about_blurb"] = self._short_blurb(str(about))
 
-        mailto = soup.find("a", href=re.compile(r"^mailto:", re.I))
-        if mailto and mailto.get("href") and "email" not in out:
-            out["email"] = str(mailto["href"]).split(":", 1)[1].split("?")[0][:255]
+        def _mailto_from(scope: Any) -> str | None:
+            if scope is None:
+                return None
+            for link in scope.find_all("a", href=re.compile(r"^mailto:", re.I)):
+                href = link.get("href") or ""
+                cleaned = self._normalize_email_candidate(str(href))
+                if cleaned:
+                    return cleaned
+            return None
 
         if "email" not in out:
-            email_in_text = re.search(
+            preferred = (
+                soup.find("footer")
+                or soup.find(id=re.compile(r"contact", re.I))
+                or soup.find(class_=re.compile(r"contact", re.I))
+            )
+            picked = _mailto_from(preferred) or _mailto_from(soup)
+            if picked:
+                out["email"] = picked
+
+        if "email" not in out:
+            scopes = [
+                soup.find("footer"),
+                soup.find(id=re.compile(r"contact", re.I)),
+                soup.find(class_=re.compile(r"contact", re.I)),
+                soup,
+            ]
+            email_re = re.compile(
                 r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b",
-                soup.get_text(" ", strip=True),
                 re.I,
             )
-            if email_in_text:
-                out["email"] = email_in_text.group(0)[:255]
+            for scope in scopes:
+                if scope is None:
+                    continue
+                text = scope.get_text(" ", strip=True)
+                for match in email_re.finditer(text):
+                    cleaned = self._normalize_email_candidate(match.group(0))
+                    if cleaned:
+                        out["email"] = cleaned
+                        break
+                if out.get("email"):
+                    break
 
         tel = soup.find("a", href=re.compile(r"^tel:", re.I))
         if tel and tel.get("href") and "phone" not in out:

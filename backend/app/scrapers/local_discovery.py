@@ -102,6 +102,23 @@ def _save_cache(cache: dict[str, Any]) -> None:
     )
 
 
+def _email_from_tags(tags: dict[str, str]) -> str | None:
+    for key in ("email", "contact:email"):
+        raw = (tags.get(key) or "").strip()
+        if not raw or "@" not in raw:
+            continue
+        return raw.split(",")[0].strip()[:255]
+    return None
+
+
+def _phone_from_tags(tags: dict[str, str]) -> str | None:
+    for key in ("phone", "contact:phone", "contact:mobile"):
+        raw = (tags.get(key) or "").strip()
+        if raw:
+            return raw[:64]
+    return None
+
+
 def _website_from_tags(tags: dict[str, str]) -> str | None:
     for key in ("website", "contact:website", "url", "contact:url"):
         raw = (tags.get(key) or "").strip()
@@ -334,6 +351,12 @@ def _select_independents(
             "independent": not _is_likely_chain(name),
             "area_local": area_local,
         }
+        osm_email = _email_from_tags(str_tags)
+        if osm_email:
+            row["email"] = osm_email
+        osm_phone = _phone_from_tags(str_tags)
+        if osm_phone:
+            row["phone"] = osm_phone
         independents.append(row)
 
     # Round-robin across categories so pubs/takeaways/grocers are not crowded
