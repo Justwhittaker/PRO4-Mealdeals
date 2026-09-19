@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,10 +27,19 @@ def zone_for_now() -> str | None:
 
 
 def main() -> int:
-    zone = zone_for_now()
-    if zone is None:
-        print("No scrape zone scheduled for this UTC slot — skipping.")
-        return 0
+    forced = (os.environ.get("SCRAPE_ZONE_ID") or "").strip().lower()
+    if forced:
+        if forced not in ZONE_BEAT_SLOTS:
+            print(f"Unknown SCRAPE_ZONE_ID: {forced}")
+            print("Valid zones:", ", ".join(ZONE_ORDER))
+            return 1
+        zone = forced
+        print(f"Using forced zone: {zone}")
+    else:
+        zone = zone_for_now()
+        if zone is None:
+            print("No scrape zone scheduled for this UTC slot — skipping.")
+            return 0
 
     print(f"Running scheduled zone scrape: {zone}")
     result = scrape_and_ingest_zone(zone)

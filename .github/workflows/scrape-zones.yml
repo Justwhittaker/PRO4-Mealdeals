@@ -13,6 +13,22 @@ on:
   schedule:
     - cron: "0,15,30,45 * * * *"
   workflow_dispatch:
+    inputs:
+      zone_id:
+        description: Zone to scrape (auto = UTC schedule slot only)
+        required: false
+        default: auto
+        type: choice
+        options:
+          - auto
+          - north_america
+          - latin_america
+          - western_europe
+          - eastern_europe
+          - africa
+          - mena
+          - asia
+          - oceania
 
 concurrency:
   group: scrape-zones
@@ -42,4 +58,5 @@ jobs:
           FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL || 'https://dineadeal.com' }}
           DEEP_SCRAPE_ENABLED: "true"
           DEEP_SCRAPE_MAX_EXTRA_FETCHES: "4"
+          SCRAPE_ZONE_ID: ${{ github.event.inputs.zone_id != 'auto' && github.event.inputs.zone_id || '' }}
         run: python backend/scripts/pick_and_scrape_zone.py
