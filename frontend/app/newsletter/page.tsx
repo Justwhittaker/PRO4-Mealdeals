@@ -13,11 +13,17 @@ export const metadata: Metadata = publicPageMetadata({
 export default function NewsletterPortalPage({
   searchParams,
 }: {
-  searchParams?: { resubscribe?: string; token?: string; email?: string };
+  searchParams?: {
+    resubscribe?: string;
+    token?: string;
+    email?: string;
+    next?: string;
+  };
 }) {
   const resubscribe = searchParams?.resubscribe === "1";
   const token = searchParams?.token;
   const email = searchParams?.email ?? "";
+  const nextPath = searchParams?.next;
 
   return (
     <div className="relative min-h-screen max-w-[100vw] overflow-x-clip bg-white">
@@ -29,6 +35,7 @@ export default function NewsletterPortalPage({
               resubscribe={resubscribe}
               token={token}
               initialEmail={email}
+              nextPath={nextPath}
             />
           </div>
         </div>
@@ -53,12 +60,13 @@ export default function NewsletterPortalPage({
             bars, and takeaway.
           </p>
           <p>
-            Listings on the site are public to browse. The newsletter is extra:
-            a weekly digest near the location you choose. You can unsubscribe
-            from any email or from this portal. We do not sell a voucher; you
-            redeem with the venue using the details on each listing. Ads, when
-            shown, only appear beside deal grids on listing pages — never on
-            this signup screen.
+            Listings on the site are public to browse. Opening a deal (Get
+            deal / venue site) asks for a newsletter signup first, then
+            continues to the offer. The weekly email is a digest near the
+            location you choose. You can unsubscribe from any email or from
+            this portal. We do not sell a voucher; you redeem with the venue
+            using the details on each listing. Ads, when shown, only appear
+            beside deal grids on listing pages — never on this signup screen.
           </p>
         </div>
       </section>

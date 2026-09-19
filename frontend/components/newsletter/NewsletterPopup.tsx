@@ -8,8 +8,11 @@ import { NewsletterAuthPanel } from "@/components/newsletter/NewsletterAuthPanel
 import { isAdCrawler } from "@/lib/crawlers";
 import {
   NEWSLETTER_OPEN_EVENT,
+  continuePendingGoRedirect,
+  getPendingGoDealId,
   markNewsletterPopupDismissed,
   shouldShowNewsletterPopup,
+  takePendingGoDealId,
 } from "@/lib/newsletter-storage";
 
 export function NewsletterPopup() {
@@ -34,9 +37,15 @@ export function NewsletterPopup() {
   }, []);
 
   function dismiss() {
+    takePendingGoDealId();
     markNewsletterPopupDismissed();
     setOpen(false);
   }
+
+  const pendingGo = getPendingGoDealId();
+  const portalHref = pendingGo
+    ? `/newsletter?next=${encodeURIComponent(`/go/${pendingGo}`)}`
+    : "/newsletter";
 
   if (!open) return null;
 
@@ -71,6 +80,7 @@ export function NewsletterPopup() {
             initialView="signup"
             onSuccess={() => {
               setOpen(false);
+              continuePendingGoRedirect();
             }}
           />
         </div>
@@ -78,7 +88,7 @@ export function NewsletterPopup() {
         <p className="mt-4 text-center text-xs text-charcoal-400">
           Prefer the full page?{" "}
           <Link
-            href="/newsletter"
+            href={portalHref}
             className="text-burgundy-500 underline-offset-2 hover:underline"
             onClick={dismiss}
           >

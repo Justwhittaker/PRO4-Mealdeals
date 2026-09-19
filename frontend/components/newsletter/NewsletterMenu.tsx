@@ -9,6 +9,7 @@ import {
 } from "@/components/newsletter/NewsletterAuthPanel";
 import {
   clearNewsletterSubscribedFlag,
+  continuePendingGoRedirect,
   getRememberedNewsletterEmail,
   isNewsletterSubscribedLocally,
 } from "@/lib/newsletter-storage";
@@ -98,7 +99,10 @@ export function NewsletterMenu() {
               compact
               initialView={view}
               initialEmail={email}
-              onSuccess={() => setOpen(false)}
+              onSuccess={() => {
+                setOpen(false);
+                continuePendingGoRedirect();
+              }}
             />
           </div>
           <Link

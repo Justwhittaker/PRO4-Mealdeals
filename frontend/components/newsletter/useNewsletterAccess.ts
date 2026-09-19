@@ -4,6 +4,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   NEWSLETTER_ACCESS_EVENT,
   isNewsletterSubscribedLocally,
+  syncNewsletterUnlockCookie,
 } from "@/lib/newsletter-storage";
 
 function subscribeNewsletterAccess(onStoreChange: () => void): () => void {
@@ -33,6 +34,7 @@ export function useNewsletterAccess(): { ready: boolean; unlocked: boolean } {
   );
 
   useEffect(() => {
+    syncNewsletterUnlockCookie();
     setReady(true);
   }, []);
 

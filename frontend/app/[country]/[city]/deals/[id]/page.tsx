@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DealHeroMedia } from "@/components/deals/DealHeroMedia";
 import { LocationHeader } from "@/components/deals/LocationHeader";
+import { DealGoCta } from "@/components/deals/DealGoCta";
 import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { fetchDeal, fetchValueCalculator } from "@/lib/api";
 import { dealCtaLabel, dealLinkHint } from "@/lib/deal-link";
@@ -147,14 +148,11 @@ export default async function DealDetailPage({ params }: PageProps) {
           {websiteUrl ? (
             <p className="text-sm text-charcoal-300">
               Website:{" "}
-              <a
-                href={websiteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-burgundy-600 underline-offset-2 hover:underline break-all"
-              >
-                {websiteLabel}
-              </a>
+              <DealGoCta
+                dealId={deal.id}
+                label={websiteLabel ?? "Venue website"}
+                variant="link"
+              />
             </p>
           ) : null}
 
@@ -197,15 +195,7 @@ export default async function DealDetailPage({ params }: PageProps) {
 
           <div className="space-y-2 pt-2">
             <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg">
-                <a
-                  href={`/go/${deal.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {ctaLabel}
-                </a>
-              </Button>
+              <DealGoCta dealId={deal.id} label={ctaLabel} />
               <Button asChild size="lg" variant="outline">
                 <Link href={`/${country}/${city}`}>
                   More in {cityDisplayLabel(country, city)}

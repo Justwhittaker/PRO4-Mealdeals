@@ -1,6 +1,11 @@
 const EMAIL_KEY = "dineadeal_newsletter_email";
 const DISMISS_KEY = "dineadeal_newsletter_popup_dismissed";
 const SUBSCRIBED_KEY = "dineadeal_newsletter_subscribed";
+const PENDING_GO_KEY = "dineadeal_pending_go";
+
+/** Readable cookie so /go can enforce newsletter on the server. */
+export const NEWSLETTER_UNLOCK_COOKIE = "dineadeal_newsletter_unlock";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 /** Force-open the newsletter popup (e.g. from deal-gate CTA). */
 export const NEWSLETTER_OPEN_EVENT = "dineadeal:newsletter-open";
@@ -12,12 +17,31 @@ function notifyNewsletterAccessChanged(): void {
   window.dispatchEvent(new Event(NEWSLETTER_ACCESS_EVENT));
 }
 
-/** Persist newsletter identity + unlock deals for this browser. */
+function writeUnlockCookie(enabled: boolean): void {
+  if (typeof document === "undefined") return;
+  const secure =
+    typeof window !== "undefined" && window.location.protocol === "https:"
+      ? "; Secure"
+      : "";
+  if (enabled) {
+    document.cookie = `${NEWSLETTER_UNLOCK_COOKIE}=1; Path=/; Max-Age=${COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
+    return;
+  }
+  document.cookie = `${NEWSLETTER_UNLOCK_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+}
+
+/** Keep the /go cookie in sync with the local unlock flag. */
+export function syncNewsletterUnlockCookie(): void {
+  writeUnlockCookie(isNewsletterSubscribedLocally());
+}
+
+/** Persist newsletter identity + unlock outbound deal CTAs for this browser. */
 export function rememberNewsletterEmail(email: string): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(EMAIL_KEY, email.trim().toLowerCase());
   localStorage.setItem(SUBSCRIBED_KEY, "1");
   localStorage.setItem(DISMISS_KEY, "1");
+  writeUnlockCookie(true);
   notifyNewsletterAccessChanged();
 }
 
@@ -53,6 +77,7 @@ export function openNewsletterSignup(): void {
 export function clearNewsletterSubscribedFlag(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(SUBSCRIBED_KEY);
+  writeUnlockCookie(false);
   notifyNewsletterAccessChanged();
 }
 
@@ -61,5 +86,49 @@ export function clearNewsletterSession(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(SUBSCRIBED_KEY);
   localStorage.removeItem(EMAIL_KEY);
+  writeUnlockCookie(false);
   notifyNewsletterAccessChanged();
+}
+
+const GO_DEAL_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isGoDealId(value: string): boolean {
+  return GO_DEAL_ID.test(value);
+}
+
+export function isSafeGoNext(path: string): boolean {
+  return /^\/go\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/?$/i.test(
+    path.trim(),
+  );
+}
+
+export function setPendingGoDealId(dealId: string): void {
+  if (typeof window === "undefined" || !isGoDealId(dealId)) return;
+  sessionStorage.setItem(PENDING_GO_KEY, dealId);
+}
+
+export function getPendingGoDealId(): string | null {
+  if (typeof window === "undefined") return null;
+  const value = sessionStorage.getItem(PENDING_GO_KEY);
+  return value && isGoDealId(value) ? value : null;
+}
+
+export function takePendingGoDealId(): string | null {
+  if (typeof window === "undefined") return null;
+  const value = sessionStorage.getItem(PENDING_GO_KEY);
+  sessionStorage.removeItem(PENDING_GO_KEY);
+  return value && isGoDealId(value) ? value : null;
+}
+
+/** After signup/sign-in, continue the locked /go click when one is pending. */
+export function continuePendingGoRedirect(nextFromQuery?: string | null): void {
+  if (typeof window === "undefined") return;
+  const pending = takePendingGoDealId();
+  if (pending) {
+    window.location.assign(`/go/${pending}`);
+    return;
+  }
+  if (nextFromQuery && isSafeGoNext(nextFromQuery)) {
+    window.location.assign(nextFromQuery);
+  }
 }

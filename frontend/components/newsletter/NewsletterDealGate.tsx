@@ -42,8 +42,8 @@ export function NewsletterDealGate({
             Get the weekly roundup in your inbox
           </h2>
           <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-charcoal-300">
-            Listings below are public. Sign up to save your city on this device
-            and receive Weekly Hot Deals by email.
+            Listings below are public. Sign up to open deal links and get the
+            weekly roundup for your city.
           </p>
           <Button
             type="button"
