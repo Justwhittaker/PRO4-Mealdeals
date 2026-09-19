@@ -42,6 +42,7 @@ def send_email(
     subject: str,
     text_body: str,
     html_body: Optional[str] = None,
+    reply_to: Optional[str] = None,
 ) -> bool:
     """
     Send an email via Resend (preferred) or SMTP.
@@ -59,6 +60,7 @@ def send_email(
             subject=subject,
             text_body=text_body,
             html_body=html_body,
+            reply_to=reply_to,
         )
 
     smtp_ok = bool(settings.smtp_host.strip()) and (
@@ -100,6 +102,7 @@ def _send_via_resend(
     subject: str,
     text_body: str,
     html_body: Optional[str],
+    reply_to: Optional[str] = None,
 ) -> bool:
     from_addr = (settings.resend_from_email or "").strip() or settings.smtp_from_email
     payload: dict[str, object] = {
@@ -108,6 +111,8 @@ def _send_via_resend(
         "subject": subject,
         "text": text_body,
     }
+    if reply_to and reply_to.strip():
+        payload["reply_to"] = reply_to.strip()
     if html_body:
         payload["html"] = html_body
 

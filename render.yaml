@@ -36,7 +36,7 @@ services:
       - key: RESEND_API_KEY
         sync: false
       - key: RESEND_FROM_EMAIL
-        value: Dine A Deal <onboarding@resend.dev>
+        value: Dine A Deal <noreply@dineadeal.com>
       - key: CONTACT_TO_EMAIL
         value: just.whittaker@gmail.com
       - key: SMTP_ALLOW

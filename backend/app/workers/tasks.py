@@ -14,6 +14,7 @@ from app.models.newsletter import NewsletterSubscriber
 from app.scrapers.global_retail import TARGET_MARKETS, iter_market_areas
 from app.scrapers.markets import CURRENCY_RATES
 from app.services.deal_expiry import expire_past_due_deals
+from app.services.merchant_outreach import send_merchant_outreach_batch
 from app.services.newsletter import send_weekly_special_to_subscriber
 from app.services.scrape_runner import scrape_and_ingest_area, scrape_and_ingest_markets, scrape_and_ingest_zone
 from app.scrapers.zones import SCRAPE_ZONES, markets_for_zone
@@ -141,6 +142,13 @@ def send_weekly_specials() -> dict[str, int]:
     summary = {"sent": sent, "skipped": skipped, "failed": failed}
     logger.info("Weekly specials complete: %s", summary)
     return summary
+
+
+@celery_app.task(name="app.workers.tasks.send_merchant_outreach")
+def send_merchant_outreach() -> dict[str, int]:
+    """Monthly batch: email scraped businesses about free listing + priority slots."""
+    with SyncSessionLocal() as session:
+        return send_merchant_outreach_batch(session)
 
 
 @celery_app.task(name="app.workers.tasks.ping")

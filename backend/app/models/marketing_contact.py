@@ -51,6 +51,19 @@ class MarketingContact(Base):
     source_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     venue_category: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
 
+    outreach_unsubscribe_token: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, unique=True, index=True
+    )
+    outreach_unsubscribed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_outreach_sent_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    outreach_excluded_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     last_scraped_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

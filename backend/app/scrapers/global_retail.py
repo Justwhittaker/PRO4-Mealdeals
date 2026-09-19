@@ -590,6 +590,15 @@ class GlobalRetailScraper(BaseScraper):
         if mailto and mailto.get("href") and "email" not in out:
             out["email"] = str(mailto["href"]).split(":", 1)[1].split("?")[0][:255]
 
+        if "email" not in out:
+            email_in_text = re.search(
+                r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b",
+                soup.get_text(" ", strip=True),
+                re.I,
+            )
+            if email_in_text:
+                out["email"] = email_in_text.group(0)[:255]
+
         tel = soup.find("a", href=re.compile(r"^tel:", re.I))
         if tel and tel.get("href") and "phone" not in out:
             out["phone"] = str(tel["href"]).split(":", 1)[1][:64]

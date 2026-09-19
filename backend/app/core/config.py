@@ -101,6 +101,8 @@ class Settings(BaseSettings):
 
     # Public site URL (unsubscribe / deal links in emails)
     frontend_base_url: str = Field(default="https://dineadeal.com")
+    # Public API URL (merchant outreach unsubscribe links in emails)
+    public_api_base_url: str = Field(default="https://dineadeal-api.onrender.com")
 
     # Shared with Vercel REVALIDATE_SECRET — POST /api/revalidate after scrapes.
     revalidate_secret: str = Field(default="")
@@ -111,13 +113,21 @@ class Settings(BaseSettings):
     # NUC Celery Beat: disable when GitHub Actions sends weekly specials instead.
     celery_weekly_email_enabled: bool = Field(default=True)
 
+    # Monthly email to scraped marketing_contacts (merchant acquisition).
+    merchant_outreach_enabled: bool = Field(default=True)
+    # Resend free tier: 100 emails/day — default 95 leaves headroom for contact form etc.
+    merchant_outreach_max_per_run: int = Field(default=95, ge=1, le=500)
+    merchant_outreach_min_days: int = Field(default=28, ge=7, le=90)
+    merchant_outreach_send_delay_ms: int = Field(default=200, ge=0, le=5000)
+    merchant_outreach_reply_to: str = Field(default="hello@dineadeal.com")
+
     # Scraped deals: extended on each re-scrape; hidden from feed after expiry.
     scraped_deal_ttl_days: int = Field(default=14, ge=1, le=90)
 
     # Resend HTTPS API (preferred on Render free — SMTP ports are blocked there)
     resend_api_key: str = Field(default="")
     resend_from_email: str = Field(
-        default="Dine A Deal <onboarding@resend.dev>"
+        default="Dine A Deal <noreply@dineadeal.com>"
     )
 
     # SMTP fallback (local/dev, or paid Render with SMTP_ALLOW=true)

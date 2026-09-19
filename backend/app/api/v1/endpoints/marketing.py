@@ -5,8 +5,10 @@ from __future__ import annotations
 import csv
 import io
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import func, select
 
@@ -119,4 +121,37 @@ async def export_marketing_contacts(
         headers={
             "Content-Disposition": 'attachment; filename="marketing_contacts.csv"'
         },
+    )
+
+
+@router.get("/outreach/unsubscribe", response_class=HTMLResponse)
+async def unsubscribe_merchant_outreach_endpoint(
+    db: DbSession,
+    token: str = Query(..., min_length=16, max_length=128),
+) -> HTMLResponse:
+    """One-click opt-out from merchant outreach emails."""
+    result = await db.execute(
+        select(MarketingContact)
+        .where(MarketingContact.outreach_unsubscribe_token == token.strip())
+        .limit(1)
+    )
+    row = result.scalar_one_or_none()
+    if row is not None:
+        row.outreach_unsubscribed_at = datetime.now(timezone.utc)
+        await db.commit()
+        ok = True
+    else:
+        ok = False
+    if ok:
+        body = (
+            "<html><body style='font-family:sans-serif;max-width:480px;margin:48px auto'>"
+            "<h1>Dine A Deal</h1>"
+            "<p>You've been unsubscribed from merchant outreach emails.</p>"
+            "<p>We won't email this address about listing your business again.</p>"
+            "</body></html>"
+        )
+        return HTMLResponse(content=body, status_code=200)
+    return HTMLResponse(
+        content="<html><body><p>Invalid or expired unsubscribe link.</p></body></html>",
+        status_code=404,
     )

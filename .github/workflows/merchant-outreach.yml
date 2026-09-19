@@ -1,0 +1,73 @@
+# Daily merchant outreach drip to scraped marketing_contacts (Resend via GitHub Actions).
+#
+# Resend free tier: 100 emails/day, 3,000/month — shared with contact form + weekly specials.
+# Default 95/run leaves headroom. A 3,000-contact backlog clears in ~32 daily runs.
+
+name: Merchant outreach
+
+on:
+  schedule:
+    # Every day 10:00 UTC — drip, not one big monthly blast
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Count queue only (no emails sent)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Run merchant outreach drip
+        env:
+          APP_ENV: production
+          DATABASE_URL_SYNC: ${{ secrets.DATABASE_URL_SYNC }}
+          FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL || 'https://dineadeal.com' }}
+          PUBLIC_API_BASE_URL: ${{ vars.PUBLIC_API_BASE_URL || 'https://dineadeal-api.onrender.com' }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL || 'Dine A Deal <noreply@dineadeal.com>' }}
+          MERCHANT_OUTREACH_REPLY_TO: ${{ vars.MERCHANT_OUTREACH_REPLY_TO || 'hello@dineadeal.com' }}
+          MERCHANT_OUTREACH_ENABLED: ${{ github.event.inputs.dry_run == 'true' && 'false' || 'true' }}
+          MERCHANT_OUTREACH_MAX_PER_RUN: ${{ vars.MERCHANT_OUTREACH_MAX_PER_RUN || '95' }}
+          MERCHANT_OUTREACH_MIN_DAYS: ${{ vars.MERCHANT_OUTREACH_MIN_DAYS || '28' }}
+          MERCHANT_OUTREACH_SEND_DELAY_MS: ${{ vars.MERCHANT_OUTREACH_SEND_DELAY_MS || '200' }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            python -c "
+          from sqlalchemy import create_engine
+          from sqlalchemy.orm import sessionmaker
+          from app.core.config import get_settings
+          from app.services.merchant_outreach import fetch_outreach_batch, outreach_queue_stats
+          s = get_settings()
+          engine = create_engine(s.database_url_sync, pool_pre_ping=True)
+          Session = sessionmaker(bind=engine)
+          with Session() as db:
+              stats = outreach_queue_stats(db)
+              batch = fetch_outreach_batch(db, persist_exclusions=False)
+              stats['eligible_this_run'] = len(batch)
+              days_to_clear = (stats['pending_outreach'] + stats['max_per_run'] - 1) // max(stats['max_per_run'], 1)
+              stats['estimated_days_to_clear_backlog'] = days_to_clear
+              print(stats)
+          "
+          else
+            python -c "from app.workers.tasks import send_merchant_outreach; print(send_merchant_outreach())"
+          fi
+        working-directory: backend
