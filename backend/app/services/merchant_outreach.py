@@ -27,6 +27,29 @@ ABOUT_US_BLURB = (
     "about their offers (no voucher cut, allowing businesses to keep all their earnings)."
 )
 
+# Aligned with GET /api/v1/scrapers/plans/priority (PlanInfo).
+MERCHANT_OFFER_BULLETS: tuple[tuple[str, str], ...] = (
+    (
+        "Free to join",
+        "Create your merchant profile and publish deals at no cost.",
+    ),
+    (
+        "Priority hero placement",
+        "Get your first month free to explore Priority and see the impact — 3 hero slots "
+        "that rank above scraped listings in city feeds, then a flat monthly rate "
+        "(card on file; one free month per eligible business).",
+    ),
+    (
+        "Weekly newsletter",
+        "Reach diners who opted in for dining specials in their city every Friday.",
+    ),
+    (
+        "Keep what you earn",
+        "No commission and no voucher cut — unlike voucher sites, you keep what your "
+        "customers pay you.",
+    ),
+)
+
 _SKIP_EMAIL_RE = re.compile(
     r"^(noreply|no-reply|donotreply|mailer-daemon|postmaster|admin|webmaster|"
     r"support|help|info@example|test@)",
@@ -164,16 +187,14 @@ def build_merchant_outreach_email(
         "",
         "What that means for you:",
         "",
-        "• Free to join — list your deals on a flat-rate stage, no voucher cut.",
-        "• Priority hero placement — subscribers get top slots above scraped listings "
-        "(€20/month intro with 3 priority deal slots).",
-        "• Weekly newsletter — reach diners who opted in for specials in their city.",
-        "• You keep what you earn — we don't take a slice of redemptions.",
+        *[
+            f"• {title} — {detail}"
+            for title, detail in MERCHANT_OFFER_BULLETS
+        ],
         "",
         f"Claim your listing: {dashboard}",
         f"About Dine A Deal: {base}/about",
         f"Browse deals: {base}",
-        "",
         "",
         "—",
         "You're receiving this because we found public contact details while indexing "
@@ -201,11 +222,12 @@ def build_merchant_outreach_email(
     What that means for you
   </h2>
   <ul style="padding-left:18px;line-height:1.6">
-    <li><strong>Free to join</strong> — list deals on a flat-rate stage, no voucher cut.</li>
-    <li><strong>Priority hero placement</strong> — subscribers rank above scraped listings
-      (€20/month intro with 3 priority deal slots).</li>
-    <li><strong>Weekly newsletter</strong> — reach diners who opted in for city specials.</li>
-    <li><strong>You keep what you earn</strong> — we don't take a slice of redemptions.</li>
+    {
+        "".join(
+            f"<li><strong>{title}</strong> — {detail}</li>"
+            for title, detail in MERCHANT_OFFER_BULLETS
+        )
+    }
   </ul>
   <p style="margin-top:24px">
     <a href="{dashboard}" style="display:inline-block;background:#7a1f2b;color:#fff;padding:12px 20px;text-decoration:none;border-radius:6px;font-family:Arial,sans-serif;font-weight:600">
