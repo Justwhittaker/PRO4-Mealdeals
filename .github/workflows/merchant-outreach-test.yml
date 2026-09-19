@@ -46,12 +46,17 @@ jobs:
               business_name = 'Galway Test Bistro'
               city = 'Galway'
               country_code = 'IE'
-              source_url = 'https://dineadeal.com/about'
+              source_url = None
+              website = None
 
           settings = get_settings()
+          base = settings.frontend_base_url.rstrip('/')
           to = settings.contact_to_email
+          listing_url = f'{base}/ie/galway/deals'
           subject, text, html = build_merchant_outreach_email(
-              Preview(), unsubscribe_token='preview-test'
+              Preview(),
+              unsubscribe_token='preview-test',
+              listing_url=listing_url,
           )
           ok = send_email(
               to_email=to,

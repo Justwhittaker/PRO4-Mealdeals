@@ -11,12 +11,16 @@ from typing import Any
 from urllib.parse import quote, urlparse
 
 from sqlalchemy import func, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.config import get_settings
+from app.models.deal import Deal
+from app.models.location import Location
 from app.models.marketing_contact import MarketingContact
 from app.models.merchant import Merchant
+from app.services.deal_link import normalize_outbound_url
 from app.services.email import is_email_configured, send_email
+from app.services.ingest import normalize_city, normalize_country
 from app.services.marketing_contacts import _clean_email
 
 logger = logging.getLogger(__name__)
@@ -152,10 +156,150 @@ def is_outreach_eligible_email(email: str | None) -> bool:
     return True
 
 
+def _dineadeal_host(base: str) -> str:
+    return urlparse(base).netloc.lower().removeprefix("www.")
+
+
+def _is_dineadeal_deal_url(url: str, base: str) -> bool:
+    """True when URL is a public deal page on our site (not /about or city feed)."""
+    try:
+        parsed = urlparse(url.strip())
+        host = parsed.netloc.lower().removeprefix("www.")
+        if host != _dineadeal_host(base):
+            return False
+        parts = [part for part in parsed.path.split("/") if part]
+        return len(parts) >= 4 and parts[2] == "deals"
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _deal_public_url(deal: Deal, base: str) -> str | None:
+    loc = deal.merchant.location if deal.merchant else None
+    if loc is None:
+        return None
+    country = loc.country_code.lower()
+    city_slug = loc.city.lower().replace(" ", "-")
+    return f"{base}/{country}/{city_slug}/deals/{deal.id}"
+
+
+def _city_deals_url(contact: MarketingContact, base: str) -> str | None:
+    if not contact.country_code or not contact.city:
+        return None
+    country = normalize_country(contact.country_code).lower()
+    city_slug = normalize_city(contact.city).lower().replace(" ", "-")
+    return f"{base}/{country}/{city_slug}/deals"
+
+
+def _deal_lookup_options() -> tuple[Any, ...]:
+    return (
+        selectinload(Deal.merchant).selectinload(Merchant.location),
+    )
+
+
+def _find_deal_for_contact(session: Session, contact: MarketingContact) -> Deal | None:
+    """Best-effort match from marketing contact → scraped deal on Dine A Deal."""
+    loaders = _deal_lookup_options()
+    country = normalize_country(contact.country_code)
+    city_name = normalize_city(contact.city) if contact.city else None
+
+    if contact.source_url:
+        deal = session.scalar(
+            select(Deal)
+            .where(Deal.scraped_raw_url == contact.source_url)
+            .where(Deal.deleted_at.is_(None))
+            .options(*loaders)
+            .limit(1)
+        )
+        if deal is not None:
+            return deal
+
+        normalized_source = normalize_outbound_url(contact.source_url)
+        if normalized_source:
+            deal = session.scalar(
+                select(Deal)
+                .where(Deal.scraped_raw_url == normalized_source)
+                .where(Deal.deleted_at.is_(None))
+                .options(*loaders)
+                .limit(1)
+            )
+            if deal is not None:
+                return deal
+
+        source_root = contact.source_url.split("?", 1)[0]
+        deal = session.scalar(
+            select(Deal)
+            .where(Deal.scraped_raw_url.like(f"{source_root}%"))
+            .where(Deal.deleted_at.is_(None))
+            .options(*loaders)
+            .order_by(Deal.created_at.desc())
+            .limit(1)
+        )
+        if deal is not None:
+            return deal
+
+    if contact.website:
+        stmt = (
+            select(Deal)
+            .join(Merchant, Deal.merchant_id == Merchant.id)
+            .join(Location, Merchant.location_id == Location.id)
+            .where(Deal.deleted_at.is_(None))
+            .where(Merchant.website == contact.website)
+            .where(Location.country_code == country)
+            .options(*loaders)
+            .order_by(Deal.created_at.desc())
+            .limit(1)
+        )
+        if city_name:
+            stmt = stmt.where(func.lower(Location.city) == city_name.lower())
+        deal = session.scalar(stmt)
+        if deal is not None:
+            return deal
+
+    business_name = (contact.business_name or "").strip()
+    if business_name:
+        stmt = (
+            select(Deal)
+            .join(Merchant, Deal.merchant_id == Merchant.id)
+            .join(Location, Merchant.location_id == Location.id)
+            .where(Deal.deleted_at.is_(None))
+            .where(func.lower(Merchant.name) == business_name.lower())
+            .where(Location.country_code == country)
+            .options(*loaders)
+            .order_by(Deal.created_at.desc())
+            .limit(1)
+        )
+        if city_name:
+            stmt = stmt.where(func.lower(Location.city) == city_name.lower())
+        deal = session.scalar(stmt)
+        if deal is not None:
+            return deal
+
+    return None
+
+
+def resolve_dineadeal_listing_url(
+    session: Session,
+    contact: MarketingContact,
+) -> str | None:
+    """Public Dine A Deal URL for this business (deal page, else city feed)."""
+    settings = get_settings()
+    base = settings.frontend_base_url.rstrip("/")
+
+    if contact.source_url and _is_dineadeal_deal_url(contact.source_url, base):
+        return contact.source_url
+
+    deal = _find_deal_for_contact(session, contact)
+    if deal is not None:
+        return _deal_public_url(deal, base)
+
+    return _city_deals_url(contact, base)
+
+
 def build_merchant_outreach_email(
     contact: MarketingContact,
     *,
     unsubscribe_token: str,
+    listing_url: str | None = None,
 ) -> tuple[str, str, str]:
     """Subject, plain text, HTML for one business outreach message."""
     settings = get_settings()
@@ -171,8 +315,8 @@ def build_merchant_outreach_email(
     )
 
     deal_hint = ""
-    if contact.source_url:
-        deal_hint = f"\nWe spotted your offer here: {contact.source_url}\n"
+    if listing_url:
+        deal_hint = f"\nView your listing on Dine A Deal: {listing_url}\n"
 
     lines = [
         f"Hello {greeting},",
@@ -208,6 +352,12 @@ def build_merchant_outreach_email(
 
     logo_mark = f"{base}/logo-dineadeal.png"
     logo_wordmark = f"{base}/logo-wordmark.png"
+    listing_link_html = ""
+    if listing_url:
+        listing_link_html = (
+            f'<p><a href="{listing_url}" style="color:#7a1f2b;font-weight:600">'
+            "View your listing on Dine A Deal</a></p>"
+        )
 
     html_body = f"""<!DOCTYPE html>
 <html><body style="font-family:Georgia,serif;color:#1a1a1a;max-width:560px;margin:0 auto;padding:24px">
@@ -222,7 +372,7 @@ def build_merchant_outreach_email(
     Did you know <strong>Dine A Deal</strong> already found your business in
     <strong>{city}, {country}</strong>? We'd love to send more hungry locals to your site.
   </p>
-  {"<p><a href=\"" + contact.source_url + "\">View where we found your listing</a></p>" if contact.source_url else ""}
+  {listing_link_html}
   <h2 style="font-family:Arial,sans-serif;color:#7a1f2b;font-size:16px;margin-top:24px">
     About us
   </h2>
@@ -270,8 +420,11 @@ def send_outreach_to_contact(
         return {"email": contact.email, "skipped": True, "reason": "no_valid_email"}
 
     token = ensure_outreach_token(contact)
+    listing_url = resolve_dineadeal_listing_url(session, contact)
     subject, text_body, html_body = build_merchant_outreach_email(
-        contact, unsubscribe_token=token
+        contact,
+        unsubscribe_token=token,
+        listing_url=listing_url,
     )
     settings = get_settings()
     ok = send_email(
