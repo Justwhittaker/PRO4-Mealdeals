@@ -2,8 +2,11 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
+.venv-repair/
 venv/
 .env
+scripts/repair-agent.env
+scripts/nuc-health.env
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
