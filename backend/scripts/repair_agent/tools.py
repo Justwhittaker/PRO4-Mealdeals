@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from repair_agent.config import Config
 
 _LAST_RESTART_AT = 0.0
+_LAST_PULL_AT = 0.0
 
 
 @dataclass
@@ -44,8 +45,88 @@ def _run(
     body = out if out else err
     if proc.returncode != 0:
         detail = body or f"exit {proc.returncode}"
+        if out and err and out != err:
+            detail = f"{out}\n{err}"
         return ToolResult(ok=False, text=detail)
+    if out and err and err not in out:
+        body = f"{out}\n{err}"
     return ToolResult(ok=True, text=body or "(no output)")
+
+
+def _cooldown_ok(last_at: float, cooldown_secs: int) -> tuple[bool, int]:
+    if not last_at:
+        return True, 0
+    elapsed = time.time() - last_at
+    if elapsed < cooldown_secs:
+        return False, int(cooldown_secs - elapsed)
+    return True, 0
+
+
+def git_pull(cfg: Config) -> ToolResult:
+    """Fast-forward only pull of the allowlisted remote/branch."""
+    global _LAST_PULL_AT
+    ok, wait = _cooldown_ok(_LAST_PULL_AT, cfg.pull_cooldown_secs)
+    if not ok:
+        return ToolResult(
+            ok=False,
+            text=f"Pull cooldown: wait {wait}s (max 1 per {cfg.pull_cooldown_secs}s).",
+        )
+
+    repo = cfg.repo_dir
+    if not (repo / ".git").exists():
+        return ToolResult(ok=False, text=f"Not a git repo: {repo}")
+
+    remote = cfg.git_remote
+    branch = cfg.git_branch
+    # Allowlist: only these fixed args — never interpolate user text into git.
+    fetch = _run(
+        ["git", "fetch", "--prune", remote, branch],
+        cwd=str(repo),
+        timeout=120,
+    )
+    if not fetch.ok:
+        return ToolResult(ok=False, text=f"git fetch failed:\n{fetch.text}")
+
+    pull = _run(
+        ["git", "pull", "--ff-only", remote, branch],
+        cwd=str(repo),
+        timeout=120,
+    )
+    head = _run(["git", "rev-parse", "--short", "HEAD"], cwd=str(repo), timeout=15)
+    status = _run(["git", "status", "-sb"], cwd=str(repo), timeout=15)
+
+    lines = [
+        f"repo: {repo}",
+        f"ref: {remote}/{branch}",
+        "=== fetch ===",
+        fetch.text,
+        "=== pull --ff-only ===",
+        pull.text,
+        "=== HEAD ===",
+        head.text if head.ok else head.text,
+        "=== status ===",
+        status.text if status.ok else status.text,
+    ]
+    if not pull.ok:
+        return ToolResult(ok=False, text="\n".join(lines))
+
+    _LAST_PULL_AT = time.time()
+    ntfy_ack(
+        cfg,
+        "MealDeals git pull",
+        f"Pulled {remote}/{branch} on {repo} → {head.text if head.ok else '?'}",
+    )
+    return ToolResult(ok=True, text="\n".join(lines))
+
+
+def git_pull_and_restart(cfg: Config) -> ToolResult:
+    """Pull latest master, then recreate the Celery worker."""
+    pull = git_pull(cfg)
+    if not pull.ok:
+        return pull
+    restart = celery_restart(cfg)
+    body = f"{pull.text}\n\n=== restart ===\n{restart.text}"
+    return ToolResult(ok=restart.ok, text=body)
 
 
 def celery_status(cfg: Config) -> ToolResult:

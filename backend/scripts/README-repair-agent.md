@@ -1,7 +1,16 @@
 # NUC Telegram repair bot ($0 — no LLM)
 
-Slash commands only: `/status`, `/restart`, `/logs`, `/disk`, `/help`.
-Works with the existing ntfy health cron; optionally posts an ntfy ack on `/restart`.
+Slash commands only: `/status`, `/pull`, `/deploy`, `/restart`, `/logs`, `/disk`, `/help`.
+Works with the existing ntfy health cron; optionally posts an ntfy ack on `/restart` and `/pull`.
+
+| Command | Action |
+|---------|--------|
+| `/status` | Docker running + Celery ping |
+| `/pull` | `git fetch` + `git pull --ff-only` of allowlisted remote/branch |
+| `/deploy` | `/pull` then recreate celery-worker (alias: `/update`) |
+| `/restart` | `docker compose -f docker-compose.nuc.yml up -d --force-recreate` |
+| `/logs` | Tail container logs |
+| `/disk` | `df` / `free` |
 
 ## 1. Create the Telegram bot
 
@@ -9,7 +18,10 @@ Works with the existing ntfy health cron; optionally posts an ntfy ack on `/rest
 2. `/newbot` → copy the token
 3. Message [@userinfobot](https://t.me/userinfobot) → copy your numeric **Id**
 
-## 2. Copy files to the NUC (from your Mac)
+## 2. Copy files to the NUC (from your Mac / home LAN)
+
+Prefer a normal `git pull` on the NUC if the clone already exists (see § tonight script).
+Otherwise from Mac:
 
 ```bash
 ssh justinw@192.168.1.171 'mkdir -p ~/MealDeals/backend/scripts'
@@ -32,8 +44,14 @@ python3 -m venv .venv-repair
 
 cp repair-agent.env.example repair-agent.env
 nano repair-agent.env   # set TELEGRAM_BOT_TOKEN + TELEGRAM_ALLOWED_USER_IDS
-# Optional: copy NTFY_TOPIC from nuc-health.env for restart acks
+# Optional: copy NTFY_TOPIC from nuc-health.env for restart/pull acks
 chmod 600 repair-agent.env
+```
+
+Confirm git can pull non-interactively (SSH key or credential helper):
+
+```bash
+cd ~/MealDeals && git fetch origin master && git status -sb
 ```
 
 Smoke test (Ctrl+C to stop):
@@ -43,7 +61,7 @@ cd ~/MealDeals/backend/scripts
 REPAIR_AGENT_ENV=$PWD/repair-agent.env .venv-repair/bin/python -m repair_agent.bot
 ```
 
-In Telegram, message your bot: `/status`
+In Telegram, message your bot: `/status` then `/pull`.
 
 ## 4. systemd (survives logout)
 
@@ -62,5 +80,6 @@ journalctl --user -u repair-agent.service -f
 
 - Only `TELEGRAM_ALLOWED_USER_IDS` can run commands
 - No free-text LLM / no arbitrary shell
-- `/restart` rate-limited (`RESTART_COOLDOWN_SECS`, default 300)
+- `/pull` uses fixed `GIT_REMOTE` / `GIT_BRANCH` only (`--ff-only`)
+- `/restart` and `/pull` rate-limited (`RESTART_COOLDOWN_SECS`, `PULL_COOLDOWN_SECS`)
 - Never commit `repair-agent.env`

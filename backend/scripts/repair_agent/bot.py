@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Telegram slash-command bot for NUC Celery repair ($0 — no LLM).
 
-Commands: /status /restart /logs /disk /help
+Commands: /status /pull /deploy /restart /logs /disk /help
 Only TELEGRAM_ALLOWED_USER_IDS may use the bot.
 """
 
@@ -37,6 +37,8 @@ log = logging.getLogger("repair_agent")
 HELP_TEXT = """MealDeals NUC repair bot (no AI — slash commands only)
 
 /status — Docker + Celery ping
+/pull — git fetch + ff-only pull (master)
+/deploy — /pull then recreate celery-worker
 /restart — recreate celery-worker (rate-limited)
 /logs — last container log lines
 /disk — disk + memory
@@ -83,6 +85,32 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     await update.message.reply_text(f"{prefix}\n{result.text}"[:4000])
 
 
+async def cmd_pull(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    cfg: Config = context.application.bot_data["cfg"]
+    if not _allowed(update, cfg):
+        await _deny(update)
+        return
+    await update.message.reply_text(
+        f"Pulling {cfg.git_remote}/{cfg.git_branch}…"
+    )
+    result = tools.git_pull(cfg)
+    prefix = "OK" if result.ok else "FAIL"
+    await update.message.reply_text(f"{prefix}\n{result.text}"[:4000])
+
+
+async def cmd_deploy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    cfg: Config = context.application.bot_data["cfg"]
+    if not _allowed(update, cfg):
+        await _deny(update)
+        return
+    await update.message.reply_text(
+        f"Deploying ({cfg.git_remote}/{cfg.git_branch} + restart)…"
+    )
+    result = tools.git_pull_and_restart(cfg)
+    prefix = "OK" if result.ok else "FAIL"
+    await update.message.reply_text(f"{prefix}\n{result.text}"[:4000])
+
+
 async def cmd_restart(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     cfg: Config = context.application.bot_data["cfg"]
     if not _allowed(update, cfg):
@@ -122,7 +150,7 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await _deny(update)
         return
     await update.message.reply_text(
-        "No free-text AI on this bot. Use /status /restart /logs /disk /help"
+        "No free-text AI on this bot. Use /status /pull /deploy /restart /logs /disk /help"
     )
 
 
@@ -137,15 +165,20 @@ def main() -> None:
 
     app.add_handler(CommandHandler(["start", "help"], cmd_help))
     app.add_handler(CommandHandler("status", cmd_status))
+    app.add_handler(CommandHandler("pull", cmd_pull))
+    app.add_handler(CommandHandler(["deploy", "update"], cmd_deploy))
     app.add_handler(CommandHandler("restart", cmd_restart))
     app.add_handler(CommandHandler("logs", cmd_logs))
     app.add_handler(CommandHandler("disk", cmd_disk))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_text))
 
     log.info(
-        "Starting repair bot (container=%s backend=%s cooldown=%ss)",
+        "Starting repair bot (container=%s repo=%s %s/%s pull_cd=%ss restart_cd=%ss)",
         cfg.container,
-        cfg.backend_dir,
+        cfg.repo_dir,
+        cfg.git_remote,
+        cfg.git_branch,
+        cfg.pull_cooldown_secs,
         cfg.restart_cooldown_secs,
     )
     app.run_polling(allowed_updates=Update.ALL_TYPES)

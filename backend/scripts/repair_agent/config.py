@@ -25,9 +25,13 @@ class Config:
     telegram_bot_token: str
     allowed_user_ids: frozenset[int]
     backend_dir: Path
+    repo_dir: Path
     compose_file: str
     container: str
     restart_cooldown_secs: int
+    pull_cooldown_secs: int
+    git_remote: str
+    git_branch: str
     ntfy_topic: str | None
     ntfy_url: str
     ntfy_token: str | None
@@ -65,12 +69,23 @@ class Config:
             )
         ).expanduser()
 
+        repo_raw = os.environ.get("MEALDEALS_REPO_DIR", "").strip()
+        if repo_raw:
+            repo = Path(repo_raw).expanduser()
+        elif (backend / ".git").exists():
+            repo = backend
+        elif (backend.parent / ".git").exists():
+            repo = backend.parent
+        else:
+            repo = backend.parent
+
         ntfy_topic = os.environ.get("NTFY_TOPIC", "").strip() or None
 
         return cls(
             telegram_bot_token=token,
             allowed_user_ids=allowed,
             backend_dir=backend,
+            repo_dir=repo,
             compose_file=os.environ.get(
                 "COMPOSE_FILE", "docker-compose.nuc.yml"
             ).strip(),
@@ -78,6 +93,9 @@ class Config:
             restart_cooldown_secs=int(
                 os.environ.get("RESTART_COOLDOWN_SECS", "300")
             ),
+            pull_cooldown_secs=int(os.environ.get("PULL_COOLDOWN_SECS", "120")),
+            git_remote=os.environ.get("GIT_REMOTE", "origin").strip() or "origin",
+            git_branch=os.environ.get("GIT_BRANCH", "master").strip() or "master",
             ntfy_topic=ntfy_topic,
             ntfy_url=os.environ.get("NTFY_URL", "https://ntfy.sh").rstrip("/"),
             ntfy_token=os.environ.get("NTFY_TOKEN", "").strip() or None,
