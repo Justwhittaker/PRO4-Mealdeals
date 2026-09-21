@@ -944,6 +944,18 @@ export const MARKET_COUNTRIES: MarketCountryOption[] = [
     ],
   },
   {
+    code: "as",
+    iso: "AS",
+    label: "American Samoa",
+    cities: [
+      {
+        country: "as",
+        city: "pago-pago",
+        label: "Pago Pago",
+      },
+    ],
+  },
+  {
     code: "at",
     iso: "AT",
     label: "Austria",
@@ -1323,6 +1335,36 @@ export const MARKET_COUNTRIES: MarketCountryOption[] = [
         city: "bilbao",
         label: "Bilbao",
       },
+      {
+        country: "es",
+        city: "palma",
+        label: "Palma",
+      },
+      {
+        country: "es",
+        city: "ibiza",
+        label: "Ibiza",
+      },
+      {
+        country: "es",
+        city: "mahon",
+        label: "Mahon",
+      },
+      {
+        country: "es",
+        city: "las-palmas",
+        label: "Las Palmas",
+      },
+      {
+        country: "es",
+        city: "santa-cruz-de-tenerife",
+        label: "Santa Cruz De Tenerife",
+      },
+      {
+        country: "es",
+        city: "arrecife",
+        label: "Arrecife",
+      },
     ],
   },
   {
@@ -1488,6 +1530,23 @@ export const MARKET_COUNTRIES: MarketCountryOption[] = [
         country: "gr",
         city: "heraklion",
         label: "Heraklion",
+      },
+    ],
+  },
+  {
+    code: "gu",
+    iso: "GU",
+    label: "Guam",
+    cities: [
+      {
+        country: "gu",
+        city: "hagatna",
+        label: "Hagatna",
+      },
+      {
+        country: "gu",
+        city: "tamuning",
+        label: "Tamuning",
       },
     ],
   },
@@ -1871,6 +1930,18 @@ export const MARKET_COUNTRIES: MarketCountryOption[] = [
     ],
   },
   {
+    code: "mp",
+    iso: "MP",
+    label: "Northern Mariana Islands",
+    cities: [
+      {
+        country: "mp",
+        city: "saipan",
+        label: "Saipan",
+      },
+    ],
+  },
+  {
     code: "mt",
     iso: "MT",
     label: "Malta",
@@ -2119,6 +2190,28 @@ export const MARKET_COUNTRIES: MarketCountryOption[] = [
         country: "pl",
         city: "wroclaw",
         label: "Wroclaw",
+      },
+    ],
+  },
+  {
+    code: "pr",
+    iso: "PR",
+    label: "Puerto Rico",
+    cities: [
+      {
+        country: "pr",
+        city: "san-juan",
+        label: "San Juan",
+      },
+      {
+        country: "pr",
+        city: "ponce",
+        label: "Ponce",
+      },
+      {
+        country: "pr",
+        city: "mayaguez",
+        label: "Mayaguez",
       },
     ],
   },
@@ -2446,6 +2539,23 @@ export const MARKET_COUNTRIES: MarketCountryOption[] = [
     ],
   },
   {
+    code: "vi",
+    iso: "VI",
+    label: "U.S. Virgin Islands",
+    cities: [
+      {
+        country: "vi",
+        city: "charlotte-amalie",
+        label: "Charlotte Amalie",
+      },
+      {
+        country: "vi",
+        city: "christiansted",
+        label: "Christiansted",
+      },
+    ],
+  },
+  {
     code: "vn",
     iso: "VN",
     label: "Vietnam",
@@ -2568,6 +2678,4 @@ export const MARKET_COUNTRIES: MarketCountryOption[] = [
     ],
   },
 ];
-
-export const MARKET_COUNT = 91;
 

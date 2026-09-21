@@ -14,7 +14,7 @@ disable-model-invocation: true
 ## Goal
 
 Start the hospitality scraping rule and run a **fresh scrape** across **all**
-`TARGET_MARKETS` (currently 91 countries / 383 cities). Persist deals and a
+`TARGET_MARKETS` (currently 96 countries / 398 cities). Persist deals and a
 separate marketing contact ledger, **update the MealDeals website so it serves
 the newest scraped data**, refresh the metrics canvas, then **show the full
 results breakdown** to the user.
@@ -363,8 +363,8 @@ Example shape:
 
 | Metric | Result |
 |--------|--------|
-| Areas | 383 cities |
-| Markets | 91 countries |
+| Areas | 398 cities |
+| Markets | 96 countries |
 | Deals discovered / ingested | 1000 / 1000 |
 | Marketing contacts upserted | 1000 (973 unique in DB) |
 | Runtime | 322s |

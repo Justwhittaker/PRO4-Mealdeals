@@ -54,6 +54,8 @@ _COUNTRY_ZONE: dict[str, str] = {
     "AG": "north_america",
     "KN": "north_america",
     "VC": "north_america",
+    "PR": "north_america",
+    "VI": "north_america",
     # Latin America
     "AR": "latin_america",
     "BR": "latin_america",
@@ -140,6 +142,9 @@ _COUNTRY_ZONE: dict[str, str] = {
     "PW": "oceania",
     "TO": "oceania",
     "TV": "oceania",
+    "AS": "oceania",
+    "GU": "oceania",
+    "MP": "oceania",
 }
 
 # Celery Beat slot: (minute, hour_offset) within each 6-hour cycle (0,6,12,18 UTC).

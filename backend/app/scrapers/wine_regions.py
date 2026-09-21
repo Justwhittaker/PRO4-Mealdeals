@@ -114,6 +114,9 @@ WINE_REGIONS: dict[str, list[WineRegion]] = {
         ("Penedes Wine Country", 41.3467, 1.7000, 14),
         ("Rias Baixas Wine Country", 42.4336, -8.6486, 14),
         ("Jerez Sherry Country", 36.6866, -6.1365, 12),
+        ("Mallorca Wine Country", 39.6967, 2.8450, 12),
+        ("Lanzarote Wine Country", 28.9750, -13.6550, 12),
+        ("Tenerife Wine Country", 28.4800, -16.4100, 12),
     ],
     "PT": [
         ("Douro Wine Country", 41.1611, -7.7867, 18),
