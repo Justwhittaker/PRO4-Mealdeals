@@ -109,6 +109,8 @@ def celery_restart(cfg: Config) -> ToolResult:
             text=f"Compose file not found: {compose_path}",
         )
 
+    # Start cooldown immediately so double-taps during a long recreate are blocked.
+    _LAST_RESTART_AT = now
     result = _run(
         [
             "docker",
@@ -122,10 +124,15 @@ def celery_restart(cfg: Config) -> ToolResult:
         cwd=str(cfg.backend_dir),
         timeout=180,
     )
+    status = celery_status(cfg)
+    body = f"{result.text}\n\n--- post-restart status ---\n{status.text}"
     if result.ok:
-        _LAST_RESTART_AT = now
-        ntfy_ack(cfg, "MealDeals Celery restart", f"Restarted {cfg.container} via Telegram")
-    return result
+        ntfy_ack(
+            cfg,
+            "MealDeals Celery restart",
+            f"Restarted {cfg.container} via Telegram",
+        )
+    return ToolResult(ok=result.ok and status.ok, text=body)
 
 
 def disk_memory(_cfg: Config) -> ToolResult:

@@ -58,6 +58,16 @@ systemctl --user status repair-agent.service
 journalctl --user -u repair-agent.service -f
 ```
 
+## Commands
+
+| Command | Action |
+|---------|--------|
+| `/status` | Docker running + Celery ping |
+| `/restart` | Recreate celery worker (rate-limited) + post status; optional ntfy ack |
+| `/logs` | Tail container logs |
+| `/disk` | Disk + memory |
+| `/help` | Command list |
+
 ## Security
 
 - Only `TELEGRAM_ALLOWED_USER_IDS` can run commands
