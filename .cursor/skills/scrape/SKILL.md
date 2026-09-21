@@ -25,16 +25,18 @@ results breakdown** to the user.
 
 Production scheduling uses **8 continental zones** (not one 12-minute mega-job):
 
-| Zone | Fires (UTC, each 6h block) |
+| Zone (small → large) | Fires (UTC, twice daily) |
 |------|------------------------------|
-| north_america | 00:00, 06:00, 12:00, 18:00 |
-| latin_america | +15 min |
-| western_europe | +30 min |
-| eastern_europe | +45 min |
-| africa | 01:00, 07:00, 13:00, 19:00 |
+| eastern_europe | 06:00, 18:00 |
 | mena | +15 min |
-| asia | +30 min |
-| oceania | +45 min |
+| latin_america | +30 min |
+| africa | +45 min |
+| asia | 07:00, 19:00 |
+| oceania | +15 min |
+| north_america | +30 min |
+| western_europe | +45 min |
+
+Queued zone tasks expire after **11h55m** so a slow drain can finish before the next cycle.
 
 - Config: `backend/app/scrapers/zones.py`, `backend/app/workers/celery_app.py`
 - Task: `scrape_zone_retail` in `backend/app/workers/tasks.py`

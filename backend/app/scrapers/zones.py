@@ -142,29 +142,36 @@ _COUNTRY_ZONE: dict[str, str] = {
     "TV": "oceania",
 }
 
-# Celery Beat slot: (minute, hour_offset) within each 6-hour cycle (0,6,12,18 UTC).
-# Eight zones fire every 15 minutes: 00:00 → 01:45, then 06:00 → 07:45, etc.
+# Twice-daily cycle bases (UTC). Eight zones fire every 15 minutes, small → large:
+# 06:00 → 07:45 and 18:00 → 19:45.
+ZONE_CYCLE_BASE_HOURS: tuple[int, ...] = (6, 18)
+
+# Celery Beat slot: (minute, hour_offset) relative to each ZONE_CYCLE_BASE_HOURS entry.
 ZONE_BEAT_SLOTS: dict[str, tuple[int, int]] = {
-    "north_america": (0, 0),
-    "latin_america": (15, 0),
-    "western_europe": (30, 0),
-    "eastern_europe": (45, 0),
-    "africa": (0, 1),
-    "mena": (15, 1),
-    "asia": (30, 1),
-    "oceania": (45, 1),
+    "eastern_europe": (0, 0),
+    "mena": (15, 0),
+    "latin_america": (30, 0),
+    "africa": (45, 0),
+    "asia": (0, 1),
+    "oceania": (15, 1),
+    "north_america": (30, 1),
+    "western_europe": (45, 1),
 }
 
+# Fire / drain order: smaller hub counts first so big zones don't block the queue.
 ZONE_ORDER: list[str] = [
-    "north_america",
-    "latin_america",
-    "western_europe",
     "eastern_europe",
-    "africa",
     "mena",
+    "latin_america",
+    "africa",
     "asia",
     "oceania",
+    "north_america",
+    "western_europe",
 ]
+
+# Keep queued zone tasks alive almost until the next twice-daily cycle (12h).
+ZONE_TASK_EXPIRES_SECONDS: int = (11 * 60 * 60) + (55 * 60)
 
 
 def zone_for_country(country_code: str) -> str:

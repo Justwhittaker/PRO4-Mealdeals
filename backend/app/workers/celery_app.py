@@ -9,7 +9,14 @@ from celery import Celery
 from celery.schedules import crontab
 
 from app.core.config import get_settings
-from app.scrapers.zones import SCRAPE_ZONES, ZONE_BEAT_SLOTS, ZONE_ORDER, validate_zone_coverage
+from app.scrapers.zones import (
+    SCRAPE_ZONES,
+    ZONE_BEAT_SLOTS,
+    ZONE_CYCLE_BASE_HOURS,
+    ZONE_ORDER,
+    ZONE_TASK_EXPIRES_SECONDS,
+    validate_zone_coverage,
+)
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -51,8 +58,8 @@ else:
         "Celery weekly email beat disabled (CELERY_WEEKLY_EMAIL_ENABLED=false)"
     )
 
-# Eight continental zone scrapes every 6 hours, staggered 15 minutes apart.
-# Cycle blocks: 00:00–01:45, 06:00–07:45, 12:00–13:45, 18:00–19:45 UTC.
+# Eight continental zone scrapes twice daily, staggered 15 minutes apart.
+# Cycle blocks: 06:00–07:45 and 18:00–19:45 UTC (small zones first).
 try:
     validate_zone_coverage()
 except RuntimeError as exc:
@@ -65,15 +72,16 @@ for zone_id in ZONE_ORDER:
         "task": "app.workers.tasks.scrape_zone_retail",
         "schedule": crontab(
             minute=minute,
-            hour=[h + hour_offset for h in (0, 6, 12, 18)],
+            hour=[h + hour_offset for h in ZONE_CYCLE_BASE_HOURS],
         ),
         "kwargs": {"zone_id": zone_id},
-        "options": {"expires": 60 * 60 * 3},
+        "options": {"expires": ZONE_TASK_EXPIRES_SECONDS},
     }
     logger.info(
-        "Registered beat scrape zone %s (%s) at +%sh%02sm each 6h cycle",
+        "Registered beat scrape zone %s (%s) at +%sh%02sm each 12h cycle (%s UTC)",
         zone_id,
         label,
         hour_offset,
         minute,
+        "/".join(f"{h:02d}:00" for h in ZONE_CYCLE_BASE_HOURS),
     )
