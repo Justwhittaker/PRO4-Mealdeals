@@ -45,6 +45,11 @@ celery_app.conf.update(
             "task": "app.workers.tasks.update_currency_rates",
             "schedule": crontab(minute=15),
         },
+        # After each twice-daily scrape window (almost 12h after 06:00 / 18:00 start).
+        "scrape-cycle-digest": {
+            "task": "app.workers.tasks.send_scrape_cycle_digest",
+            "schedule": crontab(minute=50, hour="5,17"),
+        },
     },
 )
 

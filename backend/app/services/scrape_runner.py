@@ -114,6 +114,8 @@ def scrape_and_ingest_markets(
     by_country: dict[str, int] = {code: 0 for code in markets}
     breakdown_batches: list[list[dict[str, Any]]] = []
     revalidate_runs = 0
+    revalidate_ok = 0
+    revalidate_fail = 0
 
     for country, city in areas:
         async def _run(c: str = country, t: str = city) -> list:
@@ -139,6 +141,10 @@ def scrape_and_ingest_markets(
         )
         if not revalidate.get("skipped"):
             revalidate_runs += 1
+            if revalidate.get("ok") is True:
+                revalidate_ok += 1
+            elif revalidate.get("ok") is False:
+                revalidate_fail += 1
 
         logger.info(
             "%s/%s: discovered=%s ingested=%s stale=%s contacts=%s",
@@ -176,6 +182,8 @@ def scrape_and_ingest_markets(
         "category_tally": report["category_tally"],
         "report": report,
         "frontend_revalidate_runs": revalidate_runs,
+        "revalidate_ok": revalidate_ok,
+        "revalidate_fail": revalidate_fail,
     }
 
 
@@ -183,8 +191,8 @@ def scrape_and_ingest_zone(zone_id: str) -> dict[str, Any]:
     """
     Bite-size continental scrape: one of eight zones (hub cities only).
 
-    Celery Beat fires these every 15 minutes within each 6-hour cycle so a
-    full worldwide refresh completes in ~2 hours without one giant job.
+    Celery Beat fires these twice daily (06:00 / 18:00 UTC), staggered
+    15 minutes apart, small zones first.
     """
     markets = markets_for_zone(zone_id)
     if not markets:

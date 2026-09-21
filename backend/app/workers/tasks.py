@@ -16,6 +16,8 @@ from app.scrapers.markets import CURRENCY_RATES
 from app.services.deal_expiry import expire_past_due_deals
 from app.services.merchant_outreach import send_merchant_outreach_batch
 from app.services.newsletter import send_weekly_special_to_subscriber
+from app.services.scrape_cycle_digest import run_scrape_cycle_digest
+from app.services.scrape_cycle_stats import record_zone_result
 from app.services.scrape_runner import scrape_and_ingest_area, scrape_and_ingest_markets, scrape_and_ingest_zone
 from app.scrapers.zones import SCRAPE_ZONES, markets_for_zone
 from app.workers.celery_app import celery_app
@@ -98,22 +100,60 @@ def scrape_zone_retail(zone_id: str) -> dict[str, int | str]:
     zone = zone_id.strip().lower()
     if zone not in SCRAPE_ZONES:
         raise ValueError(f"Unknown scrape zone: {zone_id}")
-    result = scrape_and_ingest_zone(zone)
+    try:
+        result = scrape_and_ingest_zone(zone)
+    except Exception as exc:
+        record_zone_result(
+            zone,
+            {
+                "ok": False,
+                "error": str(exc)[:500],
+                "areas": 0,
+                "discovered": 0,
+                "ingested": 0,
+                "stale_deactivated": 0,
+                "marketing_contacts": 0,
+                "revalidate_ok": 0,
+                "revalidate_fail": 0,
+            },
+        )
+        raise
     markets = markets_for_zone(zone)
-    logger.info(
-        "Zone scrape complete (%s): areas=%s discovered=%s ingested=%s",
-        zone,
-        result.get("areas"),
-        result.get("discovered"),
-        result.get("ingested"),
-    )
-    return {
+    summary = {
         "zone": zone,
         "label": SCRAPE_ZONES[zone]["label"],
         "areas": int(result.get("areas") or 0),
         "discovered": int(result.get("discovered") or 0),
         "ingested": int(result.get("ingested") or 0),
+        "stale_deactivated": int(result.get("stale_deactivated") or 0),
+        "marketing_contacts": int(result.get("marketing_contacts") or 0),
+        "revalidate_ok": int(result.get("revalidate_ok") or 0),
+        "revalidate_fail": int(result.get("revalidate_fail") or 0),
         "markets": len(markets),
+        "ok": True,
+    }
+    record_zone_result(zone, summary)
+    logger.info(
+        "Zone scrape complete (%s): areas=%s discovered=%s ingested=%s",
+        zone,
+        summary["areas"],
+        summary["discovered"],
+        summary["ingested"],
+    )
+    return summary
+
+
+@celery_app.task(name="app.workers.tasks.send_scrape_cycle_digest")
+def send_scrape_cycle_digest() -> dict[str, object]:
+    """Twice-daily ntfy: zone %, site transfer, deals, emails, categories."""
+    result = run_scrape_cycle_digest()
+    return {
+        "cycle_id": result["report"]["cycle_id"],
+        "zones_pct": result["report"]["zones"]["pct_completed"],
+        "new_deals": result["report"]["new_deals"],
+        "dropped_deals": result["report"]["dropped_deals"],
+        "net_new_emails": result["report"]["net_new_emails"],
+        "ntfy": result["ntfy"],
     }
 
 

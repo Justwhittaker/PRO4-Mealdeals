@@ -38,6 +38,8 @@ Production scheduling uses **8 continental zones** (not one 12-minute mega-job):
 
 Queued zone tasks expire after **11h55m** so a slow drain can finish before the next cycle.
 
+Celery Beat also fires **`send_scrape_cycle_digest`** at **05:50 / 17:50 UTC** → ntfy with zone completion %, site transfer health, new/dropped deals, net new merchant emails, and active category mix. Set `NTFY_TOPIC` in the NUC `.env`.
+
 - Config: `backend/app/scrapers/zones.py`, `backend/app/workers/celery_app.py`
 - Task: `scrape_zone_retail` in `backend/app/workers/tasks.py`
 - Manual `/scrape` still runs **full worldwide** in one pass

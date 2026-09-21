@@ -9,6 +9,7 @@
 #
 # Health alerts (optional): cp scripts/nuc-health.env.example scripts/nuc-health.env
 #   crontab: */15 * * * * ~/MealDeals/backend/scripts/nuc-celery-health.sh
+# Also set NTFY_TOPIC in backend/.env so Celery can push scrape-cycle digests.
 #
 # GitHub Actions runs weekly email only — scrape cron is disabled there.
 

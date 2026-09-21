@@ -107,6 +107,11 @@ class Settings(BaseSettings):
     # Shared with Vercel REVALIDATE_SECRET — POST /api/revalidate after scrapes.
     revalidate_secret: str = Field(default="")
 
+    # ntfy push alerts (NUC scrape cycle digests + host health scripts).
+    ntfy_topic: str = Field(default="")
+    ntfy_url: str = Field(default="https://ntfy.sh")
+    ntfy_token: str = Field(default="")
+
     # NUC home networks often block Overpass — proxy via Render API instead.
     overpass_proxy_url: str = Field(default="")
 
