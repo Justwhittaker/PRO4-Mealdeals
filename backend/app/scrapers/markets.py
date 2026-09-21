@@ -8,11 +8,27 @@ from app.scrapers.hospitality_pack import merge_hospitality_into_sources
 SEEDED_MARKETS: list[str] = ['GB', 'US', 'CA', 'AU', 'IE', 'NZ', 'PH', 'TH', 'NL', 'BS', 'JM']
 
 MARKET_SOURCES: dict[str, list[dict[str, str]]] = {
+    'AS': [
+        {"merchant": 'Cost-U-Less Samoa', "url": 'https://www.costuless.com/'},
+        {"merchant": 'DDW Shopping Center', "url": 'https://www.ddwshopping.com/'},
+    ],
     'GB': [
         {"merchant": 'Tesco', "url": 'https://www.tesco.com/groceries/en-GB/promotions'},
         {"merchant": "Sainsbury's", "url": 'https://www.sainsburys.co.uk/gol-ui/promotions'},
         {"merchant": 'Pret A Manger', "url": 'https://www.pret.co.uk/en-GB/meal-deals'},
         {"merchant": 'Greggs', "url": 'https://www.greggs.co.uk/menu'},
+    ],
+    'GU': [
+        {"merchant": 'Payless Markets Guam', "url": 'https://www.paylessmarkets.com/'},
+        {"merchant": "Jeff's Pirates Cove", "url": 'https://www.jeffspiratescove.com/'},
+    ],
+    'MP': [
+        {"merchant": 'Joeten Superstore', "url": 'https://www.joeten.com/'},
+        {"merchant": 'Saipan World Resort', "url": 'https://www.saipanworldresort.com/'},
+    ],
+    'PR': [
+        {"merchant": 'Pueblo Supermarkets', "url": 'https://www.pueblo.com/'},
+        {"merchant": "Martin's BBQ", "url": 'https://www.martinsbbqpr.com/'},
     ],
     'US': [
         {"merchant": 'Whole Foods', "url": 'https://www.wholefoodsmarket.com/sales-flyer'},
@@ -371,6 +387,10 @@ MARKET_SOURCES: dict[str, list[dict[str, str]]] = {
         {"merchant": 'Massy SVG', "url": 'https://www.massygroup.com/'},
         {"merchant": 'C.K. Greaves', "url": 'https://www.ckgreaves.com/'},
     ],
+    'VI': [
+        {"merchant": 'Plaza Extra', "url": 'https://www.plazaextra.com/'},
+        {"merchant": 'Magens Bay Beach Bar', "url": 'https://www.magensbayauthority.com/'},
+    ],
     'VN': [
         {"merchant": 'VinMart', "url": 'https://www.vinmart.com/'},
         {"merchant": 'Highlands Coffee', "url": 'https://www.highlandscoffee.com.vn/'},
@@ -399,7 +419,11 @@ MARKET_SOURCES: dict[str, list[dict[str, str]]] = {
 }
 
 MARKET_CITIES: dict[str, list[str]] = {
+    'AS': ['Pago Pago'],
     'GB': ['London', 'Manchester', 'Birmingham', 'Leeds', 'Glasgow', 'Edinburgh', 'Liverpool', 'Bristol', 'Sheffield', 'Newcastle', 'Cardiff', 'Belfast', 'Nottingham', 'Leicester', 'Brighton', 'Southampton', 'Coventry', 'Reading', 'Cambridge', 'Oxford', 'Aberdeen', 'Plymouth', 'Swansea', 'York', 'Bath'],
+    'GU': ['Hagatna', 'Tamuning'],
+    'MP': ['Saipan'],
+    'PR': ['San Juan', 'Ponce', 'Mayaguez'],
     'US': ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose', 'Austin', 'Jacksonville', 'San Francisco', 'Seattle', 'Denver', 'Boston', 'Nashville', 'Detroit', 'Portland', 'Las Vegas', 'Miami', 'Atlanta', 'Washington', 'Minneapolis', 'Charlotte', 'Tampa', 'Orlando', 'Cleveland', 'Pittsburgh', 'Kansas City', 'St Louis', 'Sacramento', 'Salt Lake City', 'Honolulu', 'New Orleans', 'Raleigh', 'Columbus', 'Indianapolis', 'Cincinnati', 'Milwaukee'],
     'CA': ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Edmonton', 'Winnipeg', 'Quebec City', 'Hamilton', 'Halifax', 'Victoria', 'Saskatoon', 'Regina', 'London', 'Kitchener', 'Mississauga', 'Brampton', 'Surrey'],
     'IE': ['Dublin', 'Cork', 'Galway', 'Limerick', 'Waterford', 'Kilkenny', 'Sligo', 'Drogheda', 'Dundalk', 'Wexford'],
@@ -428,7 +452,19 @@ MARKET_CITIES: dict[str, list[str]] = {
     'DE': ['Berlin', 'Munich', 'Hamburg', 'Cologne', 'Frankfurt'],
     'DK': ['Copenhagen', 'Aarhus', 'Odense'],
     'EG': ['Cairo', 'Alexandria', 'Giza'],
-    'ES': ['Madrid', 'Barcelona', 'Valencia', 'Seville', 'Bilbao'],
+    'ES': [
+        'Madrid',
+        'Barcelona',
+        'Valencia',
+        'Seville',
+        'Bilbao',
+        'Palma',
+        'Ibiza',
+        'Mahon',
+        'Las Palmas',
+        'Santa Cruz De Tenerife',
+        'Arrecife',
+    ],
     'FI': ['Helsinki', 'Tampere', 'Turku'],
     'FJ': ['Suva', 'Nadi', 'Lautoka'],
     'FM': ['Palikir', 'Kolonia'],
@@ -484,6 +520,7 @@ MARKET_CITIES: dict[str, list[str]] = {
     'TV': ['Funafuti'],
     'UG': ['Kampala', 'Entebbe', 'Jinja'],
     'VC': ['Kingstown'],
+    'VI': ['Charlotte Amalie', 'Christiansted'],
     'VN': ['Ho Chi Minh City', 'Hanoi', 'Da Nang', 'Nha Trang'],
     'VU': ['Port Vila'],
     'WS': ['Apia'],
@@ -493,7 +530,11 @@ MARKET_CITIES: dict[str, list[str]] = {
 }
 
 DEFAULT_CURRENCY: dict[str, str] = {
+    'AS': 'USD',
     'GB': 'GBP',
+    'GU': 'USD',
+    'MP': 'USD',
+    'PR': 'USD',
     'US': 'USD',
     'CA': 'CAD',
     'AU': 'AUD',
@@ -578,6 +619,7 @@ DEFAULT_CURRENCY: dict[str, str] = {
     'TV': 'AUD',
     'UG': 'UGX',
     'VC': 'XCD',
+    'VI': 'USD',
     'VN': 'VND',
     'VU': 'VUV',
     'WS': 'WST',
@@ -657,6 +699,19 @@ CURRENCY_RATES: dict[str, tuple[str, str]] = {
 }
 
 CITY_COORDS: dict[tuple[str, str], tuple[float, float]] = {
+    ('MP', 'Saipan'): (15.1778, 145.7505),
+    ('PR', 'San Juan'): (18.4655, -66.1057),
+    ('PR', 'Ponce'): (18.0111, -66.6141),
+    ('PR', 'Mayaguez'): (18.2013, -67.1397),
+    ('GU', 'Hagatna'): (13.475, 144.7458),
+    ('GU', 'Tamuning'): (13.4875, 144.7814),
+    ('ES', 'Palma'): (39.5696, 2.6502),
+    ('ES', 'Ibiza'): (38.9067, 1.4206),
+    ('ES', 'Mahon'): (39.8894, 4.2644),
+    ('ES', 'Las Palmas'): (28.1235, -15.4366),
+    ('ES', 'Santa Cruz De Tenerife'): (28.4636, -16.2518),
+    ('ES', 'Arrecife'): (28.963, -13.5477),
+    ('AS', 'Pago Pago'): (-14.2781, -170.7025),
     ('AE', 'Dubai'): (25.2048, 55.2708),
     ('AE', 'Abu Dhabi'): (24.4539, 54.3773),
     ('AE', 'Sharjah'): (25.3463, 55.4209),
@@ -678,6 +733,8 @@ CITY_COORDS: dict[tuple[str, str], tuple[float, float]] = {
     ('BR', 'Brasilia'): (-15.8267, -47.9218),
     ('BR', 'Salvador'): (-12.9777, -38.5016),
     ('BR', 'Belo Horizonte'): (-19.9167, -43.9345),
+    ('VI', 'Charlotte Amalie'): (18.3419, -64.9307),
+    ('VI', 'Christiansted'): (17.7466, -64.7071),
     ('BW', 'Gaborone'): (-24.6282, 25.9231),
     ('BW', 'Francistown'): (-21.1702, 27.5079),
     ('BZ', 'Belize City'): (17.5046, -88.1962),
@@ -885,8 +942,12 @@ CITY_COORDS: dict[tuple[str, str], tuple[float, float]] = {
 }
 
 COUNTRY_TIMEZONES: dict[str, str] = {
+    'AS': 'Pacific/Pago_Pago',
     'GB': 'Europe/London',
+    'GU': 'Pacific/Guam',
     'IE': 'Europe/Dublin',
+    'MP': 'Pacific/Saipan',
+    'PR': 'America/Puerto_Rico',
     'US': 'America/New_York',
     'CA': 'America/Toronto',
     'AU': 'Australia/Sydney',
@@ -970,6 +1031,7 @@ COUNTRY_TIMEZONES: dict[str, str] = {
     'TV': 'Pacific/Funafuti',
     'UG': 'Africa/Kampala',
     'VC': 'America/St_Vincent',
+    'VI': 'America/St_Thomas',
     'VN': 'Asia/Ho_Chi_Minh',
     'VU': 'Pacific/Efate',
     'WS': 'Pacific/Apia',
@@ -978,9 +1040,9 @@ COUNTRY_TIMEZONES: dict[str, str] = {
     'ZW': 'Africa/Harare',
 }
 
-TARGET_MARKETS: list[str] = ['GB', 'US', 'CA', 'AU', 'IE', 'NZ', 'PH', 'TH', 'NL', 'BS', 'JM', 'AE', 'AG', 'AR', 'AT', 'BB', 'BE', 'BR', 'BW', 'BZ', 'CH', 'CL', 'CM', 'CN', 'CO', 'CZ', 'DE', 'DK', 'EG', 'ES', 'FI', 'FJ', 'FM', 'FR', 'GD', 'GH', 'GM', 'GR', 'GY', 'HR', 'ID', 'IL', 'IN', 'IS', 'IT', 'JO', 'JP', 'KE', 'KI', 'KN', 'KR', 'LR', 'LS', 'MA', 'MH', 'MT', 'MW', 'MX', 'MY', 'NA', 'NG', 'NO', 'NR', 'PG', 'PK', 'PL', 'PT', 'PW', 'QA', 'RW', 'SB', 'SE', 'SG', 'SI', 'SK', 'SL', 'SS', 'SZ', 'TN', 'TO', 'TR', 'TT', 'TV', 'UG', 'VC', 'VN', 'VU', 'WS', 'ZA', 'ZM', 'ZW']
+TARGET_MARKETS: list[str] = ['GB', 'US', 'CA', 'AU', 'IE', 'NZ', 'PH', 'TH', 'NL', 'BS', 'JM', 'AE', 'AG', 'AR', 'AS', 'AT', 'BB', 'BE', 'BR', 'BW', 'BZ', 'CH', 'CL', 'CM', 'CN', 'CO', 'CZ', 'DE', 'DK', 'EG', 'ES', 'FI', 'FJ', 'FM', 'FR', 'GD', 'GH', 'GM', 'GR', 'GU', 'GY', 'HR', 'ID', 'IL', 'IN', 'IS', 'IT', 'JO', 'JP', 'KE', 'KI', 'KN', 'KR', 'LR', 'LS', 'MA', 'MH', 'MP', 'MT', 'MW', 'MX', 'MY', 'NA', 'NG', 'NO', 'NR', 'PG', 'PK', 'PL', 'PR', 'PT', 'PW', 'QA', 'RW', 'SB', 'SE', 'SG', 'SI', 'SK', 'SL', 'SS', 'SZ', 'TN', 'TO', 'TR', 'TT', 'TV', 'UG', 'VC', 'VI', 'VN', 'VU', 'WS', 'ZA', 'ZM', 'ZW']
 
-NEW_MARKETS: list[str] = ['AE', 'AG', 'AR', 'AT', 'BB', 'BE', 'BR', 'BW', 'BZ', 'CH', 'CL', 'CM', 'CN', 'CO', 'CZ', 'DE', 'DK', 'EG', 'ES', 'FI', 'FJ', 'FM', 'FR', 'GD', 'GH', 'GM', 'GR', 'GY', 'HR', 'ID', 'IL', 'IN', 'IS', 'IT', 'JO', 'JP', 'KE', 'KI', 'KN', 'KR', 'LR', 'LS', 'MA', 'MH', 'MT', 'MW', 'MX', 'MY', 'NA', 'NG', 'NO', 'NR', 'PG', 'PK', 'PL', 'PT', 'PW', 'QA', 'RW', 'SB', 'SE', 'SG', 'SI', 'SK', 'SL', 'SS', 'SZ', 'TN', 'TO', 'TR', 'TT', 'TV', 'UG', 'VC', 'VN', 'VU', 'WS', 'ZA', 'ZM', 'ZW']
+NEW_MARKETS: list[str] = ['AE', 'AG', 'AR', 'AS', 'AT', 'BB', 'BE', 'BR', 'BW', 'BZ', 'CH', 'CL', 'CM', 'CN', 'CO', 'CZ', 'DE', 'DK', 'EG', 'ES', 'FI', 'FJ', 'FM', 'FR', 'GD', 'GH', 'GM', 'GR', 'GU', 'GY', 'HR', 'ID', 'IL', 'IN', 'IS', 'IT', 'JO', 'JP', 'KE', 'KI', 'KN', 'KR', 'LR', 'LS', 'MA', 'MH', 'MP', 'MT', 'MW', 'MX', 'MY', 'NA', 'NG', 'NO', 'NR', 'PG', 'PK', 'PL', 'PR', 'PT', 'PW', 'QA', 'RW', 'SB', 'SE', 'SG', 'SI', 'SK', 'SL', 'SS', 'SZ', 'TN', 'TO', 'TR', 'TT', 'TV', 'UG', 'VC', 'VI', 'VN', 'VU', 'WS', 'ZA', 'ZM', 'ZW']
 
 # Append hotels / pubs / bars / cafés / restaurants for every scrape market.
 merge_hospitality_into_sources(MARKET_SOURCES, TARGET_MARKETS)
@@ -1014,6 +1076,15 @@ COUNTRY_ALIASES: dict[str, str] = {
     'THE GAMBIA': 'GM',
     'GAMBIA': 'GM',
     'PAPUA NEW GUINEA': 'PG',
+    'PUERTO RICO': 'PR',
+    'GUAM': 'GU',
+    'USVI': 'VI',
+    'U.S. VIRGIN ISLANDS': 'VI',
+    'US VIRGIN ISLANDS': 'VI',
+    'AMERICAN SAMOA': 'AS',
+    'NORTHERN MARIANA ISLANDS': 'MP',
+    'CNMI': 'MP',
+    'SAIPAN': 'MP',
 }
 
 def iter_market_areas(

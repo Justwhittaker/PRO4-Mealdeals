@@ -105,7 +105,7 @@ _COUNTRY_ZONE: dict[str, str] = {
     "AG": "canada_mexico_caribbean",
     "KN": "canada_mexico_caribbean",
     "VC": "canada_mexico_caribbean",
-    # US territories (when present in TARGET_MARKETS)
+    # US territories
     "PR": "canada_mexico_caribbean",
     "VI": "canada_mexico_caribbean",
     # Latin America

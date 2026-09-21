@@ -147,7 +147,7 @@ function marketCityToOption(city: {
   };
 }
 
-/** All scrape-market cities (91 countries) for country pages / search. */
+/** All scrape-market cities (96 countries) for country pages / search. */
 export const POPULAR_CITIES = MARKET_COUNTRIES.flatMap((m) =>
   m.cities.map(({ country, city, label }) => ({ country, city, label })),
 );
