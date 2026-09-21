@@ -23,22 +23,26 @@ results breakdown** to the user.
 
 ## Automated bite-size zones (Celery Beat)
 
-Production scheduling uses **8 continental zones** (not one 12-minute mega-job):
+Production scheduling uses **11 NUC Celery zones** twice daily (rest-of-world
+first, then **large** NA/WE splits so the heavy scrapes stay at the end):
 
-| Zone (small → large) | Fires (UTC, twice daily) |
-|------|------------------------------|
-| eastern_europe | 06:00, 18:00 |
-| mena | +15 min |
-| latin_america | +30 min |
-| africa | +45 min |
-| asia | 07:00, 19:00 |
-| oceania | +15 min |
-| north_america | +30 min |
-| western_europe | +45 min |
+| Zone | Fires (UTC, twice daily) | Class |
+|------|--------------------------|-------|
+| eastern_europe | 06:00, 18:00 | small |
+| mena | +15 min | small |
+| latin_america | +30 min | small |
+| africa | +45 min | medium |
+| asia | 07:00, 19:00 | medium |
+| oceania | +15 min | medium |
+| british_isles | +30 min | **large** (WE) |
+| south_europe | +45 min | **large** (WE) |
+| canada_mexico_caribbean | 08:00, 20:00 | **large** (NA) |
+| us | +15 min | **large** (NA) |
+| west_eu_core | +30 min | **large** (WE) |
 
-Queued zone tasks expire after **11h55m** so a slow drain can finish before the next cycle.
+Worker **concurrency=2** on the NUC. Queued zone tasks expire after **11h55m**.
 
-Celery Beat also fires **`send_scrape_cycle_digest`** at **05:50 / 17:50 UTC** → ntfy with zone completion %, site transfer health, new/dropped deals, net new merchant emails, and active category mix. Set `NTFY_TOPIC` in the NUC `.env`.
+Celery Beat also fires **`send_scrape_cycle_digest`** at **05:50 / 17:50 UTC** → ntfy with zone completion %, **large-family rollups** (NA / WE), site transfer health, new/dropped deals, net new merchant emails, and active category mix. Set `NTFY_TOPIC` in the NUC `.env`.
 
 - Config: `backend/app/scrapers/zones.py`, `backend/app/workers/celery_app.py`
 - Task: `scrape_zone_retail` in `backend/app/workers/tasks.py`

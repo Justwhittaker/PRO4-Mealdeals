@@ -81,7 +81,7 @@ score = tier_weight + proximity + freshness - scrape_penalty + tier_priority_sco
 | Schedule | Task |
 |----------|------|
 | Hourly `:15` | `update_currency_rates` |
-| 8 continental zones, small→large, 15 min apart at 06:00 & 18:00 UTC | `scrape_zone_retail` (`zones.py`) |
+| 11 NUC zones (NA/WE large splits last), concurrency=2, 06:00 & 18:00 UTC | `scrape_zone_retail` (`zones.py`) |
 | Scrape-cycle ntfy digest at 05:50 & 17:50 UTC | `send_scrape_cycle_digest` |
 | Friday 09:00 UTC | `send_weekly_specials` |
 

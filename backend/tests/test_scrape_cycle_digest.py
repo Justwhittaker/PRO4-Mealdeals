@@ -48,6 +48,22 @@ def test_format_digest_body_includes_requested_sections() -> None:
                 "missing": ["western_europe"],
                 "pct_completed": 87.5,
                 "pct_ok": 87.5,
+                "large_families": [
+                    {
+                        "family": "north_america",
+                        "label": "North America & Caribbean (large)",
+                        "pct_completed": 100.0,
+                        "completed": 2,
+                        "total": 2,
+                    },
+                    {
+                        "family": "western_europe",
+                        "label": "Western Europe (large)",
+                        "pct_completed": 66.7,
+                        "completed": 2,
+                        "total": 3,
+                    },
+                ],
             },
             "site": {
                 "healthy": True,
@@ -69,6 +85,8 @@ def test_format_digest_body_includes_requested_sections() -> None:
     )
     assert "Zones: 88% completed" in body
     assert "Missing: western_europe" in body
+    assert "Large · North America & Caribbean (large): 100%" in body
+    assert "Large · Western Europe (large): 67%" in body
     assert "Site transfer: OK" in body
     assert "New deals: 12" in body
     assert "Dropped deals: 5" in body

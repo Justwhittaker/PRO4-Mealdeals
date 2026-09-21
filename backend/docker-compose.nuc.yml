@@ -37,7 +37,7 @@ services:
       - |
         mkdir -p /app/data
         chown -R appuser:appuser /app/data
-        exec su appuser -s /bin/sh -c 'exec celery -A app.workers.celery_app.celery_app worker --beat --loglevel=info --concurrency=1 -s /app/data/celerybeat-schedule'
+        exec su appuser -s /bin/sh -c 'exec celery -A app.workers.celery_app.celery_app worker --beat --loglevel=info --concurrency=2 -s /app/data/celerybeat-schedule'
 
 volumes:
   celerybeat-data:

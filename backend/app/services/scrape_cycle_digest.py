@@ -12,7 +12,13 @@ from sqlalchemy.engine import Engine
 
 from app.core.config import get_settings
 from app.scrapers.categories import CATEGORY_ID_TO_LABEL, CATEGORY_ORDER
-from app.scrapers.zones import ZONE_ORDER, zone_for_country
+from app.scrapers.zones import (
+    LARGE_ZONE_FAMILIES,
+    ZONE_FAMILY_LABELS,
+    ZONE_ORDER,
+    zone_family,
+    zone_for_country,
+)
 from app.services.ntfy import send_ntfy
 from app.services.scrape_cycle_stats import (
     cycle_id_for_start,
@@ -42,6 +48,37 @@ def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
     ]
     ok_zones = [z for z in completed if z not in failed]
     total = len(ZONE_ORDER)
+
+    family_stats: dict[str, dict[str, Any]] = {}
+    for zone_id in ZONE_ORDER:
+        family = zone_family(zone_id)
+        bucket = family_stats.setdefault(
+            family,
+            {"zones": [], "completed": 0, "ok": 0, "total": 0},
+        )
+        bucket["total"] += 1
+        bucket["zones"].append(zone_id)
+        if zone_id in cycle_results:
+            bucket["completed"] += 1
+            if zone_id not in failed:
+                bucket["ok"] += 1
+
+    large_families = []
+    for family in LARGE_ZONE_FAMILIES:
+        bucket = family_stats.get(family)
+        if not bucket:
+            continue
+        large_families.append(
+            {
+                "family": family,
+                "label": ZONE_FAMILY_LABELS.get(family, family),
+                "pct_completed": _pct(bucket["completed"], bucket["total"]),
+                "completed": bucket["completed"],
+                "total": bucket["total"],
+                "zones": bucket["zones"],
+            }
+        )
+
     return {
         "total_zones": total,
         "completed": len(completed),
@@ -50,6 +87,7 @@ def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
         "missing": [z for z in ZONE_ORDER if z not in cycle_results],
         "pct_completed": _pct(len(completed), total),
         "pct_ok": _pct(len(ok_zones), total),
+        "large_families": large_families,
     }
 
 
@@ -277,6 +315,12 @@ def format_digest_body(report: dict[str, Any]) -> str:
         zone_line += f"\nMissing: {', '.join(zones['missing'])}"
     if zones["failed"]:
         zone_line += f"\nFailed: {', '.join(zones['failed'])}"
+    for family in zones.get("large_families") or []:
+        zone_line += (
+            f"\nLarge · {family['label']}: "
+            f"{family['pct_completed']:.0f}% "
+            f"({family['completed']}/{family['total']})"
+        )
 
     if site["revalidate_pct"] is None:
         rev = "no revalidate attempts recorded"
