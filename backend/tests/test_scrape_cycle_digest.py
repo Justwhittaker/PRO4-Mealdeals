@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from app.services.scrape_cycle_digest import format_digest_body
+from app.services.scrape_cycle_digest import _format_duration, format_digest_body
 from app.services.scrape_cycle_stats import cycle_start_for_time, digest_cycle_start
 
 
@@ -35,6 +35,13 @@ def test_digest_cycle_start_maps_beat_slots() -> None:
     )
 
 
+def test_format_duration_compacts_seconds() -> None:
+    assert _format_duration(None) == "—"
+    assert _format_duration(12) == "12s"
+    assert _format_duration(75) == "1m 15s"
+    assert _format_duration(3725) == "1h 2m"
+
+
 def test_format_digest_body_includes_requested_sections() -> None:
     body = format_digest_body(
         {
@@ -48,6 +55,27 @@ def test_format_digest_body_includes_requested_sections() -> None:
                 "missing": ["western_europe"],
                 "pct_completed": 87.5,
                 "pct_ok": 87.5,
+                "runtime_seconds": 5430.0,
+                "details": [
+                    {
+                        "zone": "eastern_europe",
+                        "label": "Eastern Europe",
+                        "status": "ok",
+                        "runtime_seconds": 492.0,
+                    },
+                    {
+                        "zone": "us",
+                        "label": "United States (large)",
+                        "status": "ok",
+                        "runtime_seconds": 3120.0,
+                    },
+                    {
+                        "zone": "west_eu_core",
+                        "label": "West EU core (large)",
+                        "status": "missing",
+                        "runtime_seconds": None,
+                    },
+                ],
                 "large_families": [
                     {
                         "family": "north_america",
@@ -55,6 +83,7 @@ def test_format_digest_body_includes_requested_sections() -> None:
                         "pct_completed": 100.0,
                         "completed": 2,
                         "total": 2,
+                        "runtime_seconds": 3900.0,
                     },
                     {
                         "family": "western_europe",
@@ -62,6 +91,7 @@ def test_format_digest_body_includes_requested_sections() -> None:
                         "pct_completed": 66.7,
                         "completed": 2,
                         "total": 3,
+                        "runtime_seconds": 1800.0,
                     },
                 ],
             },
@@ -84,9 +114,13 @@ def test_format_digest_body_includes_requested_sections() -> None:
         }
     )
     assert "Zones: 88% completed" in body
+    assert "Cycle runtime: 1h 30m" in body
+    assert "• Eastern Europe: 8m 12s" in body
+    assert "• United States (large): 52m 0s" in body
+    assert "• West EU core (large): missing" in body
     assert "Missing: western_europe" in body
-    assert "Large · North America & Caribbean (large): 100%" in body
-    assert "Large · Western Europe (large): 67%" in body
+    assert "Large · North America & Caribbean (large): 100% (2/2) · 1h 5m" in body
+    assert "Large · Western Europe (large): 67% (2/3) · 30m 0s" in body
     assert "Site transfer: OK" in body
     assert "New deals: 12" in body
     assert "Dropped deals: 5" in body
