@@ -45,7 +45,7 @@ import {
   itemListJsonLd,
   listingPath,
   withFeaturedDealDescription,
-  withNoIndexFollow,
+  withFilterCanonical,
 } from "@/lib/seo";
 import { BRAND_NAME } from "@/lib/brand";
 
@@ -82,7 +82,7 @@ export async function generateMetadata({
     feed.ok ? feed.data : [],
   );
   if (hasFeedFilterParams(searchParams)) {
-    meta = withNoIndexFollow(meta);
+    meta = withFilterCanonical(meta);
   }
   return meta;
 }

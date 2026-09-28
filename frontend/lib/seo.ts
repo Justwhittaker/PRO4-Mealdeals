@@ -94,11 +94,36 @@ export function hasFeedFilterParams(searchParams?: {
   );
 }
 
+/**
+ * Filtered listing URLs already declare a clean-path canonical via
+ * publicPageMetadata / *ListingMetadata. Do not add noindex on top — pairing a
+ * cross-URL canonical with noindex makes Google ignore the canonical hint
+ * (Search Console: "Duplicate without user-selected canonical").
+ */
+export function withFilterCanonical(meta: Metadata): Metadata {
+  return {
+    ...meta,
+    robots: { index: true, follow: true },
+  };
+}
+
 export function withNoIndexFollow(meta: Metadata): Metadata {
   return {
     ...meta,
     robots: { index: false, follow: true },
   };
+}
+
+/** True when the request geo path matches the deal's preferred listing path. */
+export function isCanonicalDealPath(
+  requestCountry: string,
+  requestCity: string,
+  dealCountry: string,
+  dealCity: string,
+): boolean {
+  const requestPath = listingPath(requestCountry, requestCity);
+  const canonicalPath = listingPath(dealCountry, dealCity);
+  return requestPath === canonicalPath;
 }
 
 export function withFeaturedDealDescription(
@@ -150,6 +175,8 @@ export function publicPageMetadata(opts: {
   path: string;
   image?: string | null;
   index?: boolean;
+  /** Geographic market alternates — only for home / country hubs, not every page. */
+  hreflang?: boolean;
 }): Metadata {
   const url = absoluteUrl(opts.path);
   const fullTitle =
@@ -164,7 +191,7 @@ export function publicPageMetadata(opts: {
     description: opts.description,
     alternates: {
       canonical: url,
-      languages: marketHreflangLanguages(),
+      ...(opts.hreflang ? { languages: marketHreflangLanguages() } : {}),
     },
     robots: index
       ? { index: true, follow: true }
@@ -193,6 +220,7 @@ export function countryListingMetadata(country: string): Metadata {
     title: `Dining deals across ${label}`,
     description: `Compare lunch deals, early-bird menus, and hotel dining offers across ${label}. Venues advertise on a flat-rate platform — no voucher cut.`,
     path: listingPath(country),
+    hreflang: true,
   });
 }
 

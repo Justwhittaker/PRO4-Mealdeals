@@ -217,6 +217,31 @@ export function normalizeCountrySlug(code: string): string {
   return key === "gb" ? "uk" : key;
 }
 
+/**
+ * Normalize public pathnames for a single preferred URL:
+ * lowercase segments and map legacy `/gb` → `/uk`.
+ * Returns null when the path is already canonical.
+ */
+export function canonicalizePublicPathname(pathname: string): string | null {
+  if (!pathname || pathname === "/") return null;
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts.length === 0) return null;
+
+  let changed = false;
+  const normalized = parts.map((part, index) => {
+    const lower = part.toLowerCase();
+    if (index === 0 && lower === "gb") {
+      changed = true;
+      return "uk";
+    }
+    if (lower !== part) changed = true;
+    return lower;
+  });
+
+  if (!changed) return null;
+  return `/${normalized.join("/")}`;
+}
+
 /** True when the slug is a configured scrape market (ISO or route code). */
 export function isKnownMarketCountry(code: string): boolean {
   return MARKET_COUNTRY_CODES.has(code.trim().toLowerCase());

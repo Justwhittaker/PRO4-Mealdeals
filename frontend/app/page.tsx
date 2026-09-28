@@ -38,7 +38,7 @@ import {
   itemListJsonLd,
   publicPageMetadata,
   websiteJsonLd,
-  withNoIndexFollow,
+  withFilterCanonical,
 } from "@/lib/seo";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/brand";
 
@@ -87,8 +87,9 @@ export async function generateMetadata({
     title: { absolute: `${BRAND_NAME} — ${BRAND_TAGLINE}` },
     description: HOME_DESCRIPTION,
     path: "/",
+    hreflang: true,
   });
-  return hasFeedFilterParams(searchParams) ? withNoIndexFollow(meta) : meta;
+  return hasFeedFilterParams(searchParams) ? withFilterCanonical(meta) : meta;
 }
 
 export default async function HomePage({
