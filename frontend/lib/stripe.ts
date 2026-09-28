@@ -81,9 +81,9 @@ export const PLANS: PlanPrice[] = [
     amount: 0,
     interval: "month",
     intervalCount: 1,
-    label: "Priority — Monthly (first month free)",
+    label: "Priority — Start free month",
     description:
-      "Monthly Priority with the first month free and 3 slots. Card required — local monthly rate starts after 30 days.",
+      "Primary: monthly Priority with the first month free and 3 slots. Card required — local monthly rate starts after 30 days.",
     dealSlots: DEAL_SLOT_LIMIT,
     phase: "trial",
   },
@@ -93,9 +93,9 @@ export const PLANS: PlanPrice[] = [
     amount: PRIORITY_EUR.promoThreeMonths,
     interval: "month",
     intervalCount: 3,
-    label: "Priority — Pay now (50% off)",
+    label: "Priority — Pay now (50% off 3 months)",
     description:
-      "Skip the wait — pay 50% off the next three months (€30 / local equiv.), then continue monthly.",
+      "Pay 50% off three months now (€30 / local equiv. = half monthly × 3), then continue at the monthly rate.",
     dealSlots: DEAL_SLOT_LIMIT,
     phase: "promo",
   },

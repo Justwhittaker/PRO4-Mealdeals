@@ -40,7 +40,8 @@ export default async function NewDealPage() {
           <p>
             Choose a plan on{" "}
             <strong className="text-charcoal-50">Deal of the century</strong> —
-            free first month (card required) or pay now for 50% off three months.
+            start with a free month (card required), or pay now for 3 months at
+            50% off.
           </p>
           <Button asChild className="mt-4">
             <Link href="/dashboard">Choose a subscription</Link>
