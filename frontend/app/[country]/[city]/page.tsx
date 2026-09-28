@@ -6,12 +6,13 @@ import { LocationHeader } from "@/components/deals/LocationHeader";
 import { CurrencySelector } from "@/components/deals/CurrencySelector";
 import { RadiusSelector } from "@/components/deals/RadiusSelector";
 import { AreaDealGrid } from "@/components/deals/AreaDealGrid";
+import { FeedPagination } from "@/components/deals/FeedPagination";
 import { PublisherExplainer } from "@/components/landing/PublisherExplainer";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { LocationDealsBar } from "@/components/geo/LocationDealsBar";
 import { CitySearchBar } from "@/components/geo/CitySearchBar";
-import { fetchDealsFeed } from "@/lib/api";
+import { fetchDealsFeed, fetchDealsFeedPage } from "@/lib/api";
 import {
   currencyForCountry,
   isCurrencyCode,
@@ -26,13 +27,12 @@ import {
   parseLocationCookie,
   type LocationSource,
 } from "@/lib/geo";
+import { parseCategoryParam } from "@/lib/categories";
 import {
-  filterDealsByCategory,
-  parseCategoryParam,
-} from "@/lib/categories";
-import {
+  GEO_FEED_PAGE_SIZE,
   buildDealFeedParams,
   feedEmptyMessage,
+  parseFeedPage,
 } from "@/lib/deal-feed-query";
 import { areaListingDeals } from "@/lib/priority";
 import { parseFeedSort, parseRadiusMiles } from "@/lib/radius";
@@ -56,6 +56,7 @@ interface PageProps {
     radius?: string;
     sort?: string;
     category?: string;
+    page?: string;
   };
 }
 
@@ -73,6 +74,7 @@ export async function generateMetadata({
       city: params.city,
       currency: currencyForCountry(params.country),
       sort: "score",
+      page: 1,
     }),
   );
   let meta = withFeaturedDealDescription(
@@ -95,9 +97,11 @@ export default async function CityPage({ params, searchParams }: PageProps) {
   const radius = parseRadiusMiles(searchParams.radius);
   const sort = parseFeedSort(searchParams.sort);
   const category = parseCategoryParam(searchParams.category);
+  const page = parseFeedPage(searchParams.page);
   const countryLabel = countrySearchLabel(country);
   const cityLabel = cityDisplayLabel(country, city);
   const hasCentroid = Boolean(lookupCityCoords(country, city));
+  const listingHref = listingPath(country, city);
 
   const jar = cookies();
   const pref = parseLocationCookie(jar.get(LOCATION_COOKIE)?.value);
@@ -114,7 +118,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
         cityLabel,
       };
 
-  const feed = await fetchDealsFeed(
+  const feed = await fetchDealsFeedPage(
     buildDealFeedParams({
       scope: "city",
       country,
@@ -122,12 +126,19 @@ export default async function CityPage({ params, searchParams }: PageProps) {
       currency,
       sort,
       radius,
+      category,
+      page,
     }),
   );
-  const deals = feed.ok
-    ? filterDealsByCategory(areaListingDeals(feed.data), category)
-    : [];
+  const deals = feed.ok ? areaListingDeals(feed.data.deals) : [];
+  const total = feed.ok ? feed.data.total : 0;
   const empty = feedEmptyMessage("city", cityLabel);
+  const preservedParams = {
+    currency: searchParams.currency,
+    sort: searchParams.sort,
+    category: searchParams.category,
+    radius: searchParams.radius,
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -142,7 +153,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
             city={city}
             subtitle={`HOT Deals near ${cityLabel}, ${countryLabel}${
               hasCentroid ? ` — within ${radius} miles` : ""
-            }. ${deals.length} listing${deals.length === 1 ? "" : "s"}.`}
+            }. ${total} listing${total === 1 ? "" : "s"}.`}
           />
           <div className="flex flex-col items-end gap-2">
             <Suspense fallback={null}>
@@ -166,7 +177,7 @@ export default async function CityPage({ params, searchParams }: PageProps) {
             breadcrumbJsonLd([
               { name: BRAND_NAME, path: "/" },
               { name: countryLabel, path: listingPath(country) },
-              { name: cityLabel, path: listingPath(country, city) },
+              { name: cityLabel, path: listingHref },
             ]),
             itemListJsonLd(`Dining deals in ${cityLabel}`, deals),
           ]}
@@ -188,6 +199,14 @@ export default async function CityPage({ params, searchParams }: PageProps) {
             category={category}
             emptyMessage={empty.emptyMessage}
             emptyHint={empty.emptyHint}
+          />
+
+          <FeedPagination
+            page={page}
+            pageSize={GEO_FEED_PAGE_SIZE}
+            total={total}
+            pathname={listingHref}
+            searchParams={preservedParams}
           />
         </NewsletterDealGate>
       </main>

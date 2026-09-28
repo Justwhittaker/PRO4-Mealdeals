@@ -14,7 +14,7 @@ from sqlalchemy.orm import selectinload
 
 from app.api.dependencies import CurrencySvc, DbSession
 from app.core.feed_limits import (
-    FEED_OVERFETCH_CAP,
+    MAX_FEED_CANDIDATES,
     MAX_FEED_LIMIT,
     MAX_SITEMAP_LIMIT,
 )
@@ -213,19 +213,22 @@ async def deals_feed(
     ),
     currency_override: str | None = Query(default=None, min_length=3, max_length=3),
     language_code: str = Query(default="en", min_length=2, max_length=5),
+    category: str | None = Query(
+        default=None,
+        description="Parent venue category id (e.g. restaurants-cafes-bistros).",
+    ),
     limit: int = Query(default=50, ge=1, le=MAX_FEED_LIMIT),
+    offset: int = Query(default=0, ge=0),
     auto_scrape: bool = Query(
         default=True,
         description="When the area feed is empty, skim the net and ingest deals.",
     ),
 ) -> DealFeedResponse:
     """
-    Geo-aware deal feed.
+    Geo-aware deal feed with offset pagination.
 
-    - country only → nationwide for that country
-    - city → that city (exact name); with lat/lon + radius also includes nearby
-    - lat/lon + radius (no city) → circle search for geo homepage-style feeds
-    Sort: score (featured first) or distance (needs lat/lon).
+    Scores all matching candidates with a lightweight query, then hydrates
+    only the requested page so large markets can be browsed without OOM.
     """
     if country_code:
         country_code = normalize_country(country_code)
@@ -244,6 +247,10 @@ async def deals_feed(
     if sort_mode not in {"score", "distance"}:
         sort_mode = "score"
 
+    category_filter = (category or "").strip().lower() or None
+    if category_filter in {"", "all"}:
+        category_filter = None
+
     now = datetime.now(timezone.utc)
     has_point = lat is not None and lon is not None
 
@@ -252,23 +259,32 @@ async def deals_feed(
         user_point = ST_SetSRID(ST_MakePoint(lon, lat), 4326)
         distance_expr = ST_DistanceSphere(Location.geom, user_point) / 1000.0
 
-    columns = [Deal, Merchant, Location]
+    # Phase 1: score lightweight candidates (no translations / images).
+    candidate_cols = [
+        Deal.id,
+        Deal.created_at,
+        Deal.tier_priority_score,
+        Deal.venue_category,
+        Merchant.tier_level,
+        Merchant.is_subscriber,
+        Merchant.name,
+    ]
     if distance_expr is not None:
-        columns.append(distance_expr.label("distance_km"))
+        candidate_cols.append(distance_expr.label("distance_km"))
 
-    stmt = (
-        select(*columns)
+    candidate_stmt = (
+        select(*candidate_cols)
         .join(Merchant, Deal.merchant_id == Merchant.id)
         .join(Location, Merchant.location_id == Location.id)
         .where(Deal.is_active.is_(True))
         .where(Deal.deleted_at.is_(None))
         .where(or_(Deal.expires_at.is_(None), Deal.expires_at > now))
-        # Feed response only needs translations (title/description), not line items.
-        .options(selectinload(Deal.translations))
     )
 
     if country_code:
-        stmt = stmt.where(Location.country_code == country_code.upper())
+        candidate_stmt = candidate_stmt.where(
+            Location.country_code == country_code.upper()
+        )
 
     radius_explicit = radius_miles is not None or radius_km is not None
 
@@ -276,108 +292,83 @@ async def deals_feed(
     # include nearby venues inside the circle (still not the whole country).
     # Country / geo radius mode (no city): filter by distance only.
     if city and has_point and distance_expr is not None and radius_explicit:
-        stmt = stmt.where(
+        candidate_stmt = candidate_stmt.where(
             or_(
                 Location.city.ilike(city),
                 distance_expr <= effective_radius_km,
             )
         )
     elif city:
-        stmt = stmt.where(Location.city.ilike(city))
+        candidate_stmt = candidate_stmt.where(Location.city.ilike(city))
     elif has_point and distance_expr is not None:
-        stmt = stmt.where(distance_expr <= effective_radius_km)
+        candidate_stmt = candidate_stmt.where(distance_expr <= effective_radius_km)
 
-    # Over-fetch for Python scoring, but never materialise tens of thousands of rows.
-    stmt = stmt.limit(min(limit * 3, FEED_OVERFETCH_CAP))
-    result = await db.execute(stmt)
-    rows = result.unique().all()
+    candidate_stmt = candidate_stmt.limit(MAX_FEED_CANDIDATES)
+    candidate_rows = (await db.execute(candidate_stmt)).all()
 
-    feed_items: list[DealFeedItem] = []
-    override = currency_override.upper() if currency_override else None
-
-    for row in rows:
+    ranked: list[tuple[UUID, float, float | None]] = []
+    for row in candidate_rows:
         if has_point:
-            deal, merchant, location, distance_km = row
+            (
+                deal_id,
+                created_at,
+                tier_priority_score,
+                venue_category,
+                tier_level,
+                is_subscriber,
+                merchant_name,
+                distance_km,
+            ) = row
             distance_km = float(distance_km) if distance_km is not None else None
         else:
-            deal, merchant, location = row
+            (
+                deal_id,
+                created_at,
+                tier_priority_score,
+                venue_category,
+                tier_level,
+                is_subscriber,
+                merchant_name,
+            ) = row
             distance_km = None
 
+        parent_category = venue_category_id(
+            venue_category,
+            merchant_name=merchant_name or "",
+        )
+        if category_filter and parent_category != category_filter:
+            continue
+
         score = compute_feed_score(
-            tier=merchant.tier_level,
+            tier=tier_level,
             distance_km=distance_km,
-            created_at=deal.created_at,
-            is_subscriber=merchant.is_subscriber,
+            created_at=created_at,
+            is_subscriber=bool(is_subscriber),
             radius_km=effective_radius_km,
-            tier_priority_score=deal.tier_priority_score,
+            tier_priority_score=int(tier_priority_score or 0),
             now=now,
         )
-
-        translation = next(
-            (t for t in deal.translations if t.language_code == language_code),
-            deal.translations[0] if deal.translations else None,
-        )
-
-        converted_price: Decimal | None = None
-        converted_currency: str | None = None
-        if override and override != deal.currency_code:
-            converted_price = await currency_svc.convert(
-                deal.deal_price, deal.currency_code, override
-            )
-            if converted_price is not None:
-                converted_currency = override
-
-        link_fields = _public_link_fields(deal, merchant.name)
-        feed_items.append(
-            DealFeedItem(
-                id=deal.id,
-                merchant_id=merchant.id,
-                merchant_name=merchant.name,
-                title=translation.title if translation else None,
-                description=clean_deal_description(
-                    translation.description if translation else None
-                ),
-                original_price=deal.original_price,
-                deal_price=deal.deal_price,
-                currency_code=deal.currency_code,
-                converted_deal_price=converted_price,
-                converted_currency=converted_currency,
-                distance_km=round(distance_km, 3) if distance_km is not None else None,
-                feed_score=score,
-                affiliate_url=deal.affiliate_url,
-                clean_url=deal.clean_url,
-                image_url=deal.image_url,
-                logo_url=merchant.logo_url,
-                venue_category=(
-                    venue_category_id(deal.venue_category)
-                    if deal.venue_category
-                    else venue_category_id(None, merchant_name=merchant.name)
-                ),
-                created_at=deal.created_at,
-                expires_at=deal.expires_at,
-                city=location.city,
-                area_local=location.area_local,
-                country_code=location.country_code,
-                tier_level=merchant.tier_level,
-                is_subscriber=merchant.is_subscriber,
-                **link_fields,
-            )
-        )
+        ranked.append((deal_id, score, distance_km))
 
     if sort_mode == "distance" and has_point:
-        feed_items.sort(
+        ranked.sort(
             key=lambda item: (
-                item.distance_km is None,
-                item.distance_km if item.distance_km is not None else 1e9,
-                -item.feed_score,
+                item[2] is None,
+                item[2] if item[2] is not None else 1e9,
+                -item[1],
             )
         )
     else:
-        feed_items.sort(key=lambda item: item.feed_score, reverse=True)
-    feed_items = feed_items[:limit]
+        ranked.sort(key=lambda item: item[1], reverse=True)
+
+    total = len(ranked)
+    page = ranked[offset : offset + limit]
+    page_ids = [deal_id for deal_id, _score, _distance in page]
+    score_by_id = {deal_id: score for deal_id, score, _distance in page}
+    distance_by_id = {deal_id: distance for deal_id, _score, distance in page}
 
     # Auto-skim the net for this area when visitors hit an empty city feed
-    if auto_scrape and not feed_items and country_code and city:
+    if auto_scrape and total == 0 and country_code and city:
         await asyncio.to_thread(scrape_and_ingest_area, country_code, city)
         return await deals_feed(
             db=db,
@@ -391,11 +382,91 @@ async def deals_feed(
             sort=sort_mode,
             currency_override=currency_override,
             language_code=language_code,
+            category=category_filter,
             limit=limit,
+            offset=offset,
             auto_scrape=False,
         )
 
-    return DealFeedResponse(count=len(feed_items), results=feed_items)
+    feed_items: list[DealFeedItem] = []
+    if page_ids:
+        hydrate_stmt = (
+            select(Deal, Merchant, Location)
+            .join(Merchant, Deal.merchant_id == Merchant.id)
+            .join(Location, Merchant.location_id == Location.id)
+            .where(Deal.id.in_(page_ids))
+            .options(selectinload(Deal.translations))
+        )
+        hydrated = {
+            deal.id: (deal, merchant, location)
+            for deal, merchant, location in (await db.execute(hydrate_stmt)).unique().all()
+        }
+        override = currency_override.upper() if currency_override else None
+        for deal_id in page_ids:
+            packed = hydrated.get(deal_id)
+            if packed is None:
+                continue
+            deal, merchant, location = packed
+            distance_km = distance_by_id.get(deal_id)
+            translation = next(
+                (t for t in deal.translations if t.language_code == language_code),
+                deal.translations[0] if deal.translations else None,
+            )
+            converted_price: Decimal | None = None
+            converted_currency: str | None = None
+            if override and override != deal.currency_code:
+                converted_price = await currency_svc.convert(
+                    deal.deal_price, deal.currency_code, override
+                )
+                if converted_price is not None:
+                    converted_currency = override
+
+            link_fields = _public_link_fields(deal, merchant.name)
+            feed_items.append(
+                DealFeedItem(
+                    id=deal.id,
+                    merchant_id=merchant.id,
+                    merchant_name=merchant.name,
+                    title=translation.title if translation else None,
+                    description=clean_deal_description(
+                        translation.description if translation else None
+                    ),
+                    original_price=deal.original_price,
+                    deal_price=deal.deal_price,
+                    currency_code=deal.currency_code,
+                    converted_deal_price=converted_price,
+                    converted_currency=converted_currency,
+                    distance_km=(
+                        round(distance_km, 3) if distance_km is not None else None
+                    ),
+                    feed_score=score_by_id.get(deal_id, 0.0),
+                    affiliate_url=deal.affiliate_url,
+                    clean_url=deal.clean_url,
+                    image_url=deal.image_url,
+                    logo_url=merchant.logo_url,
+                    venue_category=(
+                        venue_category_id(deal.venue_category)
+                        if deal.venue_category
+                        else venue_category_id(None, merchant_name=merchant.name)
+                    ),
+                    created_at=deal.created_at,
+                    expires_at=deal.expires_at,
+                    city=location.city,
+                    area_local=location.area_local,
+                    country_code=location.country_code,
+                    tier_level=merchant.tier_level,
+                    is_subscriber=merchant.is_subscriber,
+                    **link_fields,
+                )
+            )
+
+    return DealFeedResponse(
+        count=len(feed_items),
+        total=total,
+        offset=offset,
+        limit=limit,
+        results=feed_items,
+    )
 
 
 @router.get("/sitemap", response_model=DealSitemapResponse)

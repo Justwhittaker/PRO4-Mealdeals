@@ -1,9 +1,10 @@
 import type { FeedParams } from "@/lib/api";
+import type { ParentCategoryId } from "@/lib/categories";
 import { lookupCityCoords } from "@/lib/geo";
 import type { FeedSort, RadiusMiles } from "@/lib/radius";
 
 /** Ranked page size for country/city listings — keep under API MAX_FEED_LIMIT. */
-const GEO_FEED_LIMIT = 200;
+export const GEO_FEED_PAGE_SIZE = 200;
 
 export type DealFeedScope = "country" | "city";
 
@@ -14,7 +15,21 @@ export interface BuildDealFeedParamsInput {
   currency?: string;
   sort?: FeedSort;
   radius?: RadiusMiles;
+  category?: ParentCategoryId | "all";
+  page?: number;
   limit?: number;
+}
+
+/** 1-based page from `?page=` (invalid / missing → 1). */
+export function parseFeedPage(raw?: string | string[] | null): number {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const n = Number.parseInt(String(value ?? "1"), 10);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return n;
+}
+
+export function feedPageOffset(page: number, pageSize = GEO_FEED_PAGE_SIZE): number {
+  return Math.max(0, (page - 1) * pageSize);
 }
 
 /**
@@ -27,13 +42,19 @@ export interface BuildDealFeedParamsInput {
 export function buildDealFeedParams(
   input: BuildDealFeedParamsInput,
 ): FeedParams {
-  const limit = input.limit ?? GEO_FEED_LIMIT;
+  const limit = input.limit ?? GEO_FEED_PAGE_SIZE;
+  const page = input.page && input.page > 0 ? input.page : 1;
   const base: FeedParams = {
     country: input.country,
     currency: input.currency,
     sort: input.sort ?? "score",
     limit,
+    offset: feedPageOffset(page, limit),
   };
+
+  if (input.category && input.category !== "all") {
+    base.category = input.category;
+  }
 
   if (input.scope === "country" || !input.city) {
     return base;

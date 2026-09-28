@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.core.feed_limits import (
-    FEED_OVERFETCH_CAP,
+    MAX_FEED_CANDIDATES,
     MAX_FEED_LIMIT,
     MAX_SITEMAP_LIMIT,
 )
@@ -11,15 +11,16 @@ from app.core.feed_limits import (
 
 def test_feed_limit_caps_are_safe_for_512mb_dyno() -> None:
     assert MAX_FEED_LIMIT <= 500
-    assert FEED_OVERFETCH_CAP <= 750
     assert MAX_SITEMAP_LIMIT <= 500
-    assert FEED_OVERFETCH_CAP >= MAX_FEED_LIMIT
+    assert MAX_FEED_CANDIDATES <= 20_000
 
 
-def test_feed_overfetch_never_materialises_tens_of_thousands() -> None:
-    # Historical bug: limit=10000 fetched limit*3 rows into the web process.
-    requested = 10_000
-    capped_limit = min(requested, MAX_FEED_LIMIT)
-    fetch_rows = min(capped_limit * 3, FEED_OVERFETCH_CAP)
-    assert fetch_rows <= FEED_OVERFETCH_CAP
-    assert fetch_rows < 1000
+def test_feed_page_slice_supports_show_all() -> None:
+    # Score many candidates, hydrate only one page.
+    total = 1_706
+    page_size = 200
+    offset = 400
+    page_ids = list(range(total))[offset : offset + page_size]
+    assert len(page_ids) == page_size
+    assert page_ids[0] == 400
+    assert offset + len(page_ids) < total

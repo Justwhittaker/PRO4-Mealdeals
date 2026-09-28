@@ -29,6 +29,7 @@ export function CurrencySelector({ value }: CurrencySelectorProps) {
   function onChange(next: string) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("currency", next.toUpperCase());
+    params.delete("page");
     router.push(`${pathname}?${params.toString()}`);
   }
 

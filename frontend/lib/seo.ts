@@ -82,13 +82,15 @@ export function hasFeedFilterParams(searchParams?: {
   sort?: string;
   category?: string;
   radius?: string;
+  page?: string;
 }): boolean {
   if (!searchParams) return false;
   return Boolean(
     searchParams.currency ||
       searchParams.sort ||
       searchParams.category ||
-      searchParams.radius,
+      searchParams.radius ||
+      (searchParams.page && searchParams.page !== "1"),
   );
 }
 

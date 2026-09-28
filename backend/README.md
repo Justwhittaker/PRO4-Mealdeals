@@ -56,7 +56,7 @@ DATABASE_URL_SYNC=postgresql://mealdeals:mealdeals@localhost:5432/mealdeals \
 |--------|------|-------------|
 | `GET` | `/health` | Liveness |
 | `GET` | `/go/{deal_id}` | Lookup `affiliate_url`, log click (Redis + Postgres), **302** redirect |
-| `GET` | `/api/v1/deals/feed` | Geo feed: `country_code`, `city`, `lat`, `lon`, `radius_km`, `currency_override` — sorted by `feed_score` (max `limit` 500) |
+| `GET` | `/api/v1/deals/feed` | Geo feed: `country_code`, `city`, `lat`, `lon`, `radius_km`, `currency_override`, `category`, `offset`, `limit` (max 500) — ranked page with `total` |
 | `GET` | `/api/v1/deals/sitemap` | Lean paginated deal URLs for sitemap builds (`offset` / `limit`, max 500) |
 | `GET` | `/api/v1/deals/{deal_id}/value-calculator` | `SUM(individual_price) - deal_price` + savings % |
 | `GET/POST/PATCH/DELETE` | `/api/v1/merchants` | Merchant CRUD |

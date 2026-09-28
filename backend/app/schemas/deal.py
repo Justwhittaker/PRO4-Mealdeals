@@ -143,6 +143,9 @@ class DealFeedItem(BaseModel):
 
 class DealFeedResponse(BaseModel):
     count: int
+    total: int = 0
+    offset: int = 0
+    limit: int = 0
     results: List[DealFeedItem]
 
 

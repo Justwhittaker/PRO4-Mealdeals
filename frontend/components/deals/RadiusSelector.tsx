@@ -43,6 +43,7 @@ export function RadiusSelector({
     for (const [key, value] of Object.entries(patch)) {
       params.set(key, value);
     }
+    params.delete("page");
     router.push(`${pathname}?${params.toString()}`);
   }
 

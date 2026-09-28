@@ -63,9 +63,20 @@ export interface FeedParams {
   radiusMiles?: number;
   /** score = featured first; distance = nearest first */
   sort?: "score" | "distance";
+  /** Parent venue category id; omit or "all" for unfiltered. */
+  category?: string;
   limit?: number;
+  offset?: number;
   /** Backend defaults to true. Sitemap and metadata fetches must pass false. */
   autoScrape?: boolean;
+}
+
+export interface DealFeedPage {
+  deals: Deal[];
+  count: number;
+  total: number;
+  offset: number;
+  limit: number;
 }
 
 export type ApiResult<T> =
@@ -271,9 +282,9 @@ async function apiFetch<T>(
   }
 }
 
-export async function fetchDealsFeed(
+export async function fetchDealsFeedPage(
   params: FeedParams = {},
-): Promise<ApiResult<Deal[]>> {
+): Promise<ApiResult<DealFeedPage>> {
   const qs = new URLSearchParams();
   if (params.country) {
     const raw = params.country.toUpperCase();
@@ -293,7 +304,11 @@ export async function fetchDealsFeed(
     qs.set("radius_km", String(params.radiusKm));
   }
   if (params.sort) qs.set("sort", params.sort);
+  if (params.category && params.category !== "all") {
+    qs.set("category", params.category);
+  }
   if (params.limit != null) qs.set("limit", String(params.limit));
+  if (params.offset != null) qs.set("offset", String(params.offset));
   qs.set("auto_scrape", params.autoScrape === false ? "false" : "true");
 
   const query = qs.toString();
@@ -301,23 +316,47 @@ export async function fetchDealsFeed(
   if (params.country && params.city) {
     feedTags.push(cityDealsTag(params.country, params.city));
   }
-  const result = await apiFetch<{ results?: BackendDealFeedItem[] } | BackendDealFeedItem[]>(
-    `/api/v1/deals/feed${query ? `?${query}` : ""}`,
-    { next: { tags: feedTags } },
-  );
+  const result = await apiFetch<
+    | {
+        results?: BackendDealFeedItem[];
+        count?: number;
+        total?: number;
+        offset?: number;
+        limit?: number;
+      }
+    | BackendDealFeedItem[]
+  >(`/api/v1/deals/feed${query ? `?${query}` : ""}`, {
+    next: { tags: feedTags },
+  });
 
   if (!result.ok) return result;
 
   const rows = Array.isArray(result.data)
     ? result.data
     : (result.data.results ?? []);
+  const deals = rows.map((row) =>
+    mapFeedItem(row, params.country, params.city),
+  );
+  const meta = Array.isArray(result.data) ? null : result.data;
 
   return {
     ok: true,
-    data: rows.map((row) =>
-      mapFeedItem(row, params.country, params.city),
-    ),
+    data: {
+      deals,
+      count: meta?.count ?? deals.length,
+      total: meta?.total ?? deals.length,
+      offset: meta?.offset ?? params.offset ?? 0,
+      limit: meta?.limit ?? params.limit ?? deals.length,
+    },
   };
+}
+
+export async function fetchDealsFeed(
+  params: FeedParams = {},
+): Promise<ApiResult<Deal[]>> {
+  const page = await fetchDealsFeedPage(params);
+  if (!page.ok) return page;
+  return { ok: true, data: page.data.deals };
 }
 
 export async function fetchDeal(
