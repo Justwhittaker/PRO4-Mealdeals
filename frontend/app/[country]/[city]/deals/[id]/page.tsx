@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +17,7 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import {
   breadcrumbJsonLd,
   dealListingMetadata,
+  isCanonicalDealPath,
   isIndexableCountrySlug,
   isReservedGeoSlug,
   listingPath,
@@ -80,6 +81,10 @@ export default async function DealDetailPage({ params }: PageProps) {
   }
 
   const deal = result.data;
+  if (!isCanonicalDealPath(country, city, deal.country, deal.city)) {
+    permanentRedirect(listingPath(deal.country, deal.city, deal.id));
+  }
+
   const badge = dealBadge(deal);
   const value = await fetchValueCalculator(id);
   const websiteUrl =
