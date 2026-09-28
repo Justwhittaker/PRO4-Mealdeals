@@ -88,6 +88,10 @@ class Settings(BaseSettings):
     deep_scrape_enabled: bool = Field(default=True)
     deep_scrape_max_extra_fetches: int = Field(default=4, ge=1, le=8)
 
+    # Contact scrape: when deal-page HTML lacks email/phone, fetch /contact|/about|/.
+    deep_contact_scrape_enabled: bool = Field(default=True)
+    deep_contact_max_extra_fetches: int = Field(default=2, ge=0, le=4)
+
     # CORS origins as comma-separated string (avoids pydantic-settings list JSON decode).
     cors_origins: str = Field(
         default="http://localhost:3000,http://127.0.0.1:3000"
