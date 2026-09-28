@@ -6,27 +6,27 @@ import { LocationHeader } from "@/components/deals/LocationHeader";
 import { CurrencySelector } from "@/components/deals/CurrencySelector";
 import { RadiusSelector } from "@/components/deals/RadiusSelector";
 import { AreaDealGrid } from "@/components/deals/AreaDealGrid";
+import { FeedPagination } from "@/components/deals/FeedPagination";
 import { PublisherExplainer } from "@/components/landing/PublisherExplainer";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { CitySearchBar } from "@/components/geo/CitySearchBar";
-import { fetchDealsFeed } from "@/lib/api";
+import { fetchDealsFeed, fetchDealsFeedPage } from "@/lib/api";
 import {
   currencyForCountry,
   isCurrencyCode,
   type CurrencyCode,
 } from "@/lib/currency";
-import {
-  filterDealsByCategory,
-  parseCategoryParam,
-} from "@/lib/categories";
+import { parseCategoryParam } from "@/lib/categories";
 import {
   POPULAR_CITIES,
   countrySearchLabel,
 } from "@/lib/geo";
 import {
+  GEO_FEED_PAGE_SIZE,
   buildDealFeedParams,
   feedEmptyMessage,
+  parseFeedPage,
 } from "@/lib/deal-feed-query";
 import { areaListingDeals } from "@/lib/priority";
 import { parseFeedSort, parseRadiusMiles } from "@/lib/radius";
@@ -50,6 +50,7 @@ interface PageProps {
     sort?: string;
     category?: string;
     radius?: string;
+    page?: string;
   };
 }
 
@@ -66,6 +67,7 @@ export async function generateMetadata({
       country: params.country,
       currency: currencyForCountry(params.country),
       sort: "score",
+      page: 1,
     }),
   );
   let meta = withFeaturedDealDescription(
@@ -88,23 +90,32 @@ export default async function CountryPage({ params, searchParams }: PageProps) {
   const sort = parseFeedSort(searchParams.sort);
   const category = parseCategoryParam(searchParams.category);
   const radius = parseRadiusMiles(searchParams.radius);
+  const page = parseFeedPage(searchParams.page);
   const countryLabel = countrySearchLabel(country);
+  const listingHref = listingPath(country);
 
-  const feed = await fetchDealsFeed(
+  const feed = await fetchDealsFeedPage(
     buildDealFeedParams({
       scope: "country",
       country,
       currency,
       sort,
+      category,
+      page,
     }),
   );
-  const deals = feed.ok
-    ? filterDealsByCategory(areaListingDeals(feed.data), category)
-    : [];
+  const deals = feed.ok ? areaListingDeals(feed.data.deals) : [];
+  const total = feed.ok ? feed.data.total : 0;
   const countrySlug =
     country.toLowerCase() === "gb" ? "uk" : country.toLowerCase();
   const cities = POPULAR_CITIES.filter((c) => c.country === countrySlug);
   const empty = feedEmptyMessage("country", countryLabel);
+  const preservedParams = {
+    currency: searchParams.currency,
+    sort: searchParams.sort,
+    category: searchParams.category,
+    radius: searchParams.radius,
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -115,7 +126,9 @@ export default async function CountryPage({ params, searchParams }: PageProps) {
         <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
           <LocationHeader
             country={country}
-            subtitle={`HOT Deals across ${countryLabel} — all categories. ${deals.length} listings.`}
+            subtitle={`HOT Deals across ${countryLabel} — all categories. ${total} listing${
+              total === 1 ? "" : "s"
+            }.`}
           />
           <div className="flex flex-col items-end gap-2">
             <Suspense fallback={null}>
@@ -152,7 +165,7 @@ export default async function CountryPage({ params, searchParams }: PageProps) {
           data={[
             breadcrumbJsonLd([
               { name: BRAND_NAME, path: "/" },
-              { name: countryLabel, path: listingPath(country) },
+              { name: countryLabel, path: listingHref },
             ]),
             itemListJsonLd(`Dining deals across ${countryLabel}`, deals),
           ]}
@@ -172,6 +185,14 @@ export default async function CountryPage({ params, searchParams }: PageProps) {
             category={category}
             emptyMessage={empty.emptyMessage}
             emptyHint={empty.emptyHint}
+          />
+
+          <FeedPagination
+            page={page}
+            pageSize={GEO_FEED_PAGE_SIZE}
+            total={total}
+            pathname={listingHref}
+            searchParams={preservedParams}
           />
         </NewsletterDealGate>
       </main>

@@ -143,7 +143,26 @@ class DealFeedItem(BaseModel):
 
 class DealFeedResponse(BaseModel):
     count: int
+    total: int = 0
+    offset: int = 0
+    limit: int = 0
     results: List[DealFeedItem]
+
+
+class DealSitemapEntry(BaseModel):
+    """Minimal deal fields for sitemap generation (avoids full feed payload)."""
+
+    id: UUID
+    country_code: str
+    city: Optional[str] = None
+    created_at: datetime
+
+
+class DealSitemapResponse(BaseModel):
+    count: int
+    total: int
+    offset: int
+    results: List[DealSitemapEntry]
 
 
 class ValueCalculatorResponse(BaseModel):

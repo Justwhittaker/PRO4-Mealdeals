@@ -36,6 +36,7 @@ export function CategorySelector({
     } else {
       params.set("category", next);
     }
+    params.delete("page");
     const qs = params.toString();
     router.push(qs ? `${pathname}?${qs}` : pathname);
   }

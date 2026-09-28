@@ -10,8 +10,9 @@ import { GeoBootstrap } from "@/components/geo/GeoBootstrap";
 import { LocationDealsBar } from "@/components/geo/LocationDealsBar";
 import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { AreaDealGrid } from "@/components/deals/AreaDealGrid";
+import { FeedPagination } from "@/components/deals/FeedPagination";
 import { RadiusSelector } from "@/components/deals/RadiusSelector";
-import { fetchDealsFeed } from "@/lib/api";
+import { fetchDealsFeedPage } from "@/lib/api";
 import { currencyForCountry } from "@/lib/currency";
 import {
   LOCATION_COOKIE,
@@ -22,11 +23,12 @@ import {
   resolveGeoFromHeaders,
   type LocationSource,
 } from "@/lib/geo";
+import { parseCategoryParam } from "@/lib/categories";
 import {
-  filterDealsByCategory,
-  parseCategoryParam,
-} from "@/lib/categories";
-import { buildDealFeedParams } from "@/lib/deal-feed-query";
+  GEO_FEED_PAGE_SIZE,
+  buildDealFeedParams,
+  parseFeedPage,
+} from "@/lib/deal-feed-query";
 import { areaListingDeals } from "@/lib/priority";
 import { parseFeedSort, parseRadiusMiles } from "@/lib/radius";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -74,7 +76,12 @@ function resolveHomeLocation(): {
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams?: { radius?: string; sort?: string; category?: string };
+  searchParams?: {
+    radius?: string;
+    sort?: string;
+    category?: string;
+    page?: string;
+  };
 }): Promise<Metadata> {
   const meta = publicPageMetadata({
     title: { absolute: `${BRAND_NAME} — ${BRAND_TAGLINE}` },
@@ -87,7 +94,12 @@ export async function generateMetadata({
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams?: { radius?: string; sort?: string; category?: string };
+  searchParams?: {
+    radius?: string;
+    sort?: string;
+    category?: string;
+    page?: string;
+  };
 }) {
   const { target, source, needsClientGeo } = resolveHomeLocation();
   const feedCountry = target.countryCode;
@@ -97,23 +109,31 @@ export default async function HomePage({
   const radius = parseRadiusMiles(searchParams?.radius);
   const sort = parseFeedSort(searchParams?.sort);
   const category = parseCategoryParam(searchParams?.category);
+  const page = parseFeedPage(searchParams?.page);
 
   // Country-wide feed for the geolocated country — all cities, all categories.
-  const feed = await fetchDealsFeed(
+  const feed = await fetchDealsFeedPage(
     buildDealFeedParams({
       scope: "country",
       country: feedCountry,
       currency,
       sort,
+      category,
+      page,
     }),
   );
-  const deals = feed.ok ? feed.data : [];
-  const listed = filterDealsByCategory(areaListingDeals(deals), category);
+  const listed = feed.ok ? areaListingDeals(feed.data.deals) : [];
+  const total = feed.ok ? feed.data.total : 0;
   const carouselDeals = listed.slice(0, 12);
   const restaurants = listed.slice(0, 8).map((d) => ({
     label: `${d.restaurantName}, ${d.city.replace(/-/g, " ")}`,
     href: `/${d.country}/${d.city}`,
   }));
+  const preservedParams = {
+    radius: searchParams?.radius,
+    sort: searchParams?.sort,
+    category: searchParams?.category,
+  };
 
   return (
     <div className="relative min-h-screen bg-white">
@@ -153,7 +173,7 @@ export default async function HomePage({
                 </h2>
                 <p className="mt-1 text-sm text-charcoal-400">
                   HOT Deals for {countryLabel} — every listing in every category
-                  ({listed.length} shown).
+                  ({total} listing{total === 1 ? "" : "s"}).
                 </p>
               </div>
             </div>
@@ -189,6 +209,13 @@ export default async function HomePage({
                 category={category}
                 emptyMessage={`No deals listed across ${countryLabel} yet.`}
                 emptyHint="Search another country or check back soon."
+              />
+              <FeedPagination
+                page={page}
+                pageSize={GEO_FEED_PAGE_SIZE}
+                total={total}
+                pathname="/"
+                searchParams={preservedParams}
               />
             </div>
           </NewsletterDealGate>
