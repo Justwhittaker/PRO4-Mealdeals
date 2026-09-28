@@ -10,7 +10,7 @@ services:
     plan: free
     region: frankfurt
     branch: master
-    buildCommand: pip install -r backend/requirements.txt
+    buildCommand: PIP_DEFAULT_TIMEOUT=100 pip install --retries 10 -r backend/requirements.txt
     startCommand: cd backend && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
