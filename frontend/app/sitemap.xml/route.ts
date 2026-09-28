@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { fetchDealsFeed } from "@/lib/api";
-import { absoluteUrl, listingPath } from "@/lib/seo";
+import { fetchDealSitemapPage } from "@/lib/api";
+import { absoluteUrl } from "@/lib/seo";
 
 export const revalidate = 3600;
 export const runtime = "nodejs";
@@ -8,13 +8,9 @@ export const runtime = "nodejs";
 const DEALS_PER_SITEMAP = 2500;
 
 async function dealChunkCount(): Promise<number> {
-  const feed = await fetchDealsFeed({ limit: 10000, autoScrape: false });
-  if (!feed.ok || feed.data.length === 0) return 1;
-  const seen = new Set<string>();
-  for (const deal of feed.data) {
-    seen.add(listingPath(deal.country, deal.city, deal.id));
-  }
-  return Math.max(1, Math.ceil(seen.size / DEALS_PER_SITEMAP));
+  const page = await fetchDealSitemapPage({ offset: 0, limit: 1 });
+  if (!page.ok || page.data.total <= 0) return 1;
+  return Math.max(1, Math.ceil(page.data.total / DEALS_PER_SITEMAP));
 }
 
 /** Sitemap index — Google Search Console submits this URL. */

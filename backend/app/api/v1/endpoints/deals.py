@@ -13,6 +13,11 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import selectinload
 
 from app.api.dependencies import CurrencySvc, DbSession
+from app.core.feed_limits import (
+    FEED_OVERFETCH_CAP,
+    MAX_FEED_LIMIT,
+    MAX_SITEMAP_LIMIT,
+)
 from app.models.deal import Deal, DealItem
 from app.models.location import Location
 from app.models.marketing_contact import MarketingContact
@@ -24,6 +29,8 @@ from app.schemas.deal import (
     DealFeedItem,
     DealFeedResponse,
     DealRead,
+    DealSitemapEntry,
+    DealSitemapResponse,
     DealUpdate,
     ValueCalculatorResponse,
 )
@@ -206,7 +213,7 @@ async def deals_feed(
     ),
     currency_override: str | None = Query(default=None, min_length=3, max_length=3),
     language_code: str = Query(default="en", min_length=2, max_length=5),
-    limit: int = Query(default=50, ge=1, le=10000),
+    limit: int = Query(default=50, ge=1, le=MAX_FEED_LIMIT),
     auto_scrape: bool = Query(
         default=True,
         description="When the area feed is empty, skim the net and ingest deals.",
@@ -256,10 +263,8 @@ async def deals_feed(
         .where(Deal.is_active.is_(True))
         .where(Deal.deleted_at.is_(None))
         .where(or_(Deal.expires_at.is_(None), Deal.expires_at > now))
-        .options(
-            selectinload(Deal.items),
-            selectinload(Deal.translations),
-        )
+        # Feed response only needs translations (title/description), not line items.
+        .options(selectinload(Deal.translations))
     )
 
     if country_code:
@@ -282,7 +287,8 @@ async def deals_feed(
     elif has_point and distance_expr is not None:
         stmt = stmt.where(distance_expr <= effective_radius_km)
 
-    stmt = stmt.limit(limit * 3)  # over-fetch then rank in Python for scoring clarity
+    # Over-fetch for Python scoring, but never materialise tens of thousands of rows.
+    stmt = stmt.limit(min(limit * 3, FEED_OVERFETCH_CAP))
     result = await db.execute(stmt)
     rows = result.unique().all()
 
@@ -390,6 +396,54 @@ async def deals_feed(
         )
 
     return DealFeedResponse(count=len(feed_items), results=feed_items)
+
+
+@router.get("/sitemap", response_model=DealSitemapResponse)
+async def deals_sitemap(
+    db: DbSession,
+    offset: int = Query(default=0, ge=0),
+    limit: int = Query(default=500, ge=1, le=MAX_SITEMAP_LIMIT),
+) -> DealSitemapResponse:
+    """
+    Lightweight paginated deal URLs for sitemap generation.
+
+    Avoids the ranked feed path (no items/translations/scoring) so sitemap
+    builds do not OOM the web service.
+    """
+    now = datetime.now(timezone.utc)
+    active = (
+        Deal.is_active.is_(True)
+        & Deal.deleted_at.is_(None)
+        & or_(Deal.expires_at.is_(None), Deal.expires_at > now)
+    )
+    total = int(
+        await db.scalar(select(func.count()).select_from(Deal).where(active)) or 0
+    )
+    stmt = (
+        select(Deal.id, Location.country_code, Location.city, Deal.created_at)
+        .join(Merchant, Deal.merchant_id == Merchant.id)
+        .join(Location, Merchant.location_id == Location.id)
+        .where(active)
+        .order_by(Deal.created_at.desc(), Deal.id.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    rows = (await db.execute(stmt)).all()
+    results = [
+        DealSitemapEntry(
+            id=deal_id,
+            country_code=country_code,
+            city=city,
+            created_at=created_at,
+        )
+        for deal_id, country_code, city, created_at in rows
+    ]
+    return DealSitemapResponse(
+        count=len(results),
+        total=total,
+        offset=offset,
+        results=results,
+    )
 
 
 @router.patch("/{deal_id}", response_model=DealRead)

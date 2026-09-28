@@ -2,7 +2,8 @@ import type { FeedParams } from "@/lib/api";
 import { lookupCityCoords } from "@/lib/geo";
 import type { FeedSort, RadiusMiles } from "@/lib/radius";
 
-const GEO_FEED_LIMIT = 10000;
+/** Ranked page size for country/city listings — keep under API MAX_FEED_LIMIT. */
+const GEO_FEED_LIMIT = 200;
 
 export type DealFeedScope = "country" | "city";
 

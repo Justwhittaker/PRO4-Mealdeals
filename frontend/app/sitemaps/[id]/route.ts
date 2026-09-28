@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchDealsFeed } from "@/lib/api";
+import { fetchDealSitemapPage } from "@/lib/api";
 import {
   absoluteUrl,
   listingPath,
@@ -11,6 +11,7 @@ export const revalidate = 3600;
 export const runtime = "nodejs";
 
 const DEALS_PER_SITEMAP = 2500;
+const SITEMAP_PAGE_SIZE = 500;
 
 function urlEntry(
   loc: string,
@@ -80,33 +81,40 @@ export async function GET(
   }
 
   const chunk = Number.parseInt(dealMatch[1]!, 10);
-  const feed = await fetchDealsFeed({ limit: 10000, autoScrape: false });
-  if (!feed.ok) {
-    return xmlResponse([]);
-  }
-
-  const seen = new Set<string>();
-  const deals: { path: string; lastmod: string }[] = [];
-  for (const deal of feed.data) {
-    const path = listingPath(deal.country, deal.city, deal.id);
-    if (seen.has(path)) continue;
-    seen.add(path);
-    deals.push({
-      path,
-      lastmod: deal.createdAt
-        ? new Date(deal.createdAt).toISOString()
-        : now,
-    });
-  }
-
   const start = chunk * DEALS_PER_SITEMAP;
-  const slice = deals.slice(start, start + DEALS_PER_SITEMAP);
-  if (slice.length === 0 && chunk > 0) {
+  const end = start + DEALS_PER_SITEMAP;
+  const deals: { path: string; lastmod: string }[] = [];
+  const seen = new Set<string>();
+
+  for (let offset = start; offset < end; offset += SITEMAP_PAGE_SIZE) {
+    const page = await fetchDealSitemapPage({
+      offset,
+      limit: Math.min(SITEMAP_PAGE_SIZE, end - offset),
+    });
+    if (!page.ok) {
+      return xmlResponse([]);
+    }
+    if (page.data.results.length === 0) break;
+    for (const deal of page.data.results) {
+      const path = listingPath(deal.country, deal.city, deal.id);
+      if (seen.has(path)) continue;
+      seen.add(path);
+      deals.push({
+        path,
+        lastmod: deal.createdAt
+          ? new Date(deal.createdAt).toISOString()
+          : now,
+      });
+    }
+    if (page.data.results.length < SITEMAP_PAGE_SIZE) break;
+  }
+
+  if (deals.length === 0 && chunk > 0) {
     return new NextResponse("Not found", { status: 404 });
   }
 
   return xmlResponse(
-    slice.map((deal) =>
+    deals.map((deal) =>
       urlEntry(absoluteUrl(deal.path), deal.lastmod, "weekly", "0.6"),
     ),
   );

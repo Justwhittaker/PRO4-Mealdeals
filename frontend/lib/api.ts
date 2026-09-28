@@ -971,6 +971,64 @@ export async function requestPasswordReset(
   });
 }
 
+export interface DealSitemapEntry {
+  id: string;
+  country: string;
+  city: string;
+  createdAt?: string;
+}
+
+export interface DealSitemapPage {
+  count: number;
+  total: number;
+  offset: number;
+  results: DealSitemapEntry[];
+}
+
+interface BackendDealSitemapEntry {
+  id: string;
+  country_code: string;
+  city?: string | null;
+  created_at: string;
+}
+
+interface BackendDealSitemapPage {
+  count: number;
+  total: number;
+  offset: number;
+  results: BackendDealSitemapEntry[];
+}
+
+/** Paginated lean deal URLs for sitemap builds (avoids full feed payloads). */
+export async function fetchDealSitemapPage(params: {
+  offset?: number;
+  limit?: number;
+}): Promise<ApiResult<DealSitemapPage>> {
+  const qs = new URLSearchParams();
+  if (params.offset != null) qs.set("offset", String(params.offset));
+  if (params.limit != null) qs.set("limit", String(params.limit));
+  const query = qs.toString();
+  const result = await apiFetch<BackendDealSitemapPage>(
+    `/api/v1/deals/sitemap${query ? `?${query}` : ""}`,
+    { next: { revalidate: 3600 } },
+  );
+  if (!result.ok) return result;
+  return {
+    ok: true,
+    data: {
+      count: result.data.count,
+      total: result.data.total,
+      offset: result.data.offset,
+      results: result.data.results.map((row) => ({
+        id: row.id,
+        country: row.country_code,
+        city: row.city ?? "",
+        createdAt: row.created_at,
+      })),
+    },
+  };
+}
+
 export interface ScrapeMetrics {
   activeDeals: number;
   markets: number;
