@@ -1,13 +1,7 @@
-import { Facebook, Instagram } from "lucide-react";
+import { Facebook } from "lucide-react";
 import { CookieSettingsLink } from "@/components/cookie/CookieSettingsLink";
 
 const SOCIAL = [
-  {
-    label: "Instagram (coming soon)",
-    href: "#instagram",
-    icon: Instagram,
-    external: false,
-  },
   {
     label: "Facebook",
     href: "https://www.facebook.com/mealdeals.ie",
@@ -41,6 +35,12 @@ export function SiteFooter() {
         >
           <a href="/about" className="transition hover:text-burgundy-500">
             About us
+          </a>
+          <a
+            href="/guides/how-we-list-offers"
+            className="transition hover:text-burgundy-500"
+          >
+            How we list offers
           </a>
           <a
             href="/newsletter"

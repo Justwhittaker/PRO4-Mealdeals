@@ -30,6 +30,7 @@ from app.schemas.deal import (
     DealFeedResponse,
     DealRead,
     DealSitemapEntry,
+    DealTranslationRead,
     DealSitemapResponse,
     DealUpdate,
     ValueCalculatorResponse,
@@ -37,6 +38,7 @@ from app.schemas.deal import (
 from app.services.affiliate import build_affiliate_urls
 from app.services.deal_copy import clean_deal_description
 from app.services.deal_link import LinkKind, cta_label_for_link, outbound_link_meta
+from app.services.listing_quality import is_policy_violation, prepare_public_listing
 from app.services.ingest import normalize_city, normalize_country
 from app.services.ranking import compute_feed_score
 from app.services.scrape_runner import scrape_and_ingest_area
@@ -272,6 +274,17 @@ async def deals_feed(
     if distance_expr is not None:
         candidate_cols.append(distance_expr.label("distance_km"))
 
+    listing_title_col = (
+        select(DealTranslation.title)
+        .where(
+            DealTranslation.deal_id == Deal.id,
+            DealTranslation.language_code == "en",
+        )
+        .limit(1)
+        .scalar_subquery()
+    )
+    candidate_cols.append(listing_title_col.label("listing_title"))
+
     candidate_stmt = (
         select(*candidate_cols)
         .join(Merchant, Deal.merchant_id == Merchant.id)
@@ -318,6 +331,7 @@ async def deals_feed(
                 is_subscriber,
                 merchant_name,
                 distance_km,
+                listing_title,
             ) = row
             distance_km = float(distance_km) if distance_km is not None else None
         else:
@@ -329,8 +343,12 @@ async def deals_feed(
                 tier_level,
                 is_subscriber,
                 merchant_name,
+                listing_title,
             ) = row
             distance_km = None
+
+        if is_policy_violation(listing_title, merchant_name):
+            continue
 
         parent_category = venue_category_id(
             venue_category,
@@ -422,17 +440,34 @@ async def deals_feed(
                     converted_currency = override
 
             link_fields = _public_link_fields(deal, merchant.name)
+            category_id = (
+                venue_category_id(deal.venue_category)
+                if deal.venue_category
+                else venue_category_id(None, merchant_name=merchant.name)
+            )
+            public = prepare_public_listing(
+                title=translation.title if translation else None,
+                description=translation.description if translation else None,
+                merchant=merchant.name,
+                city=location.city,
+                venue_category=category_id,
+                is_subscriber=bool(merchant.is_subscriber),
+                deal_price=deal.deal_price,
+                original_price=deal.original_price,
+            )
+            if public["blocked"]:
+                continue
             feed_items.append(
                 DealFeedItem(
                     id=deal.id,
                     merchant_id=merchant.id,
                     merchant_name=merchant.name,
-                    title=translation.title if translation else None,
+                    title=str(public["title"]) if public["title"] else None,
                     description=clean_deal_description(
-                        translation.description if translation else None
+                        str(public["description"]) if public["description"] else None
                     ),
-                    original_price=deal.original_price,
-                    deal_price=deal.deal_price,
+                    original_price=Decimal(str(public["original_price"])),
+                    deal_price=Decimal(str(public["deal_price"])),
                     currency_code=deal.currency_code,
                     converted_deal_price=converted_price,
                     converted_currency=converted_currency,
@@ -444,11 +479,7 @@ async def deals_feed(
                     clean_url=deal.clean_url,
                     image_url=deal.image_url,
                     logo_url=merchant.logo_url,
-                    venue_category=(
-                        venue_category_id(deal.venue_category)
-                        if deal.venue_category
-                        else venue_category_id(None, merchant_name=merchant.name)
-                    ),
+                    venue_category=category_id,
                     created_at=deal.created_at,
                     expires_at=deal.expires_at,
                     city=location.city,
@@ -487,11 +518,24 @@ async def deals_sitemap(
         & Deal.deleted_at.is_(None)
         & or_(Deal.expires_at.is_(None), Deal.expires_at > now)
     )
-    total = int(
-        await db.scalar(select(func.count()).select_from(Deal).where(active)) or 0
+    listing_title = (
+        select(DealTranslation.title)
+        .where(
+            DealTranslation.deal_id == Deal.id,
+            DealTranslation.language_code == "en",
+        )
+        .limit(1)
+        .scalar_subquery()
     )
     stmt = (
-        select(Deal.id, Location.country_code, Location.city, Deal.created_at)
+        select(
+            Deal.id,
+            Location.country_code,
+            Location.city,
+            Deal.created_at,
+            listing_title.label("listing_title"),
+            Merchant.name,
+        )
         .join(Merchant, Deal.merchant_id == Merchant.id)
         .join(Location, Merchant.location_id == Location.id)
         .where(active)
@@ -507,8 +551,12 @@ async def deals_sitemap(
             city=city,
             created_at=created_at,
         )
-        for deal_id, country_code, city, created_at in rows
+        for deal_id, country_code, city, created_at, title, merchant_name in rows
+        if not is_policy_violation(title, merchant_name)
     ]
+    total = int(
+        await db.scalar(select(func.count()).select_from(Deal).where(active)) or 0
+    )
     return DealSitemapResponse(
         count=len(results),
         total=total,
@@ -730,7 +778,53 @@ async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
     deal, merchant, location = row
     if deal.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
-    about_blurb = merchant.bio
+    primary_translation = next(
+        (item for item in deal.translations if item.language_code == "en"),
+        deal.translations[0] if deal.translations else None,
+    )
+    category_id = (
+        venue_category_id(deal.venue_category)
+        if deal.venue_category
+        else venue_category_id(None, merchant_name=merchant.name)
+    )
+    public = prepare_public_listing(
+        title=primary_translation.title if primary_translation else None,
+        description=primary_translation.description if primary_translation else None,
+        merchant=merchant.name,
+        city=location.city,
+        venue_category=category_id,
+        is_subscriber=bool(merchant.is_subscriber),
+        deal_price=deal.deal_price,
+        original_price=deal.original_price,
+        about=merchant.bio,
+    )
+    if public["blocked"]:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
+    public_translations = [
+        DealTranslationRead(
+            language_code=item.language_code,
+            title=(
+                str(public["title"])
+                if item.language_code == (primary_translation.language_code if primary_translation else "en")
+                else item.title
+            ),
+            description=(
+                str(public["description"] or "")
+                if item.language_code == (primary_translation.language_code if primary_translation else "en")
+                else item.description
+            ),
+        )
+        for item in deal.translations
+    ]
+    if not public_translations and public["title"]:
+        public_translations.append(
+            DealTranslationRead(
+                language_code="en",
+                title=str(public["title"]),
+                description=str(public["description"] or ""),
+            )
+        )
+    about_blurb = public["about"] if isinstance(public["about"], str) else None
     if not about_blurb:
         # Fall back to marketing contact ledger from prior scrapes.
         contact = (
@@ -745,7 +839,8 @@ async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
                 .limit(1)
             )
         ).scalar_one_or_none()
-        about_blurb = contact
+        if contact and not is_policy_violation(contact):
+            about_blurb = contact
     link_fields = _public_link_fields(deal, merchant.name)
     return DealDetailRead(
         id=deal.id,
@@ -754,18 +849,18 @@ async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
         scraped_raw_url=deal.scraped_raw_url,
         clean_url=deal.clean_url,
         affiliate_url=deal.affiliate_url,
-        original_price=deal.original_price,
-        deal_price=deal.deal_price,
+        original_price=Decimal(str(public["original_price"])),
+        deal_price=Decimal(str(public["deal_price"])),
         currency_code=deal.currency_code,
         is_active=deal.is_active,
         tier_priority_score=deal.tier_priority_score,
         slot_exempt=deal.slot_exempt,
         image_url=deal.image_url,
-        venue_category=deal.venue_category,
+        venue_category=category_id,
         expires_at=deal.expires_at,
         created_at=deal.created_at,
         items=list(deal.items),
-        translations=list(deal.translations),
+        translations=public_translations,
         merchant_name=merchant.name,
         logo_url=merchant.logo_url,
         about_blurb=about_blurb,

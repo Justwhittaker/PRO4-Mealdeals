@@ -21,6 +21,7 @@ const RESERVED_GEO_SLUGS = new Set([
   "cookies",
   "terms",
   "about",
+  "guides",
   "go",
   "api",
   "admin",
@@ -332,6 +333,7 @@ export function sitemapStaticPaths(): string[] {
   return [
     "/",
     "/about",
+    "/guides/how-we-list-offers",
     "/contact",
     "/newsletter",
     "/privacy",

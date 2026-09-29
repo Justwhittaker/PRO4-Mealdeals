@@ -17,6 +17,12 @@ from app.scrapers.categories import categorize_venue
 from app.scrapers.deal_placeholders import resolve_dish_placeholder
 from app.scrapers.local_discovery import discover_local_venues, merge_local_sources
 from app.scrapers.hub_radius import hub_default_locality
+from app.services.listing_quality import (
+    explicit_price_comparison,
+    is_low_value_title,
+    is_policy_violation,
+    public_original_price,
+)
 from app.scrapers.markets import (
     COUNTRY_ALIASES,
     DEFAULT_CITY,
@@ -279,23 +285,43 @@ class GlobalRetailScraper(BaseScraper):
             templates = _templates_for_category(venue_category)
             template = templates[index % len(templates)]
 
-            title = live.get("title") or str(template["title"]).format(
+            live_title = str(live.get("title") or "")
+            live_description = str(live.get("description") or "")
+            offer_snippet = str(live.get("offer_snippet") or "")
+            if is_policy_violation(
+                live_title, live_description, offer_snippet, source["merchant"]
+            ):
+                logger.info(
+                    "Skipping policy-violating page for %s (%s)",
+                    source["merchant"],
+                    source.get("url"),
+                )
+                continue
+
+            template_title = str(template["title"]).format(
                 merchant=source["merchant"], city=city_name
             )
-            description = live.get("description") or str(
-                template["description"]
-            ).format(city=city_name)
-            if live.get("offer_snippet") and not live.get("description"):
-                description = str(live["offer_snippet"])
+            template_description = str(template["description"]).format(city=city_name)
+            if live_title and not is_low_value_title(live_title, source["merchant"]):
+                title = live_title
+                description = offer_snippet or live_description or template_description
+            else:
+                title = template_title
+                description = offer_snippet or template_description
 
-            # Never invent prices. 0/0 means "hide pricing; show deal copy".
-            if "deal_price" in live:
+            # Prices only when the page states an offer. Never pair the lowest
+            # and highest amounts on a homepage into a fake was/now discount.
+            if offer_snippet and "deal_price" in live:
                 deal_price = Decimal(str(live["deal_price"]))
+                original = deal_price
                 if "original_price" in live:
-                    original = Decimal(str(live["original_price"]))
-                else:
-                    # Single listed price — show it, no fabricated "was" price.
-                    original = deal_price
+                    candidate = Decimal(str(live["original_price"]))
+                    original = public_original_price(
+                        deal_price,
+                        candidate,
+                        offer_snippet,
+                        trust=False,
+                    )
             else:
                 deal_price = Decimal("0")
                 original = Decimal("0")
@@ -462,14 +488,20 @@ class GlobalRetailScraper(BaseScraper):
         threshold_offer = bool(
             offer_snippet and _is_threshold_or_percent_offer(str(offer_snippet))
         )
-        if threshold_offer:
+        if threshold_offer or not offer_snippet:
             pass
-        elif len(prices) >= 2:
+        elif len(prices) >= 2 and explicit_price_comparison(str(offer_snippet)):
             prices_sorted = sorted(prices)
-            result["deal_price"] = prices_sorted[0]
-            result["original_price"] = prices_sorted[-1]
-        elif len(prices) == 1:
-            result["deal_price"] = prices[0]
+            low = prices_sorted[0]
+            high = prices_sorted[-1]
+            shown_high = public_original_price(
+                low, high, str(offer_snippet), trust=False
+            )
+            result["deal_price"] = low
+            if shown_high > low:
+                result["original_price"] = shown_high
+        elif len(prices) >= 1:
+            result["deal_price"] = min(prices)
         if get_settings().deep_scrape_enabled:
             offer = extract_offer_url_from_soup(soup, page_url=url)
             if offer:

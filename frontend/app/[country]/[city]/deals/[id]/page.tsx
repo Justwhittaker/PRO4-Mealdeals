@@ -178,7 +178,7 @@ export default async function DealDetailPage({ params }: PageProps) {
             </p>
           ) : null}
 
-          {deal.price > 0 && value.ok ? (
+          {deal.isSubscriber && deal.price > 0 && value.ok && value.data.savings > 0 ? (
             <Card>
               <CardContent className="grid gap-3 p-5 sm:grid-cols-3">
                 <div>
