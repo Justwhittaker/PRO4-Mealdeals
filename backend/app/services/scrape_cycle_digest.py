@@ -14,6 +14,7 @@ from app.core.config import get_settings
 from app.scrapers.categories import CATEGORY_ID_TO_LABEL, CATEGORY_ORDER
 from app.scrapers.zones import (
     LARGE_ZONE_FAMILIES,
+    SCRAPE_ZONES,
     ZONE_FAMILY_LABELS,
     ZONE_ORDER,
     zone_family,
@@ -39,6 +40,35 @@ def _pct(part: int | float, whole: int | float) -> float:
     return round(100.0 * float(part) / float(whole), 1)
 
 
+def _format_duration(seconds: float | int | None) -> str:
+    """Compact human duration for ntfy (e.g. 12m 4s, 1h 5m)."""
+    if seconds is None:
+        return "—"
+    try:
+        total = max(0, int(round(float(seconds))))
+    except (TypeError, ValueError):
+        return "—"
+    hours, rem = divmod(total, 3600)
+    minutes, secs = divmod(rem, 60)
+    if hours:
+        return f"{hours}h {minutes}m"
+    if minutes:
+        return f"{minutes}m {secs}s"
+    return f"{secs}s"
+
+
+def _runtime_seconds(row: dict[str, Any] | None) -> float | None:
+    if not row:
+        return None
+    raw = row.get("runtime_seconds")
+    if raw is None:
+        return None
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
+
+
 def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
     completed = [z for z in ZONE_ORDER if z in cycle_results]
     failed = [
@@ -50,11 +80,50 @@ def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
     total = len(ZONE_ORDER)
 
     family_stats: dict[str, dict[str, Any]] = {}
+    zone_details: list[dict[str, Any]] = []
+    total_runtime = 0.0
+    runtime_zones = 0
+
     for zone_id in ZONE_ORDER:
+        row = cycle_results.get(zone_id)
+        runtime = _runtime_seconds(row)
+        if runtime is not None:
+            total_runtime += runtime
+            runtime_zones += 1
+
+        if zone_id not in cycle_results:
+            status = "missing"
+        elif zone_id in failed:
+            status = "failed"
+        else:
+            status = "ok"
+
+        label = ""
+        if row and isinstance(row.get("label"), str) and row["label"].strip():
+            label = row["label"].strip()
+        else:
+            label = SCRAPE_ZONES.get(zone_id, {}).get("label", zone_id)
+
+        zone_details.append(
+            {
+                "zone": zone_id,
+                "label": label,
+                "status": status,
+                "runtime_seconds": runtime,
+            }
+        )
+
         family = zone_family(zone_id)
         bucket = family_stats.setdefault(
             family,
-            {"zones": [], "completed": 0, "ok": 0, "total": 0},
+            {
+                "zones": [],
+                "completed": 0,
+                "ok": 0,
+                "total": 0,
+                "runtime_seconds": 0.0,
+                "runtime_zones": 0,
+            },
         )
         bucket["total"] += 1
         bucket["zones"].append(zone_id)
@@ -62,6 +131,9 @@ def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
             bucket["completed"] += 1
             if zone_id not in failed:
                 bucket["ok"] += 1
+        if runtime is not None:
+            bucket["runtime_seconds"] += runtime
+            bucket["runtime_zones"] += 1
 
     large_families = []
     for family in LARGE_ZONE_FAMILIES:
@@ -76,6 +148,9 @@ def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
                 "completed": bucket["completed"],
                 "total": bucket["total"],
                 "zones": bucket["zones"],
+                "runtime_seconds": (
+                    bucket["runtime_seconds"] if bucket["runtime_zones"] else None
+                ),
             }
         )
 
@@ -88,6 +163,8 @@ def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
         "pct_completed": _pct(len(completed), total),
         "pct_ok": _pct(len(ok_zones), total),
         "large_families": large_families,
+        "details": zone_details,
+        "runtime_seconds": total_runtime if runtime_zones else None,
     }
 
 
@@ -311,15 +388,32 @@ def format_digest_body(report: dict[str, Any]) -> str:
         f"({zones['completed']}/{zones['total_zones']}), "
         f"{zones['pct_ok']:.0f}% ok"
     )
+    total_runtime = zones.get("runtime_seconds")
+    if total_runtime is not None:
+        zone_line += f"\nCycle runtime: {_format_duration(total_runtime)}"
+    for detail in zones.get("details") or []:
+        status = detail.get("status") or "ok"
+        duration = _format_duration(detail.get("runtime_seconds"))
+        label = detail.get("label") or detail.get("zone") or "zone"
+        if status == "ok":
+            zone_line += f"\n• {label}: {duration}"
+        elif status == "failed":
+            zone_line += f"\n• {label}: {duration} (failed)"
+        else:
+            zone_line += f"\n• {label}: missing"
     if zones["missing"]:
         zone_line += f"\nMissing: {', '.join(zones['missing'])}"
     if zones["failed"]:
         zone_line += f"\nFailed: {', '.join(zones['failed'])}"
     for family in zones.get("large_families") or []:
+        family_runtime = ""
+        if family.get("runtime_seconds") is not None:
+            family_runtime = f" · {_format_duration(family['runtime_seconds'])}"
         zone_line += (
             f"\nLarge · {family['label']}: "
             f"{family['pct_completed']:.0f}% "
             f"({family['completed']}/{family['total']})"
+            f"{family_runtime}"
         )
 
     if site["revalidate_pct"] is None:

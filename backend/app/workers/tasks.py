@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from decimal import Decimal
 
 from sqlalchemy import create_engine, select
@@ -95,19 +96,22 @@ def scrape_global_retail(country_codes: list[str] | None = None) -> dict[str, in
 
 
 @celery_app.task(name="app.workers.tasks.scrape_zone_retail")
-def scrape_zone_retail(zone_id: str) -> dict[str, int | str]:
+def scrape_zone_retail(zone_id: str) -> dict[str, int | str | float]:
     """Continental bite-size scrape for one of eight worldwide zones."""
     zone = zone_id.strip().lower()
     if zone not in SCRAPE_ZONES:
         raise ValueError(f"Unknown scrape zone: {zone_id}")
+    started = time.perf_counter()
     try:
         result = scrape_and_ingest_zone(zone)
     except Exception as exc:
+        runtime_seconds = round(time.perf_counter() - started, 1)
         record_zone_result(
             zone,
             {
                 "ok": False,
                 "error": str(exc)[:500],
+                "label": SCRAPE_ZONES[zone]["label"],
                 "areas": 0,
                 "discovered": 0,
                 "ingested": 0,
@@ -115,10 +119,16 @@ def scrape_zone_retail(zone_id: str) -> dict[str, int | str]:
                 "marketing_contacts": 0,
                 "revalidate_ok": 0,
                 "revalidate_fail": 0,
+                "runtime_seconds": runtime_seconds,
             },
         )
         raise
     markets = markets_for_zone(zone)
+    runtime_seconds = result.get("runtime_seconds")
+    if runtime_seconds is None:
+        runtime_seconds = round(time.perf_counter() - started, 1)
+    else:
+        runtime_seconds = float(runtime_seconds)
     summary = {
         "zone": zone,
         "label": SCRAPE_ZONES[zone]["label"],
@@ -130,15 +140,17 @@ def scrape_zone_retail(zone_id: str) -> dict[str, int | str]:
         "revalidate_ok": int(result.get("revalidate_ok") or 0),
         "revalidate_fail": int(result.get("revalidate_fail") or 0),
         "markets": len(markets),
+        "runtime_seconds": runtime_seconds,
         "ok": True,
     }
     record_zone_result(zone, summary)
     logger.info(
-        "Zone scrape complete (%s): areas=%s discovered=%s ingested=%s",
+        "Zone scrape complete (%s): areas=%s discovered=%s ingested=%s runtime=%ss",
         zone,
         summary["areas"],
         summary["discovered"],
         summary["ingested"],
+        summary["runtime_seconds"],
     )
     return summary
 
