@@ -81,6 +81,7 @@ const ADSENSE_RESERVED_ROOTS = new Set([
   "cookies",
   "terms",
   "about",
+  "guides",
   "go",
   "api",
   "admin",

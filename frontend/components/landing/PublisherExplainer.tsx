@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 interface PublisherExplainerProps {
   areaLabel?: string;
 }
@@ -31,16 +33,24 @@ export function PublisherExplainer({ areaLabel }: PublisherExplainerProps) {
         <p>
           Venues advertise on a flat-rate basis. There is no commission taken
           from the table when you redeem an offer; you book or walk in with the
-          venue using the details on each listing. Featured subscriber deals
-          sit above scraped public offers so independent restaurants can stay
-          visible next to larger groups.
+          venue using the details on each listing. Priority subscriber deals
+          sit above other listings so independent restaurants can stay visible
+          next to larger groups.
         </p>
         <p>
           Browse by country and city, then filter by category (meals, wine and
-          entertainment, hotels, groceries, bars, takeaway). Weekly Hot Deals
-          is an optional email roundup for readers who want offers sent to
-          their inbox. Privacy, cookies, and contact pages explain how to
-          manage that signup or report a listing that looks wrong.
+          entertainment, hotels, groceries, bars, takeaway). A price is shown
+          only when the venue states one. Otherwise the card names the offer
+          type — lunch deal, happy hour, spend-and-save — and you confirm the
+          details with the venue. Weekly Hot Deals is an optional email roundup.
+          If a listing looks wrong, use the contact page.{" "}
+          <Link
+            href="/guides/how-we-list-offers"
+            className="font-medium text-burgundy-500 underline-offset-2 hover:underline"
+          >
+            How we list offers
+          </Link>{" "}
+          explains what each card means.
         </p>
       </div>
     </section>

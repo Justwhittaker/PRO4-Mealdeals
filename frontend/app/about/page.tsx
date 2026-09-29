@@ -1,141 +1,96 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  Bell,
-  Compass,
-  Database,
-  MessagesSquare,
-  Palette,
-  Smartphone,
-} from "lucide-react";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { publicPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = publicPageMetadata({
   title: "About us",
   description:
-    "Dine a Deal services — digital marketing, SEO, content creation — and the marketing gurus, hoteliers, and developers working for you.",
+    "Dine A Deal is a dining-offers directory run by CheddaCheeze. Venues advertise at a flat rate, and readers compare lunch, happy hour, and grocery offers before they visit.",
   path: "/about",
 });
-
-const SERVICES = [
-  {
-    title: "Digital Marketing",
-    icon: Smartphone,
-    body: "Digital marketing is incredibly important these days as the use of the Internet, mobile devices, social media, search engines, and other channels are in high demand. Our aim as digital marketers is to reach consumers easily by being visible to them on their connected devices and to use visually appealing content to gain more engagement from your audience.",
-  },
-  {
-    title: "SEO",
-    icon: Compass,
-    body: "Search engine optimization (SEO) is the process of growing the quality and quantity of website traffic by increasing the visibility of a website or web page to users of a web search engine so that your business listing appears above your competitors for organic results.",
-  },
-  {
-    title: "Content Creation",
-    icon: Palette,
-    body: "Content creation is the process of generating ideas that appeal to your clientele and customers when creating written or visual content around products and services and making that information accessible to your audience as a blog, video, infographic, and more. We pride ourselves on maximizing your portfolio and giving you fantastic content you can use on any platform.",
-  },
-] as const;
-
-const WORKING_FOR_YOU = [
-  {
-    title: "Marketing Gurus",
-    icon: MessagesSquare,
-    body: "Our team has 22+ years of marketing experience to help you build your brand.",
-  },
-  {
-    title: "Hoteliers",
-    icon: Bell,
-    body: "Our team has 18+ years of restaurant and hotel experience — get great ideas to boost your business.",
-  },
-  {
-    title: "Developers",
-    icon: Database,
-    body: "Our team has 16+ years of website design and analytical experience.",
-  },
-] as const;
 
 export default function AboutPage() {
   return (
     <div className="relative min-h-screen bg-white">
-      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
         <p className="text-[10px] font-medium uppercase tracking-wider text-burgundy-500">
           Dine a Deal
         </p>
         <h1 className="mt-2 font-display text-3xl text-charcoal-50 sm:text-4xl">
           About us
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-charcoal-300 sm:text-base">
-          We&apos;re all about the thrill of a great deal — hunting down tasty
-          savings near you, and giving hotels, businesses, and grocers a
-          cheerful, flat-rate stage to shout about their offers (no voucher cut,
-          allowing businesses to keep all their earnings).
-        </p>
+        <div className="mt-4 space-y-4 text-sm leading-relaxed text-charcoal-300 sm:text-base">
+          <p>
+            Dine A Deal is a directory of dining offers for restaurants, cafés,
+            bars, hotels, and grocers. CheddaCheeze trades as Dine A Deal and
+            publishes the site so you can see what is on this week in a city
+            before you book or walk in.
+          </p>
+          <p>
+            Venues that want a featured placement buy Priority advertising at a
+            flat rate. We do not take a cut of the bill, and we do not sell
+            vouchers. You redeem an offer with the venue, using the details on
+            the listing.
+          </p>
+        </div>
 
-        <section className="mt-14" aria-labelledby="services-heading">
+        <section className="mt-12" aria-labelledby="listings-heading">
           <h2
-            id="services-heading"
-            className="font-display text-2xl text-charcoal-50 sm:text-3xl"
+            id="listings-heading"
+            className="font-display text-2xl text-charcoal-50"
           >
-            Services
+            What a listing is
           </h2>
-          <ul className="mt-8 grid gap-10 sm:grid-cols-3">
-            {SERVICES.map((item) => {
-              const Icon = item.icon;
-              return (
-                <li key={item.title}>
-                  <p className="flex items-center gap-2 font-display text-lg text-burgundy-600">
-                    <Icon className="h-5 w-5 shrink-0" aria-hidden />
-                    {item.title}
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed text-charcoal-300">
-                    {item.body}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="mt-4 space-y-4 text-sm leading-relaxed text-charcoal-300 sm:text-base">
+            <p>
+              Each card names the venue, the city, and the kind of offer: a
+              lunch deal, breakfast bundle, happy hour, takeaway promotion, or
+              grocery spend-and-save. A price appears only when that venue has
+              published one. If we cannot confirm a was/now price, we leave the
+              money off the card rather than guess.
+            </p>
+            <p>
+              Priority listings are written by the venue. Other listings are
+              short summaries we prepare from the venue&apos;s own offer pages,
+              rewritten into a consistent format so a homepage title is not
+              presented as a deal. Always confirm today&apos;s inclusions with
+              the restaurant before you go — menus change.
+            </p>
+            <p>
+              <Link
+                href="/guides/how-we-list-offers"
+                className="font-medium text-burgundy-500 underline-offset-2 hover:underline"
+              >
+                How we list offers
+              </Link>{" "}
+              walks through the card, the categories, and how to tell us when
+              something is wrong.
+            </p>
+          </div>
         </section>
 
-        <section
-          className="mt-16 border-t border-charcoal-700 pt-14"
-          aria-labelledby="working-heading"
-        >
+        <section className="mt-12" aria-labelledby="correct-heading">
           <h2
-            id="working-heading"
-            className="font-display text-2xl text-charcoal-50 sm:text-3xl"
+            id="correct-heading"
+            className="font-display text-2xl text-charcoal-50"
           >
-            Working for you
+            Correct a listing
           </h2>
-          <ul className="mt-8 grid gap-10 sm:grid-cols-3">
-            {WORKING_FOR_YOU.map((item) => {
-              const Icon = item.icon;
-              return (
-                <li key={item.title}>
-                  <p className="flex items-center gap-2 font-display text-lg text-burgundy-600">
-                    <Icon className="h-5 w-5 shrink-0" aria-hidden />
-                    {item.title}
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed text-charcoal-300">
-                    {item.body}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
+          <p className="mt-4 text-sm leading-relaxed text-charcoal-300 sm:text-base">
+            If a name, city, or offer looks wrong, or you want a listing
+            removed, write to us from the{" "}
+            <Link
+              href="/contact"
+              className="font-medium text-burgundy-500 underline-offset-2 hover:underline"
+            >
+              contact page
+            </Link>
+            . We reply from just.whittaker@gmail.com. Privacy choices, cookies,
+            and the terms of use are linked in the footer.
+          </p>
         </section>
-
-        <p className="mt-14 text-sm text-charcoal-400">
-          Want to talk through a campaign?{" "}
-          <Link
-            href="/contact"
-            className="font-medium text-burgundy-500 underline-offset-2 hover:underline"
-          >
-            Contact us
-          </Link>
-          .
-        </p>
       </main>
-
       <SiteFooter />
     </div>
   );

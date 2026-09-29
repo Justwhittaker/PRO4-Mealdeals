@@ -2,6 +2,7 @@ import type { CurrencyCode } from "./currency";
 import { formatAreaLabel, slugifyCity } from "@/lib/area-label";
 import { cityDealsTag, DEALS_TAG, dealTag } from "@/lib/cache-tags";
 import { cleanDealDescription, cleanMediaUrl } from "@/lib/deal-media";
+import { preparePublicListing } from "@/lib/listing-quality";
 import type { DealLinkKind } from "@/lib/deal-link";
 import type { TierLevel } from "./priority";
 
@@ -145,20 +146,13 @@ function mapFeedItem(
   item: BackendDealFeedItem,
   fallbackCountry?: string,
   fallbackCity?: string,
-): Deal {
+): Deal | null {
   const isSubscriber = Boolean(item.is_subscriber);
   const currency = (
     item.converted_currency ?? item.currency_code ?? "USD"
   ).toUpperCase() as CurrencyCode;
   const price = toNumber(item.converted_deal_price ?? item.deal_price);
   const original = toNumber(item.original_price);
-  // Scraped promo-only deals use 0/0 when no list price was found — hide money UI.
-  const hasListedPrice = price > 0;
-  const savingsPercent =
-    hasListedPrice && original > price
-      ? Math.round(((original - price) / original) * 100)
-      : undefined;
-
   const country = (
     item.country_code ??
     fallbackCountry ??
@@ -168,14 +162,25 @@ function mapFeedItem(
   const city = slugifyCity(hubName);
   const areaLocal = item.area_local ?? null;
   const areaLabel = formatAreaLabel(hubName, areaLocal);
+  const prepared = preparePublicListing({
+    title: item.title,
+    description: cleanDealDescription(item.description),
+    merchant: item.merchant_name,
+    city: hubName,
+    category: item.venue_category,
+    isSubscriber,
+    price,
+    original,
+  });
+  if (prepared.blocked) return null;
 
   return {
     id: item.id,
-    title: item.title?.trim() || item.merchant_name,
-    description: cleanDealDescription(item.description),
+    title: prepared.title,
+    description: prepared.description,
     restaurantName: item.merchant_name,
-    price: hasListedPrice ? price : 0,
-    originalPrice: hasListedPrice && original > price ? original : null,
+    price: prepared.price,
+    originalPrice: prepared.originalPrice,
     currency,
     country,
     city,
@@ -195,8 +200,7 @@ function mapFeedItem(
     imageUrl: cleanMediaUrl(item.image_url),
     logoUrl: cleanMediaUrl(item.logo_url),
     category: item.venue_category ?? undefined,
-    savingsPercent:
-      savingsPercent != null && savingsPercent > 0 ? savingsPercent : undefined,
+    savingsPercent: prepared.savingsPercent,
   };
 }
 
@@ -334,9 +338,9 @@ export async function fetchDealsFeedPage(
   const rows = Array.isArray(result.data)
     ? result.data
     : (result.data.results ?? []);
-  const deals = rows.map((row) =>
-    mapFeedItem(row, params.country, params.city),
-  );
+  const deals = rows
+    .map((row) => mapFeedItem(row, params.country, params.city))
+    .filter((deal): deal is Deal => deal !== null);
   const meta = Array.isArray(result.data) ? null : result.data;
 
   return {
@@ -402,18 +406,31 @@ export async function fetchDeal(
   const areaLabel = formatAreaLabel(hubName, areaLocal);
   const price = toNumber(d.deal_price);
   const original = toNumber(d.original_price);
-  const hasListedPrice = price > 0;
+  const prepared = preparePublicListing({
+    title: translation?.title,
+    description: cleanDealDescription(translation?.description),
+    about: d.about_blurb,
+    merchant: d.merchant_name,
+    city: hubName,
+    category: d.venue_category,
+    isSubscriber,
+    price,
+    original,
+  });
+  if (prepared.blocked) {
+    return { ok: false, error: "Deal not found", status: 404 };
+  }
 
   return {
     ok: true,
     data: {
       id: d.id,
-      title: translation?.title?.trim() || d.merchant_name,
-      description: cleanDealDescription(translation?.description),
-      aboutBlurb: d.about_blurb ?? null,
+      title: prepared.title,
+      description: prepared.description,
+      aboutBlurb: prepared.about,
       restaurantName: d.merchant_name,
-      price: hasListedPrice ? price : 0,
-      originalPrice: hasListedPrice && original > price ? original : null,
+      price: prepared.price,
+      originalPrice: prepared.originalPrice,
       currency: d.currency_code.toUpperCase() as CurrencyCode,
       country,
       city,
