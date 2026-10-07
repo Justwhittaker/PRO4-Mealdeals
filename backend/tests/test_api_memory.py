@@ -30,6 +30,8 @@ forbidden = [
     "app.workers.celery_app",
     "app.services.scrape_runner",
     "app.services.ingest",
+    "app.scrapers.fetch_guard",
+    "app.scrapers.offer_links",
     "bs4",
     "lxml",
     "lxml.etree",

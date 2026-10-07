@@ -6,8 +6,11 @@ import logging
 import re
 from collections.abc import Awaitable, Callable
 from typing import Any
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
+from app.core.task_errors import reraise_if_fatal
+from app.scrapers.fetch_guard import SpeculativeFetchGuard
+from app.scrapers.url_safety import safe_urljoin
 from app.services.deal_link import LinkKind, classify_deal_url, normalize_outbound_url
 
 logger = logging.getLogger(__name__)
@@ -42,7 +45,8 @@ _SKIP_HREF_RE = re.compile(
 def _same_site(origin: str, candidate: str) -> bool:
     try:
         return urlparse(origin).netloc.lower() == urlparse(candidate).netloc.lower()
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        reraise_if_fatal(exc)
         return False
 
 
@@ -74,10 +78,17 @@ def listing_urls_for(base_url: str) -> list[str]:
     return out
 
 
+def _absolute_href(page_url: str, href: str) -> str | None:
+    joined = safe_urljoin(page_url, href)
+    if not joined:
+        return None
+    return normalize_outbound_url(joined)
+
+
 def _score_offer_candidate(href: str, anchor_text: str, *, page_url: str) -> int:
     if not href or _SKIP_HREF_RE.search(href):
         return -1
-    absolute = normalize_outbound_url(urljoin(page_url, href))
+    absolute = _absolute_href(page_url, href)
     if not absolute or not _same_site(page_url, absolute):
         return -1
     text = f"{absolute} {anchor_text}".strip()
@@ -106,19 +117,28 @@ def extract_offer_url_from_soup(soup: Any, *, page_url: str) -> str | None:
     best_url: str | None = None
     best_score = 0
     for anchor in soup.find_all("a", href=True):
-        href = str(anchor.get("href") or "").strip()
-        if not href or href.startswith("#"):
+        try:
+            href = str(anchor.get("href") or "").strip()
+            if not href or href.startswith("#"):
+                continue
+            text = anchor.get_text(" ", strip=True)[:200]
+            score = _score_offer_candidate(href, text, page_url=page_url)
+            if score <= best_score:
+                continue
+            absolute = _absolute_href(page_url, href)
+            if not absolute:
+                continue
+            best_score = score
+            best_url = absolute
+        except Exception as exc:  # noqa: BLE001 — one bad href must not drop the page
+            reraise_if_fatal(exc)
+            logger.debug("Skipping malformed offer href on %s", page_url, exc_info=True)
             continue
-        text = anchor.get_text(" ", strip=True)[:200]
-        score = _score_offer_candidate(href, text, page_url=page_url)
-        if score <= best_score:
-            continue
-        absolute = normalize_outbound_url(urljoin(page_url, href))
-        if not absolute:
-            continue
-        best_score = score
-        best_url = absolute
     return best_url
+
+
+def _is_speculative_candidate(page_url: str, base_url: str) -> bool:
+    return page_url.rstrip("/") != base_url.rstrip("/")
 
 
 async def resolve_offer_url(
@@ -127,6 +147,7 @@ async def resolve_offer_url(
     *,
     parse_soup: Callable[[str], Any],
     max_extra_fetches: int = 4,
+    guard: SpeculativeFetchGuard | None = None,
 ) -> str | None:
     """
     Try base URL then common listing paths; return the best offer URL found.
@@ -139,13 +160,36 @@ async def resolve_offer_url(
     best_score = 0
 
     for page_url in candidates:
+        speculative = _is_speculative_candidate(page_url, normalized)
+        if guard is not None:
+            reason = guard.should_skip(page_url, speculative=speculative)
+            if reason:
+                logger.debug("Speculative fetch skipped %s (%s)", page_url, reason)
+                if reason in {"dns_or_ssl", "parked"}:
+                    break
+                continue
         try:
             html = await fetch_html(page_url)
         except Exception as exc:  # noqa: BLE001
+            reraise_if_fatal(exc)
+            if guard is not None and guard.note_error(
+                page_url, exc, speculative=speculative
+            ):
+                logger.info(
+                    "Host unreachable, skipping remaining probes for %s: %s",
+                    page_url,
+                    exc,
+                )
+                break
             logger.info("Deep scrape fetch skipped %s: %s", page_url, exc)
             continue
+        if guard is not None:
+            guard.note_success(page_url, html=html)
         if not html or len(html) < 200:
             continue
+        if guard is not None and guard.note_html(page_url, html):
+            logger.info("Parked host, skipping remaining probes for %s", page_url)
+            break
         soup = parse_soup(html)
         offer = extract_offer_url_from_soup(soup, page_url=page_url)
         if offer:

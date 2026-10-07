@@ -7,11 +7,14 @@ import logging
 import re
 from decimal import Decimal, InvalidOperation
 from typing import Any
-from urllib.parse import quote_plus, urljoin, urlparse
+from urllib.parse import quote_plus, urlparse
 
 from app.core.config import get_settings
+from app.core.task_errors import is_fatal_task_error, reraise_if_fatal
 from app.scrapers.base import BaseScraper, ScrapedDeal
+from app.scrapers.fetch_guard import SpeculativeFetchGuard
 from app.scrapers.offer_links import extract_offer_url_from_soup, resolve_offer_url
+from app.scrapers.url_safety import safe_netloc, safe_urljoin
 from app.scrapers.source_filters import dedupe_chain_sources_for_hub
 from app.scrapers.categories import categorize_venue
 from app.scrapers.deal_placeholders import resolve_dish_placeholder
@@ -237,6 +240,7 @@ class GlobalRetailScraper(BaseScraper):
         # Homepage media fallbacks keyed by origin (scheme://host).
         self._site_media_cache: dict[str, dict[str, str]] = {}
         self._offer_url_cache: dict[str, str | None] = {}
+        self._fetch_guard = SpeculativeFetchGuard(redis_url=get_settings().redis_url)
 
     def _normalize_country(self, country_code: str) -> str:
         upper = country_code.strip().upper()
@@ -258,6 +262,7 @@ class GlobalRetailScraper(BaseScraper):
             local_sources = await discover_local_venues(country, city_name)
             sources = merge_local_sources(sources, local_sources)
         except Exception as exc:  # noqa: BLE001 — discovery must not fail scrape
+            reraise_if_fatal(exc)
             logger.info("Local venue discovery failed for %s / %s: %s", city_name, country, exc)
 
         if not sources:
@@ -271,167 +276,223 @@ class GlobalRetailScraper(BaseScraper):
         settings = get_settings()
 
         for index, source in enumerate(sources):
-            live = await self._try_live_parse(source["url"], source["merchant"])
-            deal_source_url = str(live.get("offer_url") or source["url"])
-            if settings.deep_scrape_enabled and not live.get("offer_url"):
-                resolved = await self._resolve_offer_url(source["url"])
-                if resolved:
-                    deal_source_url = resolved
-                    live = await self._try_live_parse(resolved, source["merchant"])
-                    live["offer_url"] = resolved
-            venue_category = str(
-                source.get("venue_category") or categorize_venue(source["merchant"])
-            )
-            templates = _templates_for_category(venue_category)
-            template = templates[index % len(templates)]
-
-            live_title = str(live.get("title") or "")
-            live_description = str(live.get("description") or "")
-            offer_snippet = str(live.get("offer_snippet") or "")
-            if is_policy_violation(
-                live_title, live_description, offer_snippet, source["merchant"]
-            ):
-                logger.info(
-                    "Skipping policy-violating page for %s (%s)",
-                    source["merchant"],
-                    source.get("url"),
+            try:
+                deal = await self._deal_for_source(
+                    source=source,
+                    index=index,
+                    country=country,
+                    city_name=city_name,
+                    currency=currency,
+                    deep_scrape_enabled=settings.deep_scrape_enabled,
+                )
+            except Exception as exc:
+                if is_fatal_task_error(exc):
+                    raise
+                logger.exception(
+                    "Skipping %s/%s source %s after error: %s",
+                    country,
+                    city_name,
+                    source.get("merchant"),
+                    exc,
                 )
                 continue
-
-            template_title = str(template["title"]).format(
-                merchant=source["merchant"], city=city_name
-            )
-            template_description = str(template["description"]).format(city=city_name)
-            if live_title and not is_low_value_title(live_title, source["merchant"]):
-                title = live_title
-                description = offer_snippet or live_description or template_description
-            else:
-                title = template_title
-                description = offer_snippet or template_description
-
-            # Prices only when the page states an offer. Never pair the lowest
-            # and highest amounts on a homepage into a fake was/now discount.
-            if offer_snippet and "deal_price" in live:
-                deal_price = Decimal(str(live["deal_price"]))
-                original = deal_price
-                if "original_price" in live:
-                    candidate = Decimal(str(live["original_price"]))
-                    original = public_original_price(
-                        deal_price,
-                        candidate,
-                        offer_snippet,
-                        trust=False,
-                    )
-            else:
-                deal_price = Decimal("0")
-                original = Decimal("0")
-
-            # FORCE photo order:
-            # 1) deal/offer page  2) site landing/menu  3) dish-category generic
-            image_url = live.get("image_url")
-            if not image_url:
-                item_names = [
-                    str(template["main"]),
-                    str(template["side"]),
-                    str(template["drink"]),
-                ]
-                image_url, dish_key = resolve_dish_placeholder(
-                    title=str(title),
-                    description=str(description),
-                    merchant=source["merchant"],
-                    items=item_names,
-                    venue_category=venue_category,
-                    discover_unknown=True,
-                )
-                logger.info(
-                    "No site image for %s (%s) — dish placeholder '%s'",
-                    source["merchant"],
-                    urlparse(source["url"]).netloc,
-                    dish_key,
-                )
-            logo_url = live.get("logo_url")
-
-            area_local = str(
-                source.get("area_local") or hub_default_locality(city_name)
-            )
-            # Unique URL per hub + nested town so the same chain can appear in multiple areas
-            raw_url = (
-                f"{deal_source_url}?city={quote_plus(city_name)}"
-                f"&locality={quote_plus(area_local)}"
-                f"&country={country}&utm_source=mealdeals_scraper"
-            )
-
-            website = str(live.get("website") or source["url"]).split("?")[0]
-            phone = str(live["phone"]) if live.get("phone") else None
-            email = str(live["email"]) if live.get("email") else None
-            about_blurb = (
-                str(live["about_blurb"]) if live.get("about_blurb") else None
-            )
-
-            item_price = (
-                str(deal_price.quantize(Decimal("0.01")))
-                if deal_price > 0
-                else "0"
-            )
-            deals.append(
-                ScrapedDeal(
-                    merchant_name=source["merchant"],
-                    title=str(title)[:255],
-                    description=str(description),
-                    raw_url=raw_url,
-                    original_price=original,
-                    deal_price=deal_price,
-                    currency_code=currency,
-                    country_code=country,
-                    city=city_name,
-                    area_hub=city_name,
-                    area_local=area_local,
-                    items=[
-                        {
-                            "category": "main",
-                            "item_name": str(template["main"]),
-                            "individual_price": item_price,
-                        },
-                        {
-                            "category": "side",
-                            "item_name": str(template["side"]),
-                            "individual_price": "0",
-                        },
-                        {
-                            "category": "drink",
-                            "item_name": str(template["drink"]),
-                            "individual_price": "0",
-                        },
-                    ],
-                    language_code="en",
-                    image_url=str(image_url)[:500] if image_url else None,
-                    logo_url=str(logo_url)[:500] if logo_url else None,
-                    website=website[:500],
-                    phone=phone,
-                    email=email,
-                    about_blurb=about_blurb,
-                    venue_category=venue_category,
-                )
-            )
+            if deal is not None:
+                deals.append(deal)
 
         logger.info("Scraped %d deals for %s / %s", len(deals), city_name, country)
         return deals
 
+    async def _deal_for_source(
+        self,
+        *,
+        source: dict[str, Any],
+        index: int,
+        country: str,
+        city_name: str,
+        currency: str,
+        deep_scrape_enabled: bool,
+    ) -> ScrapedDeal | None:
+        """One merchant. Returns None when the page is out of policy."""
+        live = await self._try_live_parse(source["url"], source["merchant"])
+        deal_source_url = str(live.get("offer_url") or source["url"])
+        if deep_scrape_enabled and not live.get("offer_url"):
+            resolved = await self._resolve_offer_url(source["url"])
+            if resolved:
+                deal_source_url = resolved
+                live = await self._try_live_parse(resolved, source["merchant"])
+                live["offer_url"] = resolved
+        venue_category = str(
+            source.get("venue_category") or categorize_venue(source["merchant"])
+        )
+        templates = _templates_for_category(venue_category)
+        template = templates[index % len(templates)]
+
+        live_title = str(live.get("title") or "")
+        live_description = str(live.get("description") or "")
+        offer_snippet = str(live.get("offer_snippet") or "")
+        if is_policy_violation(
+            live_title, live_description, offer_snippet, source["merchant"]
+        ):
+            logger.info(
+                "Skipping policy-violating page for %s (%s)",
+                source["merchant"],
+                source.get("url"),
+            )
+            return None
+
+        template_title = str(template["title"]).format(
+            merchant=source["merchant"], city=city_name
+        )
+        template_description = str(template["description"]).format(city=city_name)
+        if live_title and not is_low_value_title(live_title, source["merchant"]):
+            title = live_title
+            description = offer_snippet or live_description or template_description
+        else:
+            title = template_title
+            description = offer_snippet or template_description
+
+        # Prices only when the page states an offer. Never pair the lowest
+        # and highest amounts on a homepage into a fake was/now discount.
+        if offer_snippet and "deal_price" in live:
+            deal_price = Decimal(str(live["deal_price"]))
+            original = deal_price
+            if "original_price" in live:
+                candidate = Decimal(str(live["original_price"]))
+                original = public_original_price(
+                    deal_price,
+                    candidate,
+                    offer_snippet,
+                    trust=False,
+                )
+        else:
+            deal_price = Decimal("0")
+            original = Decimal("0")
+
+        # FORCE photo order:
+        # 1) deal/offer page  2) site landing/menu  3) dish-category generic
+        image_url = live.get("image_url")
+        if not image_url:
+            item_names = [
+                str(template["main"]),
+                str(template["side"]),
+                str(template["drink"]),
+            ]
+            image_url, dish_key = resolve_dish_placeholder(
+                title=str(title),
+                description=str(description),
+                merchant=source["merchant"],
+                items=item_names,
+                venue_category=venue_category,
+                discover_unknown=True,
+            )
+            logger.info(
+                "No site image for %s (%s) — dish placeholder '%s'",
+                source["merchant"],
+                safe_netloc(str(source["url"])),
+                dish_key,
+            )
+        logo_url = live.get("logo_url")
+
+        area_local = str(
+            source.get("area_local") or hub_default_locality(city_name)
+        )
+        # Unique URL per hub + nested town so the same chain can appear in multiple areas
+        raw_url = (
+            f"{deal_source_url}?city={quote_plus(city_name)}"
+            f"&locality={quote_plus(area_local)}"
+            f"&country={country}&utm_source=mealdeals_scraper"
+        )
+
+        website = str(live.get("website") or source["url"]).split("?")[0]
+        phone = str(live["phone"]) if live.get("phone") else None
+        email = str(live["email"]) if live.get("email") else None
+        about_blurb = (
+            str(live["about_blurb"]) if live.get("about_blurb") else None
+        )
+
+        item_price = (
+            str(deal_price.quantize(Decimal("0.01")))
+            if deal_price > 0
+            else "0"
+        )
+        return ScrapedDeal(
+            merchant_name=source["merchant"],
+            title=str(title)[:255],
+            description=str(description),
+            raw_url=raw_url,
+            original_price=original,
+            deal_price=deal_price,
+            currency_code=currency,
+            country_code=country,
+            city=city_name,
+            area_hub=city_name,
+            area_local=area_local,
+            items=[
+                {
+                    "category": "main",
+                    "item_name": str(template["main"]),
+                    "individual_price": item_price,
+                },
+                {
+                    "category": "side",
+                    "item_name": str(template["side"]),
+                    "individual_price": "0",
+                },
+                {
+                    "category": "drink",
+                    "item_name": str(template["drink"]),
+                    "individual_price": "0",
+                },
+            ],
+            language_code="en",
+            image_url=str(image_url)[:500] if image_url else None,
+            logo_url=str(logo_url)[:500] if logo_url else None,
+            website=website[:500],
+            phone=phone,
+            email=email,
+            about_blurb=about_blurb,
+            venue_category=venue_category,
+        )
+
     async def _try_live_parse(
-        self, url: str, merchant: str
+        self,
+        url: str,
+        merchant: str,
+        *,
+        speculative: bool = False,
     ) -> dict[str, Decimal | str]:
         """Best-effort HTML skim; returns empty dict if blocked or unparseable."""
         if url in self._live_cache:
             return self._live_cache[url]
 
-        try:
-            html = await self.fetch_html(url)
-        except Exception as exc:
-            logger.info("Live fetch skipped for %s: %s", merchant, exc)
+        skip = self._fetch_guard.should_skip(url, speculative=speculative)
+        if skip:
+            logger.debug("Live fetch skipped for %s (%s): %s", merchant, url, skip)
             self._live_cache[url] = {}
             return {}
 
+        try:
+            html = await self.fetch_html(url)
+        except Exception as exc:
+            reraise_if_fatal(exc)
+            if self._fetch_guard.note_error(url, exc, speculative=speculative):
+                logger.info(
+                    "Host unreachable, not probing %s further: %s",
+                    safe_netloc(url) or url,
+                    exc,
+                )
+            else:
+                logger.info("Live fetch skipped for %s: %s", merchant, exc)
+            self._live_cache[url] = {}
+            return {}
+
+        self._fetch_guard.note_success(url, html=html)
         if not html or len(html) < 200:
+            self._live_cache[url] = {}
+            return {}
+
+        if self._fetch_guard.note_html(url, html):
+            logger.info("Parked host skipped for %s (%s)", merchant, safe_netloc(url))
             self._live_cache[url] = {}
             return {}
 
@@ -503,7 +564,12 @@ class GlobalRetailScraper(BaseScraper):
         elif len(prices) >= 1:
             result["deal_price"] = min(prices)
         if get_settings().deep_scrape_enabled:
-            offer = extract_offer_url_from_soup(soup, page_url=url)
+            try:
+                offer = extract_offer_url_from_soup(soup, page_url=url)
+            except Exception as exc:  # noqa: BLE001 — bad hrefs must not drop the city
+                reraise_if_fatal(exc)
+                logger.info("Offer link parse skipped for %s: %s", merchant, exc)
+                offer = None
             if offer:
                 result["offer_url"] = offer
 
@@ -519,6 +585,7 @@ class GlobalRetailScraper(BaseScraper):
             self.fetch_html,
             parse_soup=self.parse_soup,
             max_extra_fetches=settings.deep_scrape_max_extra_fetches,
+            guard=self._fetch_guard,
         )
         self._offer_url_cache[base_url] = resolved
         if resolved and resolved != base_url:
@@ -527,7 +594,10 @@ class GlobalRetailScraper(BaseScraper):
 
     async def _fetch_site_media(self, page_url: str) -> dict[str, str]:
         """Fallback: content photo + logo from homepage / menu / about paths."""
-        parsed = urlparse(page_url)
+        try:
+            parsed = urlparse(page_url)
+        except ValueError:
+            return {}
         if not parsed.scheme or not parsed.netloc:
             return {}
         origin = f"{parsed.scheme}://{parsed.netloc}"
@@ -538,13 +608,34 @@ class GlobalRetailScraper(BaseScraper):
         # Try a few high-signal pages — many chains bury food photos on /menu.
         for path in ("/", "/menu", "/our-menu", "/menus", "/food", "/about"):
             candidate_url = f"{origin}{path}"
+            speculative = path != "/"
+            reason = self._fetch_guard.should_skip(
+                candidate_url, speculative=speculative
+            )
+            if reason in {"dns_or_ssl", "parked"}:
+                break
+            if reason:
+                continue
             try:
                 html = await self.fetch_html(candidate_url)
             except Exception as exc:
+                reraise_if_fatal(exc)
+                if self._fetch_guard.note_error(
+                    candidate_url, exc, speculative=speculative
+                ):
+                    logger.info(
+                        "Host unreachable, skipping site media for %s: %s",
+                        origin,
+                        exc,
+                    )
+                    break
                 logger.info("Site media fetch skipped for %s: %s", candidate_url, exc)
                 continue
+            self._fetch_guard.note_success(candidate_url, html=html)
             if not html or len(html) < 200:
                 continue
+            if self._fetch_guard.note_html(candidate_url, html):
+                break
             soup = self.parse_soup(html)
             if not media.get("image_url"):
                 image_url = self._extract_deal_image_url(soup, page_url=candidate_url)
@@ -658,8 +749,8 @@ class GlobalRetailScraper(BaseScraper):
         return f"{clipped}…"
 
     def _absolutize_media_url(self, raw: str, *, page_url: str) -> str | None:
-        absolute = urljoin(page_url, raw.strip())
-        if absolute.startswith(("http://", "https://")):
+        absolute = safe_urljoin(page_url, raw.strip())
+        if absolute and absolute.startswith(("http://", "https://")):
             return absolute[:500]
         return None
 

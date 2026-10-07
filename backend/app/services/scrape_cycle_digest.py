@@ -17,7 +17,6 @@ from app.scrapers.zones import (
     ZONE_FAMILY_LABELS,
     ZONE_ORDER,
     zone_family,
-    zone_for_country,
 )
 from app.services.ntfy import send_ntfy
 from app.services.scrape_cycle_stats import (
@@ -39,15 +38,37 @@ def _pct(part: int | float, whole: int | float) -> float:
     return round(100.0 * float(part) / float(whole), 1)
 
 
+def _is_running(row: dict[str, Any]) -> bool:
+    return str(row.get("status") or "") == "running"
+
+
+def _is_failed(row: dict[str, Any]) -> bool:
+    """Crashed, timed out, or still running when the digest is built.
+
+    A running marker means the zone task started and never recorded success.
+    That used to be filled in from partial DB activity and reported as ok.
+    """
+    if _is_running(row):
+        return True
+    if row.get("ok") is False or row.get("error"):
+        return True
+    return False
+
+
 def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    completed = [z for z in ZONE_ORDER if z in cycle_results]
-    failed = [
+    completed = [
         z
-        for z, row in cycle_results.items()
-        if row.get("ok") is False or row.get("error")
+        for z in ZONE_ORDER
+        if z in cycle_results and not _is_running(cycle_results[z])
     ]
+    failed = [z for z in ZONE_ORDER if z in cycle_results and _is_failed(cycle_results[z])]
     ok_zones = [z for z in completed if z not in failed]
     total = len(ZONE_ORDER)
+    city_errors = 0
+    for row in cycle_results.values():
+        failed_cities = row.get("cities_failed") or []
+        if isinstance(failed_cities, list):
+            city_errors += len(failed_cities)
 
     family_stats: dict[str, dict[str, Any]] = {}
     for zone_id in ZONE_ORDER:
@@ -58,7 +79,7 @@ def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
         )
         bucket["total"] += 1
         bucket["zones"].append(zone_id)
-        if zone_id in cycle_results:
+        if zone_id in cycle_results and not _is_running(cycle_results[zone_id]):
             bucket["completed"] += 1
             if zone_id not in failed:
                 bucket["ok"] += 1
@@ -88,6 +109,7 @@ def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
         "pct_completed": _pct(len(completed), total),
         "pct_ok": _pct(len(ok_zones), total),
         "large_families": large_families,
+        "city_errors": city_errors,
     }
 
 
@@ -214,31 +236,6 @@ def _category_breakdown(engine: Engine) -> list[tuple[str, int, float]]:
     return ordered
 
 
-def _countries_touched(engine: Engine, since: datetime) -> set[str]:
-    with engine.connect() as conn:
-        rows = conn.execute(
-            text(
-                """
-                SELECT DISTINCT UPPER(country_code) FROM marketing_contacts
-                WHERE last_scraped_at >= :since
-                  AND country_code IS NOT NULL
-                """
-            ),
-            {"since": since},
-        ).all()
-    return {str(r[0]).upper() for r in rows if r[0]}
-
-
-def _infer_zones_from_db(since: datetime, engine: Engine) -> set[str]:
-    zones: set[str] = set()
-    for code in _countries_touched(engine, since):
-        try:
-            zones.add(zone_for_country(code))
-        except KeyError:
-            continue
-    return zones
-
-
 def _site_transfer_health(
     *,
     cycle_results: dict[str, dict[str, Any]],
@@ -315,6 +312,8 @@ def format_digest_body(report: dict[str, Any]) -> str:
         zone_line += f"\nMissing: {', '.join(zones['missing'])}"
     if zones["failed"]:
         zone_line += f"\nFailed: {', '.join(zones['failed'])}"
+    if zones.get("city_errors"):
+        zone_line += f"\nCity errors skipped: {zones['city_errors']}"
     for family in zones.get("large_families") or []:
         zone_line += (
             f"\nLarge · {family['label']}: "
@@ -368,21 +367,8 @@ def build_cycle_digest_report(now: datetime | None = None) -> dict[str, Any]:
     window = _query_window_counts(engine, start)
     categories = _category_breakdown(engine)
 
-    # If Redis missed some zone writes, still credit zones with DB scrape touches.
-    inferred = _infer_zones_from_db(start, engine)
-    for zone in inferred:
-        cycle_results.setdefault(
-            zone,
-            {
-                "zone": zone,
-                "ok": True,
-                "inferred_from_db": True,
-                "revalidate_ok": 0,
-                "revalidate_fail": 0,
-                "stale_deactivated": 0,
-            },
-        )
-
+    # Do not invent ok=True from partial marketing_contacts touches. A zone
+    # that scraped a few cities and then crashed must stay failed or missing.
     zones = _zone_health(cycle_results)
     # Prefer Redis-accumulated drops when present; else DB proxy.
     redis_dropped = _sum_cycle_metric(cycle_results, "stale_deactivated")

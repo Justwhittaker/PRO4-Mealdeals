@@ -234,6 +234,17 @@ ZONE_BEAT_SLOTS: dict[str, tuple[int, int]] = _beat_slots_for_order(ZONE_ORDER)
 # Keep queued zone tasks alive almost until the next twice-daily cycle (12h).
 ZONE_TASK_EXPIRES_SECONDS: int = (11 * 60 * 60) + (55 * 60)
 
+# A zone that is still running must not be redelivered. Redis visibility has
+# to outlive the hard time limit; the hard limit has to outlive observed
+# zone runtimes (about 20–228 minutes) without letting a runaway occupy a
+# slot until the next cycle.
+ZONE_TASK_SOFT_TIME_LIMIT_SECONDS: int = 4 * 60 * 60
+ZONE_TASK_TIME_LIMIT_SECONDS: int = (4 * 60 * 60) + (15 * 60)
+REDIS_VISIBILITY_TIMEOUT_SECONDS: int = 8 * 60 * 60
+
+SCRAPE_QUEUE = "scrape"
+MAINTENANCE_QUEUE = "maintenance"
+
 LARGE_ZONE_FAMILIES: tuple[str, ...] = ("north_america", "western_europe")
 
 
