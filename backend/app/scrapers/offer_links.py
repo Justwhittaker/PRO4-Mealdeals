@@ -8,6 +8,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 from urllib.parse import urlparse
 
+from app.core.task_errors import reraise_if_fatal
 from app.scrapers.fetch_guard import SpeculativeFetchGuard
 from app.scrapers.url_safety import safe_urljoin
 from app.services.deal_link import LinkKind, classify_deal_url, normalize_outbound_url
@@ -44,7 +45,8 @@ _SKIP_HREF_RE = re.compile(
 def _same_site(origin: str, candidate: str) -> bool:
     try:
         return urlparse(origin).netloc.lower() == urlparse(candidate).netloc.lower()
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        reraise_if_fatal(exc)
         return False
 
 
@@ -128,7 +130,8 @@ def extract_offer_url_from_soup(soup: Any, *, page_url: str) -> str | None:
                 continue
             best_score = score
             best_url = absolute
-        except Exception:  # noqa: BLE001 — one bad href must not drop the page
+        except Exception as exc:  # noqa: BLE001 — one bad href must not drop the page
+            reraise_if_fatal(exc)
             logger.debug("Skipping malformed offer href on %s", page_url, exc_info=True)
             continue
     return best_url
@@ -168,6 +171,7 @@ async def resolve_offer_url(
         try:
             html = await fetch_html(page_url)
         except Exception as exc:  # noqa: BLE001
+            reraise_if_fatal(exc)
             if guard is not None and guard.note_error(
                 page_url, exc, speculative=speculative
             ):
@@ -179,6 +183,8 @@ async def resolve_offer_url(
                 break
             logger.info("Deep scrape fetch skipped %s: %s", page_url, exc)
             continue
+        if guard is not None:
+            guard.note_success(page_url, html=html)
         if not html or len(html) < 200:
             continue
         if guard is not None and guard.note_html(page_url, html):
