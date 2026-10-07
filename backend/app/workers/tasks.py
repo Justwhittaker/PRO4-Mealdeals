@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
+from typing import Any
 
+from celery.exceptions import SoftTimeLimitExceeded
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
@@ -17,9 +19,20 @@ from app.services.deal_expiry import expire_past_due_deals
 from app.services.merchant_outreach import send_merchant_outreach_batch
 from app.services.newsletter import send_weekly_special_to_subscriber
 from app.services.scrape_cycle_digest import run_scrape_cycle_digest
-from app.services.scrape_cycle_stats import record_zone_result
+from app.services.scrape_cycle_stats import (
+    cycle_id_for_start,
+    cycle_id_from_task_request,
+    cycle_start_for_time,
+    record_zone_result,
+    zone_already_succeeded,
+)
 from app.services.scrape_runner import scrape_and_ingest_area, scrape_and_ingest_markets, scrape_and_ingest_zone
-from app.scrapers.zones import SCRAPE_ZONES, markets_for_zone
+from app.scrapers.zones import (
+    SCRAPE_ZONES,
+    ZONE_TASK_SOFT_TIME_LIMIT_SECONDS,
+    ZONE_TASK_TIME_LIMIT_SECONDS,
+    markets_for_zone,
+)
 from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -94,35 +107,102 @@ def scrape_global_retail(country_codes: list[str] | None = None) -> dict[str, in
     return counts
 
 
-@celery_app.task(name="app.workers.tasks.scrape_zone_retail")
-def scrape_zone_retail(zone_id: str) -> dict[str, int | str]:
-    """Continental bite-size scrape for one of eight worldwide zones."""
+def _zone_failure_payload(zone: str, error: str) -> dict[str, Any]:
+    return {
+        "zone": zone,
+        "label": SCRAPE_ZONES[zone]["label"],
+        "ok": False,
+        "status": "failed",
+        "error": error[:500],
+        "areas": 0,
+        "discovered": 0,
+        "ingested": 0,
+        "stale_deactivated": 0,
+        "marketing_contacts": 0,
+        "revalidate_ok": 0,
+        "revalidate_fail": 0,
+        "cities_failed": [],
+    }
+
+
+def _queued_cycle_id(request: Any) -> str:
+    stamped = cycle_id_from_task_request(request)
+    if stamped:
+        return stamped
+    return cycle_id_for_start(cycle_start_for_time())
+
+
+@celery_app.task(
+    bind=True,
+    name="app.workers.tasks.scrape_zone_retail",
+    acks_late=True,
+    reject_on_worker_lost=True,
+    acks_on_failure_or_timeout=True,
+    soft_time_limit=ZONE_TASK_SOFT_TIME_LIMIT_SECONDS,
+    time_limit=ZONE_TASK_TIME_LIMIT_SECONDS,
+)
+def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
+    """Continental bite-size scrape for one worldwide zone.
+
+    Acked late so a dead worker redelivers the zone, but the hard time limit
+    is shorter than the Redis visibility timeout so a live run is not
+    delivered a second time. A cycle that already recorded success is skipped
+    when a late restore arrives after the zone finished.
+    """
     zone = zone_id.strip().lower()
     if zone not in SCRAPE_ZONES:
         raise ValueError(f"Unknown scrape zone: {zone_id}")
+    cycle_id = _queued_cycle_id(self.request)
+    if zone_already_succeeded(cycle_id, zone):
+        logger.info(
+            "Zone %s already completed for cycle %s; skipping redelivery",
+            zone,
+            cycle_id,
+        )
+        return {
+            "zone": zone,
+            "ok": True,
+            "status": "completed",
+            "skipped": "already_completed",
+            "cycle_id": cycle_id,
+        }
+
+    record_zone_result(
+        zone,
+        {
+            "ok": False,
+            "status": "running",
+            "areas": 0,
+            "discovered": 0,
+            "ingested": 0,
+            "stale_deactivated": 0,
+            "marketing_contacts": 0,
+            "revalidate_ok": 0,
+            "revalidate_fail": 0,
+        },
+        cycle_id=cycle_id,
+    )
     try:
         result = scrape_and_ingest_zone(zone)
+    except SoftTimeLimitExceeded:
+        summary = _zone_failure_payload(zone, "soft time limit exceeded")
+        record_zone_result(zone, summary, cycle_id=cycle_id)
+        logger.error("Zone scrape hit soft time limit (%s) cycle=%s", zone, cycle_id)
+        return summary
     except Exception as exc:
-        record_zone_result(
-            zone,
-            {
-                "ok": False,
-                "error": str(exc)[:500],
-                "areas": 0,
-                "discovered": 0,
-                "ingested": 0,
-                "stale_deactivated": 0,
-                "marketing_contacts": 0,
-                "revalidate_ok": 0,
-                "revalidate_fail": 0,
-            },
-        )
+        summary = _zone_failure_payload(zone, str(exc))
+        record_zone_result(zone, summary, cycle_id=cycle_id)
         raise
     markets = markets_for_zone(zone)
+    cities_failed = result.get("cities_failed") or []
+    if not isinstance(cities_failed, list):
+        cities_failed = []
+    areas = int(result.get("areas") or 0)
+    every_city_failed = areas > 0 and len(cities_failed) >= areas
     summary = {
         "zone": zone,
         "label": SCRAPE_ZONES[zone]["label"],
-        "areas": int(result.get("areas") or 0),
+        "areas": areas,
         "discovered": int(result.get("discovered") or 0),
         "ingested": int(result.get("ingested") or 0),
         "stale_deactivated": int(result.get("stale_deactivated") or 0),
@@ -130,15 +210,22 @@ def scrape_zone_retail(zone_id: str) -> dict[str, int | str]:
         "revalidate_ok": int(result.get("revalidate_ok") or 0),
         "revalidate_fail": int(result.get("revalidate_fail") or 0),
         "markets": len(markets),
-        "ok": True,
+        "cities_failed": cities_failed,
+        "ok": not every_city_failed,
+        "status": "failed" if every_city_failed else "completed",
+        "cycle_id": cycle_id,
     }
-    record_zone_result(zone, summary)
+    if every_city_failed:
+        summary["error"] = "every city in the zone failed"
+    record_zone_result(zone, summary, cycle_id=cycle_id)
     logger.info(
-        "Zone scrape complete (%s): areas=%s discovered=%s ingested=%s",
+        "Zone scrape complete (%s) cycle=%s: areas=%s discovered=%s ingested=%s cities_failed=%s",
         zone,
+        cycle_id,
         summary["areas"],
         summary["discovered"],
         summary["ingested"],
+        len(cities_failed),
     )
     return summary
 

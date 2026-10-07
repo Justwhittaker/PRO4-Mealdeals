@@ -12,11 +12,13 @@ from app.api.dependencies import close_redis
 from app.api.v1.endpoints import redirect as redirect_endpoint
 from app.api.v1.router import api_router
 from app.core.config import get_settings
+from app.core.log_quiet import quiet_http_client_logs
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 )
+quiet_http_client_logs()
 logger = logging.getLogger(__name__)
 settings = get_settings()
 

@@ -55,8 +55,13 @@ def normalize_outbound_url(url: str | None) -> str | None:
     """Strip tracking + scraper dedup params for URLs users actually visit."""
     if not url or not str(url).strip():
         return None
-    cleaned = strip_tracking_params(str(url).strip())
-    parsed = urlparse(cleaned)
+    try:
+        cleaned = strip_tracking_params(str(url).strip())
+        parsed = urlparse(cleaned)
+    except ValueError:
+        # Bracketed junk such as http://[invalid is not a host. Drop the link.
+        logger.debug("Discarding malformed outbound URL")
+        return None
     if not parsed.scheme or not parsed.netloc:
         return None
     filtered = [
@@ -75,7 +80,10 @@ def classify_deal_url(url: str | None) -> LinkKind:
     if not url:
         return LinkKind.HOMEPAGE
 
-    parsed = urlparse(url.strip())
+    try:
+        parsed = urlparse(url.strip())
+    except ValueError:
+        return LinkKind.HOMEPAGE
     if not parsed.scheme or not parsed.netloc:
         return LinkKind.HOMEPAGE
 

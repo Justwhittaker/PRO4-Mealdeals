@@ -12,6 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import get_settings
+from app.core.task_errors import is_fatal_task_error
 from app.scrapers.global_retail import (
     GlobalRetailScraper,
     TARGET_MARKETS,
@@ -116,45 +117,63 @@ def scrape_and_ingest_markets(
     revalidate_runs = 0
     revalidate_ok = 0
     revalidate_fail = 0
+    cities_failed: list[dict[str, str]] = []
 
     for country, city in areas:
-        async def _run(c: str = country, t: str = city) -> list:
-            return await scraper.scrape(c, t)
+        try:
+            async def _run(c: str = country, t: str = city) -> list:
+                return await scraper.scrape(c, t)
 
-        deals = _run_coro(_run())
-        discovered += len(deals)
+            deals = _run_coro(_run())
+            discovered += len(deals)
 
-        with _Session() as session:
-            hub_result = ingest_hub_scrape(session, country, city, deals)
-            contact_count = ingest_marketing_contacts_from_deals(session, deals)
+            with _Session() as session:
+                hub_result = ingest_hub_scrape(session, country, city, deals)
+                contact_count = ingest_marketing_contacts_from_deals(session, deals)
 
-        count = hub_result["ingested"]
-        stale = hub_result["stale_deactivated"]
-        ingested += count
-        stale_total += stale
-        contacts += contact_count
-        by_country[country] = by_country.get(country, 0) + count
-        breakdown_batches.append(breakdown_from_scraped_deals(deals))
+            count = hub_result["ingested"]
+            stale = hub_result["stale_deactivated"]
+            ingested += count
+            stale_total += stale
+            contacts += contact_count
+            by_country[country] = by_country.get(country, 0) + count
+            breakdown_batches.append(breakdown_from_scraped_deals(deals))
 
-        revalidate = _live_revalidate(
-            country, city, ingested=count, stale=stale
-        )
-        if not revalidate.get("skipped"):
-            revalidate_runs += 1
-            if revalidate.get("ok") is True:
-                revalidate_ok += 1
-            elif revalidate.get("ok") is False:
-                revalidate_fail += 1
+            revalidate = _live_revalidate(
+                country, city, ingested=count, stale=stale
+            )
+            if not revalidate.get("skipped"):
+                revalidate_runs += 1
+                if revalidate.get("ok") is True:
+                    revalidate_ok += 1
+                elif revalidate.get("ok") is False:
+                    revalidate_fail += 1
 
-        logger.info(
-            "%s/%s: discovered=%s ingested=%s stale=%s contacts=%s",
-            country,
-            city,
-            len(deals),
-            count,
-            stale,
-            contact_count,
-        )
+            logger.info(
+                "%s/%s: discovered=%s ingested=%s stale=%s contacts=%s",
+                country,
+                city,
+                len(deals),
+                count,
+                stale,
+                contact_count,
+            )
+        except Exception as exc:
+            if is_fatal_task_error(exc):
+                raise
+            logger.exception(
+                "City scrape failed %s/%s (remaining cities continue): %s",
+                country,
+                city,
+                exc,
+            )
+            cities_failed.append(
+                {
+                    "country": country,
+                    "city": city,
+                    "error": str(exc)[:500],
+                }
+            )
 
     runtime_seconds = round(time.perf_counter() - started, 1)
     with _Session() as session:
@@ -184,6 +203,7 @@ def scrape_and_ingest_markets(
         "frontend_revalidate_runs": revalidate_runs,
         "revalidate_ok": revalidate_ok,
         "revalidate_fail": revalidate_fail,
+        "cities_failed": cities_failed,
     }
 
 

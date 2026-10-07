@@ -29,15 +29,10 @@ services:
     restart: unless-stopped
     volumes:
       - celerybeat-data:/app/data
-    # Start as root briefly so /app/data volume is writable by appuser (Beat schedule).
+    # Start as root so the entrypoint can chown the Beat schedule volume, then
+    # drop to appuser. Two workers: scrape (concurrency 2) and maintenance+beat.
     user: "0:0"
-    command:
-      - sh
-      - -c
-      - |
-        mkdir -p /app/data
-        chown -R appuser:appuser /app/data
-        exec su appuser -s /bin/sh -c 'exec celery -A app.workers.celery_app.celery_app worker --beat --loglevel=info --concurrency=2 -s /app/data/celerybeat-schedule'
+    command: ["python", "/app/scripts/celery_nuc_supervisor.py"]
 
 volumes:
   celerybeat-data:
