@@ -11,6 +11,8 @@ services:
     region: frankfurt
     branch: master
     buildCommand: PIP_DEFAULT_TIMEOUT=100 pip install --retries 10 -r backend/requirements.txt
+    # One uvicorn process. Do not add --workers; WEB_CONCURRENCY is ignored
+    # by this command and a second worker will not fit in 512 MB.
     startCommand: cd backend && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
@@ -20,6 +22,10 @@ services:
         value: "false"
       - key: PYTHON_VERSION
         value: "3.12.8"
+      # One glibc malloc arena. The 0.5 CPU instance still sees many host
+      # cores; the default arena count keeps freed pages in RSS.
+      - key: MALLOC_ARENA_MAX
+        value: "2"
       - key: SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS

@@ -15,7 +15,8 @@ from sqlalchemy import cast, func, select
 from app.api.dependencies import DbSession
 from app.models.location import Location
 from app.scrapers.markets import MARKET_CITIES, TARGET_MARKETS
-from app.services.ingest import CITY_COORDS, normalize_country
+from app.services.city_coords import merged_city_coords
+from app.services.geo_names import normalize_country
 
 router = APIRouter(prefix="/geo", tags=["geo"])
 
@@ -110,7 +111,7 @@ async def resolve_area(
     best_key: tuple[str, str] | None = None
     best_dist = float("inf")
     best_coords = (0.0, 0.0)
-    for (country, city), (clat, clon) in CITY_COORDS.items():
+    for (country, city), (clat, clon) in merged_city_coords().items():
         dist = _haversine_km(lat, lon, clat, clon)
         if dist < best_dist:
             best_dist = dist
