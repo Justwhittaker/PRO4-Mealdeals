@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
 from app.core.database import get_db
+from app.core.redis_url import normalize_redis_url
 from app.core.security import require_admin_key, verify_optional_api_key
 from app.services.currency import CurrencyService
 
@@ -23,7 +24,7 @@ async def get_redis() -> AsyncGenerator[aioredis.Redis, None]:
     settings = get_settings()
     if _redis_client is None:
         _redis_client = aioredis.from_url(
-            settings.redis_url,
+            normalize_redis_url(settings.redis_url),
             encoding="utf-8",
             decode_responses=True,
         )

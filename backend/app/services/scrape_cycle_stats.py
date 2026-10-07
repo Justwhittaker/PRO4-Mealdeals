@@ -10,6 +10,7 @@ from typing import Any
 import redis
 
 from app.core.config import get_settings
+from app.core.redis_url import redis_from_url
 from app.scrapers.zones import ZONE_CYCLE_BASE_HOURS, ZONE_ORDER
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,12 @@ _REDIS_TTL_SECONDS = 60 * 60 * 36  # keep ~1.5 days for late digests
 
 def _client() -> redis.Redis:
     settings = get_settings()
-    return redis.Redis.from_url(settings.redis_url, decode_responses=True)
+    return redis_from_url(
+        settings.redis_url,
+        decode_responses=True,
+        socket_connect_timeout=5,
+        socket_timeout=5,
+    )
 
 
 def cycle_start_for_time(now: datetime | None = None) -> datetime:
@@ -43,6 +49,21 @@ def cycle_id_for_start(start: datetime) -> str:
     return start.astimezone(timezone.utc).strftime("%Y-%m-%dT%H")
 
 
+def cycle_id_from_task_request(request: Any) -> str | None:
+    """Read the cycle id stamped onto the message when it was queued."""
+    if request is None:
+        return None
+    direct = getattr(request, "scrape_cycle_id", None)
+    if direct:
+        return str(direct)
+    headers = getattr(request, "headers", None)
+    if isinstance(headers, dict):
+        stamped = headers.get("scrape_cycle_id")
+        if stamped:
+            return str(stamped)
+    return None
+
+
 def digest_cycle_start(now: datetime | None = None) -> datetime:
     """
     Cycle the digest should summarize.
@@ -63,10 +84,44 @@ def _zone_key(cycle_id: str, zone_id: str) -> str:
     return f"{_REDIS_KEY_PREFIX}:{cycle_id}:zone:{zone_id}"
 
 
-def record_zone_result(zone_id: str, payload: dict[str, Any]) -> str:
-    """Persist one zone's scrape outcome for the active cycle. Returns cycle_id."""
-    start = cycle_start_for_time()
-    cycle_id = cycle_id_for_start(start)
+def zone_already_succeeded(cycle_id: str, zone_id: str) -> bool:
+    """True when this cycle already stored a finished successful zone result.
+
+    A ``running`` marker is not success, so a crash retry still does the work.
+    Redis failures return False so a stats outage does not skip the scrape.
+    """
+    zone = zone_id.strip().lower()
+    try:
+        raw = _client().get(_zone_key(cycle_id, zone))
+    except Exception:
+        logger.exception("Failed to read scrape cycle stats for %s/%s", cycle_id, zone)
+        return False
+    if not raw:
+        return False
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(payload, dict):
+        return False
+    if str(payload.get("status") or "") == "running":
+        return False
+    return payload.get("ok") is True and not payload.get("error")
+
+
+def record_zone_result(
+    zone_id: str,
+    payload: dict[str, Any],
+    *,
+    cycle_id: str | None = None,
+) -> str:
+    """Persist one zone's scrape outcome. Returns the cycle_id used.
+
+    Pass the cycle id stamped when the task was queued. Falling back to "now"
+    attributes a late finish to whichever cycle is current at completion.
+    """
+    if not cycle_id:
+        cycle_id = cycle_id_for_start(cycle_start_for_time())
     zone = zone_id.strip().lower()
     body = {
         **payload,
