@@ -10,7 +10,7 @@ from uuid import UUID
 from fastapi import APIRouter, HTTPException, Query, Response, status
 from geoalchemy2.functions import ST_DistanceSphere, ST_MakePoint, ST_SetSRID
 from sqlalchemy import func, or_, select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import noload, selectinload
 
 from app.api.dependencies import CurrencySvc, DbSession
 from app.core.feed_limits import (
@@ -18,6 +18,7 @@ from app.core.feed_limits import (
     MAX_FEED_LIMIT,
     MAX_SITEMAP_LIMIT,
 )
+from app.core.memory import release_heap_to_os
 from app.models.deal import Deal, DealItem
 from app.models.location import Location
 from app.models.marketing_contact import MarketingContact
@@ -38,13 +39,16 @@ from app.schemas.deal import (
 from app.services.affiliate import build_affiliate_urls
 from app.services.deal_copy import clean_deal_description
 from app.services.deal_link import LinkKind, cta_label_for_link, outbound_link_meta
+from app.services.geo_names import normalize_city, normalize_country
 from app.services.listing_quality import is_policy_violation, prepare_public_listing
-from app.services.ingest import normalize_city, normalize_country
 from app.services.ranking import compute_feed_score
-from app.services.scrape_runner import scrape_and_ingest_area
 from app.scrapers.categories import venue_category_id
 
 router = APIRouter(prefix="/deals", tags=["deals"])
+
+# Feed cards do not include line items. Deal.items is lazy="selectin", so
+# without this a page of deals also loads every child row.
+_FEED_PAGE_OPTIONS = (noload(Deal.items), selectinload(Deal.translations))
 
 
 def _public_link_fields(
@@ -318,6 +322,7 @@ async def deals_feed(
 
     candidate_stmt = candidate_stmt.limit(MAX_FEED_CANDIDATES)
     candidate_rows = (await db.execute(candidate_stmt)).all()
+    candidate_count = len(candidate_rows)
 
     ranked: list[tuple[UUID, float, float | None]] = []
     for row in candidate_rows:
@@ -379,6 +384,12 @@ async def deals_feed(
     else:
         ranked.sort(key=lambda item: item[1], reverse=True)
 
+    del candidate_rows
+    # Country-wide and unfiltered feeds score every active deal. Drop the
+    # driver buffers before hydrating the page so RSS can fall back.
+    if candidate_count >= 2000:
+        release_heap_to_os()
+
     total = len(ranked)
     page = ranked[offset : offset + limit]
     page_ids = [deal_id for deal_id, _score, _distance in page]
@@ -387,7 +398,11 @@ async def deals_feed(
 
     # Auto-skim the net for this area when visitors hit an empty city feed
     if auto_scrape and total == 0 and country_code and city:
+        # Scraper and Celery stay out of the process until a city is empty.
+        from app.services.scrape_runner import scrape_and_ingest_area
+
         await asyncio.to_thread(scrape_and_ingest_area, country_code, city)
+        release_heap_to_os()
         return await deals_feed(
             db=db,
             currency_svc=currency_svc,
@@ -413,7 +428,7 @@ async def deals_feed(
             .join(Merchant, Deal.merchant_id == Merchant.id)
             .join(Location, Merchant.location_id == Location.id)
             .where(Deal.id.in_(page_ids))
-            .options(selectinload(Deal.translations))
+            .options(*_FEED_PAGE_OPTIONS)
         )
         hydrated = {
             deal.id: (deal, merchant, location)

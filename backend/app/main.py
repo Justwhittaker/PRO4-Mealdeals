@@ -13,6 +13,7 @@ from app.api.v1.endpoints import redirect as redirect_endpoint
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.log_quiet import quiet_http_client_logs
+from app.core.memory import release_heap_to_os
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,6 +47,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+_HEAP_RELEASE_PREFIXES = (
+    "/api/v1/deals/feed",
+    "/api/v1/deals/sitemap",
+    "/api/v1/scrapers/report",
+    "/api/v1/scrapers/scrape",
+    "/api/v1/scrapers/area",
+    "/api/v1/scrapers/worldwide",
+    "/api/v1/scrapers/internal/overpass",
+)
+
+
+@app.middleware("http")
+async def release_heap_after_large_reads(request, call_next):
+    """Return glibc arenas after endpoints that materialize big result sets."""
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith(_HEAP_RELEASE_PREFIXES):
+        release_heap_to_os()
+    return response
+
 
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 # Critical: /go/{deal_id} at root for short affiliate redirects

@@ -7,25 +7,14 @@ from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Query, status
 from pydantic import BaseModel, Field
-from sqlalchemy import create_engine, func, select
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import func, select
 
+from app.api.dependencies import DbSession
 from app.core.config import get_settings
+from app.core.memory import release_heap_to_os
 from app.models.deal import Deal
-from app.scrapers.global_retail import NEW_MARKETS, TARGET_MARKETS, iter_market_areas
-from app.scrapers.overpass_client import (
-    PROXY_OVERPASS_WALL_SECONDS,
-    fetch_overpass_for_proxy,
-)
-from app.scrapers.markets import MARKET_CITIES
-from app.services.scrape_report import build_scrape_report
-from app.services.scrape_runner import scrape_and_ingest_area, scrape_and_ingest_markets
-from app.workers.tasks import scrape_area as scrape_area_task
-from app.workers.tasks import scrape_global_retail as scrape_global_task
 
 _settings = get_settings()
-_report_engine = create_engine(_settings.database_url_sync, pool_pre_ping=True)
-_ReportSession = sessionmaker(bind=_report_engine, autocommit=False, autoflush=False)
 
 router = APIRouter(prefix="/scrapers", tags=["scrapers"])
 
@@ -149,7 +138,11 @@ async def scrape_area_endpoint(
     City pages call this when the feed is empty so the area auto-fills.
     """
     if wait:
+        # Imported here so ordinary API traffic does not load the scraper.
+        from app.services.scrape_runner import scrape_and_ingest_area
+
         result = await asyncio.to_thread(scrape_and_ingest_area, country_code, city)
+        release_heap_to_os()
         return ScrapeAreaResponse(
             status="completed",
             country_code=str(result["country_code"]),
@@ -160,6 +153,9 @@ async def scrape_area_endpoint(
         )
 
     # Prefer Celery only when a worker is actually online; otherwise BackgroundTasks.
+    from app.services.scrape_runner import scrape_and_ingest_area
+    from app.workers.tasks import scrape_area as scrape_area_task
+
     queued_via = _queue_or_background(
         background_tasks,
         celery_delay=lambda: scrape_area_task.delay(country_code, city),
@@ -181,11 +177,15 @@ async def _run_worldwide_scrape(
     wait: bool,
     only_new: bool,
 ) -> ScrapeWorldwideResponse:
+    from app.scrapers.markets import NEW_MARKETS, TARGET_MARKETS, iter_market_areas
+    from app.services.scrape_runner import scrape_and_ingest_markets
+
     markets = list(NEW_MARKETS if only_new else TARGET_MARKETS)
     areas = len(iter_market_areas(markets))
 
     if wait:
         result = await asyncio.to_thread(scrape_and_ingest_markets, markets)
+        release_heap_to_os()
         by_country = result.get("by_country")
         report = _report_from_result(result)
         return ScrapeWorldwideResponse(
@@ -219,6 +219,8 @@ async def _run_worldwide_scrape(
             report=report,
             message="Worldwide scrape finished; deals + marketing contacts ingested.",
         )
+
+    from app.workers.tasks import scrape_global_retail as scrape_global_task
 
     queued_via = _queue_or_background(
         background_tasks,
@@ -276,46 +278,45 @@ async def scrape_fresh_endpoint(
     )
 
 
-def _load_scrape_report() -> dict[str, Any]:
-    with _ReportSession() as session:
-        return build_scrape_report(session, markets=list(TARGET_MARKETS))
-
-
 @router.get("/report", response_model=ScrapeReport)
-async def scrape_report_endpoint() -> ScrapeReport:
+async def scrape_report_endpoint(db: DbSession) -> ScrapeReport:
     """
     Current scrape inventory report (areas/markets/deals/contacts + breakdowns).
 
     Use after an async scrape completes, or anytime for a live DB snapshot.
+    Counts come from narrow queries so the 11k-deal ledger is not loaded
+    into the web process.
     """
-    report = await asyncio.to_thread(_load_scrape_report)
+    from app.scrapers.markets import TARGET_MARKETS
+    from app.services.scrape_report import build_scrape_report_async
+
+    report = await build_scrape_report_async(db, markets=list(TARGET_MARKETS))
+    release_heap_to_os()
     return ScrapeReport.model_validate(report)
 
 
-def _load_scrape_metrics() -> dict[str, int]:
-    markets = list(TARGET_MARKETS)
-    areas = sum(len(MARKET_CITIES.get(code, [])) for code in markets)
-    with _ReportSession() as session:
-        active_deals = int(
-            session.execute(
-                select(func.count()).select_from(Deal).where(Deal.is_active.is_(True))
-            ).scalar_one()
-        )
-    return {
-        "active_deals": active_deals,
-        "markets": len(markets),
-        "areas": areas,
-    }
-
-
 @router.get("/metrics", response_model=ScrapeMetrics)
-async def scrape_metrics_endpoint() -> ScrapeMetrics:
+async def scrape_metrics_endpoint(db: DbSession) -> ScrapeMetrics:
     """
     Live active-deal + market counters for the public site header.
 
     Same inventory sources as GET /report summary, without the heavy breakdown.
     """
-    return ScrapeMetrics.model_validate(await asyncio.to_thread(_load_scrape_metrics))
+    from app.scrapers.markets import MARKET_CITIES, TARGET_MARKETS
+
+    markets = list(TARGET_MARKETS)
+    areas = sum(len(MARKET_CITIES.get(code, [])) for code in markets)
+    active_deals = int(
+        await db.scalar(
+            select(func.count()).select_from(Deal).where(Deal.is_active.is_(True))
+        )
+        or 0
+    )
+    return ScrapeMetrics(
+        active_deals=active_deals,
+        markets=len(markets),
+        areas=areas,
+    )
 
 
 class PlanInfo(BaseModel):
@@ -365,6 +366,11 @@ async def overpass_proxy_endpoint(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Unauthorized",
         )
+    from app.scrapers.overpass_client import (
+        PROXY_OVERPASS_WALL_SECONDS,
+        fetch_overpass_for_proxy,
+    )
+
     try:
         elements = await asyncio.wait_for(
             fetch_overpass_for_proxy(body.query, log_label="Overpass proxy"),

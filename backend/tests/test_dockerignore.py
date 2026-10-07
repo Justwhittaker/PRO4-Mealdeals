@@ -19,6 +19,8 @@ def _patterns() -> set[str]:
 def test_dockerignore_excludes_script_env_and_other_secrets() -> None:
     patterns = _patterns()
     assert "scripts/*.env" in patterns
+    assert "scripts/*.env.bak*" in patterns
+    assert "*.env.bak*" in patterns
     assert "*.env" in patterns
     assert ".env" in patterns
     assert ".env.*" in patterns

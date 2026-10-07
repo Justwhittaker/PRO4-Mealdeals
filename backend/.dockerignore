@@ -18,6 +18,9 @@ tests/
 .env.*
 *.env
 scripts/*.env
+# `*.env` does not match nuc-health.env.bak-<epoch> backups.
+scripts/*.env.bak*
+*.env.bak*
 *.pem
 *.key
 id_rsa
