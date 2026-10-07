@@ -1,10 +1,11 @@
 """Skip repeat work against dead, parked, or already-missed hosts.
 
 Guessed paths such as ``/deals`` and ``/offers`` are most of the scraper's
-speculative HTTP. Domains that fail DNS or TLS, and pages that 404/403, are
-remembered for the rest of the zone and (best-effort) in Redis so the next
-cycle does not pay the timeout again. A real 200 offer page is never cached
-as a miss.
+speculative HTTP. A host is remembered as dead or parked only after repeated
+failures, and only for a few hours. Any later successful fetch, including the
+configured page itself, clears that mark. A single DNS or TLS blip still stops
+the rest of the current probe burst, but it does not hide the merchant from
+the next city. A real 200 offer page is never cached as a miss.
 """
 
 from __future__ import annotations
@@ -16,12 +17,17 @@ from urllib.parse import urlparse
 import redis
 
 from app.core.redis_url import redis_from_url
+from app.core.task_errors import reraise_if_fatal
 from app.scrapers.url_safety import safe_netloc
 
 logger = logging.getLogger(__name__)
 
 _MISS_STATUSES = frozenset({403, 404, 410, 451})
-_DEAD_TTL_SECONDS = 7 * 24 * 60 * 60
+# One blip must not hide a merchant for a week. Three transport failures, or
+# two parked pages, skip guessed paths for a few hours. The next cycle retries.
+TRANSPORT_FAILURES_BEFORE_SKIP = 3
+PARKED_OBSERVATIONS_BEFORE_SKIP = 2
+HOST_SKIP_TTL_SECONDS = 6 * 60 * 60
 _MISS_TTL_SECONDS = 36 * 60 * 60
 _KEY_PREFIX = "mealdeals:fetch_guard"
 
@@ -124,36 +130,45 @@ class SpeculativeFetchGuard:
         self._redis_disabled = not self._redis_url
         self._dead: set[str] = set()
         self._parked: set[str] = set()
+        self._strikes: dict[tuple[str, str], int] = {}
         self._misses: set[tuple[str, str]] = set()
         self._hydrated: set[str] = set()
 
     def should_skip(self, url: str, *, speculative: bool) -> str | None:
         """Return a reason to skip this fetch, or None to go ahead.
 
-        Dead and parked hosts are skipped for every URL. Cached 404/403 misses
-        are skipped only for speculative guessed paths, so a configured offer
-        URL is still requested.
+        A dead or parked host skips guessed paths only. The configured page is
+        still requested so a later success can clear the mark. Cached 404/403
+        misses are also speculative-only.
         """
         netloc = _netloc(url)
         if not netloc:
             return None
         self._hydrate(netloc)
-        if netloc in self._dead:
+        if speculative and netloc in self._dead:
             return "dns_or_ssl"
-        if netloc in self._parked:
+        if speculative and netloc in self._parked:
             return "parked"
         if speculative and (netloc, _miss_member(url)) in self._misses:
             return "cached_miss"
         return None
 
     def note_error(self, url: str, exc: BaseException, *, speculative: bool) -> bool:
-        """Record a failed fetch. True when the host should not be probed again."""
+        """Record a failed fetch.
+
+        True means stop the rest of this host's probe burst. DNS and TLS
+        failures always do that (the next guessed path will fail the same way).
+        The host is skipped on later calls only after repeated failures.
+        """
+        reraise_if_fatal(exc)
         netloc = _netloc(url)
         if not netloc:
             return False
         self._hydrate(netloc)
         if is_dead_transport_error(exc):
-            self._mark_dead(netloc)
+            count = self._bump_strike("dead", netloc)
+            if count >= TRANSPORT_FAILURES_BEFORE_SKIP:
+                self._mark_dead(netloc)
             return True
         status = _status_code(exc)
         if speculative and status in _MISS_STATUSES:
@@ -161,34 +176,88 @@ class SpeculativeFetchGuard:
         return False
 
     def note_html(self, url: str, html: str) -> bool:
-        """Record a parked page. True when the host should not be probed again."""
+        """Record a parked page. True when guessed paths on this host should stop."""
         if not looks_parked_html(html):
             return False
         netloc = _netloc(url)
         if not netloc:
             return False
         self._hydrate(netloc)
+        count = self._bump_strike("parked", netloc)
+        if count < PARKED_OBSERVATIONS_BEFORE_SKIP:
+            return False
         self._mark_parked(netloc)
         return True
 
+    def note_success(self, url: str, *, html: str | None = None) -> None:
+        """A completed fetch. Clears a dead or parked mark earned by a blip.
+
+        Transport success always clears a DNS/TLS mark. A body that is not a
+        parking page also clears a parked mark. The configured page goes through
+        here, so one later 200 undoes a skip without waiting out the TTL.
+        """
+        netloc = _netloc(url)
+        if not netloc:
+            return
+        self._hydrate(netloc)
+        self._clear_kind(netloc, "dead")
+        if html is None or not looks_parked_html(html):
+            self._clear_kind(netloc, "parked")
+
+    def _bump_strike(self, kind: str, netloc: str) -> int:
+        client = self._redis()
+        if client is not None:
+            key = f"{_KEY_PREFIX}:{kind}_strikes:{netloc}"
+            try:
+                count = int(client.incr(key))
+                if count == 1:
+                    client.expire(key, HOST_SKIP_TTL_SECONDS)
+            except Exception as exc:  # noqa: BLE001 — cache must not break the scrape
+                reraise_if_fatal(exc)
+                self._disable_redis()
+            else:
+                self._strikes[(kind, netloc)] = count
+                return count
+        count = self._strikes.get((kind, netloc), 0) + 1
+        self._strikes[(kind, netloc)] = count
+        return count
+
     def _mark_dead(self, netloc: str) -> None:
         self._dead.add(netloc)
-        client = self._redis()
-        if client is None:
-            return
-        try:
-            client.setex(f"{_KEY_PREFIX}:dead:{netloc}", _DEAD_TTL_SECONDS, "1")
-        except Exception:  # noqa: BLE001 — cache must not break the scrape
-            self._disable_redis()
+        self._remember(f"{_KEY_PREFIX}:dead:{netloc}")
 
     def _mark_parked(self, netloc: str) -> None:
         self._parked.add(netloc)
+        self._remember(f"{_KEY_PREFIX}:parked:{netloc}")
+
+    def _remember(self, key: str) -> None:
         client = self._redis()
         if client is None:
             return
         try:
-            client.setex(f"{_KEY_PREFIX}:parked:{netloc}", _DEAD_TTL_SECONDS, "1")
-        except Exception:  # noqa: BLE001
+            client.setex(key, HOST_SKIP_TTL_SECONDS, "1")
+        except Exception as exc:  # noqa: BLE001 — cache must not break the scrape
+            reraise_if_fatal(exc)
+            self._disable_redis()
+
+    def _clear_kind(self, netloc: str, kind: str) -> None:
+        if kind == "dead":
+            self._dead.discard(netloc)
+        elif kind == "parked":
+            self._parked.discard(netloc)
+        else:
+            raise ValueError(f"Unknown fetch-guard kind: {kind}")
+        self._strikes.pop((kind, netloc), None)
+        client = self._redis()
+        if client is None:
+            return
+        try:
+            client.delete(
+                f"{_KEY_PREFIX}:{kind}:{netloc}",
+                f"{_KEY_PREFIX}:{kind}_strikes:{netloc}",
+            )
+        except Exception as exc:  # noqa: BLE001
+            reraise_if_fatal(exc)
             self._disable_redis()
 
     def _mark_miss(self, netloc: str, member: str) -> None:
@@ -200,7 +269,8 @@ class SpeculativeFetchGuard:
         try:
             client.sadd(key, member)
             client.expire(key, _MISS_TTL_SECONDS)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            reraise_if_fatal(exc)
             self._disable_redis()
 
     def _hydrate(self, netloc: str) -> None:
@@ -218,7 +288,8 @@ class SpeculativeFetchGuard:
             members = client.smembers(f"{_KEY_PREFIX}:miss:{netloc}")
             for member in members or []:
                 self._misses.add((netloc, str(member)))
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            reraise_if_fatal(exc)
             self._disable_redis()
 
     def _redis(self) -> redis.Redis | None:
@@ -234,7 +305,8 @@ class SpeculativeFetchGuard:
                 socket_timeout=1.5,
             )
             client.ping()
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            reraise_if_fatal(exc)
             logger.info("Fetch-guard Redis unavailable; using in-process cache only")
             self._disable_redis()
             return None

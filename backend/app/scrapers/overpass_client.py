@@ -9,6 +9,7 @@ from typing import Any
 import httpx
 
 from app.core.config import get_settings
+from app.core.task_errors import reraise_if_fatal
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,7 @@ async def _post_direct(
                     elements = payload.get("elements") or []
                     return list(elements) if isinstance(elements, list) else []
                 except Exception as exc:  # noqa: BLE001
+                    reraise_if_fatal(exc)
                     last_exc = exc
                     logger.warning(
                         "%s failed via %s (attempt %d): %s",
@@ -110,6 +112,7 @@ async def _post_via_render_proxy(
             elements = payload.get("elements") or []
             return list(elements) if isinstance(elements, list) else []
     except Exception as exc:  # noqa: BLE001
+        reraise_if_fatal(exc)
         logger.warning("%s proxy failed (%s): %s", log_label, proxy_url, exc)
         return []
 

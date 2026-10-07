@@ -10,7 +10,7 @@ from typing import Any
 from urllib.parse import quote_plus, urlparse
 
 from app.core.config import get_settings
-from app.core.task_errors import is_fatal_task_error
+from app.core.task_errors import is_fatal_task_error, reraise_if_fatal
 from app.scrapers.base import BaseScraper, ScrapedDeal
 from app.scrapers.fetch_guard import SpeculativeFetchGuard
 from app.scrapers.offer_links import extract_offer_url_from_soup, resolve_offer_url
@@ -262,6 +262,7 @@ class GlobalRetailScraper(BaseScraper):
             local_sources = await discover_local_venues(country, city_name)
             sources = merge_local_sources(sources, local_sources)
         except Exception as exc:  # noqa: BLE001 — discovery must not fail scrape
+            reraise_if_fatal(exc)
             logger.info("Local venue discovery failed for %s / %s: %s", city_name, country, exc)
 
         if not sources:
@@ -473,6 +474,7 @@ class GlobalRetailScraper(BaseScraper):
         try:
             html = await self.fetch_html(url)
         except Exception as exc:
+            reraise_if_fatal(exc)
             if self._fetch_guard.note_error(url, exc, speculative=speculative):
                 logger.info(
                     "Host unreachable, not probing %s further: %s",
@@ -484,6 +486,7 @@ class GlobalRetailScraper(BaseScraper):
             self._live_cache[url] = {}
             return {}
 
+        self._fetch_guard.note_success(url, html=html)
         if not html or len(html) < 200:
             self._live_cache[url] = {}
             return {}
@@ -564,6 +567,7 @@ class GlobalRetailScraper(BaseScraper):
             try:
                 offer = extract_offer_url_from_soup(soup, page_url=url)
             except Exception as exc:  # noqa: BLE001 — bad hrefs must not drop the city
+                reraise_if_fatal(exc)
                 logger.info("Offer link parse skipped for %s: %s", merchant, exc)
                 offer = None
             if offer:
@@ -597,8 +601,6 @@ class GlobalRetailScraper(BaseScraper):
         if not parsed.scheme or not parsed.netloc:
             return {}
         origin = f"{parsed.scheme}://{parsed.netloc}"
-        if self._fetch_guard.should_skip(origin, speculative=False):
-            return {}
         if origin in self._site_media_cache:
             return self._site_media_cache[origin]
 
@@ -617,6 +619,7 @@ class GlobalRetailScraper(BaseScraper):
             try:
                 html = await self.fetch_html(candidate_url)
             except Exception as exc:
+                reraise_if_fatal(exc)
                 if self._fetch_guard.note_error(
                     candidate_url, exc, speculative=speculative
                 ):
@@ -628,6 +631,7 @@ class GlobalRetailScraper(BaseScraper):
                     break
                 logger.info("Site media fetch skipped for %s: %s", candidate_url, exc)
                 continue
+            self._fetch_guard.note_success(candidate_url, html=html)
             if not html or len(html) < 200:
                 continue
             if self._fetch_guard.note_html(candidate_url, html):

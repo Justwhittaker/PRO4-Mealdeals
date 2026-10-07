@@ -186,6 +186,7 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
         result = scrape_and_ingest_zone(zone)
     except SoftTimeLimitExceeded:
         summary = _zone_failure_payload(zone, "soft time limit exceeded")
+        summary["status"] = "timed_out"
         record_zone_result(zone, summary, cycle_id=cycle_id)
         logger.error("Zone scrape hit soft time limit (%s) cycle=%s", zone, cycle_id)
         return summary
