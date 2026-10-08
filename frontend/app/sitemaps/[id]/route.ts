@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchDealSitemapPage } from "@/lib/api";
+import { isPlaceholderCitySlug } from "@/lib/geo";
 import {
   absoluteUrl,
   listingPath,
@@ -96,6 +97,7 @@ export async function GET(
     }
     if (page.data.results.length === 0) break;
     for (const deal of page.data.results) {
+      if (isPlaceholderCitySlug(deal.city)) continue;
       const path = listingPath(deal.country, deal.city, deal.id);
       if (seen.has(path)) continue;
       seen.add(path);

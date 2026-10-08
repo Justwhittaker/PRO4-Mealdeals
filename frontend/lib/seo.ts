@@ -6,6 +6,7 @@ import {
   countrySearchLabel,
   isKnownMarketCity,
   isKnownMarketCountry,
+  isPlaceholderCitySlug,
   listCountries,
   normalizeCountrySlug,
 } from "@/lib/geo";
@@ -73,7 +74,7 @@ export function isIndexableCountrySlug(slug: string): boolean {
 
 export function isIndexableCitySlug(country: string, city: string): boolean {
   if (!isIndexableCountrySlug(country)) return false;
-  if (isReservedGeoSlug(city)) return false;
+  if (isReservedGeoSlug(city) || isPlaceholderCitySlug(city)) return false;
   return isKnownMarketCity(country, city);
 }
 

@@ -20,6 +20,7 @@ from app.scrapers.global_retail import (
 )
 from app.scrapers.zones import iter_zone_areas
 from app.services.frontend_revalidate import revalidate_after_scrape
+from app.services.geo_names import is_placeholder_city
 from app.services.ingest import (
     ingest_hub_scrape,
     normalize_city,
@@ -66,10 +67,26 @@ def _live_revalidate(country: str, city: str, *, ingested: int, stale: int) -> d
     return result
 
 
-def scrape_and_ingest_area(country_code: str, city: str) -> dict[str, int | str]:
+def _skipped_placeholder(country: str, city_name: str) -> dict[str, Any]:
+    logger.info("Skipping placeholder city scrape %s / %s", country, city_name)
+    return {
+        "country_code": country,
+        "city": city_name,
+        "discovered": 0,
+        "ingested": 0,
+        "stale_deactivated": 0,
+        "marketing_contacts": 0,
+        "frontend_revalidate": {"skipped": True, "reason": "placeholder_city"},
+        "skipped": "placeholder_city",
+    }
+
+
+def scrape_and_ingest_area(country_code: str, city: str) -> dict[str, Any]:
     """Scrape + persist deals for one city. Safe to call from FastAPI or Celery."""
     country = normalize_country(country_code)
     city_name = normalize_city(city)
+    if is_placeholder_city(city_name):
+        return _skipped_placeholder(country, city_name)
     scraper = GlobalRetailScraper()
 
     async def _run() -> list:
@@ -161,6 +178,15 @@ def _scrape_areas(
     cities_completed: list[dict[str, str]] = []
 
     for index, (country, city) in enumerate(areas):
+        if is_placeholder_city(city):
+            logger.info("Skipping placeholder city %s / %s", country, city)
+            cities_completed.append(_city_ref(country, city))
+            progress["areas"] = len(cities_completed) + len(cities_failed)
+            progress["cities_completed"] = list(cities_completed)
+            progress["cities_not_reached"] = [
+                _city_ref(c, t) for c, t in areas[index + 1 :]
+            ]
+            continue
         progress["areas"] = len(cities_completed) + len(cities_failed)
         progress["cities_completed"] = list(cities_completed)
         progress["cities_failed"] = list(cities_failed)

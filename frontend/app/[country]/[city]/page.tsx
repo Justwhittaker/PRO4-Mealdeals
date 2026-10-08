@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { LocationHeader } from "@/components/deals/LocationHeader";
 import { CurrencySelector } from "@/components/deals/CurrencySelector";
@@ -23,6 +23,7 @@ import {
   LOCATION_SOURCE_COOKIE,
   cityDisplayLabel,
   countrySearchLabel,
+  isPlaceholderCitySlug,
   lookupCityCoords,
   parseLocationCookie,
   type LocationSource,
@@ -42,6 +43,7 @@ import {
   cityListingMetadata,
   hasFeedFilterParams,
   isIndexableCitySlug,
+  isIndexableCountrySlug,
   itemListJsonLd,
   listingPath,
   withFeaturedDealDescription,
@@ -64,7 +66,10 @@ export async function generateMetadata({
   params,
   searchParams,
 }: PageProps): Promise<Metadata> {
-  if (!isIndexableCitySlug(params.country, params.city)) {
+  if (
+    isPlaceholderCitySlug(params.city) ||
+    !isIndexableCitySlug(params.country, params.city)
+  ) {
     return { robots: { index: false, follow: false } };
   }
   const feed = await fetchDealsFeed(
@@ -88,6 +93,12 @@ export async function generateMetadata({
 }
 
 export default async function CityPage({ params, searchParams }: PageProps) {
+  if (
+    isPlaceholderCitySlug(params.city) &&
+    isIndexableCountrySlug(params.country)
+  ) {
+    permanentRedirect(listingPath(params.country));
+  }
   if (!isIndexableCitySlug(params.country, params.city)) notFound();
   const { country, city } = params;
   const localCurrency = currencyForCountry(country);

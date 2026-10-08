@@ -11,7 +11,11 @@ import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { fetchDeal, fetchValueCalculator } from "@/lib/api";
 import { dealCtaLabel, dealLinkHint } from "@/lib/deal-link";
 import { formatMoney } from "@/lib/currency";
-import { cityDisplayLabel, countrySearchLabel } from "@/lib/geo";
+import {
+  cityDisplayLabel,
+  countrySearchLabel,
+  isPlaceholderCitySlug,
+} from "@/lib/geo";
 import { dealBadge } from "@/lib/priority";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
@@ -35,6 +39,7 @@ export async function generateMetadata({
   if (
     isReservedGeoSlug(params.country) ||
     isReservedGeoSlug(params.city) ||
+    isPlaceholderCitySlug(params.city) ||
     !isIndexableCountrySlug(params.country)
   ) {
     return { robots: { index: false, follow: false } };
@@ -43,7 +48,7 @@ export async function generateMetadata({
     country: params.country,
     city: params.city,
   });
-  if (!result.ok) {
+  if (!result.ok || isPlaceholderCitySlug(result.data.city)) {
     return { robots: { index: false, follow: false } };
   }
   return dealListingMetadata(result.data, params.country, params.city);
@@ -81,6 +86,12 @@ export default async function DealDetailPage({ params }: PageProps) {
   }
 
   const deal = result.data;
+  if (isPlaceholderCitySlug(city) || isPlaceholderCitySlug(deal.city)) {
+    if (!isPlaceholderCitySlug(deal.city)) {
+      permanentRedirect(listingPath(deal.country, deal.city, deal.id));
+    }
+    permanentRedirect(listingPath(deal.country || country));
+  }
   if (!isCanonicalDealPath(country, city, deal.country, deal.city)) {
     permanentRedirect(listingPath(deal.country, deal.city, deal.id));
   }

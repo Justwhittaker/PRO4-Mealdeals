@@ -39,7 +39,12 @@ from app.schemas.deal import (
 from app.services.affiliate import build_affiliate_urls
 from app.services.deal_copy import clean_deal_description
 from app.services.deal_link import LinkKind, cta_label_for_link, outbound_link_meta
-from app.services.geo_names import normalize_city, normalize_country
+from app.services.geo_names import (
+    PLACEHOLDER_CITY_NAMES,
+    is_placeholder_city,
+    normalize_city,
+    normalize_country,
+)
 from app.services.listing_quality import is_policy_violation, prepare_public_listing
 from app.services.ranking import compute_feed_score
 from app.scrapers.categories import venue_category_id
@@ -296,6 +301,10 @@ async def deals_feed(
         .where(Deal.is_active.is_(True))
         .where(Deal.deleted_at.is_(None))
         .where(or_(Deal.expires_at.is_(None), Deal.expires_at > now))
+        # Sentinel hubs (city "Null" → /us/null) are not public markets.
+        .where(
+            func.lower(Location.city).notin_(tuple(sorted(PLACEHOLDER_CITY_NAMES)))
+        )
     )
 
     if country_code:
@@ -397,7 +406,13 @@ async def deals_feed(
     distance_by_id = {deal_id: distance for deal_id, _score, distance in page}
 
     # Auto-skim the net for this area when visitors hit an empty city feed
-    if auto_scrape and total == 0 and country_code and city:
+    if (
+        auto_scrape
+        and total == 0
+        and country_code
+        and city
+        and not is_placeholder_city(city)
+    ):
         # Scraper and Celery stay out of the process until a city is empty.
         from app.services.scrape_runner import scrape_and_ingest_area
 
@@ -568,6 +583,7 @@ async def deals_sitemap(
         )
         for deal_id, country_code, city, created_at, title, merchant_name in rows
         if not is_policy_violation(title, merchant_name)
+        and not is_placeholder_city(city)
     ]
     total = int(
         await db.scalar(select(func.count()).select_from(Deal).where(active)) or 0
