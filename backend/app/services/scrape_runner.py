@@ -18,7 +18,7 @@ from app.scrapers.global_retail import (
     TARGET_MARKETS,
     iter_market_areas,
 )
-from app.scrapers.zones import markets_for_zone
+from app.scrapers.zones import iter_zone_areas
 from app.services.frontend_revalidate import revalidate_after_scrape
 from app.services.ingest import (
     ingest_hub_scrape,
@@ -96,17 +96,57 @@ def scrape_and_ingest_area(country_code: str, city: str) -> dict[str, int | str]
     }
 
 
-def scrape_and_ingest_markets(
-    country_codes: list[str] | None = None,
-) -> dict[str, Any]:
-    """
-    Scrape every configured city for the given markets (default: worldwide targets).
+def _city_ref(country: str, city: str) -> dict[str, str]:
+    return {"country": country, "city": city}
 
-    Processes hub-by-hub: scrape → ingest → drop stale → revalidate the site live.
-    """
+
+def scrape_progress_of(exc: BaseException) -> dict[str, Any]:
+    """Partial zone totals attached when a time limit aborts the city loop."""
+    raw = getattr(exc, "scrape_progress", None)
+    if isinstance(raw, dict):
+        return raw
+    return {}
+
+
+def _snapshot_progress(progress: dict[str, Any]) -> dict[str, Any]:
+    snap: dict[str, Any] = {}
+    for key, value in progress.items():
+        snap[key] = list(value) if isinstance(value, list) else value
+    return snap
+
+
+def scrape_and_ingest_areas(
+    areas: list[tuple[str, str]],
+    markets: list[str],
+) -> dict[str, Any]:
+    """Scrape the given hubs. A time limit keeps the totals gathered so far."""
+    progress: dict[str, Any] = {
+        "areas": 0,
+        "areas_total": len(areas),
+        "discovered": 0,
+        "ingested": 0,
+        "stale_deactivated": 0,
+        "marketing_contacts": 0,
+        "revalidate_ok": 0,
+        "revalidate_fail": 0,
+        "cities_failed": [],
+        "cities_completed": [],
+        "cities_not_reached": [_city_ref(country, city) for country, city in areas],
+    }
+    try:
+        return _scrape_areas(areas, markets, progress)
+    except Exception as exc:
+        if is_fatal_task_error(exc):
+            setattr(exc, "scrape_progress", _snapshot_progress(progress))
+        raise
+
+
+def _scrape_areas(
+    areas: list[tuple[str, str]],
+    markets: list[str],
+    progress: dict[str, Any],
+) -> dict[str, Any]:
     started = time.perf_counter()
-    markets = country_codes or list(TARGET_MARKETS)
-    areas = iter_market_areas(markets)
     scraper = GlobalRetailScraper()
     discovered = 0
     ingested = 0
@@ -118,8 +158,21 @@ def scrape_and_ingest_markets(
     revalidate_ok = 0
     revalidate_fail = 0
     cities_failed: list[dict[str, str]] = []
+    cities_completed: list[dict[str, str]] = []
 
-    for country, city in areas:
+    for index, (country, city) in enumerate(areas):
+        progress["areas"] = len(cities_completed) + len(cities_failed)
+        progress["cities_completed"] = list(cities_completed)
+        progress["cities_failed"] = list(cities_failed)
+        progress["cities_not_reached"] = [
+            _city_ref(c, t) for c, t in areas[index:]
+        ]
+        progress["discovered"] = discovered
+        progress["ingested"] = ingested
+        progress["stale_deactivated"] = stale_total
+        progress["marketing_contacts"] = contacts
+        progress["revalidate_ok"] = revalidate_ok
+        progress["revalidate_fail"] = revalidate_fail
         try:
             async def _run(c: str = country, t: str = city) -> list:
                 return await scraper.scrape(c, t)
@@ -129,15 +182,27 @@ def scrape_and_ingest_markets(
 
             with _Session() as session:
                 hub_result = ingest_hub_scrape(session, country, city, deals)
-                contact_count = ingest_marketing_contacts_from_deals(session, deals)
 
             count = hub_result["ingested"]
             stale = hub_result["stale_deactivated"]
             ingested += count
             stale_total += stale
-            contacts += contact_count
             by_country[country] = by_country.get(country, 0) + count
             breakdown_batches.append(breakdown_from_scraped_deals(deals))
+            cities_completed.append(_city_ref(country, city))
+            progress["areas"] = len(cities_completed) + len(cities_failed)
+            progress["cities_completed"] = list(cities_completed)
+            progress["cities_not_reached"] = [
+                _city_ref(c, t) for c, t in areas[index + 1 :]
+            ]
+            progress["discovered"] = discovered
+            progress["ingested"] = ingested
+            progress["stale_deactivated"] = stale_total
+
+            with _Session() as session:
+                contact_count = ingest_marketing_contacts_from_deals(session, deals)
+            contacts += contact_count
+            progress["marketing_contacts"] = contacts
 
             revalidate = _live_revalidate(
                 country, city, ingested=count, stale=stale
@@ -148,6 +213,8 @@ def scrape_and_ingest_markets(
                     revalidate_ok += 1
                 elif revalidate.get("ok") is False:
                     revalidate_fail += 1
+            progress["revalidate_ok"] = revalidate_ok
+            progress["revalidate_fail"] = revalidate_fail
 
             logger.info(
                 "%s/%s: discovered=%s ingested=%s stale=%s contacts=%s",
@@ -175,6 +242,17 @@ def scrape_and_ingest_markets(
                 }
             )
 
+    progress["areas"] = len(cities_completed) + len(cities_failed)
+    progress["cities_completed"] = list(cities_completed)
+    progress["cities_failed"] = list(cities_failed)
+    progress["cities_not_reached"] = []
+    progress["discovered"] = discovered
+    progress["ingested"] = ingested
+    progress["stale_deactivated"] = stale_total
+    progress["marketing_contacts"] = contacts
+    progress["revalidate_ok"] = revalidate_ok
+    progress["revalidate_fail"] = revalidate_fail
+
     runtime_seconds = round(time.perf_counter() - started, 1)
     with _Session() as session:
         report = build_scrape_report(
@@ -189,6 +267,7 @@ def scrape_and_ingest_markets(
 
     return {
         "areas": len(areas),
+        "areas_total": len(areas),
         "markets": len(markets),
         "discovered": discovered,
         "ingested": ingested,
@@ -204,17 +283,27 @@ def scrape_and_ingest_markets(
         "revalidate_ok": revalidate_ok,
         "revalidate_fail": revalidate_fail,
         "cities_failed": cities_failed,
+        "cities_completed": cities_completed,
+        "cities_not_reached": [],
     }
 
 
-def scrape_and_ingest_zone(zone_id: str) -> dict[str, Any]:
+def scrape_and_ingest_markets(
+    country_codes: list[str] | None = None,
+) -> dict[str, Any]:
     """
-    Bite-size continental scrape: one of eight zones (hub cities only).
+    Scrape every configured city for the given markets (default: worldwide targets).
 
-    Celery Beat fires these twice daily (06:00 / 18:00 UTC), staggered
-    15 minutes apart, small zones first.
+    Processes hub-by-hub: scrape → ingest → drop stale → revalidate the site live.
     """
-    markets = markets_for_zone(zone_id)
-    if not markets:
+    markets = country_codes or list(TARGET_MARKETS)
+    return scrape_and_ingest_areas(iter_market_areas(markets), markets)
+
+
+def scrape_and_ingest_zone(zone_id: str) -> dict[str, Any]:
+    """Scrape one beat zone. Cities are only those assigned to the zone."""
+    areas = iter_zone_areas(zone_id)
+    if not areas:
         raise ValueError(f"Unknown or empty scrape zone: {zone_id}")
-    return scrape_and_ingest_markets(markets)
+    markets = sorted({country for country, _city in areas})
+    return scrape_and_ingest_areas(areas, markets)

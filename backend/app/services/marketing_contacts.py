@@ -13,6 +13,7 @@ from typing import Iterable, Sequence
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.task_errors import reraise_if_fatal
 from app.models.marketing_contact import MarketingContact
 from app.scrapers.base import ScrapedDeal
 from app.services.ingest import normalize_city, normalize_country
@@ -169,7 +170,8 @@ def ingest_marketing_contacts_from_deals(
             )
             if row is not None:
                 count += 1
-        except Exception:
+        except Exception as exc:
+            reraise_if_fatal(exc)
             logger.exception(
                 "Failed to upsert marketing contact for %s", deal.merchant_name
             )

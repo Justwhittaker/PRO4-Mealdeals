@@ -11,6 +11,8 @@ from typing import Any
 import httpx
 from bs4 import BeautifulSoup
 
+from app.scrapers.politeness import pace_host, penalize_host
+
 logger = logging.getLogger(__name__)
 
 
@@ -60,12 +62,15 @@ class BaseScraper(ABC):
 
     async def fetch_html(self, url: str) -> str:
         """HTTPX fetch helper used by lightweight scrapers."""
+        await pace_host(url)
         async with httpx.AsyncClient(
             timeout=self.timeout,
             follow_redirects=True,
             headers={"User-Agent": self.user_agent},
         ) as client:
             response = await client.get(url)
+            if response.status_code == 429:
+                penalize_host(url)
             response.raise_for_status()
             return response.text
 

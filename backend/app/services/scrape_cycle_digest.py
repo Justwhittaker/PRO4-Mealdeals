@@ -63,6 +63,16 @@ def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
     ]
     failed = [z for z in ZONE_ORDER if z in cycle_results and _is_failed(cycle_results[z])]
     ok_zones = [z for z in completed if z not in failed]
+    timed_out: list[str] = []
+    for zone_id in ZONE_ORDER:
+        row = cycle_results.get(zone_id) or {}
+        if str(row.get("status") or "") != "timed_out":
+            continue
+        done = row.get("areas", 0)
+        total = row.get("areas_total", "?")
+        timed_out.append(
+            f"{zone_id} {done}/{total} cities, {row.get('ingested', 0)} ingested"
+        )
     total = len(ZONE_ORDER)
     city_errors = 0
     for row in cycle_results.values():
@@ -105,6 +115,7 @@ def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
         "completed": len(completed),
         "ok": len(ok_zones),
         "failed": failed,
+        "timed_out": timed_out,
         "missing": [z for z in ZONE_ORDER if z not in cycle_results],
         "pct_completed": _pct(len(completed), total),
         "pct_ok": _pct(len(ok_zones), total),
@@ -312,6 +323,8 @@ def format_digest_body(report: dict[str, Any]) -> str:
         zone_line += f"\nMissing: {', '.join(zones['missing'])}"
     if zones["failed"]:
         zone_line += f"\nFailed: {', '.join(zones['failed'])}"
+    if zones.get("timed_out"):
+        zone_line += "\nTimed out: " + "; ".join(zones["timed_out"])
     if zones.get("city_errors"):
         zone_line += f"\nCity errors skipped: {zones['city_errors']}"
     for family in zones.get("large_families") or []:

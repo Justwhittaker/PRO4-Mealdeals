@@ -26,7 +26,12 @@ from app.services.scrape_cycle_stats import (
     record_zone_result,
     zone_already_succeeded,
 )
-from app.services.scrape_runner import scrape_and_ingest_area, scrape_and_ingest_markets, scrape_and_ingest_zone
+from app.services.scrape_runner import (
+    scrape_and_ingest_area,
+    scrape_and_ingest_markets,
+    scrape_and_ingest_zone,
+    scrape_progress_of,
+)
 from app.scrapers.zones import (
     SCRAPE_ZONES,
     ZONE_TASK_SOFT_TIME_LIMIT_SECONDS,
@@ -107,6 +112,21 @@ def scrape_global_retail(country_codes: list[str] | None = None) -> dict[str, in
     return counts
 
 
+_PROGRESS_KEYS = (
+    "areas",
+    "areas_total",
+    "discovered",
+    "ingested",
+    "stale_deactivated",
+    "marketing_contacts",
+    "revalidate_ok",
+    "revalidate_fail",
+    "cities_failed",
+    "cities_completed",
+    "cities_not_reached",
+)
+
+
 def _zone_failure_payload(zone: str, error: str) -> dict[str, Any]:
     return {
         "zone": zone,
@@ -184,11 +204,25 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
     )
     try:
         result = scrape_and_ingest_zone(zone)
-    except SoftTimeLimitExceeded:
+    except SoftTimeLimitExceeded as exc:
         summary = _zone_failure_payload(zone, "soft time limit exceeded")
         summary["status"] = "timed_out"
+        summary["ok"] = False
+        progress = scrape_progress_of(exc)
+        for key in _PROGRESS_KEYS:
+            if key in progress:
+                summary[key] = progress[key]
         record_zone_result(zone, summary, cycle_id=cycle_id)
-        logger.error("Zone scrape hit soft time limit (%s) cycle=%s", zone, cycle_id)
+        logger.error(
+            "Zone scrape hit soft time limit (%s) cycle=%s areas=%s/%s discovered=%s ingested=%s not_reached=%s",
+            zone,
+            cycle_id,
+            summary.get("areas"),
+            summary.get("areas_total"),
+            summary.get("discovered"),
+            summary.get("ingested"),
+            len(summary.get("cities_not_reached") or []),
+        )
         return summary
     except Exception as exc:
         summary = _zone_failure_payload(zone, str(exc))
