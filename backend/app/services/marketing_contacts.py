@@ -59,6 +59,27 @@ def _clean_website(value: str | None) -> str | None:
     return url[:500]
 
 
+def _upgrade(current: str | None, new: str | None) -> str | None:
+    """Non-empty value that differs from what is stored, else None."""
+    if not new or new == (current or ""):
+        return None
+    return new
+
+
+def _email_fill(current: str | None, new: str | None) -> str | None:
+    """Fill a blank email. Keep an address that is already stored."""
+    if not new or (current or "").strip():
+        return None
+    return new
+
+
+def _assign(row: MarketingContact, attr: str, value: str | None) -> bool:
+    if value is None:
+        return False
+    setattr(row, attr, value)
+    return True
+
+
 def upsert_marketing_contact(
     session: Session,
     *,
@@ -72,7 +93,14 @@ def upsert_marketing_contact(
     source_url: str | None = None,
     venue_category: str | None = None,
 ) -> MarketingContact | None:
-    """Insert or refresh one marketing contact. Returns None if name missing."""
+    """Insert a new contact, or fill in real changes on a duplicate.
+
+    Match order is email, then website+country+city, then name+country+city.
+    An existing row is left untouched when the scrape adds nothing new, so
+    ``updated_at`` and ``last_scraped_at`` stay put. A blank email is filled
+    in; a stored email is not replaced by a different scraped address.
+    Returns None if the business name is missing.
+    """
     name = (business_name or "").strip()
     if not name:
         return None
@@ -112,22 +140,24 @@ def upsert_marketing_contact(
             .limit(1)
         ).scalar_one_or_none()
 
-    now = _utcnow()
     if existing:
-        existing.business_name = name[:255]
-        if website_clean:
-            existing.website = website_clean
-        if phone_clean:
-            existing.phone = phone_clean
-        if email_clean:
-            existing.email = email_clean
-        if blurb:
-            existing.about_blurb = blurb
-        if source_url:
-            existing.source_url = source_url[:500]
-        if venue_category:
-            existing.venue_category = venue_category[:120]
-        existing.last_scraped_at = now
+        changed = False
+        changed |= _assign(
+            existing, "business_name", _upgrade(existing.business_name, name[:255])
+        )
+        changed |= _assign(existing, "website", _upgrade(existing.website, website_clean))
+        changed |= _assign(existing, "phone", _upgrade(existing.phone, phone_clean))
+        changed |= _assign(existing, "email", _email_fill(existing.email, email_clean))
+        changed |= _assign(existing, "about_blurb", _upgrade(existing.about_blurb, blurb))
+        source = source_url[:500] if source_url else None
+        category = venue_category[:120] if venue_category else None
+        changed |= _assign(existing, "source_url", _upgrade(existing.source_url, source))
+        changed |= _assign(
+            existing, "venue_category", _upgrade(existing.venue_category, category)
+        )
+        if not changed:
+            return existing
+        existing.last_scraped_at = _utcnow()
         session.flush()
         return existing
 
@@ -142,7 +172,7 @@ def upsert_marketing_contact(
         city=city_name,
         source_url=(source_url[:500] if source_url else None),
         venue_category=(venue_category[:120] if venue_category else None),
-        last_scraped_at=now,
+        last_scraped_at=_utcnow(),
     )
     session.add(row)
     session.flush()
