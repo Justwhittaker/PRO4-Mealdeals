@@ -12,6 +12,7 @@ import pytest
 from app.scrapers.zones import ZONE_ORDER, ZONE_TASK_TIME_LIMIT_SECONDS
 from app.services.scrape_cycle_digest import (
     _RUNNING_GRACE_SECONDS,
+    _active_offers_on_site,
     _query_window_counts,
     _zone_health,
     build_cycle_digest_report,
@@ -100,6 +101,7 @@ def test_format_digest_body_includes_requested_sections() -> None:
             "new_deals": 12,
             "dropped_deals": 5,
             "net_new_emails": 9,
+            "active_offers": 2464,
             "categories": [
                 ("Restaurants, Cafe's & Bistro's", 100, 40.0),
                 ("Hotels, Resorts & B&B's", 50, 20.0),
@@ -111,6 +113,7 @@ def test_format_digest_body_includes_requested_sections() -> None:
     assert "Large · North America & Caribbean (large): 100%" in body
     assert "Large · Western Europe (large): 67%" in body
     assert "Site transfer: OK" in body
+    assert "Active offers on site: 2464" in body
     assert "New deals: 12" in body
     assert "Dropped deals: 5" in body
     assert "New merchant emails (new contacts): 9" in body
@@ -160,6 +163,18 @@ def test_merchant_email_count_is_new_contacts_only() -> None:
     assert counts["new_email_rows"] == 7
     assert counts["net_new_emails"] == 7
     assert "gained_email_rows" not in counts
+    site_sql = [
+        sql
+        for sql in engine.conn.statements
+        if "FROM deals" in sql and "is_active IS TRUE" in sql and "scraped_raw_url" not in sql
+    ]
+    assert len(site_sql) == 1
+
+
+def test_active_offers_uses_site_metrics_then_the_database() -> None:
+    assert _active_offers_on_site(2464, 1800) == 2464
+    assert _active_offers_on_site(0, 1800) == 0
+    assert _active_offers_on_site(None, 1800) == 1800
 
 
 def test_crashed_and_running_zones_are_failed_not_ok() -> None:
@@ -207,6 +222,7 @@ def test_digest_does_not_mark_db_activity_as_ok(
             "net_new_emails": 1,
             "new_email_rows": 1,
             "active_scraped_deals": 10,
+            "active_site_deals": 18,
         },
     )
     monkeypatch.setattr(
@@ -234,8 +250,10 @@ def test_digest_does_not_mark_db_activity_as_ok(
     assert report["zones"]["ok"] == 0
     assert "us_east" in report["zones"]["missing"]
     assert "se_asia" not in report["zones"]["missing"]
+    assert report["active_offers"] == 18
     body = format_digest_body(report)
     assert "Failed: se_asia" in body
+    assert "Active offers on site: 18" in body
     assert "100% ok" not in body
 
 
@@ -279,6 +297,7 @@ def _digest_body(zones: dict) -> str:
             "new_deals": 0,
             "dropped_deals": 0,
             "net_new_emails": 0,
+            "active_offers": 0,
             "categories": [],
         }
     )

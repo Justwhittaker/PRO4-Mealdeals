@@ -317,13 +317,33 @@ def _query_window_counts(engine: Engine, since: datetime) -> dict[str, int]:
                 )
             ).scalar_one()
         )
+        # Same inventory count as GET /api/v1/scrapers/metrics active_deals,
+        # which is the "N deals" figure in the public site header.
+        active_site = int(
+            conn.execute(
+                text(
+                    """
+                    SELECT COUNT(*) FROM deals
+                    WHERE is_active IS TRUE
+                    """
+                )
+            ).scalar_one()
+        )
     return {
         "new_deals": new_deals,
         "dropped_deals": dropped,
         "net_new_emails": new_email_rows,
         "new_email_rows": new_email_rows,
         "active_scraped_deals": active_scraped,
+        "active_site_deals": active_site,
     }
+
+
+def _active_offers_on_site(api_active: int | None, db_active: int) -> int:
+    """Header deal total. Metrics when the API answered, otherwise the DB count."""
+    if api_active is None:
+        return db_active
+    return api_active
 
 
 def _category_breakdown(engine: Engine) -> list[tuple[str, int, float]]:
@@ -478,6 +498,7 @@ def format_digest_body(report: dict[str, Any]) -> str:
             f"Cycle {report['cycle_id']} (since {report['since_label']} UTC)",
             zone_line,
             site_line,
+            f"Active offers on site: {report['active_offers']}",
             f"New deals: {report['new_deals']}",
             f"Dropped deals: {report['dropped_deals']}",
             f"New merchant emails (new contacts): {report['net_new_emails']}",
@@ -514,6 +535,11 @@ def build_cycle_digest_report(now: datetime | None = None) -> dict[str, Any]:
         cycle_results=cycle_results,
         db_active=window["active_scraped_deals"],
     )
+    api_active = site.get("api_active_deals")
+    active_offers = _active_offers_on_site(
+        api_active if isinstance(api_active, int) else None,
+        window["active_site_deals"],
+    )
 
     return {
         "cycle_id": cycle_id,
@@ -524,6 +550,7 @@ def build_cycle_digest_report(now: datetime | None = None) -> dict[str, Any]:
         "new_deals": window["new_deals"],
         "dropped_deals": dropped,
         "net_new_emails": window["net_new_emails"],
+        "active_offers": active_offers,
         "categories": categories,
         "cycle_results": cycle_results,
     }
