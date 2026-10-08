@@ -28,6 +28,8 @@ services:
       CELERY_WEEKLY_EMAIL_ENABLED: "false"
       # Six scrape processes. Override in backend/.env if needed (1–8).
       SCRAPE_CONCURRENCY: ${SCRAPE_CONCURRENCY:-6}
+      # `python /app/scripts/...` puts scripts/ on sys.path, not /app.
+      PYTHONPATH: /app
     restart: unless-stopped
     volumes:
       - celerybeat-data:/app/data

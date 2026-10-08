@@ -4,6 +4,12 @@
 Zone scrapes sit on the ``scrape`` queue. Digest, expiry, and currency tasks
 sit on ``maintenance`` so a multi-hour scrape cannot block them. This process
 is PID 1: it drops to ``appuser`` for the workers and forwards stop signals.
+
+Compose starts this file by absolute path
+(``python /app/scripts/celery_nuc_supervisor.py``). That puts ``scripts/`` on
+``sys.path[0]``, not the backend root, so ``import app`` fails unless the
+parent of ``scripts/`` is inserted first. ``PYTHONPATH=/app`` in
+``docker-compose.nuc.yml`` is a second copy of the same fix.
 """
 
 from __future__ import annotations
@@ -14,8 +20,14 @@ import signal
 import subprocess
 import sys
 import time
+from pathlib import Path
 
-from app.scrapers.zones import scrape_concurrency
+# Absolute-path invocation sets sys.path[0] to this file's directory.
+_BACKEND_ROOT = Path(__file__).resolve().parents[1]
+if str(_BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(_BACKEND_ROOT))
+
+from app.scrapers.zones import scrape_concurrency  # noqa: E402
 
 APP_USER = "appuser"
 _CELERY = [
