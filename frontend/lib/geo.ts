@@ -1,3 +1,4 @@
+import { CATCHMENT_HUBS } from "@/lib/catchment-hubs";
 import { MARKET_COUNTRIES } from "@/lib/markets-catalog";
 
 export const LOCATION_COOKIE = "dineadeal_loc";
@@ -147,10 +148,25 @@ function marketCityToOption(city: {
   };
 }
 
-/** All scrape-market cities (96 countries) for country pages / search. */
-export const POPULAR_CITIES = MARKET_COUNTRIES.flatMap((m) =>
-  m.cities.map(({ country, city, label }) => ({ country, city, label })),
-);
+function extraCatchmentCities(country: string, existingSlugs: Set<string>) {
+  return CATCHMENT_HUBS.filter(
+    (hub) => hub.country === country && !existingSlugs.has(hub.city),
+  ).sort((a, b) => a.label.localeCompare(b.label));
+}
+
+/** Metro cities plus wine-region and other catchment hubs. */
+export const POPULAR_CITIES = MARKET_COUNTRIES.flatMap((m) => {
+  const metros = m.cities.map(({ country, city, label }) => ({
+    country,
+    city,
+    label,
+  }));
+  const extras = extraCatchmentCities(
+    m.code,
+    new Set(metros.map((city) => city.city)),
+  ).map(({ country, city, label }) => ({ country, city, label }));
+  return [...metros, ...extras];
+});
 
 /** Map IP country codes → default local portal (country-level fallback). */
 export const GEO_DEFAULTS: Record<string, GeoTarget> = Object.fromEntries(
@@ -196,6 +212,32 @@ const CITY_SEARCH_LABELS: Record<string, string> = Object.fromEntries(
     m.cities.map((c) => [`${c.country}/${c.city}`, c.label] as const),
   ),
 );
+
+for (const hub of CATCHMENT_HUBS) {
+  const key = `${hub.country}/${hub.city}`;
+  if (!CITY_SEARCH_LABELS[key]) {
+    CITY_SEARCH_LABELS[key] = hub.label;
+  }
+}
+
+/**
+ * City names produced when a missing value is stringified (`null` → "Null")
+ * or when the scraper falls back to "Unknown". These are not markets.
+ */
+const PLACEHOLDER_CITY_SLUGS = new Set([
+  "null",
+  "none",
+  "undefined",
+  "unknown",
+]);
+
+export function isPlaceholderCitySlug(
+  city: string | null | undefined,
+): boolean {
+  if (!city || !city.trim()) return true;
+  const slug = city.trim().toLowerCase().replace(/[\s_]+/g, "-");
+  return PLACEHOLDER_CITY_SLUGS.has(slug);
+}
 
 export interface CountryOption {
   code: string;
@@ -257,13 +299,26 @@ export function isKnownMarketCity(country: string, city: string): boolean {
 
 /** All 91 scrape markets, each with nested cities. */
 export function listCountries(): CountryOption[] {
-  return MARKET_COUNTRIES.map((m) => ({
-    code: m.code,
-    label: m.label,
-    cities: m.cities
-      .map(marketCityToOption)
-      .sort((a, b) => a.label.localeCompare(b.label)),
-  })).sort((a, b) => a.label.localeCompare(b.label));
+  return MARKET_COUNTRIES.map((m) => {
+    const extras = extraCatchmentCities(
+      m.code,
+      new Set(m.cities.map((city) => city.city)),
+    );
+    return {
+      code: m.code,
+      label: m.label,
+      cities: [
+        ...m.cities.map(marketCityToOption),
+        ...extras.map((hub) =>
+          marketCityToOption({
+            country: hub.country,
+            city: hub.city,
+            label: hub.label,
+          }),
+        ),
+      ].sort((a, b) => a.label.localeCompare(b.label)),
+    };
+  }).sort((a, b) => a.label.localeCompare(b.label));
 }
 
 /** Full country name for breadcrumbs, headings, banners (never abbreviations). */
