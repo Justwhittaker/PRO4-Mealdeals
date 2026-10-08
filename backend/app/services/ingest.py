@@ -13,6 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.config import get_settings
+from app.core.task_errors import reraise_if_fatal
 from app.models.deal import Deal, DealItem, ItemCategory
 from app.models.location import Location
 from app.models.merchant import Merchant, MerchantCategory, TierLevel
@@ -421,7 +422,8 @@ def ingest_scraped_deals(session: Session, deals: Sequence[ScrapedDeal]) -> int:
             if upsert_scraped_deal(session, scraped) is None:
                 continue
             count += 1
-        except Exception:
+        except Exception as exc:
+            reraise_if_fatal(exc)
             logger.exception(
                 "Failed to ingest scraped deal from %s", scraped.merchant_name
             )
@@ -443,7 +445,8 @@ def ingest_hub_scrape(
             if upsert_scraped_deal(session, scraped) is None:
                 continue
             ingested += 1
-        except Exception:
+        except Exception as exc:
+            reraise_if_fatal(exc)
             logger.exception(
                 "Failed to ingest scraped deal from %s", scraped.merchant_name
             )

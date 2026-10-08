@@ -15,6 +15,8 @@ import subprocess
 import sys
 import time
 
+from app.scrapers.zones import scrape_concurrency
+
 APP_USER = "appuser"
 _CELERY = [
     "celery",
@@ -34,17 +36,22 @@ _MAINTENANCE = [
     "-s",
     "/app/data/celerybeat-schedule",
 ]
-# ``celery`` is the old default queue. Keep draining it so a restart does not
-# strand zone tasks Beat already published before this split.
-_SCRAPE = [
-    *_CELERY,
-    "--loglevel=info",
-    "-Q",
-    "scrape,celery",
-    "--concurrency=2",
-    "-n",
-    "scrape@%h",
-]
+
+
+def _scrape_command() -> list[str]:
+    # ``celery`` is the old default queue. Keep draining it so a restart does not
+    # strand zone tasks Beat already published before the queue split.
+    # Concurrency is SCRAPE_CONCURRENCY (default 6). Maintenance stays at 1.
+    slots = scrape_concurrency()
+    return [
+        *_CELERY,
+        "--loglevel=info",
+        "-Q",
+        "scrape,celery",
+        f"--concurrency={slots}",
+        "-n",
+        "scrape@%h",
+    ]
 
 
 def _demote() -> None:
@@ -73,7 +80,7 @@ def main() -> int:
     preexec = _demote if os.geteuid() == 0 else None
     procs = [
         subprocess.Popen(cmd, preexec_fn=preexec, start_new_session=True)
-        for cmd in (_MAINTENANCE, _SCRAPE)
+        for cmd in (_MAINTENANCE, _scrape_command())
     ]
     signalled = False
 

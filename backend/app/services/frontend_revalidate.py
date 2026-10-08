@@ -8,6 +8,7 @@ from typing import Any
 import httpx
 
 from app.core.config import get_settings
+from app.core.task_errors import reraise_if_fatal
 
 logger = logging.getLogger(__name__)
 
@@ -79,5 +80,6 @@ def revalidate_after_scrape(
         )
         return {"ok": True, **data}
     except Exception as exc:
+        reraise_if_fatal(exc)
         logger.warning("Frontend revalidate request failed: %s", exc)
         return {"ok": False, "error": str(exc)}

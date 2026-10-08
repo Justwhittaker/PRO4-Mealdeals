@@ -126,9 +126,9 @@ else:
         "Celery weekly email beat disabled (CELERY_WEEKLY_EMAIL_ENABLED=false)"
     )
 
-# Eleven zone scrapes twice daily, staggered 15 minutes apart.
-# Rest-of-world first, then NA/WE large-scrape splits (see ZONE_ORDER).
-# Cycle blocks start 06:00 / 18:00 UTC; last large zone +2h30m.
+# Zone scrapes twice daily, staggered (see ZONE_BEAT_STAGGER_MINUTES).
+# Smaller zones first, then the large-family splits (see ZONE_ORDER).
+# Cycle blocks start 06:00 / 18:00 UTC.
 try:
     validate_zone_coverage()
 except RuntimeError as exc:

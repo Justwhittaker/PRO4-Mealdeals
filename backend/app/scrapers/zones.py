@@ -1,13 +1,26 @@
-"""Continental scrape zones — bite-size worldwide refresh."""
+"""Continental scrape zones — bite-size worldwide refresh.
+
+A zone is one Celery task. Observed pace on the NUC is about four minutes per
+city, and the soft time limit is four hours, so a task stays at or under
+``MAX_ZONE_AREAS`` cities (about three hours, with room before the limit).
+"""
 
 from __future__ import annotations
 
-from app.scrapers.markets import MARKET_CITIES, TARGET_MARKETS, iter_market_areas
+import os
 
-# Scrape task zones. Every TARGET_MARKET country appears in exactly one zone.
-# North America and Western Europe are split into smaller tasks but tagged
-# size_class=large / family=… so digests and scheduling still treat them as
-# the heavy "large scrape" block at the end of each cycle.
+from app.scrapers.markets import TARGET_MARKETS, iter_market_areas
+
+# About four minutes per city was west_eu_core's pace (60 cities in 14,411s).
+# 40 cities is under three hours, so the 4h soft limit stays a backstop.
+MAX_ZONE_AREAS = 40
+
+# Six scrape processes on a 12-core NUC that sits idle at concurrency 2.
+# Capped so a typo cannot open dozens of Overpass clients. Maintenance is a
+# separate worker and does not count against this.
+DEFAULT_SCRAPE_CONCURRENCY = 6
+MAX_SCRAPE_CONCURRENCY = 8
+
 SCRAPE_ZONES: dict[str, dict[str, str]] = {
     "eastern_europe": {
         "label": "Eastern Europe",
@@ -27,59 +40,98 @@ SCRAPE_ZONES: dict[str, dict[str, str]] = {
         "family": "latin_america",
         "size_class": "small",
     },
-    "africa": {
-        "label": "Africa",
-        "description": "Sub-Saharan & north Africa hubs",
+    "west_east_africa": {
+        "label": "West & East Africa",
+        "description": "West and east African hubs",
         "family": "africa",
         "size_class": "medium",
     },
-    "asia": {
-        "label": "Asia",
-        "description": "South, East & Southeast Asia",
+    "southern_africa": {
+        "label": "Southern Africa",
+        "description": "South Africa and neighbouring hubs",
+        "family": "africa",
+        "size_class": "medium",
+    },
+    "se_asia": {
+        "label": "Southeast Asia",
+        "description": "Mainland and island Southeast Asia",
         "family": "asia",
         "size_class": "medium",
     },
-    "oceania": {
-        "label": "Oceania & Pacific",
-        "description": "Australia, NZ, Pacific islands",
+    "east_south_asia": {
+        "label": "East & South Asia",
+        "description": "China, Japan, Korea, India, Pakistan",
+        "family": "asia",
+        "size_class": "medium",
+    },
+    "australia": {
+        "label": "Australia",
+        "description": "Australian metros and wine regions",
         "family": "oceania",
         "size_class": "medium",
     },
-    # --- Large scrape family: North America (split for queue health) ---
-    "canada_mexico_caribbean": {
-        "label": "Canada / Mexico / Caribbean (large)",
-        "description": "CA, MX, and Caribbean hubs — NA large-scrape split",
-        "family": "north_america",
-        "size_class": "large",
+    "pacific": {
+        "label": "New Zealand & Pacific",
+        "description": "NZ and Pacific island hubs",
+        "family": "oceania",
+        "size_class": "medium",
     },
-    "us": {
-        "label": "United States (large)",
-        "description": "US metros — NA large-scrape split",
-        "family": "north_america",
-        "size_class": "large",
-    },
-    # --- Large scrape family: Western Europe (split for queue health) ---
     "british_isles": {
         "label": "British Isles (large)",
-        "description": "UK + Ireland — WE large-scrape split",
+        "description": "UK + Ireland",
         "family": "western_europe",
         "size_class": "large",
     },
-    "south_europe": {
-        "label": "Southern Europe (large)",
-        "description": "Iberia, Italy, Greece, Adriatic — WE large-scrape split",
+    "iberia": {
+        "label": "Iberia (large)",
+        "description": "Spain and Portugal",
         "family": "western_europe",
         "size_class": "large",
     },
-    "west_eu_core": {
-        "label": "West EU core (large)",
-        "description": "France, Germany, Benelux, Alps, Nordics — WE large-scrape split",
+    "italy_adriatic": {
+        "label": "Italy & Adriatic (large)",
+        "description": "Italy, Greece, and the Adriatic",
+        "family": "western_europe",
+        "size_class": "large",
+    },
+    "canada": {
+        "label": "Canada (large)",
+        "description": "Canadian metros",
+        "family": "north_america",
+        "size_class": "large",
+    },
+    "mexico_caribbean": {
+        "label": "Mexico & Caribbean (large)",
+        "description": "Mexico, Caribbean, and US territories",
+        "family": "north_america",
+        "size_class": "large",
+    },
+    "us_east": {
+        "label": "US East & Midwest (large)",
+        "description": "Eastern and central US metros",
+        "family": "north_america",
+        "size_class": "large",
+    },
+    "us_west": {
+        "label": "US West (large)",
+        "description": "Western US metros and wine regions",
+        "family": "north_america",
+        "size_class": "large",
+    },
+    "france_benelux": {
+        "label": "France & Benelux (large)",
+        "description": "France, Netherlands, Belgium",
+        "family": "western_europe",
+        "size_class": "large",
+    },
+    "dach_nordics": {
+        "label": "DACH & Nordics (large)",
+        "description": "Germany, Alps, and the Nordics",
         "family": "western_europe",
         "size_class": "large",
     },
 }
 
-# Human labels for digest rollups of split large families.
 ZONE_FAMILY_LABELS: dict[str, str] = {
     "north_america": "North America & Caribbean (large)",
     "western_europe": "Western Europe (large)",
@@ -92,73 +144,66 @@ ZONE_FAMILY_LABELS: dict[str, str] = {
 }
 
 _COUNTRY_ZONE: dict[str, str] = {
-    # North America large-scrape splits
-    "US": "us",
-    "CA": "canada_mexico_caribbean",
-    "MX": "canada_mexico_caribbean",
-    "BS": "canada_mexico_caribbean",
-    "JM": "canada_mexico_caribbean",
-    "BZ": "canada_mexico_caribbean",
-    "GD": "canada_mexico_caribbean",
-    "TT": "canada_mexico_caribbean",
-    "BB": "canada_mexico_caribbean",
-    "AG": "canada_mexico_caribbean",
-    "KN": "canada_mexico_caribbean",
-    "VC": "canada_mexico_caribbean",
-    # US territories
-    "PR": "canada_mexico_caribbean",
-    "VI": "canada_mexico_caribbean",
-    # Latin America
+    "US": "us_east",
+    "CA": "canada",
+    "MX": "mexico_caribbean",
+    "BS": "mexico_caribbean",
+    "JM": "mexico_caribbean",
+    "BZ": "mexico_caribbean",
+    "GD": "mexico_caribbean",
+    "TT": "mexico_caribbean",
+    "BB": "mexico_caribbean",
+    "AG": "mexico_caribbean",
+    "KN": "mexico_caribbean",
+    "VC": "mexico_caribbean",
+    "PR": "mexico_caribbean",
+    "VI": "mexico_caribbean",
     "AR": "latin_america",
     "BR": "latin_america",
     "CL": "latin_america",
     "CO": "latin_america",
     "GY": "latin_america",
-    # Western Europe large-scrape splits
     "GB": "british_isles",
     "IE": "british_isles",
-    "ES": "south_europe",
-    "PT": "south_europe",
-    "IT": "south_europe",
-    "GR": "south_europe",
-    "HR": "south_europe",
-    "MT": "south_europe",
-    "SI": "south_europe",
-    "FR": "west_eu_core",
-    "DE": "west_eu_core",
-    "NL": "west_eu_core",
-    "BE": "west_eu_core",
-    "CH": "west_eu_core",
-    "AT": "west_eu_core",
-    "NO": "west_eu_core",
-    "SE": "west_eu_core",
-    "DK": "west_eu_core",
-    "FI": "west_eu_core",
-    "IS": "west_eu_core",
-    # Eastern Europe
+    "ES": "iberia",
+    "PT": "iberia",
+    "IT": "italy_adriatic",
+    "GR": "italy_adriatic",
+    "HR": "italy_adriatic",
+    "MT": "italy_adriatic",
+    "SI": "italy_adriatic",
+    "FR": "france_benelux",
+    "NL": "france_benelux",
+    "BE": "france_benelux",
+    "DE": "dach_nordics",
+    "CH": "dach_nordics",
+    "AT": "dach_nordics",
+    "NO": "dach_nordics",
+    "SE": "dach_nordics",
+    "DK": "dach_nordics",
+    "FI": "dach_nordics",
+    "IS": "dach_nordics",
     "PL": "eastern_europe",
     "CZ": "eastern_europe",
     "SK": "eastern_europe",
-    # Africa (sub-Saharan focus)
-    "ZA": "africa",
-    "NG": "africa",
-    "KE": "africa",
-    "GH": "africa",
-    "CM": "africa",
-    "BW": "africa",
-    "NA": "africa",
-    "RW": "africa",
-    "SL": "africa",
-    "SS": "africa",
-    "SZ": "africa",
-    "UG": "africa",
-    "ZM": "africa",
-    "ZW": "africa",
-    "LR": "africa",
-    "LS": "africa",
-    "GM": "africa",
-    "MW": "africa",
-    # MENA
+    "NG": "west_east_africa",
+    "KE": "west_east_africa",
+    "GH": "west_east_africa",
+    "CM": "west_east_africa",
+    "RW": "west_east_africa",
+    "SL": "west_east_africa",
+    "SS": "west_east_africa",
+    "UG": "west_east_africa",
+    "LR": "west_east_africa",
+    "GM": "west_east_africa",
+    "ZA": "southern_africa",
+    "NA": "southern_africa",
+    "BW": "southern_africa",
+    "ZW": "southern_africa",
+    "ZM": "southern_africa",
+    "MW": "southern_africa",
+    "SZ": "southern_africa",
+    "LS": "southern_africa",
     "AE": "mena",
     "IL": "mena",
     "JO": "mena",
@@ -167,77 +212,115 @@ _COUNTRY_ZONE: dict[str, str] = {
     "EG": "mena",
     "MA": "mena",
     "TN": "mena",
-    # Asia
-    "CN": "asia",
-    "JP": "asia",
-    "KR": "asia",
-    "IN": "asia",
-    "ID": "asia",
-    "PH": "asia",
-    "TH": "asia",
-    "MY": "asia",
-    "SG": "asia",
-    "VN": "asia",
-    "PK": "asia",
-    # Oceania & Pacific
-    "AU": "oceania",
-    "NZ": "oceania",
-    "FJ": "oceania",
-    "PG": "oceania",
-    "SB": "oceania",
-    "VU": "oceania",
-    "WS": "oceania",
-    "KI": "oceania",
-    "NR": "oceania",
-    "MH": "oceania",
-    "FM": "oceania",
-    "PW": "oceania",
-    "TO": "oceania",
-    "TV": "oceania",
-    "GU": "oceania",
-    "AS": "oceania",
-    "MP": "oceania",
+    "PH": "se_asia",
+    "TH": "se_asia",
+    "ID": "se_asia",
+    "MY": "se_asia",
+    "VN": "se_asia",
+    "SG": "se_asia",
+    "CN": "east_south_asia",
+    "JP": "east_south_asia",
+    "KR": "east_south_asia",
+    "IN": "east_south_asia",
+    "PK": "east_south_asia",
+    "AU": "australia",
+    "NZ": "pacific",
+    "FJ": "pacific",
+    "PG": "pacific",
+    "SB": "pacific",
+    "VU": "pacific",
+    "WS": "pacific",
+    "KI": "pacific",
+    "NR": "pacific",
+    "MH": "pacific",
+    "FM": "pacific",
+    "PW": "pacific",
+    "TO": "pacific",
+    "TV": "pacific",
+    "GU": "pacific",
+    "AS": "pacific",
+    "MP": "pacific",
 }
 
-# Twice-daily cycle bases (UTC).
+# Western and south-central US hubs. The rest of the US stays on us_east.
+_US_WEST_CITIES = frozenset(
+    {
+        "Los Angeles",
+        "Phoenix",
+        "San Diego",
+        "San Jose",
+        "Houston",
+        "San Antonio",
+        "Dallas",
+        "Austin",
+        "San Francisco",
+        "Seattle",
+        "Denver",
+        "Portland",
+        "Las Vegas",
+        "Sacramento",
+        "Salt Lake City",
+        "Honolulu",
+        "Napa Valley",
+        "Sonoma",
+        "Santa Barbara Wine Country",
+        "Willamette Valley",
+        "Walla Walla Valley",
+        "Paso Robles",
+        "Texas Hill Country Wine",
+        "Monterey Wine Country",
+        "Oakland",
+        "Fresno",
+        "Palm Springs",
+        "Long Beach",
+    }
+)
+
+_CITY_ZONE: dict[tuple[str, str], str] = {
+    ("US", city): "us_west" for city in _US_WEST_CITIES
+}
+
 ZONE_CYCLE_BASE_HOURS: tuple[int, ...] = (6, 18)
 
-# Rest-of-world first, then NA/WE large-scrape splits (smaller pieces before
-# heavier ones inside that large block).
+# Smaller tasks first. Large families stay a trailing block.
 ZONE_ORDER: list[str] = [
     "eastern_europe",
     "mena",
     "latin_america",
-    "africa",
-    "asia",
-    "oceania",
-    # Large scrapes (NA + WE families) — always after the rest of the world
+    "west_east_africa",
+    "southern_africa",
+    "se_asia",
+    "east_south_asia",
+    "australia",
+    "pacific",
     "british_isles",
-    "south_europe",
-    "canada_mexico_caribbean",
-    "us",
-    "west_eu_core",
+    "iberia",
+    "italy_adriatic",
+    "canada",
+    "mexico_caribbean",
+    "us_east",
+    "us_west",
+    "france_benelux",
+    "dach_nordics",
 ]
+
+# 10 minutes fills six workers quickly without publishing every zone at once.
+# 18 zones are all queued inside three hours.
+ZONE_BEAT_STAGGER_MINUTES = 10
 
 
 def _beat_slots_for_order(order: list[str]) -> dict[str, tuple[int, int]]:
-    """15-minute stagger from cycle base: (minute, hour_offset)."""
+    """Stagger from cycle base: (minute, hour_offset)."""
     slots: dict[str, tuple[int, int]] = {}
     for index, zone_id in enumerate(order):
-        offset_minutes = index * 15
+        offset_minutes = index * ZONE_BEAT_STAGGER_MINUTES
         slots[zone_id] = (offset_minutes % 60, offset_minutes // 60)
     return slots
 
 
 ZONE_BEAT_SLOTS: dict[str, tuple[int, int]] = _beat_slots_for_order(ZONE_ORDER)
 
-# Keep queued zone tasks alive almost until the next twice-daily cycle (12h).
 ZONE_TASK_EXPIRES_SECONDS: int = (11 * 60 * 60) + (55 * 60)
-
-# A zone that is still running must not be redelivered. Redis visibility has
-# to outlive the hard time limit; the hard limit has to outlive observed
-# zone runtimes (about 20–228 minutes) without letting a runaway occupy a
-# slot until the next cycle.
 ZONE_TASK_SOFT_TIME_LIMIT_SECONDS: int = 4 * 60 * 60
 ZONE_TASK_TIME_LIMIT_SECONDS: int = (4 * 60 * 60) + (15 * 60)
 REDIS_VISIBILITY_TIMEOUT_SECONDS: int = 8 * 60 * 60
@@ -246,6 +329,20 @@ SCRAPE_QUEUE = "scrape"
 MAINTENANCE_QUEUE = "maintenance"
 
 LARGE_ZONE_FAMILIES: tuple[str, ...] = ("north_america", "western_europe")
+
+
+def scrape_concurrency(raw: str | None = None) -> int:
+    """Scrape worker processes. Maintenance stays on its own worker."""
+    if raw is None:
+        raw = os.environ.get("SCRAPE_CONCURRENCY", "")
+    text = raw.strip()
+    if not text:
+        return DEFAULT_SCRAPE_CONCURRENCY
+    try:
+        value = int(text)
+    except ValueError:
+        return DEFAULT_SCRAPE_CONCURRENCY
+    return min(MAX_SCRAPE_CONCURRENCY, max(1, value))
 
 
 def zone_family(zone_id: str) -> str:
@@ -259,6 +356,7 @@ def zone_size_class(zone_id: str) -> str:
 
 
 def zone_for_country(country_code: str) -> str:
+    """Default zone for a country. Some US cities override this."""
     code = country_code.strip().upper()
     zone = _COUNTRY_ZONE.get(code)
     if zone is None:
@@ -266,34 +364,58 @@ def zone_for_country(country_code: str) -> str:
     return zone
 
 
-def markets_for_zone(zone_id: str) -> list[str]:
-    zone = zone_id.strip().lower()
-    return sorted(
-        code for code in TARGET_MARKETS if _COUNTRY_ZONE.get(code) == zone
-    )
+def zone_for_area(country_code: str, city: str) -> str:
+    code = country_code.strip().upper()
+    override = _CITY_ZONE.get((code, city.strip()))
+    if override:
+        return override
+    return zone_for_country(code)
 
 
 def iter_zone_areas(zone_id: str) -> list[tuple[str, str]]:
-    """Hub cities belonging to a continental zone."""
-    markets = markets_for_zone(zone_id)
-    return iter_market_areas(markets)
+    """Hub cities belonging to one beat task."""
+    zone = zone_id.strip().lower()
+    if zone not in SCRAPE_ZONES:
+        return []
+    return [
+        (country, city)
+        for country, city in iter_market_areas(list(TARGET_MARKETS))
+        if zone_for_area(country, city) == zone
+    ]
+
+
+def markets_for_zone(zone_id: str) -> list[str]:
+    return sorted({country for country, _city in iter_zone_areas(zone_id)})
 
 
 def validate_zone_coverage() -> None:
-    """Ensure every TARGET_MARKET is assigned to a known zone."""
+    """Ensure every market city is in one known zone, and no zone is too big."""
     missing = [c for c in TARGET_MARKETS if c not in _COUNTRY_ZONE]
     if missing:
         raise RuntimeError(f"Countries missing scrape zone: {missing}")
-    unknown = sorted(
-        {
-            zone
-            for zone in _COUNTRY_ZONE.values()
-            if zone not in SCRAPE_ZONES
-        }
-    )
+    unknown = sorted({zone for zone in _COUNTRY_ZONE.values() if zone not in SCRAPE_ZONES})
     if unknown:
         raise RuntimeError(f"Countries map to unknown scrape zones: {unknown}")
     if set(ZONE_ORDER) != set(SCRAPE_ZONES):
         raise RuntimeError("ZONE_ORDER and SCRAPE_ZONES keys must match")
     if set(ZONE_BEAT_SLOTS) != set(ZONE_ORDER):
         raise RuntimeError("ZONE_BEAT_SLOTS and ZONE_ORDER keys must match")
+
+    counts: dict[str, int] = {zone_id: 0 for zone_id in SCRAPE_ZONES}
+    for country, city in iter_market_areas(list(TARGET_MARKETS)):
+        zone = zone_for_area(country, city)
+        if zone not in SCRAPE_ZONES:
+            raise RuntimeError(f"{country}/{city} maps to unknown zone {zone}")
+        counts[zone] += 1
+    empty = [zone_id for zone_id, count in counts.items() if count == 0]
+    if empty:
+        raise RuntimeError(f"Zones have no cities: {empty}")
+    too_big = [
+        f"{zone_id}={count}"
+        for zone_id, count in counts.items()
+        if count > MAX_ZONE_AREAS
+    ]
+    if too_big:
+        raise RuntimeError(
+            f"Zones exceed {MAX_ZONE_AREAS} cities (soft time limit): {too_big}"
+        )

@@ -111,20 +111,20 @@ def test_format_digest_body_includes_requested_sections() -> None:
 def test_crashed_and_running_zones_are_failed_not_ok() -> None:
     health = _zone_health(
         {
-            "asia": {
+            "se_asia": {
                 "ok": False,
                 "status": "failed",
                 "error": "Invalid IPv6 URL",
             },
-            "us": {"ok": False, "status": "running"},
-            "oceania": {"ok": True, "status": "completed"},
+            "us_east": {"ok": False, "status": "running"},
+            "australia": {"ok": True, "status": "completed"},
         }
     )
-    assert set(health["failed"]) == {"asia", "us"}
-    assert "oceania" not in health["failed"]
+    assert set(health["failed"]) == {"se_asia", "us_east"}
+    assert "australia" not in health["failed"]
     assert health["ok"] == 1
     assert health["completed"] == 2
-    assert "us" not in health["missing"]
+    assert "us_east" not in health["missing"]
 
 
 def test_digest_does_not_mark_db_activity_as_ok(
@@ -133,7 +133,7 @@ def test_digest_does_not_mark_db_activity_as_ok(
     monkeypatch.setattr(
         "app.services.scrape_cycle_digest.load_cycle_zone_results",
         lambda _cycle_id: {
-            "asia": {"ok": False, "status": "failed", "error": "Invalid IPv6 URL"},
+            "se_asia": {"ok": False, "status": "failed", "error": "Invalid IPv6 URL"},
         },
     )
     monkeypatch.setattr(
@@ -168,12 +168,12 @@ def test_digest_does_not_mark_db_activity_as_ok(
     report = build_cycle_digest_report(
         datetime(2026, 9, 21, 17, 50, tzinfo=timezone.utc)
     )
-    assert "asia" in report["zones"]["failed"]
+    assert "se_asia" in report["zones"]["failed"]
     assert report["zones"]["ok"] == 0
-    assert "us" in report["zones"]["missing"]
-    assert "asia" not in report["zones"]["missing"]
+    assert "us_east" in report["zones"]["missing"]
+    assert "se_asia" not in report["zones"]["missing"]
     body = format_digest_body(report)
-    assert "Failed: asia" in body
+    assert "Failed: se_asia" in body
     assert "100% ok" not in body
 
 

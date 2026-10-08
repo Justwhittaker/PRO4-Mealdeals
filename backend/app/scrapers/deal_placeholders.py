@@ -20,6 +20,9 @@ from urllib.parse import quote_plus
 
 import httpx
 
+from app.core.task_errors import reraise_if_fatal
+from app.scrapers.politeness import pace_host_sync, penalize_host
+
 logger = logging.getLogger(__name__)
 
 _DATA_PATH = Path(__file__).resolve().parent / "data" / "dish_placeholders.json"
@@ -371,11 +374,15 @@ def fetch_generic_food_image(dish: str, *, timeout: float = 12.0) -> str | None:
         "User-Agent": "MealDealsBot/1.0 (deal placeholder learner; contact=dev@mealdeals.local)"
     }
     try:
+        pace_host_sync(api)
         with httpx.Client(timeout=timeout, headers=headers, follow_redirects=True) as client:
             resp = client.get(api)
+            if resp.status_code == 429:
+                penalize_host(api)
             resp.raise_for_status()
             payload = resp.json()
     except Exception as exc:
+        reraise_if_fatal(exc)
         logger.info("Wikimedia search failed for %s: %s", dish, exc)
         return None
 

@@ -10,6 +10,7 @@ import httpx
 
 from app.core.config import get_settings
 from app.core.task_errors import reraise_if_fatal
+from app.scrapers.politeness import pace_overpass, penalize_overpass
 
 logger = logging.getLogger(__name__)
 
@@ -58,11 +59,14 @@ async def _post_direct(
         async with httpx.AsyncClient(timeout=http_timeout) as client:
             for endpoint in OVERPASS_ENDPOINTS:
                 try:
+                    await pace_overpass()
                     response = await client.post(
                         endpoint,
                         data={"data": query},
                         headers=_OVERPASS_HEADERS,
                     )
+                    if response.status_code == 429:
+                        penalize_overpass()
                     response.raise_for_status()
                     payload = response.json()
                     if not isinstance(payload, dict):
@@ -102,11 +106,14 @@ async def _post_via_render_proxy(
     client_timeout = min(max(timeout, 15.0), NUC_PROXY_CLIENT_SECONDS)
     try:
         async with httpx.AsyncClient(timeout=client_timeout) as client:
+            await pace_overpass()
             response = await client.post(
                 proxy_url,
                 json={"query": query},
                 headers={"X-Scrape-Internal-Secret": secret},
             )
+            if response.status_code == 429:
+                penalize_overpass()
             response.raise_for_status()
             payload = response.json()
             elements = payload.get("elements") or []

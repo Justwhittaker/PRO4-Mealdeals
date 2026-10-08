@@ -26,11 +26,14 @@ services:
       DEEP_SCRAPE_ENABLED: "true"
       DEEP_SCRAPE_MAX_EXTRA_FETCHES: "4"
       CELERY_WEEKLY_EMAIL_ENABLED: "false"
+      # Six scrape processes. Override in backend/.env if needed (1–8).
+      SCRAPE_CONCURRENCY: ${SCRAPE_CONCURRENCY:-6}
     restart: unless-stopped
     volumes:
       - celerybeat-data:/app/data
     # Start as root so the entrypoint can chown the Beat schedule volume, then
-    # drop to appuser. Two workers: scrape (concurrency 2) and maintenance+beat.
+    # drop to appuser. Two workers: scrape (SCRAPE_CONCURRENCY, default 6)
+    # and maintenance+beat (concurrency 1).
     user: "0:0"
     command: ["python", "/app/scripts/celery_nuc_supervisor.py"]
 

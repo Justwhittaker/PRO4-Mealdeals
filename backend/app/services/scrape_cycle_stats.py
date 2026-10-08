@@ -10,6 +10,7 @@ from typing import Any
 import redis
 
 from app.core.config import get_settings
+from app.core.task_errors import reraise_if_fatal
 from app.core.redis_url import redis_from_url
 from app.scrapers.zones import ZONE_CYCLE_BASE_HOURS, ZONE_ORDER
 
@@ -93,7 +94,8 @@ def zone_already_succeeded(cycle_id: str, zone_id: str) -> bool:
     zone = zone_id.strip().lower()
     try:
         raw = _client().get(_zone_key(cycle_id, zone))
-    except Exception:
+    except Exception as exc:
+        reraise_if_fatal(exc)
         logger.exception("Failed to read scrape cycle stats for %s/%s", cycle_id, zone)
         return False
     if not raw:
@@ -132,7 +134,8 @@ def record_zone_result(
     try:
         client = _client()
         client.setex(_zone_key(cycle_id, zone), _REDIS_TTL_SECONDS, json.dumps(body))
-    except Exception:
+    except Exception as exc:
+        reraise_if_fatal(exc)
         logger.exception("Failed to record scrape cycle stats for %s", zone)
     return cycle_id
 
@@ -150,6 +153,7 @@ def load_cycle_zone_results(cycle_id: str) -> dict[str, dict[str, Any]]:
                 out[zone] = json.loads(raw)
             except json.JSONDecodeError:
                 logger.warning("Corrupt cycle stats for %s/%s", cycle_id, zone)
-    except Exception:
+    except Exception as exc:
+        reraise_if_fatal(exc)
         logger.exception("Failed to load scrape cycle stats for %s", cycle_id)
     return out
