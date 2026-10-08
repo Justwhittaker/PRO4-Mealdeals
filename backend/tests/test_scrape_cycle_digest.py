@@ -12,6 +12,7 @@ import pytest
 from app.scrapers.zones import ZONE_ORDER, ZONE_TASK_TIME_LIMIT_SECONDS
 from app.services.scrape_cycle_digest import (
     _RUNNING_GRACE_SECONDS,
+    _query_window_counts,
     _zone_health,
     build_cycle_digest_report,
     format_digest_body,
@@ -112,9 +113,53 @@ def test_format_digest_body_includes_requested_sections() -> None:
     assert "Site transfer: OK" in body
     assert "New deals: 12" in body
     assert "Dropped deals: 5" in body
-    assert "Net new merchant emails: 9" in body
+    assert "New merchant emails (new contacts): 9" in body
+    assert "Net new merchant emails" not in body
     assert "Category mix" in body
     assert "Restaurants" in body
+
+
+class _Scalar:
+    def scalar_one(self) -> int:
+        return 7
+
+
+class _RecordingConn:
+    def __init__(self) -> None:
+        self.statements: list[str] = []
+
+    def execute(self, statement: object, _params: object = None) -> _Scalar:
+        self.statements.append(str(statement))
+        return _Scalar()
+
+    def __enter__(self) -> _RecordingConn:
+        return self
+
+    def __exit__(self, *_args: object) -> bool:
+        return False
+
+
+class _RecordingEngine:
+    def __init__(self) -> None:
+        self.conn = _RecordingConn()
+
+    def connect(self) -> _RecordingConn:
+        return self.conn
+
+
+def test_merchant_email_count_is_new_contacts_only() -> None:
+    engine = _RecordingEngine()
+    counts = _query_window_counts(
+        engine,  # type: ignore[arg-type]
+        datetime(2026, 10, 8, 6, tzinfo=timezone.utc),
+    )
+    email_sql = [sql for sql in engine.conn.statements if "marketing_contacts" in sql]
+    assert len(email_sql) == 1
+    assert "created_at >= " in email_sql[0]
+    assert "updated_at" not in email_sql[0]
+    assert counts["new_email_rows"] == 7
+    assert counts["net_new_emails"] == 7
+    assert "gained_email_rows" not in counts
 
 
 def test_crashed_and_running_zones_are_failed_not_ok() -> None:
@@ -161,7 +206,6 @@ def test_digest_does_not_mark_db_activity_as_ok(
             "dropped_deals": 0,
             "net_new_emails": 1,
             "new_email_rows": 1,
-            "gained_email_rows": 0,
             "active_scraped_deals": 10,
         },
     )

@@ -288,6 +288,10 @@ def _query_window_counts(engine: Engine, since: datetime) -> dict[str, int]:
                 {"since": since},
             ).scalar_one()
         )
+        # Re-scrape sets updated_at on every existing contact, including ones
+        # that already had an email. There is no column for when the email
+        # was first filled in, so the honest window count is contacts created
+        # in this cycle that have a non-empty email.
         new_email_rows = int(
             conn.execute(
                 text(
@@ -296,20 +300,6 @@ def _query_window_counts(engine: Engine, since: datetime) -> dict[str, int]:
                     WHERE email IS NOT NULL
                       AND BTRIM(email) <> ''
                       AND created_at >= :since
-                    """
-                ),
-                {"since": since},
-            ).scalar_one()
-        )
-        gained_email_rows = int(
-            conn.execute(
-                text(
-                    """
-                    SELECT COUNT(*) FROM marketing_contacts
-                    WHERE email IS NOT NULL
-                      AND BTRIM(email) <> ''
-                      AND created_at < :since
-                      AND updated_at >= :since
                     """
                 ),
                 {"since": since},
@@ -330,9 +320,8 @@ def _query_window_counts(engine: Engine, since: datetime) -> dict[str, int]:
     return {
         "new_deals": new_deals,
         "dropped_deals": dropped,
-        "net_new_emails": new_email_rows + gained_email_rows,
+        "net_new_emails": new_email_rows,
         "new_email_rows": new_email_rows,
-        "gained_email_rows": gained_email_rows,
         "active_scraped_deals": active_scraped,
     }
 
@@ -491,7 +480,7 @@ def format_digest_body(report: dict[str, Any]) -> str:
             site_line,
             f"New deals: {report['new_deals']}",
             f"Dropped deals: {report['dropped_deals']}",
-            f"Net new merchant emails: {report['net_new_emails']}",
+            f"New merchant emails (new contacts): {report['net_new_emails']}",
             "Category mix (active on site):",
             *cat_lines,
         ]
