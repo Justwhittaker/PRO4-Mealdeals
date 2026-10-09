@@ -13,6 +13,7 @@ from sqlalchemy import text
 from app.api.dependencies import DbSession, RedisClient
 from app.core.config import get_settings
 from app.models.deal import Deal
+from app.services.click_referral import clean_utm
 from app.services.deal_link import normalize_outbound_url
 
 router = APIRouter(tags=["redirect"])
@@ -29,8 +30,21 @@ async def _ensure_click_table(db: DbSession) -> None:
                 affiliate_url TEXT,
                 ip_address TEXT,
                 user_agent TEXT,
+                utm_source TEXT,
+                utm_medium TEXT,
+                utm_campaign TEXT,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
+            """
+        )
+    )
+    await db.execute(
+        text(
+            """
+            ALTER TABLE click_events
+                ADD COLUMN IF NOT EXISTS utm_source TEXT,
+                ADD COLUMN IF NOT EXISTS utm_medium TEXT,
+                ADD COLUMN IF NOT EXISTS utm_campaign TEXT
             """
         )
     )
@@ -42,6 +56,9 @@ async def go_redirect(
     request: Request,
     db: DbSession,
     redis: RedisClient,
+    utm_source: str | None = None,
+    utm_medium: str | None = None,
+    utm_campaign: str | None = None,
 ) -> RedirectResponse:
     """
     Lookup deal affiliate_url, async-log the click to Redis + Postgres, HTTP 302.
@@ -64,6 +81,9 @@ async def go_redirect(
     now = datetime.now(timezone.utc).isoformat()
     client_ip = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent", "")
+    source = clean_utm(utm_source)
+    medium = clean_utm(utm_medium)
+    campaign = clean_utm(utm_campaign)
 
     # Redis click log (fast path for analytics / rate dashboards)
     click_payload = {
@@ -71,6 +91,9 @@ async def go_redirect(
         "affiliate_url": target,
         "ip": client_ip,
         "user_agent": user_agent,
+        "utm_source": source,
+        "utm_medium": medium,
+        "utm_campaign": campaign,
         "ts": now,
     }
     redis_key = f"clicks:{deal_id}"
@@ -84,8 +107,14 @@ async def go_redirect(
     await db.execute(
         text(
             """
-            INSERT INTO click_events (deal_id, affiliate_url, ip_address, user_agent, created_at)
-            VALUES (:deal_id, :affiliate_url, :ip_address, :user_agent, NOW())
+            INSERT INTO click_events (
+                deal_id, affiliate_url, ip_address, user_agent,
+                utm_source, utm_medium, utm_campaign, created_at
+            )
+            VALUES (
+                :deal_id, :affiliate_url, :ip_address, :user_agent,
+                :utm_source, :utm_medium, :utm_campaign, NOW()
+            )
             """
         ),
         {
@@ -93,6 +122,9 @@ async def go_redirect(
             "affiliate_url": target,
             "ip_address": client_ip,
             "user_agent": user_agent[:512] if user_agent else None,
+            "utm_source": source,
+            "utm_medium": medium,
+            "utm_campaign": campaign,
         },
     )
 

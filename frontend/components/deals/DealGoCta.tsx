@@ -5,12 +5,15 @@ import { useNewsletterAccess } from "@/components/newsletter/useNewsletterAccess
 import {
   openNewsletterSignup,
   setPendingGoDealId,
+  trackedGoPath,
 } from "@/lib/newsletter-storage";
 
 interface DealGoCtaProps {
   dealId: string;
   label: string;
   variant?: "button" | "link";
+  /** Query string from the deal page (utm_source, utm_medium, utm_campaign). */
+  referralSearch?: string;
 }
 
 /**
@@ -20,8 +23,10 @@ export function DealGoCta({
   dealId,
   label,
   variant = "button",
+  referralSearch = "",
 }: DealGoCtaProps) {
   const { unlocked } = useNewsletterAccess();
+  const href = trackedGoPath(dealId, referralSearch);
 
   function requireSignup() {
     setPendingGoDealId(dealId);
@@ -32,7 +37,7 @@ export function DealGoCta({
     if (variant === "link") {
       return (
         <a
-          href={`/go/${dealId}`}
+          href={href}
           target="_blank"
           rel="noopener noreferrer"
           className="font-medium text-burgundy-600 underline-offset-2 hover:underline break-all"
@@ -43,7 +48,7 @@ export function DealGoCta({
     }
     return (
       <Button asChild size="lg">
-        <a href={`/go/${dealId}`} target="_blank" rel="noopener noreferrer">
+        <a href={href} target="_blank" rel="noopener noreferrer">
           {label}
         </a>
       </Button>

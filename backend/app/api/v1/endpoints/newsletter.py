@@ -16,6 +16,7 @@ from app.schemas.newsletter import (
     NewsletterUnsubscribeEmailRequest,
 )
 from app.services.newsletter import (
+    assign_resolved_location,
     new_unsubscribe_token,
     normalize_email,
     soft_resubscribe,
@@ -44,11 +45,13 @@ async def subscribe(
         # Re-activate + refresh capture fields; never delete history
         existing.name = payload.name.strip()
         existing.surname = payload.surname.strip()
-        existing.location = payload.location.strip()
-        if payload.country_code:
-            existing.country_code = payload.country_code.strip().lower()
-        if payload.city:
-            existing.city = payload.city.strip()
+        assign_resolved_location(
+            existing,
+            location=payload.location,
+            country_code=payload.country_code,
+            city=payload.city,
+            region=payload.region,
+        )
         soft_resubscribe(existing)
         await db.flush()
         await db.refresh(existing)
@@ -59,12 +62,15 @@ async def subscribe(
         surname=payload.surname.strip(),
         email=email,
         location=payload.location.strip(),
-        country_code=(
-            payload.country_code.strip().lower() if payload.country_code else None
-        ),
-        city=payload.city.strip() if payload.city else None,
         is_subscribed=True,
         unsubscribe_token=new_unsubscribe_token(),
+    )
+    assign_resolved_location(
+        subscriber,
+        location=payload.location,
+        country_code=payload.country_code,
+        city=payload.city,
+        region=payload.region,
     )
     db.add(subscriber)
     await db.flush()

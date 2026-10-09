@@ -10,6 +10,7 @@ import {
   type GeoTarget,
 } from "@/lib/geo";
 import { setLocationPreference } from "@/lib/location-preference";
+import { regionForCity, regionFromCode } from "@/lib/subscriber-region";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -30,12 +31,21 @@ async function resolveFromApi(lat: number, lon: number): Promise<GeoTarget | nul
       country_slug: string;
       city_slug: string;
       city: string;
+      region_code?: string | null;
+      region_label?: string | null;
     };
+    const cityLabel =
+      data.city || cityDisplayLabel(data.country_slug, data.city_slug);
+    const region =
+      regionForCity(data.country_slug, cityLabel) ??
+      regionFromCode(data.country_slug, data.region_code);
     return {
       countryCode: data.country_slug,
       countryLabel: countrySearchLabel(data.country_slug),
       citySlug: data.city_slug,
-      cityLabel: data.city || cityDisplayLabel(data.country_slug, data.city_slug),
+      cityLabel,
+      regionCode: region?.regionCode,
+      regionLabel: data.region_label || region?.regionLabel,
     };
   } catch {
     return null;

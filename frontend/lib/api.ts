@@ -923,6 +923,7 @@ export interface NewsletterSubscriber {
   location: string;
   country_code?: string | null;
   city?: string | null;
+  region?: string | null;
   is_subscribed: boolean;
   unsubscribed_at?: string | null;
   created_at: string;
@@ -947,6 +948,7 @@ export async function subscribeNewsletter(payload: {
   location: string;
   country_code?: string;
   city?: string;
+  region?: string;
 }): Promise<ApiResult<NewsletterSubscriber>> {
   return apiFetch("/api/v1/newsletter/subscribe", {
     method: "POST",
