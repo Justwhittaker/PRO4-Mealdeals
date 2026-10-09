@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import httpx
 from sqlalchemy import create_engine, text
@@ -35,6 +36,7 @@ logger = logging.getLogger(__name__)
 # writes a terminal status. Wait past that limit before calling a running
 # row interrupted, so a zone still inside its budget is left alone.
 _RUNNING_GRACE_SECONDS = 15 * 60
+_DUBLIN = ZoneInfo("Europe/Dublin")
 
 
 def _engine() -> Engine:
@@ -442,6 +444,75 @@ def _site_transfer_health(
     }
 
 
+def _coerce_utc(value: datetime | str | None) -> datetime | None:
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
+    return _parse_recorded_at(value)
+
+
+def _format_dublin_duration(
+    started_at: datetime,
+    finished_at: datetime,
+    *,
+    approximate: bool,
+) -> str | None:
+    start_local = started_at.astimezone(_DUBLIN).replace(second=0, microsecond=0)
+    finish_local = finished_at.astimezone(_DUBLIN).replace(second=0, microsecond=0)
+    minutes = int((finish_local - start_local).total_seconds() // 60)
+    if minutes < 0:
+        return None
+    hours, mins = divmod(minutes, 60)
+    start_clock = start_local.strftime("%H:%M")
+    if approximate:
+        start_clock = f"~{start_clock}"
+    finish_clock = finish_local.strftime("%H:%M")
+    return f"Duration: {hours}h {mins}m ({start_clock}–{finish_clock} Dublin)"
+
+
+def _cycle_duration_line(
+    cycle_results: dict[str, dict[str, Any]],
+    *,
+    since: datetime | str | None = None,
+) -> str | None:
+    """Earliest zone start through the latest finished zone, in Dublin time.
+
+    Finish time comes from zones that have left the running state. A running
+    row's recorded_at is the moment that marker was written. When no zone
+    stored started_at, the scheduled cycle start (since) is the start and is
+    prefixed with ~. With no finished zone, there is no duration line.
+    """
+    starts: list[datetime] = []
+    finishes: list[datetime] = []
+    for row in cycle_results.values():
+        if not isinstance(row, dict):
+            continue
+        started = _parse_recorded_at(row.get("started_at"))
+        if started is not None:
+            starts.append(started)
+        if _is_running(row):
+            continue
+        finished = _parse_recorded_at(row.get("recorded_at"))
+        if finished is not None:
+            finishes.append(finished)
+    if not finishes:
+        return None
+    if starts:
+        started_at = min(starts)
+        approximate = False
+    else:
+        started_at = _coerce_utc(since)
+        if started_at is None:
+            return None
+        approximate = True
+    return _format_dublin_duration(
+        started_at,
+        max(finishes),
+        approximate=approximate,
+    )
+
+
 def format_digest_body(report: dict[str, Any]) -> str:
     zones = report["zones"]
     site = report["site"]
@@ -493,9 +564,14 @@ def format_digest_body(report: dict[str, Any]) -> str:
             short = short[:27] + "…"
         cat_lines.append(f"• {short}: {pct:.0f}% ({count})")
 
-    return "\n".join(
+    raw_results = report.get("cycle_results")
+    cycle_results = raw_results if isinstance(raw_results, dict) else {}
+    duration_line = _cycle_duration_line(cycle_results, since=report.get("since"))
+    lines = [f"Cycle {report['cycle_id']} (since {report['since_label']} UTC)"]
+    if duration_line:
+        lines.append(duration_line)
+    lines.extend(
         [
-            f"Cycle {report['cycle_id']} (since {report['since_label']} UTC)",
             zone_line,
             site_line,
             f"Active offers on site: {report['active_offers']}",
@@ -506,6 +582,7 @@ def format_digest_body(report: dict[str, Any]) -> str:
             *cat_lines,
         ]
     )
+    return "\n".join(lines)
 
 
 def build_cycle_digest_report(now: datetime | None = None) -> dict[str, Any]:

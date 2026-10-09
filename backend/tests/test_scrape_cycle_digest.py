@@ -13,6 +13,7 @@ from app.scrapers.zones import ZONE_ORDER, ZONE_TASK_TIME_LIMIT_SECONDS
 from app.services.scrape_cycle_digest import (
     _RUNNING_GRACE_SECONDS,
     _active_offers_on_site,
+    _cycle_duration_line,
     _query_window_counts,
     _zone_health,
     build_cycle_digest_report,
@@ -279,28 +280,36 @@ class _FakeRedis:
                 yield key
 
 
-def _digest_body(zones: dict) -> str:
-    return format_digest_body(
-        {
-            "cycle_id": "2026-10-08T06",
-            "since_label": "2026-10-08 06:00",
-            "zones": zones,
-            "site": {
-                "healthy": True,
-                "api_ok": True,
-                "frontend_ok": True,
-                "revalidate_ok": 1,
-                "revalidate_fail": 0,
-                "revalidate_pct": 100.0,
-                "detail": "ok",
-            },
-            "new_deals": 0,
-            "dropped_deals": 0,
-            "net_new_emails": 0,
-            "active_offers": 0,
-            "categories": [],
-        }
-    )
+def _digest_body(
+    zones: dict,
+    *,
+    cycle_results: dict | None = None,
+    since: str | None = None,
+) -> str:
+    report: dict = {
+        "cycle_id": "2026-10-08T06",
+        "since_label": "2026-10-08 06:00",
+        "zones": zones,
+        "site": {
+            "healthy": True,
+            "api_ok": True,
+            "frontend_ok": True,
+            "revalidate_ok": 1,
+            "revalidate_fail": 0,
+            "revalidate_pct": 100.0,
+            "detail": "ok",
+        },
+        "new_deals": 0,
+        "dropped_deals": 0,
+        "net_new_emails": 0,
+        "active_offers": 0,
+        "categories": [],
+    }
+    if cycle_results is not None:
+        report["cycle_results"] = cycle_results
+    if since is not None:
+        report["since"] = since
+    return format_digest_body(report)
 
 
 def test_overdue_running_zone_is_interrupted_in_the_digest() -> None:
@@ -596,3 +605,163 @@ def test_running_marker_records_worker_hostname(monkeypatch: pytest.MonkeyPatch)
     assert recorded[0]["status"] == "running"
     assert recorded[0]["worker_hostname"] == "scrape@nuc"
     assert result["status"] == "completed"
+    started_at = recorded[0]["started_at"]
+    assert isinstance(started_at, str)
+    assert started_at.endswith("+00:00")
+    assert recorded[-1]["started_at"] == started_at
+    assert result["started_at"] == started_at
+
+
+def test_failure_payload_keeps_the_zone_started_at(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    recorded: list[dict[str, object]] = []
+
+    def _record(zone: str, payload: dict[str, object], cycle_id: str | None = None) -> str:
+        recorded.append(payload)
+        return cycle_id or ""
+
+    def _boom(_zone: str) -> dict[str, object]:
+        raise RuntimeError("Invalid IPv6 URL")
+
+    monkeypatch.setattr("app.workers.tasks.zone_already_succeeded", lambda *_a, **_k: False)
+    monkeypatch.setattr("app.workers.tasks.record_zone_result", _record)
+    monkeypatch.setattr("app.workers.tasks.scrape_and_ingest_zone", _boom)
+
+    with pytest.raises(RuntimeError, match="Invalid IPv6 URL"):
+        scrape_zone_retail.run("se_asia")
+
+    assert recorded[0]["status"] == "running"
+    assert recorded[1]["status"] == "failed"
+    assert recorded[0]["started_at"] == recorded[1]["started_at"]
+    assert str(recorded[0]["started_at"]).endswith("+00:00")
+
+
+def test_cycle_duration_line_uses_earliest_start_and_latest_finish() -> None:
+    line = _cycle_duration_line(
+        {
+            "australia": {
+                "status": "completed",
+                "started_at": "2026-10-08T18:00:00+00:00",
+                "recorded_at": "2026-10-08T21:00:00+00:00",
+            },
+            "se_asia": {
+                "status": "completed",
+                "started_at": "2026-10-08T19:00:00+00:00",
+                "recorded_at": "2026-10-08T22:18:00+00:00",
+            },
+        },
+        since="2026-10-08T17:00:00+00:00",
+    )
+    assert line == "Duration: 4h 18m (19:00–23:18 Dublin)"
+
+
+def test_cycle_duration_line_falls_back_to_cycle_start() -> None:
+    line = _cycle_duration_line(
+        {
+            "se_asia": {
+                "status": "completed",
+                "recorded_at": "2026-10-08T22:18:00+00:00",
+            },
+        },
+        since=datetime(2026, 10, 8, 18, 0, tzinfo=timezone.utc),
+    )
+    assert line == "Duration: 4h 18m (~19:00–23:18 Dublin)"
+
+
+def test_cycle_duration_line_ignores_running_zones_when_picking_the_finish() -> None:
+    line = _cycle_duration_line(
+        {
+            "australia": {
+                "status": "completed",
+                "started_at": "2026-10-08T18:30:00+00:00",
+                "recorded_at": "2026-10-08T21:00:00+00:00",
+            },
+            "se_asia": {
+                "status": "running",
+                "started_at": "2026-10-08T18:00:00+00:00",
+                "recorded_at": "2026-10-08T23:30:00+00:00",
+            },
+        },
+        since="2026-10-08T18:00:00+00:00",
+    )
+    assert line == "Duration: 3h 0m (19:00–22:00 Dublin)"
+    assert (
+        _cycle_duration_line(
+            {
+                "se_asia": {
+                    "status": "running",
+                    "started_at": "2026-10-08T18:00:00+00:00",
+                    "recorded_at": "2026-10-08T23:30:00+00:00",
+                },
+            },
+            since="2026-10-08T18:00:00+00:00",
+        )
+        is None
+    )
+
+
+def test_cycle_duration_line_without_results() -> None:
+    assert _cycle_duration_line({}, since="2026-10-08T18:00:00+00:00") is None
+    assert (
+        _cycle_duration_line(
+            {"se_asia": {"status": "completed", "ok": True}},
+            since="2026-10-08T18:00:00+00:00",
+        )
+        is None
+    )
+
+
+def test_cycle_duration_line_spans_midnight() -> None:
+    line = _cycle_duration_line(
+        {
+            "us_east": {
+                "status": "timed_out",
+                "started_at": "2026-10-08T22:30:00+00:00",
+                "recorded_at": "2026-10-09T01:15:00+00:00",
+            },
+        },
+        since="2026-10-08T18:00:00+00:00",
+    )
+    assert line == "Duration: 2h 45m (23:30–02:15 Dublin)"
+
+
+def test_format_digest_body_puts_duration_after_the_cycle_line() -> None:
+    zones = {
+        "total_zones": 1,
+        "completed": 1,
+        "ok": 1,
+        "failed": [],
+        "missing": [],
+        "pct_completed": 100.0,
+        "pct_ok": 100.0,
+    }
+    body = _digest_body(
+        zones,
+        cycle_results={
+            "australia": {
+                "status": "completed",
+                "started_at": "2026-10-08T18:00:00+00:00",
+                "recorded_at": "2026-10-08T22:18:00+00:00",
+            },
+        },
+        since="2026-10-08T18:00:00+00:00",
+    )
+    lines = body.splitlines()
+    assert lines[0] == "Cycle 2026-10-08T06 (since 2026-10-08 06:00 UTC)"
+    assert lines[1] == "Duration: 4h 18m (19:00–23:18 Dublin)"
+    assert lines[2].startswith("Zones:")
+
+    open_cycle = _digest_body(
+        zones,
+        cycle_results={
+            "se_asia": {
+                "status": "running",
+                "started_at": "2026-10-08T18:00:00+00:00",
+                "recorded_at": "2026-10-08T22:18:00+00:00",
+            },
+        },
+        since="2026-10-08T18:00:00+00:00",
+    )
+    assert "Duration:" not in open_cycle
+    assert open_cycle.splitlines()[1].startswith("Zones:")

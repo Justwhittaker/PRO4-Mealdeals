@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -127,13 +128,19 @@ _PROGRESS_KEYS = (
 )
 
 
-def _zone_failure_payload(zone: str, error: str) -> dict[str, Any]:
+def _zone_failure_payload(
+    zone: str,
+    error: str,
+    *,
+    started_at: str,
+) -> dict[str, Any]:
     return {
         "zone": zone,
         "label": SCRAPE_ZONES[zone]["label"],
         "ok": False,
         "status": "failed",
         "error": error[:500],
+        "started_at": started_at,
         "areas": 0,
         "discovered": 0,
         "ingested": 0,
@@ -195,9 +202,11 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
             "cycle_id": cycle_id,
         }
 
+    started_at = datetime.now(timezone.utc).isoformat()
     running = {
         "ok": False,
         "status": "running",
+        "started_at": started_at,
         "areas": 0,
         "discovered": 0,
         "ingested": 0,
@@ -213,7 +222,11 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
     try:
         result = scrape_and_ingest_zone(zone)
     except SoftTimeLimitExceeded as exc:
-        summary = _zone_failure_payload(zone, "soft time limit exceeded")
+        summary = _zone_failure_payload(
+            zone,
+            "soft time limit exceeded",
+            started_at=started_at,
+        )
         summary["status"] = "timed_out"
         summary["ok"] = False
         progress = scrape_progress_of(exc)
@@ -233,7 +246,7 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
         )
         return summary
     except Exception as exc:
-        summary = _zone_failure_payload(zone, str(exc))
+        summary = _zone_failure_payload(zone, str(exc), started_at=started_at)
         record_zone_result(zone, summary, cycle_id=cycle_id)
         raise
     markets = markets_for_zone(zone)
@@ -256,6 +269,7 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
         "cities_failed": cities_failed,
         "ok": not every_city_failed,
         "status": "failed" if every_city_failed else "completed",
+        "started_at": started_at,
         "cycle_id": cycle_id,
     }
     if every_city_failed:
