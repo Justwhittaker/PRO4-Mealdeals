@@ -17,14 +17,21 @@ from app.services.scrape_cycle_digest import (
     _query_window_counts,
     _zone_health,
     build_cycle_digest_report,
+    format_city_retry_line,
     format_digest_body,
+    queue_failed_city_retries,
+    run_city_retry,
+    send_city_retry_followup,
 )
 from app.services.scrape_cycle_stats import (
+    claim_city_retries,
     cycle_id_from_task_request,
     cycle_start_for_time,
     digest_cycle_start,
+    load_city_retries,
     load_cycle_zone_results,
     load_cycle_zone_set,
+    record_city_retry_outcome,
     record_zone_result,
     remember_cycle_zone_set,
     zone_already_succeeded,
@@ -208,6 +215,10 @@ def test_digest_does_not_mark_db_activity_as_ok(
         },
     )
     monkeypatch.setattr(
+        "app.services.scrape_cycle_digest.load_city_retries",
+        lambda _cycle_id: [],
+    )
+    monkeypatch.setattr(
         "app.services.scrape_cycle_digest.load_cycle_zone_set",
         lambda _cycle_id: None,
     )
@@ -261,6 +272,7 @@ def test_digest_does_not_mark_db_activity_as_ok(
 class _FakeRedis:
     def __init__(self) -> None:
         self.values: dict[str, str] = {}
+        self.hashes: dict[str, dict[str, str]] = {}
 
     def setex(self, key: str, _ttl: int, value: str) -> None:
         self.values[key] = value
@@ -274,6 +286,27 @@ class _FakeRedis:
     def get(self, key: str) -> str | None:
         return self.values.get(key)
 
+    def expire(self, _key: str, _ttl: int) -> bool:
+        return True
+
+    def hsetnx(self, key: str, field: str, value: str) -> int:
+        bucket = self.hashes.setdefault(key, {})
+        if field in bucket:
+            return 0
+        bucket[field] = value
+        return 1
+
+    def hset(self, key: str, field: str, value: str) -> int:
+        bucket = self.hashes.setdefault(key, {})
+        bucket[field] = value
+        return 1
+
+    def hget(self, key: str, field: str) -> str | None:
+        return self.hashes.get(key, {}).get(field)
+
+    def hgetall(self, key: str) -> dict[str, str]:
+        return dict(self.hashes.get(key, {}))
+
     def scan_iter(self, match: str | None = None):
         for key in list(self.values):
             if match is None or fnmatch.fnmatch(key, match):
@@ -285,6 +318,7 @@ def _digest_body(
     *,
     cycle_results: dict | None = None,
     since: str | None = None,
+    city_retries: list | None = None,
 ) -> str:
     report: dict = {
         "cycle_id": "2026-10-08T06",
@@ -309,6 +343,8 @@ def _digest_body(
         report["cycle_results"] = cycle_results
     if since is not None:
         report["since"] = since
+    if city_retries is not None:
+        report["city_retries"] = city_retries
     return format_digest_body(report)
 
 
@@ -765,3 +801,193 @@ def test_format_digest_body_puts_duration_after_the_cycle_line() -> None:
     )
     assert "Duration:" not in open_cycle
     assert open_cycle.splitlines()[1].startswith("Zones:")
+
+
+_RECONNECT = "Can't reconnect until invalid transaction is rolled back"
+
+
+def _cycle_with_failed_cities() -> dict:
+    return {
+        "us_east": {
+            "status": "completed",
+            "cities_failed": [
+                {"country": "US", "city": "Tampa", "error": _RECONNECT},
+                {"country": "US", "city": "Seattle", "error": _RECONNECT},
+            ],
+        },
+        "france_benelux": {
+            "status": "failed",
+            "cities_failed": [
+                {
+                    "country": "FR",
+                    "city": "Bordeaux Wine Country",
+                    "error": _RECONNECT,
+                },
+            ],
+        },
+        "us_west": {
+            "status": "running",
+            "cities_failed": [
+                {"country": "US", "city": "Phoenix", "error": "still running"},
+            ],
+        },
+    }
+
+
+def test_each_failed_city_is_claimed_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = _FakeRedis()
+    monkeypatch.setattr("app.services.scrape_cycle_stats._client", lambda: fake)
+    cities = [("US", "Tampa"), ("US", "Seattle"), ("FR", "Bordeaux Wine Country")]
+    assert claim_city_retries("2026-10-08T18", cities) == cities
+    assert claim_city_retries("2026-10-08T18", cities) == []
+
+
+def test_duplicate_digest_trigger_does_not_requeue_city_retries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake = _FakeRedis()
+    monkeypatch.setattr("app.services.scrape_cycle_stats._client", lambda: fake)
+    calls: list[tuple[str, str, str]] = []
+
+    def _enqueue(cycle_id: str, country: str, city: str) -> None:
+        calls.append((cycle_id, country, city))
+
+    results = _cycle_with_failed_cities()
+    first = queue_failed_city_retries("2026-10-08T18", results, enqueue=_enqueue)
+    second = queue_failed_city_retries("2026-10-08T18", results, enqueue=_enqueue)
+    assert first == [
+        ("US", "Tampa"),
+        ("US", "Seattle"),
+        ("FR", "Bordeaux Wine Country"),
+    ]
+    assert ("US", "Phoenix") not in first
+    assert second == []
+    assert calls == [
+        ("2026-10-08T18", "US", "Tampa"),
+        ("2026-10-08T18", "US", "Seattle"),
+        ("2026-10-08T18", "FR", "Bordeaux Wine Country"),
+    ]
+
+
+def test_city_retry_runs_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = _FakeRedis()
+    monkeypatch.setattr("app.services.scrape_cycle_stats._client", lambda: fake)
+    monkeypatch.setattr(
+        "app.services.scrape_cycle_digest.send_ntfy",
+        lambda *_args, **_kwargs: {"ok": True},
+    )
+    claim_city_retries("2026-10-08T18", [("US", "Tampa")])
+    calls: list[tuple[str, str]] = []
+
+    def _scrape(country: str, city: str) -> dict[str, int]:
+        calls.append((country, city))
+        return {"ingested": 1}
+
+    first = run_city_retry("2026-10-08T18", "US", "Tampa", scrape=_scrape)
+    second = run_city_retry("2026-10-08T18", "US", "Tampa", scrape=_scrape)
+    assert calls == [("US", "Tampa")]
+    assert first["ok"] is True
+    assert second["skipped"] is True
+    assert load_city_retries("2026-10-08T18")[0]["status"] == "recovered"
+
+
+def test_a_failed_city_retry_is_not_run_again(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = _FakeRedis()
+    monkeypatch.setattr("app.services.scrape_cycle_stats._client", lambda: fake)
+    monkeypatch.setattr(
+        "app.services.scrape_cycle_digest.send_ntfy",
+        lambda *_args, **_kwargs: {"ok": True},
+    )
+    claim_city_retries("2026-10-08T18", [("US", "Tampa")])
+    calls: list[str] = []
+
+    def _scrape(_country: str, city: str) -> dict[str, int]:
+        calls.append(city)
+        raise RuntimeError("Can't reconnect until invalid transaction is rolled back")
+
+    first = run_city_retry("2026-10-08T18", "US", "Tampa", scrape=_scrape)
+    second = run_city_retry("2026-10-08T18", "US", "Tampa", scrape=_scrape)
+    assert calls == ["Tampa"]
+    assert first["ok"] is False
+    assert second["skipped"] is True
+    assert load_city_retries("2026-10-08T18")[0]["status"] == "failed"
+
+
+def test_format_digest_body_includes_city_retry_line() -> None:
+    zones = {
+        "total_zones": 2,
+        "completed": 2,
+        "ok": 1,
+        "failed": ["france_benelux"],
+        "missing": [],
+        "pct_completed": 100.0,
+        "pct_ok": 50.0,
+    }
+    retries = [
+        {"status": "recovered", "country": "US", "city": "Seattle"},
+        {"status": "failed", "country": "US", "city": "Tampa"},
+        {"status": "failed", "country": "FR", "city": "Bordeaux Wine Country"},
+    ]
+    line = format_city_retry_line(retries)
+    assert line == (
+        "City retries: 1 recovered, 2 still failing: "
+        "Bordeaux Wine Country (FR), Tampa (US)"
+    )
+    body = _digest_body(zones, city_retries=retries)
+    zone_at = body.index("Zones:")
+    retry_at = body.index(line or "")
+    site_at = body.index("Site transfer:")
+    assert zone_at < retry_at < site_at
+
+    pending = _digest_body(
+        zones,
+        city_retries=[
+            {"status": "queued", "country": "US", "city": "Tampa"},
+            {"status": "recovered", "country": "US", "city": "Seattle"},
+        ],
+    )
+    assert "City retries:" not in pending
+    assert format_city_retry_line([]) is None
+    assert format_city_retry_line(None) is None
+
+
+def test_city_retry_followup_is_sent_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = _FakeRedis()
+    monkeypatch.setattr("app.services.scrape_cycle_stats._client", lambda: fake)
+    claim_city_retries(
+        "2026-10-08T18",
+        [("US", "Tampa"), ("US", "Seattle"), ("FR", "Bordeaux Wine Country")],
+    )
+    record_city_retry_outcome("2026-10-08T18", "US", "Seattle", ok=True)
+    record_city_retry_outcome(
+        "2026-10-08T18",
+        "US",
+        "Tampa",
+        ok=False,
+        error=_RECONNECT,
+    )
+    record_city_retry_outcome(
+        "2026-10-08T18",
+        "FR",
+        "Bordeaux Wine Country",
+        ok=False,
+        error=_RECONNECT,
+    )
+    sent: list[str] = []
+
+    def _send(_title: str, body: str, **_kwargs: object) -> dict[str, bool]:
+        sent.append(body)
+        return {"ok": True}
+
+    monkeypatch.setattr("app.services.scrape_cycle_digest.send_ntfy", _send)
+    first = send_city_retry_followup("2026-10-08T18")
+    second = send_city_retry_followup("2026-10-08T18")
+    assert first is not None
+    assert second is None
+    assert len(sent) == 1
+    assert "Cycle 2026-10-08T18" in sent[0]
+    assert (
+        "City retries: 1 recovered, 2 still failing: "
+        "Bordeaux Wine Country (FR), Tampa (US)"
+    ) in sent[0]
+    assert "next scheduled scrape" in sent[0]

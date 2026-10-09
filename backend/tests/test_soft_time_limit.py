@@ -191,6 +191,12 @@ class _Session:
     def __exit__(self, *_args: object) -> bool:
         return False
 
+    def rollback(self) -> None:
+        return None
+
+    def close(self) -> None:
+        return None
+
     def commit(self) -> None:
         raise AssertionError("session committed after a time limit")
 

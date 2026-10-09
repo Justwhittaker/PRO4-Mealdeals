@@ -224,3 +224,156 @@ def load_cycle_zone_results(cycle_id: str) -> dict[str, dict[str, Any]]:
         reraise_if_fatal(exc)
         logger.exception("Failed to load scrape cycle stats for %s", cycle_id)
     return out
+
+
+def _city_retry_key(cycle_id: str) -> str:
+    return f"{_REDIS_KEY_PREFIX}:{cycle_id}:city_retries"
+
+
+def _city_retry_field(country: str, city: str) -> str:
+    return f"{country.strip().upper()}\t{city.strip()}"
+
+
+def claim_city_retries(
+    cycle_id: str,
+    cities: list[tuple[str, str]],
+) -> list[tuple[str, str]]:
+    """Claim each city once for this cycle. Already-claimed cities are skipped.
+
+    ``HSETNX`` is the guard against a second digest, a restart, or a duplicate
+    trigger. A city that loses the claim is not queued again.
+    """
+    claimed: list[tuple[str, str]] = []
+    if not cities:
+        return claimed
+    try:
+        client = _client()
+        key = _city_retry_key(cycle_id)
+        now = datetime.now(timezone.utc).isoformat()
+        for country, city in cities:
+            code = country.strip().upper()
+            name = city.strip()
+            if not code or not name:
+                continue
+            payload = json.dumps(
+                {
+                    "status": "queued",
+                    "country": code,
+                    "city": name,
+                    "queued_at": now,
+                }
+            )
+            if client.hsetnx(key, _city_retry_field(code, name), payload):
+                claimed.append((code, name))
+        if claimed:
+            client.expire(key, _REDIS_TTL_SECONDS)
+    except Exception as exc:
+        reraise_if_fatal(exc)
+        logger.exception("Failed to claim city retries for %s", cycle_id)
+    return claimed
+
+
+def begin_city_retry(cycle_id: str, country: str, city: str) -> bool:
+    """Move one claimed city from queued to running.
+
+    A second worker, a redelivery, or a repeat call leaves the city alone.
+    """
+    code = country.strip().upper()
+    name = city.strip()
+    key = _city_retry_key(cycle_id)
+    field = _city_retry_field(code, name)
+    lock = f"{key}:lock:{field}"
+    try:
+        client = _client()
+        if not client.set(lock, "1", nx=True, ex=_REDIS_TTL_SECONDS):
+            return False
+        raw = client.hget(key, field)
+        if not raw:
+            return False
+        payload = json.loads(raw)
+        if not isinstance(payload, dict) or payload.get("status") != "queued":
+            return False
+        payload["status"] = "running"
+        client.hset(key, field, json.dumps(payload))
+        return True
+    except Exception as exc:
+        reraise_if_fatal(exc)
+        logger.exception(
+            "Failed to begin city retry %s/%s for %s",
+            code,
+            name,
+            cycle_id,
+        )
+        return False
+
+
+def record_city_retry_outcome(
+    cycle_id: str,
+    country: str,
+    city: str,
+    *,
+    ok: bool,
+    error: str | None = None,
+) -> None:
+    """Store the single retry result. Failed cities stay failed for the next cycle."""
+    code = country.strip().upper()
+    name = city.strip()
+    payload = {
+        "status": "recovered" if ok else "failed",
+        "country": code,
+        "city": name,
+        "error": (error or "")[:500],
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        client = _client()
+        key = _city_retry_key(cycle_id)
+        client.hset(key, _city_retry_field(code, name), json.dumps(payload))
+        client.expire(key, _REDIS_TTL_SECONDS)
+    except Exception as exc:
+        reraise_if_fatal(exc)
+        logger.exception(
+            "Failed to record city retry %s/%s for %s",
+            code,
+            name,
+            cycle_id,
+        )
+
+
+def load_city_retries(cycle_id: str) -> list[dict[str, Any]]:
+    """Retry rows for a cycle, ordered by country then city."""
+    try:
+        raw_map = _client().hgetall(_city_retry_key(cycle_id))
+    except Exception as exc:
+        reraise_if_fatal(exc)
+        logger.exception("Failed to load city retries for %s", cycle_id)
+        return []
+    if not raw_map:
+        return []
+    items: list[dict[str, Any]] = []
+    for raw in raw_map.values():
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError:
+            logger.warning("Corrupt city retry row for %s", cycle_id)
+            continue
+        if isinstance(payload, dict):
+            items.append(payload)
+    items.sort(
+        key=lambda item: (
+            str(item.get("country") or ""),
+            str(item.get("city") or ""),
+        )
+    )
+    return items
+
+
+def claim_city_retry_followup(cycle_id: str) -> bool:
+    """True the first time this cycle's retry follow-up is claimed."""
+    key = f"{_REDIS_KEY_PREFIX}:{cycle_id}:city_retry_followup"
+    try:
+        return bool(_client().set(key, "1", nx=True, ex=_REDIS_TTL_SECONDS))
+    except Exception as exc:
+        reraise_if_fatal(exc)
+        logger.exception("Failed to claim city retry follow-up for %s", cycle_id)
+        return False

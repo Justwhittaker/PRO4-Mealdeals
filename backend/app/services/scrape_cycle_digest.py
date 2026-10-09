@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -23,10 +24,15 @@ from app.scrapers.zones import (
 )
 from app.services.ntfy import send_ntfy
 from app.services.scrape_cycle_stats import (
+    begin_city_retry,
+    claim_city_retries,
+    claim_city_retry_followup,
     cycle_id_for_start,
     digest_cycle_start,
+    load_city_retries,
     load_cycle_zone_results,
     load_cycle_zone_set,
+    record_city_retry_outcome,
 )
 from app.workers.celery_app import celery_app
 
@@ -513,6 +519,71 @@ def _cycle_duration_line(
     )
 
 
+def failed_cities_for_retry(
+    cycle_results: dict[str, dict[str, Any]],
+) -> list[tuple[str, str]]:
+    """Failed cities on zones that have left the running state.
+
+    A running zone's partial list is not retried. The digest checkpoint is
+    what decides the cycle's finished results.
+    """
+    seen: set[tuple[str, str]] = set()
+    cities: list[tuple[str, str]] = []
+    for row in cycle_results.values():
+        if not isinstance(row, dict) or _is_running(row):
+            continue
+        failed = row.get("cities_failed") or []
+        if not isinstance(failed, list):
+            continue
+        for item in failed:
+            if not isinstance(item, dict):
+                continue
+            country = str(item.get("country") or "").strip().upper()
+            city = str(item.get("city") or "").strip()
+            if not country or not city:
+                continue
+            key = (country, city)
+            if key in seen:
+                continue
+            seen.add(key)
+            cities.append(key)
+    return cities
+
+
+def format_city_retry_line(retries: object) -> str | None:
+    """`City retries: X recovered, Y still failing: Tampa (US), …`.
+
+    Pending rows (queued or running) have no final line yet.
+    """
+    if not isinstance(retries, list) or not retries:
+        return None
+    recovered = 0
+    failing: list[tuple[str, str]] = []
+    for item in retries:
+        if not isinstance(item, dict):
+            continue
+        status = str(item.get("status") or "")
+        if status in {"queued", "running"}:
+            return None
+        if status == "recovered":
+            recovered += 1
+            continue
+        if status != "failed":
+            continue
+        country = str(item.get("country") or "").strip().upper()
+        city = str(item.get("city") or "").strip()
+        if country and city:
+            failing.append((country, city))
+    if recovered == 0 and not failing:
+        return None
+    failing.sort()
+    line = f"City retries: {recovered} recovered, {len(failing)} still failing"
+    if failing:
+        names = ", ".join(f"{city} ({country})" for country, city in failing)
+        line += f": {names}"
+    return line
+
+
 def format_digest_body(report: dict[str, Any]) -> str:
     zones = report["zones"]
     site = report["site"]
@@ -567,12 +638,15 @@ def format_digest_body(report: dict[str, Any]) -> str:
     raw_results = report.get("cycle_results")
     cycle_results = raw_results if isinstance(raw_results, dict) else {}
     duration_line = _cycle_duration_line(cycle_results, since=report.get("since"))
+    retry_line = format_city_retry_line(report.get("city_retries"))
     lines = [f"Cycle {report['cycle_id']} (since {report['since_label']} UTC)"]
     if duration_line:
         lines.append(duration_line)
+    lines.append(zone_line)
+    if retry_line:
+        lines.append(retry_line)
     lines.extend(
         [
-            zone_line,
             site_line,
             f"Active offers on site: {report['active_offers']}",
             f"New deals: {report['new_deals']}",
@@ -630,6 +704,7 @@ def build_cycle_digest_report(now: datetime | None = None) -> dict[str, Any]:
         "active_offers": active_offers,
         "categories": categories,
         "cycle_results": cycle_results,
+        "city_retries": load_city_retries(cycle_id),
     }
 
 
@@ -663,3 +738,116 @@ def run_scrape_cycle_digest(now: datetime | None = None) -> dict[str, Any]:
         notify,
     )
     return {"report": report, "body": body, "ntfy": notify}
+
+
+def queue_failed_city_retries(
+    cycle_id: str,
+    cycle_results: dict[str, dict[str, Any]],
+    *,
+    enqueue: Callable[[str, str, str], None],
+) -> list[tuple[str, str]]:
+    """Queue one retry per failed city. A second call queues nothing.
+
+    Called from the digest task, which is the cycle checkpoint. Cities still
+    failing after that single retry are left for the next scheduled scrape.
+    """
+    claimed = claim_city_retries(cycle_id, failed_cities_for_retry(cycle_results))
+    queued: list[tuple[str, str]] = []
+    for country, city in claimed:
+        try:
+            enqueue(cycle_id, country, city)
+        except Exception as exc:
+            reraise_if_fatal(exc)
+            logger.exception(
+                "Failed to queue city retry %s/%s for %s",
+                country,
+                city,
+                cycle_id,
+            )
+            record_city_retry_outcome(
+                cycle_id,
+                country,
+                city,
+                ok=False,
+                error=str(exc),
+            )
+            continue
+        queued.append((country, city))
+    if claimed and len(queued) < len(claimed):
+        send_city_retry_followup(cycle_id)
+    return queued
+
+
+def send_city_retry_followup(cycle_id: str) -> dict[str, Any] | None:
+    """One short ntfy after every claimed retry has a terminal result."""
+    retries = load_city_retries(cycle_id)
+    line = format_city_retry_line(retries)
+    if line is None:
+        return None
+    if not claim_city_retry_followup(cycle_id):
+        return None
+    failing = sum(1 for item in retries if item.get("status") == "failed")
+    body = f"Cycle {cycle_id}\n{line}"
+    if failing:
+        body += "\nStill failing cities wait for the next scheduled scrape."
+    notify = send_ntfy(
+        "MealDeals scrape city retries",
+        body,
+        priority="high" if failing else "default",
+        tags="warning,newspaper" if failing else "newspaper",
+    )
+    logger.info("City retry follow-up sent cycle=%s ntfy=%s", cycle_id, notify)
+    return notify
+
+
+def run_city_retry(
+    cycle_id: str,
+    country: str,
+    city: str,
+    *,
+    scrape: Callable[[str, str], Any],
+) -> dict[str, Any]:
+    """Scrape one failed city a single time and record the outcome."""
+    if not begin_city_retry(cycle_id, country, city):
+        logger.info(
+            "City retry already taken cycle=%s %s/%s",
+            cycle_id,
+            country,
+            city,
+        )
+        return {
+            "ok": False,
+            "skipped": True,
+            "cycle_id": cycle_id,
+            "country": country,
+            "city": city,
+            "followup": send_city_retry_followup(cycle_id),
+        }
+    try:
+        scrape(country, city)
+    except Exception as exc:
+        record_city_retry_outcome(cycle_id, country, city, ok=False, error=str(exc))
+        followup = send_city_retry_followup(cycle_id)
+        reraise_if_fatal(exc)
+        logger.exception(
+            "City retry failed cycle=%s %s/%s",
+            cycle_id,
+            country,
+            city,
+        )
+        return {
+            "ok": False,
+            "cycle_id": cycle_id,
+            "country": country,
+            "city": city,
+            "error": str(exc)[:500],
+            "followup": followup,
+        }
+    record_city_retry_outcome(cycle_id, country, city, ok=True)
+    return {
+        "ok": True,
+        "cycle_id": cycle_id,
+        "country": country,
+        "city": city,
+        "followup": send_city_retry_followup(cycle_id),
+    }

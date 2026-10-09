@@ -49,6 +49,7 @@ _TASK_ROUTES = {
     "app.workers.tasks.scrape_zone_retail": {"queue": SCRAPE_QUEUE},
     "app.workers.tasks.scrape_global_retail": {"queue": SCRAPE_QUEUE},
     "app.workers.tasks.scrape_area": {"queue": SCRAPE_QUEUE},
+    "app.workers.tasks.retry_failed_scrape_city": {"queue": SCRAPE_QUEUE},
     "app.workers.tasks.send_scrape_cycle_digest": {"queue": MAINTENANCE_QUEUE},
     "app.workers.tasks.expire_past_due_deals": {"queue": MAINTENANCE_QUEUE},
     "app.workers.tasks.update_currency_rates": {"queue": MAINTENANCE_QUEUE},

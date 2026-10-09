@@ -79,6 +79,7 @@ def test_zone_time_limit_is_inside_redis_visibility() -> None:
 def test_scrape_and_maintenance_use_separate_queues() -> None:
     routes = celery_app.conf.task_routes
     assert routes["app.workers.tasks.scrape_zone_retail"]["queue"] == SCRAPE_QUEUE
+    assert routes["app.workers.tasks.retry_failed_scrape_city"]["queue"] == SCRAPE_QUEUE
     assert routes["app.workers.tasks.send_scrape_cycle_digest"]["queue"] == MAINTENANCE_QUEUE
     assert routes["app.workers.tasks.expire_past_due_deals"]["queue"] == MAINTENANCE_QUEUE
     schedule = celery_app.conf.beat_schedule

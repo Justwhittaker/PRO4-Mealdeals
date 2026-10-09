@@ -12,7 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import get_settings
-from app.core.task_errors import is_fatal_task_error
+from app.core.task_errors import is_fatal_task_error, reraise_if_fatal
 from app.scrapers.global_retail import (
     GlobalRetailScraper,
     TARGET_MARKETS,
@@ -93,9 +93,12 @@ def scrape_and_ingest_area(country_code: str, city: str) -> dict[str, Any]:
         return await scraper.scrape(country, city_name)
 
     deals = _run_coro(_run())
-    with _Session() as session:
-        hub_result = ingest_hub_scrape(session, country, city_name, deals)
-        contacts = ingest_marketing_contacts_from_deals(session, deals)
+    hub_result = _in_session(
+        lambda session: ingest_hub_scrape(session, country, city_name, deals)
+    )
+    contacts = _in_session(
+        lambda session: ingest_marketing_contacts_from_deals(session, deals)
+    )
     revalidate = _live_revalidate(
         country,
         city_name,
@@ -115,6 +118,27 @@ def scrape_and_ingest_area(country_code: str, city: str) -> dict[str, Any]:
 
 def _city_ref(country: str, city: str) -> dict[str, str]:
     return {"country": country, "city": city}
+
+
+def _in_session(callback: Any) -> Any:
+    """Run one city's DB work on a fresh session.
+
+    A failed transaction left on a pooled connection makes the next city
+    raise "Can't reconnect until invalid transaction is rolled back".
+    Roll back before the connection is returned to the pool.
+    """
+    session = _Session()
+    try:
+        return callback(session)
+    except Exception:
+        try:
+            session.rollback()
+        except Exception as rollback_exc:
+            reraise_if_fatal(rollback_exc)
+            logger.exception("Session rollback failed after a city error")
+        raise
+    finally:
+        session.close()
 
 
 def scrape_progress_of(exc: BaseException) -> dict[str, Any]:
@@ -206,8 +230,9 @@ def _scrape_areas(
             deals = _run_coro(_run())
             discovered += len(deals)
 
-            with _Session() as session:
-                hub_result = ingest_hub_scrape(session, country, city, deals)
+            hub_result = _in_session(
+                lambda session: ingest_hub_scrape(session, country, city, deals)
+            )
 
             count = hub_result["ingested"]
             stale = hub_result["stale_deactivated"]
@@ -225,8 +250,9 @@ def _scrape_areas(
             progress["ingested"] = ingested
             progress["stale_deactivated"] = stale_total
 
-            with _Session() as session:
-                contact_count = ingest_marketing_contacts_from_deals(session, deals)
+            contact_count = _in_session(
+                lambda session: ingest_marketing_contacts_from_deals(session, deals)
+            )
             contacts += contact_count
             progress["marketing_contacts"] = contacts
 
@@ -280,8 +306,8 @@ def _scrape_areas(
     progress["revalidate_fail"] = revalidate_fail
 
     runtime_seconds = round(time.perf_counter() - started, 1)
-    with _Session() as session:
-        report = build_scrape_report(
+    report = _in_session(
+        lambda session: build_scrape_report(
             session,
             discovered=discovered,
             ingested=ingested,
@@ -290,6 +316,7 @@ def _scrape_areas(
             markets=markets,
             run_breakdown=merge_breakdown_rows(breakdown_batches),
         )
+    )
 
     return {
         "areas": len(areas),
