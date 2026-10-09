@@ -16,6 +16,7 @@ class NewsletterSubscribeRequest(BaseModel):
     location: str = Field(..., min_length=1, max_length=255)
     country_code: Optional[str] = Field(default=None, max_length=8)
     city: Optional[str] = Field(default=None, max_length=120)
+    region: Optional[str] = Field(default=None, max_length=8)
 
 
 class NewsletterResubscribeRequest(BaseModel):
@@ -40,6 +41,7 @@ class NewsletterSubscriberRead(BaseModel):
     location: str
     country_code: Optional[str] = None
     city: Optional[str] = None
+    region: Optional[str] = None
     is_subscribed: bool
     unsubscribed_at: Optional[datetime] = None
     created_at: datetime

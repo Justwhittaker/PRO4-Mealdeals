@@ -14,8 +14,18 @@ Eligible deals are then taken in this order, and only from that country:
 1. The subscriber's city (a "Galway City" label matches Galway).
 2. Other cities in the same country within ``NEARBY_RADIUS_KM`` (120) of
    the subscriber city centroid, nearest first. Distance uses the venue
-   coordinates when they exist, otherwise the city centroid.
-3. The rest of that country, nearest first.
+   coordinates when they exist, otherwise the city centroid. A nearby
+   city across a state line stays in this tier.
+3. For the US, Canada, and Australia, the rest of the subscriber's state
+   or province (Salt Lake City, then nearby Utah towns, then St. George,
+   and not Denver). The state is the city's entry in
+   ``app.services.regions``, or the stored ``region`` when the city is
+   not in that map.
+4. The rest of that country, nearest first. This country tier is used
+   only when the state or province has no deal that survives the quality
+   filter. A Utah subscriber is not padded with the rest of the US while
+   any Utah deal remains. Ireland and other countries without a state
+   map skip step 3 and go from nearby towns to the country.
 
 ``WEEKLY_CANDIDATE_CAP`` bounds the database read (newest active deals in
 the country, plus an extra city query so older hometown deals are not
@@ -23,6 +33,16 @@ crowded out). ``WEEKLY_DEAL_LIMIT`` is the maximum number of rows in the
 email. A short list is sent as-is. When nothing in the country survives
 the quality filter, the email is the "no new local deals this week"
 variant. Deals from other countries are not added.
+
+Signup stores country, city, and region. The form prefills from the
+site location cookie (IP city and state headers, or the homepage
+browser geolocation). Those structured fields are sent while the
+subscriber leaves the prefill in place. A known city sets the state
+from the city map. Existing rows with a null country, city, or region
+are filled from the free-text location on the next successful send
+(``backfill_subscriber_location``). A value that is already stored is
+left as it is. The email still prefers the city map over a stale
+region code when the city is known.
 
 Links
 -----
@@ -69,6 +89,13 @@ from app.services.deal_quality import (
 from app.services.email import send_email
 from app.services.frontend_revalidate import frontend_country_slug, slugify_city
 from app.services.geo_names import normalize_country
+from app.services.regions import (
+    region_belongs,
+    region_for_city,
+    region_from_name,
+    region_label,
+    regions_with_code,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -180,10 +207,12 @@ class SubscriberPlace:
     longitude: float | None
     city_label: str | None
     country_label: str
+    region_code: str | None = None
+    region_label: str | None = None
 
     @property
     def place_label(self) -> str:
-        return self.city_label or self.country_label
+        return self.city_label or self.region_label or self.country_label
 
 
 @dataclass(frozen=True)
@@ -193,6 +222,7 @@ class WeeklySelection:
     city_label: str | None
     country_label: str
     local_currency: str
+    region_label: str | None = None
 
     @property
     def place_label(self) -> str:
@@ -246,15 +276,12 @@ def _centroid(country: str, city: str) -> tuple[float | None, float | None]:
     return matches[0][2], matches[0][3]
 
 
-def _country_from_token(token: str) -> str | None:
-    """Known country name, or a 2-letter code we actually publish deals for."""
-    cleaned = token.strip()
-    if not cleaned:
-        return None
-    name = _norm_spaces(cleaned)
-    if name in _COUNTRY_NAMES:
-        return _COUNTRY_NAMES[name]
-    compact = re.sub(r"[^A-Za-z]", "", cleaned).upper()
+def _norm_spaces(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+
+
+def _country_code_from_compact(compact: str) -> str | None:
+    """A 2-letter country we publish, including UK → GB. Not a state code."""
     if len(compact) != 2:
         return None
     code = normalize_country(compact)
@@ -263,111 +290,218 @@ def _country_from_token(token: str) -> str | None:
     return None
 
 
-def _norm_spaces(value: str) -> str:
-    return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+def _interpret_place_code(
+    compact: str,
+    city: str | None,
+    known_country: str | None,
+) -> tuple[str | None, str | None]:
+    """Return (country, region) for a 2- or 3-letter token.
+
+    ``CA`` is California when the city is in the US (Los Angeles, CA) and
+    Canada when the city is in Canada (Vancouver, CA) or the token stands
+    alone. ``UT`` is Utah. ``IE`` stays Ireland.
+    """
+    region_hits = regions_with_code(compact)
+    as_country = _country_code_from_compact(compact)
+    if known_country:
+        for region_country, _label in region_hits:
+            if region_country == known_country:
+                return known_country, compact
+        return known_country, None
+
+    city_countries = {row[0] for row in _cities_named(city)} if city else set()
+    for region_country, _label in region_hits:
+        if region_country in city_countries:
+            return region_country, compact
+    if len(city_countries) == 1:
+        only = next(iter(city_countries))
+        if as_country is None or as_country == only:
+            return only, None
+    if as_country and (not city_countries or as_country in city_countries):
+        return as_country, None
+    if len(region_hits) == 1 and as_country is None:
+        return region_hits[0][0], compact
+    return None, None
 
 
-def _parse_location(location: str | None) -> tuple[str | None, str | None]:
+def _parse_location(
+    location: str | None,
+) -> tuple[str | None, str | None, str | None]:
+    """Return (country, city, region code) from free text."""
     text = (location or "").strip()
     if not text:
-        return None, None
+        return None, None, None
     parts = [part.strip() for part in re.split(r"[,|/]", text) if part.strip()]
     if not parts:
-        return None, None
+        return None, None, None
     country: str | None = None
+    region: str | None = None
     city_parts: list[str] = []
+    codes: list[str] = []
     for part in parts:
-        code = _country_from_token(part)
-        if code and country is None:
-            country = code
+        spaced = _norm_spaces(part)
+        if spaced in _COUNTRY_NAMES:
+            if country is None:
+                country = _COUNTRY_NAMES[spaced]
+            continue
+        compact = re.sub(r"[^A-Za-z]", "", part).upper()
+        is_short_code = len(compact) == 2 or (
+            len(compact) == 3 and bool(regions_with_code(compact))
+        )
+        if is_short_code and _norm_spaces(part) == compact.lower():
+            codes.append(compact)
+            continue
+        named = region_from_name(spaced)
+        if named and not _cities_named(part):
+            region_country, region_code = named
+            if country is None:
+                country = region_country
+            if country == region_country and region is None:
+                region = region_code
             continue
         city_parts.append(part)
     city = city_parts[0] if city_parts else None
-    return country, city
+    for compact in codes:
+        code_country, code_region = _interpret_place_code(compact, city, country)
+        if code_country and country is None:
+            country = code_country
+        if code_region and region is None and (
+            country is None or region_belongs(country, code_region)
+        ):
+            region = code_region
+            if country is None:
+                country = code_country
+    return country, city, region
 
 
 def _one_line(value: str) -> str:
     return " ".join(value.replace("\r", " ").replace("\n", " ").split())
 
 
+def _resolved_region(
+    country: str | None,
+    city: str | None,
+    hinted_region: str | None,
+) -> tuple[str | None, str | None]:
+    """City map wins. A stored or typed region covers towns missing from the map."""
+    mapped = region_for_city(country, city) if country and city else None
+    if mapped:
+        return mapped
+    if hinted_region and region_belongs(country, hinted_region):
+        return hinted_region, region_label(country, hinted_region)
+    return None, None
+
+
+def _place(
+    *,
+    country_code: str | None,
+    city: str | None,
+    latitude: float | None,
+    longitude: float | None,
+    city_label: str | None,
+    country_label: str,
+    hinted_region: str | None,
+) -> SubscriberPlace:
+    region_code, label = _resolved_region(country_code, city, hinted_region)
+    return SubscriberPlace(
+        country_code=country_code,
+        city=city,
+        latitude=latitude,
+        longitude=longitude,
+        city_label=city_label,
+        country_label=country_label,
+        region_code=region_code,
+        region_label=label,
+    )
+
+
 def resolve_subscriber_place(
     country_code: str | None,
     city: str | None,
     location: str | None,
+    region: str | None = None,
 ) -> SubscriberPlace:
-    """Resolve the subscriber's city and country. Never guesses across countries."""
+    """Resolve city, state, and country. Never guesses across countries."""
     stored_country = (
         normalize_country(country_code) if (country_code or "").strip() else None
     )
     stored_city = (city or "").strip() or None
-    hinted_country, hinted_city = _parse_location(location)
+    stored_region = re.sub(r"[^A-Za-z0-9]", "", region or "").upper() or None
+    hinted_country, hinted_city, hinted_region = _parse_location(location)
     country = stored_country or hinted_country
     city_text = stored_city or hinted_city
+    region_hint = stored_region or hinted_region
 
     if city_text and country is None:
         matches = _cities_named(city_text)
         countries = {row[0] for row in matches}
         if len(countries) == 1 and matches:
             code, canonical, lat, lon = matches[0]
-            return SubscriberPlace(
+            return _place(
                 country_code=code,
                 city=canonical,
                 latitude=lat,
                 longitude=lon,
                 city_label=canonical,
                 country_label=_country_label(code),
+                hinted_region=region_hint,
             )
         label = _one_line(city_text)
-        return SubscriberPlace(
+        return _place(
             country_code=None,
             city=None,
             latitude=None,
             longitude=None,
             city_label=label or None,
             country_label="your country",
+            hinted_region=None,
         )
 
     if country and city_text:
         matches = [row for row in _cities_named(city_text) if row[0] == country]
         if matches:
             _code, canonical, lat, lon = matches[0]
-            return SubscriberPlace(
+            return _place(
                 country_code=country,
                 city=canonical,
                 latitude=lat,
                 longitude=lon,
                 city_label=canonical,
                 country_label=_country_label(country),
+                hinted_region=region_hint,
             )
         lat, lon = _centroid(country, city_text)
         label = _one_line(city_text)
-        return SubscriberPlace(
+        return _place(
             country_code=country,
             city=label,
             latitude=lat,
             longitude=lon,
             city_label=label,
             country_label=_country_label(country),
+            hinted_region=region_hint,
         )
 
     if country:
-        return SubscriberPlace(
+        return _place(
             country_code=country,
             city=None,
             latitude=None,
             longitude=None,
             city_label=None,
             country_label=_country_label(country),
+            hinted_region=region_hint,
         )
 
     fallback = _one_line((location or "").split(",")[0].strip()) or "your area"
-    return SubscriberPlace(
+    return _place(
         country_code=None,
         city=None,
         latitude=None,
         longitude=None,
         city_label=fallback,
         country_label="your country",
+        hinted_region=None,
     )
 
 
@@ -398,18 +532,31 @@ def _distance_km(place: SubscriberPlace, deal: WeeklyDeal) -> float | None:
     return _haversine_km(place.latitude, place.longitude, point[0], point[1])
 
 
+def _deal_region_code(deal: WeeklyDeal) -> str | None:
+    mapped = region_for_city(deal.country_code, deal.city)
+    if mapped is None:
+        return None
+    return mapped[0]
+
+
 def _tier(place: SubscriberPlace, deal: WeeklyDeal) -> str:
     if place.city and same_city(deal.city, place.city):
         return "city"
     distance = _distance_km(place, deal)
     if distance is not None and distance <= NEARBY_RADIUS_KM:
         return "nearby"
+    if (
+        place.region_code
+        and _deal_region_code(deal) == place.region_code
+        and normalize_country(deal.country_code) == (place.country_code or "")
+    ):
+        return "region"
     return "country"
 
 
 def _sort_key(place: SubscriberPlace, deal: WeeklyDeal) -> tuple[int, float, float]:
     tier = _tier(place, deal)
-    rank = {"city": 0, "nearby": 1, "country": 2}[tier]
+    rank = {"city": 0, "nearby": 1, "region": 2, "country": 3}[tier]
     distance = 0.0 if tier == "city" else _distance_km(place, deal)
     if distance is None:
         distance = 1_000_000.0
@@ -436,7 +583,21 @@ def _scope(place: SubscriberPlace, deals: list[WeeklyDeal]) -> str:
         return "city"
     if "country" in tiers:
         return "country"
+    if "region" in tiers:
+        return "region"
     return "nearby"
+
+
+def _state_has_kept_deals(place: SubscriberPlace, deals: list[WeeklyDeal]) -> bool:
+    if not place.region_code or not place.country_code:
+        return False
+    country = place.country_code.upper()
+    for deal in deals:
+        if normalize_country(deal.country_code) != country:
+            continue
+        if _deal_region_code(deal) == place.region_code:
+            return True
+    return False
 
 
 def review_candidates(
@@ -463,6 +624,7 @@ def review_candidates(
             city_label=place.city_label,
             country_label=place.country_label,
             local_currency=local_currency,
+            region_label=place.region_label,
         )
         return selection, excluded
 
@@ -499,6 +661,15 @@ def review_candidates(
         )
         excluded.append((deal, reason.value if reason is not None else "duplicate"))
 
+    if _state_has_kept_deals(place, kept):
+        in_state: list[WeeklyDeal] = []
+        for deal in kept:
+            if _tier(place, deal) == "country":
+                excluded.append((deal, "other_region"))
+                continue
+            in_state.append(deal)
+        kept = in_state
+
     limited = kept[:limit]
     limited_ids = {deal.id for deal in limited}
     for deal in kept:
@@ -511,6 +682,7 @@ def review_candidates(
         city_label=place.city_label,
         country_label=place.country_label,
         local_currency=local_currency,
+        region_label=place.region_label,
     )
     return selection, excluded
 
@@ -686,6 +858,13 @@ def _intro(selection: WeeklySelection) -> str:
     place = selection.place_label
     country = selection.country_label
     if selection.scope == "none":
+        if selection.region_label:
+            return (
+                f"No new local deals this week in {place}. "
+                f"We only email offers from {place}, nearby towns, "
+                f"{selection.region_label}, and the rest of {country}. "
+                "We'll try again next Friday."
+            )
         return (
             f"No new local deals this week in {place}. "
             f"We only email offers from {place}, nearby towns, and the rest of {country}. "
@@ -695,6 +874,11 @@ def _intro(selection: WeeklySelection) -> str:
         return f"Here are this week's dining deals for {place}:"
     if selection.scope == "nearby":
         return f"Here are this week's dining deals for {place} and nearby towns:"
+    if selection.scope == "region" and selection.region_label:
+        return (
+            f"Here are this week's dining deals for {place} "
+            f"and the rest of {selection.region_label}:"
+        )
     if selection.scope == "country":
         if selection.city_label:
             return (
@@ -793,6 +977,32 @@ def build_weekly_email(
     return subject, text_body, html_body
 
 
+def backfill_subscriber_location(subscriber: NewsletterSubscriber) -> bool:
+    """Fill only null country, city, and region. Existing values stay put.
+
+    Called before a Weekly Specials send so older free-text signups pick up
+    a city and state from the location string and the city map. The row is
+    written on the same commit as a successful send.
+    """
+    place = resolve_subscriber_place(
+        subscriber.country_code,
+        subscriber.city,
+        subscriber.location,
+        subscriber.region,
+    )
+    changed = False
+    if not (subscriber.country_code or "").strip() and place.country_code:
+        subscriber.country_code = place.country_code.lower()
+        changed = True
+    if not (subscriber.city or "").strip() and place.city:
+        subscriber.city = place.city
+        changed = True
+    if not (subscriber.region or "").strip() and place.region_code:
+        subscriber.region = place.region_code
+        changed = True
+    return changed
+
+
 def render_weekly_issue(
     subscriber: NewsletterSubscriber,
     deals: list[WeeklyDeal],
@@ -802,6 +1012,7 @@ def render_weekly_issue(
         subscriber.country_code,
         subscriber.city,
         subscriber.location,
+        subscriber.region,
     )
     selection, excluded = review_candidates(deals, place)
     subject, text_body, html_body = build_weekly_email(subscriber, selection)
@@ -815,10 +1026,12 @@ def send_weekly_special_to_subscriber(
     if not subscriber.is_subscribed:
         return {"email": subscriber.email, "skipped": True, "reason": "unsubscribed"}
 
+    backfill_subscriber_location(subscriber)
     place = resolve_subscriber_place(
         subscriber.country_code,
         subscriber.city,
         subscriber.location,
+        subscriber.region,
     )
     deals = fetch_weekly_deals(session, place)
     selection, excluded = review_candidates(deals, place)

@@ -18,6 +18,7 @@ from app.scrapers.catchment_hubs import catchment_cities_for
 from app.scrapers.markets import MARKET_CITIES, TARGET_MARKETS
 from app.services.city_coords import merged_city_coords
 from app.services.geo_names import normalize_country
+from app.services.regions import region_for_city
 
 router = APIRouter(prefix="/geo", tags=["geo"])
 
@@ -75,6 +76,8 @@ class ResolvedArea(BaseModel):
     latitude: float
     longitude: float
     distance_km: float
+    region_code: str | None = None
+    region_label: str | None = None
 
 
 class LocationCreate(BaseModel):
@@ -130,6 +133,7 @@ async def resolve_area(
     country_iso = normalize_country(country_iso)
     country_slug = "uk" if country_iso == "GB" else country_iso.lower()
     city_slug = city.lower().replace(" ", "-")
+    mapped_region = region_for_city(country_iso, city)
     return ResolvedArea(
         country_code=country_iso,
         country_slug=country_slug,
@@ -138,6 +142,8 @@ async def resolve_area(
         latitude=best_coords[0],
         longitude=best_coords[1],
         distance_km=round(best_dist, 1),
+        region_code=mapped_region[0] if mapped_region else None,
+        region_label=mapped_region[1] if mapped_region else None,
     )
 
 

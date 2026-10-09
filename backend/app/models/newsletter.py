@@ -37,6 +37,8 @@ class NewsletterSubscriber(Base):
     location: Mapped[str] = mapped_column(String(255), nullable=False)
     country_code: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
     city: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    # US state, Canadian province, or Australian state code (UT, ON, NSW).
+    region: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
 
     is_subscribed: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True

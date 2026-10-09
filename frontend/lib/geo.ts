@@ -1,8 +1,11 @@
 import { CATCHMENT_HUBS } from "@/lib/catchment-hubs";
 import { MARKET_COUNTRIES } from "@/lib/markets-catalog";
+import { regionForCity, regionFromCode } from "@/lib/subscriber-region";
 
 export const LOCATION_COOKIE = "dineadeal_loc";
 export const LOCATION_SOURCE_COOKIE = "dineadeal_loc_source";
+/** State/province code. Kept off `dineadeal_loc` so that cookie stays `country/city`. */
+export const LOCATION_REGION_COOKIE = "dineadeal_loc_region";
 
 export type LocationSource = "geo" | "search" | "manual";
 
@@ -11,6 +14,8 @@ export interface GeoTarget {
   countryLabel: string;
   citySlug: string;
   cityLabel: string;
+  regionCode?: string;
+  regionLabel?: string;
 }
 
 export interface CityOption {
@@ -355,13 +360,24 @@ function titleCaseSlug(slug: string): string {
     .join(" ");
 }
 
+export function withSubscriberRegion(
+  target: GeoTarget,
+  headerRegion?: string | null,
+): GeoTarget {
+  const fromCity = regionForCity(target.countryCode, target.cityLabel);
+  if (fromCity) return { ...target, ...fromCity };
+  const fromHeader = regionFromCode(target.countryCode, headerRegion);
+  if (fromHeader) return { ...target, ...fromHeader };
+  return target;
+}
+
 export function cityToTarget(option: CityOption): GeoTarget {
-  return {
+  return withSubscriberRegion({
     countryCode: option.country,
     countryLabel: countrySearchLabel(option.country),
     citySlug: option.city,
     cityLabel: option.label,
-  };
+  });
 }
 
 /** Resolve catalog centroid for radius feeds (lat/lon). */
@@ -388,12 +404,12 @@ export function parseLocationCookie(
     (c) => c.country === country && c.city === city,
   );
   if (known) return cityToTarget(known);
-  return {
+  return withSubscriberRegion({
     countryCode: country === "gb" ? "uk" : country,
     countryLabel: countrySearchLabel(country),
     citySlug: city,
     cityLabel: cityDisplayLabel(country, city),
-  };
+  });
 }
 
 export function locationCookieValue(target: GeoTarget): string {
@@ -453,6 +469,10 @@ export function resolveGeoFromHeaders(headersList: {
     headersList.get("cf-ipcity") ??
     headersList.get("x-city") ??
     headersList.get("x-vercel-ip-city-name");
+  const regionRaw =
+    headersList.get("x-vercel-ip-country-region") ??
+    headersList.get("cf-region-code") ??
+    headersList.get("x-region-code");
 
   const countryKey = countryRaw.toUpperCase();
   const countrySlug =
@@ -470,16 +490,19 @@ export function resolveGeoFromHeaders(headersList: {
           c.label.toLowerCase() === decoded.toLowerCase() ||
           c.aliases?.some((a) => a === decoded.toLowerCase() || slugify(a) === slug)),
     );
-    if (match) return cityToTarget(match);
+    if (match) return withSubscriberRegion(cityToTarget(match), regionRaw);
 
     // Unknown city in a supported scrape market — still use that city slug
     if (GEO_DEFAULTS[countryKey] || COUNTRY_SEARCH_LABELS[countrySlug]) {
-      return {
-        countryCode: countrySlug,
-        countryLabel: countrySearchLabel(countrySlug),
-        citySlug: slug,
-        cityLabel: cityDisplayLabel(countrySlug, slug),
-      };
+      return withSubscriberRegion(
+        {
+          countryCode: countrySlug,
+          countryLabel: countrySearchLabel(countrySlug),
+          citySlug: slug,
+          cityLabel: cityDisplayLabel(countrySlug, slug),
+        },
+        regionRaw,
+      );
     }
   }
 

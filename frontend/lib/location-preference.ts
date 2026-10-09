@@ -1,8 +1,10 @@
 import {
   LOCATION_COOKIE,
+  LOCATION_REGION_COOKIE,
   LOCATION_SOURCE_COOKIE,
   locationCookieValue,
   parseLocationCookie,
+  withSubscriberRegion,
   type GeoTarget,
   type LocationSource,
 } from "@/lib/geo";
@@ -18,12 +20,18 @@ export function setLocationPreference(
   const base = `Path=/; Max-Age=${MAX_AGE_SECONDS}; SameSite=Lax`;
   document.cookie = `${LOCATION_COOKIE}=${encodeURIComponent(value)}; ${base}`;
   document.cookie = `${LOCATION_SOURCE_COOKIE}=${source}; ${base}`;
+  if (target.regionCode) {
+    document.cookie = `${LOCATION_REGION_COOKIE}=${encodeURIComponent(target.regionCode)}; ${base}`;
+  } else {
+    document.cookie = `${LOCATION_REGION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+  }
 }
 
 export function clearLocationPreference(): void {
   if (typeof document === "undefined") return;
   document.cookie = `${LOCATION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
   document.cookie = `${LOCATION_SOURCE_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+  document.cookie = `${LOCATION_REGION_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
 }
 
 export function readLocationPreferenceFromDocument(): {
@@ -39,7 +47,10 @@ export function readLocationPreferenceFromDocument(): {
       return [k, decodeURIComponent(rest.join("=") ?? "")];
     }),
   );
-  const target = parseLocationCookie(map[LOCATION_COOKIE] ?? null);
+  const parsed = parseLocationCookie(map[LOCATION_COOKIE] ?? null);
   const source = (map[LOCATION_SOURCE_COOKIE] as LocationSource | undefined) ?? null;
+  const target = parsed
+    ? withSubscriberRegion(parsed, map[LOCATION_REGION_COOKIE] ?? null)
+    : null;
   return { target, source };
 }

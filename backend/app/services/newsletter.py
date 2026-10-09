@@ -13,9 +13,13 @@ from urllib.parse import quote
 
 from app.core.config import get_settings
 from app.models.newsletter import NewsletterSubscriber
-from app.services.weekly_specials import send_weekly_special_to_subscriber
+from app.services.weekly_specials import (
+    resolve_subscriber_place,
+    send_weekly_special_to_subscriber,
+)
 
 __all__ = [
+    "assign_resolved_location",
     "new_unsubscribe_token",
     "normalize_email",
     "resubscribe_url",
@@ -55,3 +59,25 @@ def soft_unsubscribe(subscriber: NewsletterSubscriber) -> None:
 def soft_resubscribe(subscriber: NewsletterSubscriber) -> None:
     subscriber.is_subscribed = True
     subscriber.unsubscribed_at = None
+
+
+def assign_resolved_location(
+    subscriber: NewsletterSubscriber,
+    *,
+    location: str,
+    country_code: str | None,
+    city: str | None,
+    region: str | None,
+) -> None:
+    """Store the place the subscriber just submitted.
+
+    Structured country, city, and region from the site geolocation win when
+    they are sent. Otherwise the free-text location is parsed. A known city
+    sets the state from the city map, so Los Angeles is California and not
+    the whole US, and ``CA`` is not read as Canada.
+    """
+    subscriber.location = location.strip()
+    place = resolve_subscriber_place(country_code, city, subscriber.location, region)
+    subscriber.country_code = place.country_code.lower() if place.country_code else None
+    subscriber.city = place.city
+    subscriber.region = place.region_code

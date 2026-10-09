@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,27 @@ import {
   resubscribeNewsletter,
   subscribeNewsletter,
 } from "@/lib/api";
+import type { GeoTarget } from "@/lib/geo";
+import { readLocationPreferenceFromDocument } from "@/lib/location-preference";
 import { rememberNewsletterEmail } from "@/lib/newsletter-storage";
+
+interface DetectedPlace {
+  label: string;
+  countryCode: string;
+  city: string;
+  regionCode?: string;
+}
+
+function isoCountry(slug: string): string {
+  const key = slug.trim().toLowerCase();
+  if (key === "uk" || key === "gb") return "GB";
+  return key.toUpperCase();
+}
+
+function signupLocationLabel(target: GeoTarget): string {
+  if (target.regionLabel) return `${target.cityLabel}, ${target.regionLabel}`;
+  return `${target.cityLabel}, ${target.countryLabel}`;
+}
 
 type Mode = "subscribe" | "resubscribe";
 
@@ -34,10 +54,25 @@ export function NewsletterSignupForm({
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState(initialEmail);
   const [location, setLocation] = useState("");
+  const [detected, setDetected] = useState<DetectedPlace | null>(null);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const usingDetected = detected !== null && location.trim() === detected.label;
+
+  useEffect(() => {
+    const { target } = readLocationPreferenceFromDocument();
+    if (!target?.cityLabel) return;
+    const label = signupLocationLabel(target);
+    setDetected({
+      label,
+      countryCode: isoCountry(target.countryCode),
+      city: target.cityLabel,
+      regionCode: target.regionCode,
+    });
+    setLocation((current) => (current.trim() ? current : label));
+  }, []);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -71,6 +106,13 @@ export function NewsletterSignupForm({
       surname: surname.trim(),
       email: email.trim(),
       location: location.trim(),
+      ...(usingDetected && detected
+        ? {
+            country_code: detected.countryCode,
+            city: detected.city,
+            region: detected.regionCode,
+          }
+        : {}),
     });
     setPending(false);
     if (!result.ok) {
@@ -144,6 +186,13 @@ export function NewsletterSignupForm({
               onChange={(e) => setLocation(e.target.value)}
               placeholder="London, UK"
             />
+            {usingDetected ? (
+              <p className="text-xs text-charcoal-400">
+                Using your detected location
+                {detected?.regionCode ? ", including state" : ""}. Change this
+                if it is wrong.
+              </p>
+            ) : null}
           </div>
         </>
       ) : (
