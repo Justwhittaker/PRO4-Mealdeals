@@ -4,6 +4,8 @@ import { getGoRedirectUrl } from "@/lib/api";
 import {
   NEWSLETTER_UNLOCK_COOKIE,
   isGoDealId,
+  trackedGoPath,
+  utmQueryString,
 } from "@/lib/newsletter-storage";
 
 /**
@@ -19,15 +21,19 @@ export async function GET(
     return NextResponse.json({ error: "Invalid deal id" }, { status: 400 });
   }
 
+  const requestUrl = new URL(req.url);
+  const referral = utmQueryString(requestUrl.search);
   const unlocked =
     cookies().get(NEWSLETTER_UNLOCK_COOKIE)?.value === "1";
   if (!unlocked) {
-    const next = `/go/${dealId}`;
+    const next = trackedGoPath(dealId, requestUrl.search);
     const signup = new URL("/newsletter", req.url);
     signup.searchParams.set("next", next);
     return NextResponse.redirect(signup, { status: 302 });
   }
 
-  const target = getGoRedirectUrl(dealId);
+  const target = referral
+    ? `${getGoRedirectUrl(dealId)}?${referral}`
+    : getGoRedirectUrl(dealId);
   return NextResponse.redirect(target, { status: 302 });
 }

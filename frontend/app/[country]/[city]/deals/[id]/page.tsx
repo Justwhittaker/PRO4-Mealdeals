@@ -28,9 +28,24 @@ import {
   offerJsonLd,
 } from "@/lib/seo";
 import { BRAND_NAME } from "@/lib/brand";
+import { utmQueryString } from "@/lib/newsletter-storage";
 
 interface PageProps {
   params: { country: string; city: string; id: string };
+  searchParams?: {
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+  };
+}
+
+function referralSearch(searchParams: PageProps["searchParams"]): string {
+  const params = new URLSearchParams();
+  for (const key of ["utm_source", "utm_medium", "utm_campaign"] as const) {
+    const value = searchParams?.[key];
+    if (value) params.set(key, value);
+  }
+  return utmQueryString(params.toString());
 }
 
 export async function generateMetadata({
@@ -54,8 +69,12 @@ export async function generateMetadata({
   return dealListingMetadata(result.data, params.country, params.city);
 }
 
-export default async function DealDetailPage({ params }: PageProps) {
+export default async function DealDetailPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { country, city, id } = params;
+  const referral = referralSearch(searchParams);
   if (
     isReservedGeoSlug(country) ||
     isReservedGeoSlug(city) ||
@@ -179,6 +198,7 @@ export default async function DealDetailPage({ params }: PageProps) {
                 dealId={deal.id}
                 label={websiteLabel ?? "Venue website"}
                 variant="link"
+                referralSearch={referral}
               />
             </p>
           ) : null}
@@ -222,7 +242,11 @@ export default async function DealDetailPage({ params }: PageProps) {
 
           <div className="space-y-2 pt-2">
             <div className="flex flex-wrap gap-3">
-              <DealGoCta dealId={deal.id} label={ctaLabel} />
+              <DealGoCta
+                dealId={deal.id}
+                label={ctaLabel}
+                referralSearch={referral}
+              />
               <Button asChild size="lg" variant="outline">
                 <Link href={`/${country}/${city}`}>
                   More in {cityDisplayLabel(country, city)}

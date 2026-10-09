@@ -91,15 +91,50 @@ export function clearNewsletterSession(): void {
 }
 
 const GO_DEAL_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const GO_PATH =
+  /^\/go\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/?$/i;
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign"] as const;
+const UTM_VALUE = /^[A-Za-z0-9_]{1,64}$/;
 
 export function isGoDealId(value: string): boolean {
   return GO_DEAL_ID.test(value);
 }
 
+/** Copy only the weekly-specials referral tags from a page or /go query. */
+export function utmQueryString(search: string): string {
+  const raw = search.startsWith("?") ? search.slice(1) : search;
+  const incoming = new URLSearchParams(raw);
+  const utm = new URLSearchParams();
+  for (const key of UTM_KEYS) {
+    const value = incoming.get(key);
+    if (value && UTM_VALUE.test(value)) utm.set(key, value);
+  }
+  return utm.toString();
+}
+
+/** Deal-page "View deal" href. Forwards newsletter UTM into /go so clicks are counted. */
+export function trackedGoPath(dealId: string, search?: string): string {
+  const source =
+    search ?? (typeof window !== "undefined" ? window.location.search : "");
+  const query = utmQueryString(source);
+  return query ? `/go/${dealId}?${query}` : `/go/${dealId}`;
+}
+
 export function isSafeGoNext(path: string): boolean {
-  return /^\/go\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/?$/i.test(
-    path.trim(),
-  );
+  const trimmed = path.trim();
+  const splitAt = trimmed.indexOf("?");
+  const pathname = splitAt === -1 ? trimmed : trimmed.slice(0, splitAt);
+  const query = splitAt === -1 ? "" : trimmed.slice(splitAt + 1);
+  if (!GO_PATH.test(pathname)) return false;
+  if (!query) return true;
+  const params = new URLSearchParams(query);
+  const keys = Array.from(params.keys());
+  if (keys.length === 0 || keys.length > UTM_KEYS.length) return false;
+  const allowed = new Set<string>(UTM_KEYS);
+  return keys.every((key) => {
+    const value = params.get(key);
+    return allowed.has(key) && Boolean(value && UTM_VALUE.test(value));
+  });
 }
 
 export function setPendingGoDealId(dealId: string): void {
@@ -125,7 +160,7 @@ export function continuePendingGoRedirect(nextFromQuery?: string | null): void {
   if (typeof window === "undefined") return;
   const pending = takePendingGoDealId();
   if (pending) {
-    window.location.assign(`/go/${pending}`);
+    window.location.assign(trackedGoPath(pending));
     return;
   }
   if (nextFromQuery && isSafeGoNext(nextFromQuery)) {
