@@ -26,7 +26,7 @@ from app.services.ntfy import send_ntfy
 from app.services.scrape_cycle_stats import (
     begin_city_retry,
     claim_city_retries,
-    claim_city_retry_followup,
+    claim_cycle_digest,
     cycle_id_for_start,
     digest_cycle_start,
     load_city_retries,
@@ -176,6 +176,7 @@ def _zone_health(
         note = None
 
     interrupted: list[str] = []
+    still_running: list[str] = []
     failed: list[str] = []
     for zone_id in scope:
         row = cycle_results.get(zone_id)
@@ -183,6 +184,8 @@ def _zone_health(
             continue
         if _is_interrupted(row, now=now_utc, alive_workers=alive_workers):
             interrupted.append(zone_id)
+        elif _is_running(row):
+            still_running.append(zone_id)
         elif _is_failed(row):
             failed.append(zone_id)
 
@@ -246,6 +249,7 @@ def _zone_health(
         "ok": len(ok_zones),
         "failed": failed,
         "interrupted": interrupted,
+        "still_running": still_running,
         "timed_out": timed_out,
         "missing": [zone_id for zone_id in scope if zone_id not in cycle_results],
         "pct_completed": _pct(len(completed), total),
@@ -550,6 +554,24 @@ def failed_cities_for_retry(
     return cities
 
 
+def pending_city_retry_labels(retries: object) -> list[str]:
+    """Cities whose one retry is queued or in progress, as ``Tampa (US)``."""
+    if not isinstance(retries, list):
+        return []
+    labels: list[str] = []
+    for item in retries:
+        if not isinstance(item, dict):
+            continue
+        if str(item.get("status") or "") not in {"queued", "running"}:
+            continue
+        country = str(item.get("country") or "").strip().upper()
+        city = str(item.get("city") or "").strip()
+        if country and city:
+            labels.append(f"{city} ({country})")
+    labels.sort()
+    return labels
+
+
 def format_city_retry_line(retries: object) -> str | None:
     """`City retries: X recovered, Y still failing: Tampa (US), …`.
 
@@ -594,6 +616,10 @@ def format_digest_body(report: dict[str, Any]) -> str:
         f"({zones['completed']}/{zones['total_zones']}), "
         f"{zones['pct_ok']:.0f}% ok"
     )
+    still_running = list(zones.get("still_running") or [])
+    still_running.extend(pending_city_retry_labels(report.get("city_retries")))
+    if still_running:
+        zone_line += f"\nStill running: {', '.join(still_running)}"
     if zones.get("zone_set_note"):
         zone_line += f"\nZone set: {zones['zone_set_note']}"
     if zones["missing"]:
@@ -708,10 +734,17 @@ def build_cycle_digest_report(now: datetime | None = None) -> dict[str, Any]:
     }
 
 
-def run_scrape_cycle_digest(now: datetime | None = None) -> dict[str, Any]:
-    """Build the cycle report and push it to ntfy."""
-    report = build_cycle_digest_report(now=now)
+def publish_cycle_digest(report: dict[str, Any]) -> dict[str, Any]:
+    """Send one ntfy digest for this cycle. A second claim does not send."""
     body = format_digest_body(report)
+    cycle_id = str(report["cycle_id"])
+    if not claim_cycle_digest(cycle_id):
+        logger.info("Scrape cycle digest already sent cycle=%s", cycle_id)
+        return {
+            "report": report,
+            "body": body,
+            "ntfy": {"skipped": True, "reason": "already_sent"},
+        }
     zones = report["zones"]
     site = report["site"]
     priority = "default"
@@ -731,13 +764,40 @@ def run_scrape_cycle_digest(now: datetime | None = None) -> dict[str, Any]:
     )
     logger.info(
         "Scrape cycle digest sent cycle=%s zones=%s%% new_deals=%s emails=%s ntfy=%s",
-        report["cycle_id"],
+        cycle_id,
         zones["pct_completed"],
         report["new_deals"],
         report["net_new_emails"],
         notify,
     )
     return {"report": report, "body": body, "ntfy": notify}
+
+
+def run_scrape_cycle_digest(
+    now: datetime | None = None,
+    *,
+    enqueue: Callable[[str, str, str], None] | None = None,
+) -> dict[str, Any]:
+    """Build the cycle report, queue city retries, and push one ntfy digest.
+
+    The digest goes out on the clock. Zones or retries still in progress are
+    named on a Still running line. There is no second message when retries finish.
+    """
+    report = build_cycle_digest_report(now=now)
+    queued: list[tuple[str, str]] = []
+    if enqueue is not None:
+        cycle_results = report.get("cycle_results")
+        if not isinstance(cycle_results, dict):
+            cycle_results = {}
+        queued = queue_failed_city_retries(
+            str(report["cycle_id"]),
+            cycle_results,
+            enqueue=enqueue,
+        )
+        report["city_retries"] = load_city_retries(str(report["cycle_id"]))
+    published = publish_cycle_digest(report)
+    published["queued"] = queued
+    return published
 
 
 def queue_failed_city_retries(
@@ -748,8 +808,9 @@ def queue_failed_city_retries(
 ) -> list[tuple[str, str]]:
     """Queue one retry per failed city. A second call queues nothing.
 
-    Called from the digest task, which is the cycle checkpoint. Cities still
-    failing after that single retry are left for the next scheduled scrape.
+    Called when the Dublin digest fires. The digest does not wait for the
+    retry. Cities still failing after that single attempt are left for the
+    next scheduled scrape.
     """
     claimed = claim_city_retries(cycle_id, failed_cities_for_retry(cycle_results))
     queued: list[tuple[str, str]] = []
@@ -773,31 +834,7 @@ def queue_failed_city_retries(
             )
             continue
         queued.append((country, city))
-    if claimed and len(queued) < len(claimed):
-        send_city_retry_followup(cycle_id)
     return queued
-
-
-def send_city_retry_followup(cycle_id: str) -> dict[str, Any] | None:
-    """One short ntfy after every claimed retry has a terminal result."""
-    retries = load_city_retries(cycle_id)
-    line = format_city_retry_line(retries)
-    if line is None:
-        return None
-    if not claim_city_retry_followup(cycle_id):
-        return None
-    failing = sum(1 for item in retries if item.get("status") == "failed")
-    body = f"Cycle {cycle_id}\n{line}"
-    if failing:
-        body += "\nStill failing cities wait for the next scheduled scrape."
-    notify = send_ntfy(
-        "MealDeals scrape city retries",
-        body,
-        priority="high" if failing else "default",
-        tags="warning,newspaper" if failing else "newspaper",
-    )
-    logger.info("City retry follow-up sent cycle=%s ntfy=%s", cycle_id, notify)
-    return notify
 
 
 def run_city_retry(
@@ -821,13 +858,11 @@ def run_city_retry(
             "cycle_id": cycle_id,
             "country": country,
             "city": city,
-            "followup": send_city_retry_followup(cycle_id),
         }
     try:
         scrape(country, city)
     except Exception as exc:
         record_city_retry_outcome(cycle_id, country, city, ok=False, error=str(exc))
-        followup = send_city_retry_followup(cycle_id)
         reraise_if_fatal(exc)
         logger.exception(
             "City retry failed cycle=%s %s/%s",
@@ -841,7 +876,6 @@ def run_city_retry(
             "country": country,
             "city": city,
             "error": str(exc)[:500],
-            "followup": followup,
         }
     record_city_retry_outcome(cycle_id, country, city, ok=True)
     return {
@@ -849,5 +883,4 @@ def run_city_retry(
         "cycle_id": cycle_id,
         "country": country,
         "city": city,
-        "followup": send_city_retry_followup(cycle_id),
     }

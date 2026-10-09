@@ -8,6 +8,7 @@ city, and the soft time limit is four hours, so a task stays at or under
 from __future__ import annotations
 
 import os
+from zoneinfo import ZoneInfo
 
 from app.scrapers.markets import TARGET_MARKETS, iter_market_areas
 
@@ -280,7 +281,12 @@ _CITY_ZONE: dict[tuple[str, str], str] = {
     ("US", city): "us_west" for city in _US_WEST_CITIES
 }
 
-ZONE_CYCLE_BASE_HOURS: tuple[int, ...] = (6, 18)
+# Wall-clock hours in Europe/Dublin, including across the October/March DST change.
+SCRAPE_TIMEZONE_NAME = "Europe/Dublin"
+SCRAPE_TIMEZONE = ZoneInfo(SCRAPE_TIMEZONE_NAME)
+ZONE_CYCLE_BASE_HOURS: tuple[int, ...] = (7, 19)
+# One hour before the next cycle (06:00 covers the previous 19:00, 18:00 covers 07:00).
+DIGEST_HOURS: tuple[int, ...] = (6, 18)
 
 # Smaller tasks first. Large families stay a trailing block.
 ZONE_ORDER: list[str] = [

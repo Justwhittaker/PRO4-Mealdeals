@@ -12,7 +12,7 @@ import redis
 from app.core.config import get_settings
 from app.core.task_errors import reraise_if_fatal
 from app.core.redis_url import redis_from_url
-from app.scrapers.zones import ZONE_CYCLE_BASE_HOURS
+from app.scrapers.zones import SCRAPE_TIMEZONE, ZONE_CYCLE_BASE_HOURS
 
 logger = logging.getLogger(__name__)
 
@@ -30,20 +30,29 @@ def _client() -> redis.Redis:
     )
 
 
-def cycle_start_for_time(now: datetime | None = None) -> datetime:
-    """Most recent twice-daily cycle start (06:00 or 18:00 UTC) at or before now."""
+def _as_utc(now: datetime | None) -> datetime:
     current = now or datetime.now(timezone.utc)
     if current.tzinfo is None:
         current = current.replace(tzinfo=timezone.utc)
-    current = current.astimezone(timezone.utc)
+    return current.astimezone(timezone.utc)
+
+
+def cycle_start_for_time(now: datetime | None = None) -> datetime:
+    """Most recent 07:00 or 19:00 Europe/Dublin cycle start at or before now.
+
+    The returned instant is UTC so cycle ids stay ``YYYY-MM-DDTHH`` in UTC
+    when Dublin shifts between UTC+1 and UTC+0.
+    """
+    current = _as_utc(now).astimezone(SCRAPE_TIMEZONE)
     bases = sorted(ZONE_CYCLE_BASE_HOURS)
     for base in reversed(bases):
         candidate = current.replace(hour=base, minute=0, second=0, microsecond=0)
         if candidate <= current:
-            return candidate
-    # Before first base hour today → previous day's last base
+            return candidate.astimezone(timezone.utc)
     yesterday = current - timedelta(days=1)
-    return yesterday.replace(hour=bases[-1], minute=0, second=0, microsecond=0)
+    return yesterday.replace(
+        hour=bases[-1], minute=0, second=0, microsecond=0
+    ).astimezone(timezone.utc)
 
 
 def cycle_id_for_start(start: datetime) -> str:
@@ -66,19 +75,22 @@ def cycle_id_from_task_request(request: Any) -> str | None:
 
 
 def digest_cycle_start(now: datetime | None = None) -> datetime:
-    """
-    Cycle the digest should summarize.
+    """Cycle the 06:00 or 18:00 Europe/Dublin digest should summarize.
 
-    Digests fire at 05:50 (covers prior 18:00 cycle) and 17:50 (covers 06:00 cycle).
+    06:00 Dublin covers the previous day's 19:00 cycle (~11h earlier).
+    18:00 Dublin covers the same day's 07:00 cycle. The instant is UTC and
+    matches ``cycle_start_for_time`` for that cycle, including across DST.
+    A morning digest that runs late, but still before noon Dublin, keeps
+    the previous evening cycle.
     """
-    current = now or datetime.now(timezone.utc)
-    if current.tzinfo is None:
-        current = current.replace(tzinfo=timezone.utc)
-    current = current.astimezone(timezone.utc)
+    current = _as_utc(now).astimezone(SCRAPE_TIMEZONE)
+    morning, evening = sorted(ZONE_CYCLE_BASE_HOURS)
     if current.hour < 12:
         prior = current - timedelta(days=1)
-        return prior.replace(hour=18, minute=0, second=0, microsecond=0)
-    return current.replace(hour=6, minute=0, second=0, microsecond=0)
+        start = prior.replace(hour=evening, minute=0, second=0, microsecond=0)
+    else:
+        start = current.replace(hour=morning, minute=0, second=0, microsecond=0)
+    return start.astimezone(timezone.utc)
 
 
 def _zone_key(cycle_id: str, zone_id: str) -> str:
@@ -368,12 +380,16 @@ def load_city_retries(cycle_id: str) -> list[dict[str, Any]]:
     return items
 
 
-def claim_city_retry_followup(cycle_id: str) -> bool:
-    """True the first time this cycle's retry follow-up is claimed."""
-    key = f"{_REDIS_KEY_PREFIX}:{cycle_id}:city_retry_followup"
+def claim_cycle_digest(cycle_id: str) -> bool:
+    """True the first time this cycle's ntfy digest is claimed.
+
+    A duplicate trigger loses the claim and must not send another digest.
+    A Redis error returns True so a stats outage does not silence the digest.
+    """
+    key = f"{_REDIS_KEY_PREFIX}:{cycle_id}:digest_sent"
     try:
         return bool(_client().set(key, "1", nx=True, ex=_REDIS_TTL_SECONDS))
     except Exception as exc:
         reraise_if_fatal(exc)
-        logger.exception("Failed to claim city retry follow-up for %s", cycle_id)
-        return False
+        logger.exception("Failed to claim scrape cycle digest for %s", cycle_id)
+        return True

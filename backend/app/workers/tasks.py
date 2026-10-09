@@ -21,7 +21,6 @@ from app.services.deal_expiry import expire_past_due_deals
 from app.services.merchant_outreach import send_merchant_outreach_batch
 from app.services.newsletter import send_weekly_special_to_subscriber
 from app.services.scrape_cycle_digest import (
-    queue_failed_city_retries,
     run_city_retry,
     run_scrape_cycle_digest,
 )
@@ -317,30 +316,18 @@ def retry_failed_scrape_city(
 
 @celery_app.task(name="app.workers.tasks.send_scrape_cycle_digest")
 def send_scrape_cycle_digest() -> dict[str, object]:
-    """Twice-daily ntfy: zone %, site transfer, deals, emails, categories.
+    """ntfy at 06:00 and 18:00 Europe/Dublin for the cycle that started ~11h earlier.
 
-    After the digest is sent, each city in ``cities_failed`` is queued once.
-    Retry results arrive as a short follow-up ntfy when those tasks finish.
-    The maintenance worker stays free instead of waiting on city scrapes.
+    Zones or city retries still in progress are listed. The message is sent
+    once per cycle and does not wait for them to finish.
     """
-    result = run_scrape_cycle_digest()
-    report = result["report"]
-    cycle_results = report.get("cycle_results")
-    if not isinstance(cycle_results, dict):
-        cycle_results = {}
     try:
-        queued = queue_failed_city_retries(
-            str(report["cycle_id"]),
-            cycle_results,
-            enqueue=_enqueue_city_retry,
-        )
+        result = run_scrape_cycle_digest(enqueue=_enqueue_city_retry)
     except Exception as exc:
         reraise_if_fatal(exc)
-        logger.exception(
-            "Failed to queue city retries for cycle %s",
-            report.get("cycle_id"),
-        )
-        queued = []
+        logger.exception("Scrape cycle digest failed")
+        raise
+    report = result["report"]
     return {
         "cycle_id": report["cycle_id"],
         "zones_pct": report["zones"]["pct_completed"],
@@ -348,7 +335,7 @@ def send_scrape_cycle_digest() -> dict[str, object]:
         "dropped_deals": report["dropped_deals"],
         "net_new_emails": report["net_new_emails"],
         "ntfy": result["ntfy"],
-        "city_retries_queued": len(queued),
+        "city_retries_queued": len(result.get("queued") or []),
     }
 
 

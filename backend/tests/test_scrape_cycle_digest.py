@@ -6,6 +6,7 @@ import fnmatch
 import json
 import logging
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -19,19 +20,20 @@ from app.services.scrape_cycle_digest import (
     build_cycle_digest_report,
     format_city_retry_line,
     format_digest_body,
+    pending_city_retry_labels,
+    publish_cycle_digest,
     queue_failed_city_retries,
     run_city_retry,
-    send_city_retry_followup,
 )
 from app.services.scrape_cycle_stats import (
     claim_city_retries,
+    cycle_id_for_start,
     cycle_id_from_task_request,
     cycle_start_for_time,
     digest_cycle_start,
     load_city_retries,
     load_cycle_zone_results,
     load_cycle_zone_set,
-    record_city_retry_outcome,
     record_zone_result,
     remember_cycle_zone_set,
     zone_already_succeeded,
@@ -197,7 +199,8 @@ def test_crashed_and_running_zones_are_failed_not_ok() -> None:
             "australia": {"ok": True, "status": "completed"},
         }
     )
-    assert set(health["failed"]) == {"se_asia", "us_east"}
+    assert health["failed"] == ["se_asia"]
+    assert health["still_running"] == ["us_east"]
     assert health["interrupted"] == []
     assert "australia" not in health["failed"]
     assert health["ok"] == 1
@@ -377,7 +380,7 @@ def test_overdue_running_zone_is_interrupted_in_the_digest() -> None:
     assert "Zones:" in body.splitlines()[1]
 
 
-def test_running_zone_inside_the_time_limit_stays_failed() -> None:
+def test_running_zone_inside_the_time_limit_is_still_running() -> None:
     now = datetime(2026, 10, 8, 18, 0, tzinfo=timezone.utc)
     health = _zone_health(
         {
@@ -392,7 +395,9 @@ def test_running_zone_inside_the_time_limit_stays_failed() -> None:
         alive_workers={"scrape@nuc"},
     )
     assert health["interrupted"] == []
-    assert "se_asia" in health["failed"]
+    assert health["still_running"] == ["se_asia"]
+    assert "se_asia" not in health["failed"]
+    assert "Still running: se_asia" in _digest_body(health)
 
 
 def test_running_zone_past_the_grace_is_interrupted() -> None:
@@ -951,28 +956,60 @@ def test_format_digest_body_includes_city_retry_line() -> None:
     assert format_city_retry_line(None) is None
 
 
-def test_city_retry_followup_is_sent_once(monkeypatch: pytest.MonkeyPatch) -> None:
+def _sample_digest_report() -> dict:
+    return {
+        "cycle_id": "2026-10-08T18",
+        "since_label": "2026-10-08 18:00",
+        "zones": {
+            "total_zones": 2,
+            "completed": 1,
+            "ok": 1,
+            "failed": [],
+            "missing": [],
+            "interrupted": [],
+            "still_running": ["us_east", "se_asia"],
+            "pct_completed": 50.0,
+            "pct_ok": 50.0,
+        },
+        "site": {
+            "healthy": True,
+            "api_ok": True,
+            "frontend_ok": True,
+            "revalidate_ok": 1,
+            "revalidate_fail": 0,
+            "revalidate_pct": 100.0,
+            "detail": "ok",
+        },
+        "new_deals": 0,
+        "dropped_deals": 0,
+        "net_new_emails": 0,
+        "active_offers": 0,
+        "categories": [],
+        "city_retries": [
+            {"status": "running", "country": "US", "city": "Tampa"},
+            {"status": "queued", "country": "FR", "city": "Bordeaux Wine Country"},
+            {"status": "recovered", "country": "US", "city": "Seattle"},
+        ],
+    }
+
+
+def test_digest_names_zones_and_retries_still_running() -> None:
+    report = _sample_digest_report()
+    body = format_digest_body(report)
+    assert (
+        "Still running: us_east, se_asia, "
+        "Bordeaux Wine Country (FR), Tampa (US)"
+    ) in body
+    assert "City retries:" not in body
+    assert pending_city_retry_labels(report["city_retries"]) == [
+        "Bordeaux Wine Country (FR)",
+        "Tampa (US)",
+    ]
+
+
+def test_digest_is_sent_once_per_cycle(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = _FakeRedis()
     monkeypatch.setattr("app.services.scrape_cycle_stats._client", lambda: fake)
-    claim_city_retries(
-        "2026-10-08T18",
-        [("US", "Tampa"), ("US", "Seattle"), ("FR", "Bordeaux Wine Country")],
-    )
-    record_city_retry_outcome("2026-10-08T18", "US", "Seattle", ok=True)
-    record_city_retry_outcome(
-        "2026-10-08T18",
-        "US",
-        "Tampa",
-        ok=False,
-        error=_RECONNECT,
-    )
-    record_city_retry_outcome(
-        "2026-10-08T18",
-        "FR",
-        "Bordeaux Wine Country",
-        ok=False,
-        error=_RECONNECT,
-    )
     sent: list[str] = []
 
     def _send(_title: str, body: str, **_kwargs: object) -> dict[str, bool]:
@@ -980,14 +1017,44 @@ def test_city_retry_followup_is_sent_once(monkeypatch: pytest.MonkeyPatch) -> No
         return {"ok": True}
 
     monkeypatch.setattr("app.services.scrape_cycle_digest.send_ntfy", _send)
-    first = send_city_retry_followup("2026-10-08T18")
-    second = send_city_retry_followup("2026-10-08T18")
-    assert first is not None
-    assert second is None
+    report = _sample_digest_report()
+    first = publish_cycle_digest(report)
+    second = publish_cycle_digest(report)
+    assert first["ntfy"] == {"ok": True}
+    assert second["ntfy"] == {"skipped": True, "reason": "already_sent"}
     assert len(sent) == 1
-    assert "Cycle 2026-10-08T18" in sent[0]
-    assert (
-        "City retries: 1 recovered, 2 still failing: "
-        "Bordeaux Wine Country (FR), Tampa (US)"
-    ) in sent[0]
-    assert "next scheduled scrape" in sent[0]
+    assert "Still running: us_east, se_asia" in sent[0]
+
+
+def test_digest_cycle_matches_across_the_october_dst_change() -> None:
+    dublin = ZoneInfo("Europe/Dublin")
+
+    summer_publish = datetime(2026, 10, 8, 19, 5, tzinfo=dublin)
+    summer_id = cycle_id_for_start(cycle_start_for_time(summer_publish))
+    summer_digest = datetime(2026, 10, 9, 6, 0, tzinfo=dublin)
+    assert summer_digest.utcoffset() == timedelta(hours=1)
+    assert cycle_id_for_start(digest_cycle_start(summer_digest)) == summer_id
+    assert summer_id == "2026-10-08T18"
+
+    # 25 Oct 2026 01:00 UTC: Ireland falls back from IST (UTC+1) to GMT.
+    evening_before = datetime(2026, 10, 24, 19, 5, tzinfo=dublin)
+    assert evening_before.utcoffset() == timedelta(hours=1)
+    folded_id = cycle_id_for_start(cycle_start_for_time(evening_before))
+    morning_after = datetime(2026, 10, 25, 6, 0, tzinfo=dublin)
+    assert morning_after.utcoffset() == timedelta(0)
+    assert cycle_id_for_start(digest_cycle_start(morning_after)) == folded_id
+    assert folded_id == "2026-10-24T18"
+
+    morning_publish = datetime(2026, 10, 25, 7, 10, tzinfo=dublin)
+    assert morning_publish.utcoffset() == timedelta(0)
+    winter_morning_id = cycle_id_for_start(cycle_start_for_time(morning_publish))
+    same_day_digest = datetime(2026, 10, 25, 18, 0, tzinfo=dublin)
+    assert cycle_id_for_start(digest_cycle_start(same_day_digest)) == winter_morning_id
+    assert winter_morning_id == "2026-10-25T07"
+
+    winter_publish = datetime(2026, 10, 26, 19, 0, tzinfo=dublin)
+    winter_id = cycle_id_for_start(cycle_start_for_time(winter_publish))
+    winter_digest = datetime(2026, 10, 27, 6, 5, tzinfo=dublin)
+    assert winter_digest.utcoffset() == timedelta(0)
+    assert cycle_id_for_start(digest_cycle_start(winter_digest)) == winter_id
+    assert winter_id == "2026-10-26T19"
