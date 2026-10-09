@@ -62,6 +62,13 @@ def main() -> int:
                 city=row.get("city") or None,
                 source_url=row.get("source_url") or None,
                 venue_category=row.get("venue_category") or None,
+                source_segment=row.get("source_segment") or None,
+                lead_zone=row.get("lead_zone") or None,
+                email_quality_score=(
+                    int(row["email_quality_score"])
+                    if (row.get("email_quality_score") or "").strip()
+                    else None
+                ),
             )
             if result is None:
                 skipped += 1
