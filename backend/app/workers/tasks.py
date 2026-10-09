@@ -16,6 +16,8 @@ from app.models.newsletter import NewsletterSubscriber
 from app.scrapers.global_retail import TARGET_MARKETS, iter_market_areas
 from app.scrapers.markets import CURRENCY_RATES
 from app.services.deal_expiry import expire_past_due_deals
+from app.services.fishy_finger.digest import run_fishy_finger_digest
+from app.services.fishy_finger.leads import run_fishy_finger_zone
 from app.services.merchant_outreach import send_merchant_outreach_batch
 from app.services.newsletter import send_weekly_special_to_subscriber
 from app.services.scrape_cycle_digest import run_scrape_cycle_digest
@@ -283,6 +285,48 @@ def send_scrape_cycle_digest() -> dict[str, object]:
         "new_deals": result["report"]["new_deals"],
         "dropped_deals": result["report"]["dropped_deals"],
         "net_new_emails": result["report"]["net_new_emails"],
+        "ntfy": result["ntfy"],
+    }
+
+
+@celery_app.task(
+    bind=True,
+    name="app.workers.tasks.scrape_fishy_finger_zone",
+    acks_late=True,
+    reject_on_worker_lost=True,
+    acks_on_failure_or_timeout=True,
+    soft_time_limit=ZONE_TASK_SOFT_TIME_LIMIT_SECONDS,
+    time_limit=ZONE_TASK_TIME_LIMIT_SECONDS,
+)
+def scrape_fishy_finger_zone(self: Any, zone_id: str) -> dict[str, Any]:
+    """Weekly independent-lead scrape for one zone.
+
+    Separate from ``scrape_zone_retail``: it does not stamp or write the
+    twice-daily deal cycle in Redis.
+    """
+    del self
+    try:
+        return run_fishy_finger_zone(zone_id)
+    except SoftTimeLimitExceeded:
+        logger.error("Fishy Finger zone %s hit the soft time limit", zone_id)
+        return {
+            "zone": zone_id.strip().lower(),
+            "ok": False,
+            "status": "timed_out",
+            "error": "soft time limit exceeded",
+        }
+
+
+@celery_app.task(name="app.workers.tasks.send_fishy_finger_digest")
+def send_fishy_finger_digest() -> dict[str, object]:
+    """Sunday ntfy: new Fishy Finger leads, queue, zone and category mix."""
+    result = run_fishy_finger_digest()
+    report = result["report"]
+    return {
+        "week_label": report["week_label"],
+        "net_new_lead_emails": report["net_new_lead_emails"],
+        "unsubscribed": report["unsubscribed"],
+        "still_to_email": report["still_to_email"],
         "ntfy": result["ntfy"],
     }
 

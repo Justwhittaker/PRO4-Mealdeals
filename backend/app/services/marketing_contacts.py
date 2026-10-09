@@ -92,6 +92,9 @@ def upsert_marketing_contact(
     city: str | None,
     source_url: str | None = None,
     venue_category: str | None = None,
+    source_segment: str | None = None,
+    lead_zone: str | None = None,
+    email_quality_score: int | None = None,
 ) -> MarketingContact | None:
     """Insert a new contact, or fill in real changes on a duplicate.
 
@@ -155,6 +158,22 @@ def upsert_marketing_contact(
         changed |= _assign(
             existing, "venue_category", _upgrade(existing.venue_category, category)
         )
+        segment = source_segment[:64] if source_segment else None
+        zone = lead_zone[:64] if lead_zone else None
+        # Fill lead fields when a restore has them and the row does not.
+        # A deal re-scrape passes none of these, so it does not retag a lead.
+        if segment and not existing.source_segment:
+            existing.source_segment = segment
+            changed = True
+        if zone and not existing.lead_zone:
+            existing.lead_zone = zone
+            changed = True
+        if (
+            email_quality_score is not None
+            and existing.email_quality_score is None
+        ):
+            existing.email_quality_score = int(email_quality_score)
+            changed = True
         if not changed:
             return existing
         existing.last_scraped_at = _utcnow()
@@ -172,6 +191,11 @@ def upsert_marketing_contact(
         city=city_name,
         source_url=(source_url[:500] if source_url else None),
         venue_category=(venue_category[:120] if venue_category else None),
+        source_segment=(source_segment[:64] if source_segment else None),
+        lead_zone=(lead_zone[:64] if lead_zone else None),
+        email_quality_score=(
+            int(email_quality_score) if email_quality_score is not None else None
+        ),
         last_scraped_at=_utcnow(),
     )
     session.add(row)
@@ -240,6 +264,9 @@ def export_marketing_contacts_csv(
             "venue_category",
             "source_url",
             "last_scraped_at",
+            "source_segment",
+            "lead_zone",
+            "email_quality_score",
         ]
     )
     for row in rows:
@@ -255,6 +282,9 @@ def export_marketing_contacts_csv(
                 row.venue_category or "",
                 row.source_url or "",
                 row.last_scraped_at.isoformat() if row.last_scraped_at else "",
+                row.source_segment or "",
+                row.lead_zone or "",
+                "" if row.email_quality_score is None else row.email_quality_score,
             ]
         )
     return buf.getvalue()
