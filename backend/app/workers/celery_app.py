@@ -26,7 +26,11 @@ from app.scrapers.zones import (
     ZONE_TASK_EXPIRES_SECONDS,
     validate_zone_coverage,
 )
-from app.services.scrape_cycle_stats import cycle_id_for_start, cycle_start_for_time
+from app.services.scrape_cycle_stats import (
+    cycle_id_for_start,
+    cycle_start_for_time,
+    remember_cycle_zone_set,
+)
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -111,9 +115,11 @@ def _stamp_scrape_cycle_id(
     """Attribute a zone result to the cycle that queued it, not the one it finished in."""
     if sender != "app.workers.tasks.scrape_zone_retail" or headers is None:
         return
-    if headers.get("scrape_cycle_id"):
-        return
-    headers["scrape_cycle_id"] = cycle_id_for_start(cycle_start_for_time())
+    if not headers.get("scrape_cycle_id"):
+        headers["scrape_cycle_id"] = cycle_id_for_start(cycle_start_for_time())
+    # First publish in the cycle wins, so a mid-cycle rename keeps the set
+    # these messages were actually scheduled with.
+    remember_cycle_zone_set(str(headers["scrape_cycle_id"]), list(ZONE_ORDER))
 
 if settings.celery_weekly_email_enabled:
     celery_app.conf.beat_schedule["send-weekly-specials-friday"] = {

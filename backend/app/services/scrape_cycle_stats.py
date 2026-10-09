@@ -12,7 +12,7 @@ import redis
 from app.core.config import get_settings
 from app.core.task_errors import reraise_if_fatal
 from app.core.redis_url import redis_from_url
-from app.scrapers.zones import ZONE_CYCLE_BASE_HOURS, ZONE_ORDER
+from app.scrapers.zones import ZONE_CYCLE_BASE_HOURS
 
 logger = logging.getLogger(__name__)
 
@@ -140,19 +140,86 @@ def record_zone_result(
     return cycle_id
 
 
+def _zone_set_key(cycle_id: str) -> str:
+    return f"{_REDIS_KEY_PREFIX}:{cycle_id}:zone_set"
+
+
+def remember_cycle_zone_set(cycle_id: str, zones: list[str]) -> None:
+    """Remember the zone ids a cycle was scheduled with.
+
+    ``SET NX`` keeps the first publisher's list. A later deploy that changes
+    ``ZONE_ORDER`` must not overwrite the set already queued for this cycle.
+    """
+    names = [str(zone).strip().lower() for zone in zones if str(zone).strip()]
+    try:
+        _client().set(
+            _zone_set_key(cycle_id),
+            json.dumps(names),
+            nx=True,
+            ex=_REDIS_TTL_SECONDS,
+        )
+    except Exception as exc:
+        reraise_if_fatal(exc)
+        logger.exception("Failed to record scrape cycle zone set for %s", cycle_id)
+
+
+def load_cycle_zone_set(cycle_id: str) -> list[str] | None:
+    """Zone ids stamped when this cycle was queued, if that record exists."""
+    try:
+        raw = _client().get(_zone_set_key(cycle_id))
+    except Exception as exc:
+        reraise_if_fatal(exc)
+        logger.exception("Failed to read scrape cycle zone set for %s", cycle_id)
+        return None
+    if not raw:
+        return None
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        logger.warning("Corrupt cycle zone set for %s", cycle_id)
+        return None
+    if not isinstance(payload, list):
+        return None
+    names = [str(zone).strip().lower() for zone in payload if str(zone).strip()]
+    return names or None
+
+
 def load_cycle_zone_results(cycle_id: str) -> dict[str, dict[str, Any]]:
-    """Return {zone_id: payload} for zones that recorded results."""
+    """Return {zone_id: payload} for every zone that recorded a result.
+
+    The scan includes retired names. A cycle queued under an older set still
+    has those keys after ``ZONE_ORDER`` changes.
+    """
     out: dict[str, dict[str, Any]] = {}
+    pattern = f"{_REDIS_KEY_PREFIX}:{cycle_id}:zone:*"
+    marker = ":zone:"
     try:
         client = _client()
-        for zone in ZONE_ORDER:
-            raw = client.get(_zone_key(cycle_id, zone))
+        for key in client.scan_iter(match=pattern):
+            raw = client.get(key)
             if not raw:
                 continue
+            key_text = str(key)
+            fallback = (
+                key_text.rsplit(marker, 1)[-1].strip().lower()
+                if marker in key_text
+                else ""
+            )
             try:
-                out[zone] = json.loads(raw)
+                payload = json.loads(raw)
             except json.JSONDecodeError:
-                logger.warning("Corrupt cycle stats for %s/%s", cycle_id, zone)
+                logger.warning(
+                    "Corrupt cycle stats for %s/%s",
+                    cycle_id,
+                    fallback or key_text,
+                )
+                continue
+            if not isinstance(payload, dict):
+                continue
+            zone = str(payload.get("zone") or fallback).strip().lower()
+            if not zone:
+                continue
+            out[zone] = payload
     except Exception as exc:
         reraise_if_fatal(exc)
         logger.exception("Failed to load scrape cycle stats for %s", cycle_id)

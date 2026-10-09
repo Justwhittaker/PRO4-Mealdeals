@@ -11,11 +11,13 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 from app.core.config import get_settings
+from app.core.task_errors import reraise_if_fatal
 from app.scrapers.categories import CATEGORY_ID_TO_LABEL, CATEGORY_ORDER
 from app.scrapers.zones import (
     LARGE_ZONE_FAMILIES,
     ZONE_FAMILY_LABELS,
     ZONE_ORDER,
+    ZONE_TASK_TIME_LIMIT_SECONDS,
     zone_family,
 )
 from app.services.ntfy import send_ntfy
@@ -23,9 +25,16 @@ from app.services.scrape_cycle_stats import (
     cycle_id_for_start,
     digest_cycle_start,
     load_cycle_zone_results,
+    load_cycle_zone_set,
 )
+from app.workers.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
+
+# A live worker is hard-killed at ZONE_TASK_TIME_LIMIT_SECONDS and never
+# writes a terminal status. Wait past that limit before calling a running
+# row interrupted, so a zone still inside its budget is left alone.
+_RUNNING_GRACE_SECONDS = 15 * 60
 
 
 def _engine() -> Engine:
@@ -43,10 +52,11 @@ def _is_running(row: dict[str, Any]) -> bool:
 
 
 def _is_failed(row: dict[str, Any]) -> bool:
-    """Crashed, timed out, or still running when the digest is built.
+    """Crashed, timed out, or still running inside its time budget.
 
-    A running marker means the zone task started and never recorded success.
-    That used to be filled in from partial DB activity and reported as ok.
+    Overdue and orphaned running rows are classified as interrupted first.
+    A running marker used to be filled in from partial DB activity and
+    reported as ok.
     """
     if _is_running(row):
         return True
@@ -55,72 +65,186 @@ def _is_failed(row: dict[str, Any]) -> bool:
     return False
 
 
-def _zone_health(cycle_results: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    completed = [
-        z
-        for z in ZONE_ORDER
-        if z in cycle_results and not _is_running(cycle_results[z])
+def _parse_recorded_at(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _owning_worker_gone(row: dict[str, Any], alive_workers: set[str] | None) -> bool:
+    """True when ping answered and this row's worker was not among the replies.
+
+    ``None`` or an empty ping means liveness is unknown. That must not flag
+    every running zone: the maintenance worker runs this digest at concurrency
+    1 and may not answer its own ping while the task is in progress.
+    """
+    if not alive_workers:
+        return False
+    hostname = str(row.get("worker_hostname") or "").strip()
+    if not hostname:
+        return False
+    return hostname not in alive_workers
+
+
+def _is_interrupted(
+    row: dict[str, Any],
+    *,
+    now: datetime | None,
+    alive_workers: set[str] | None,
+) -> bool:
+    if not _is_running(row):
+        return False
+    if _owning_worker_gone(row, alive_workers):
+        return True
+    recorded = _parse_recorded_at(row.get("recorded_at"))
+    if now is None or recorded is None:
+        return False
+    limit = ZONE_TASK_TIME_LIMIT_SECONDS + _RUNNING_GRACE_SECONDS
+    return (now - recorded).total_seconds() > limit
+
+
+def _alive_worker_hostnames() -> set[str] | None:
+    """Hostnames that answered ping, or None when liveness is unknown."""
+    try:
+        replies = celery_app.control.ping(timeout=2.0)
+    except Exception as exc:
+        reraise_if_fatal(exc)
+        logger.warning(
+            "Worker ping failed; digest will not use worker liveness: %s",
+            exc,
+        )
+        return None
+    if not isinstance(replies, list) or not replies:
+        return None
+    names: set[str] = set()
+    for reply in replies:
+        if isinstance(reply, dict):
+            names.update(str(name) for name in reply)
+    return names or None
+
+
+def _zone_health(
+    cycle_results: dict[str, dict[str, Any]],
+    *,
+    now: datetime | None = None,
+    alive_workers: set[str] | None = None,
+    scheduled_zones: list[str] | None = None,
+) -> dict[str, Any]:
+    now_utc = None
+    if now is not None:
+        now_utc = now if now.tzinfo else now.replace(tzinfo=timezone.utc)
+        now_utc = now_utc.astimezone(timezone.utc)
+
+    current = list(ZONE_ORDER)
+    current_set = set(current)
+    foreign = sorted(zone for zone in cycle_results if zone not in current_set)
+    scheduled = [
+        str(zone).strip().lower()
+        for zone in (scheduled_zones or [])
+        if str(zone).strip()
     ]
-    failed = [z for z in ZONE_ORDER if z in cycle_results and _is_failed(cycle_results[z])]
-    ok_zones = [z for z in completed if z not in failed]
+    scheduled_differs = bool(scheduled) and set(scheduled) != current_set
+    if scheduled_differs:
+        extra = [zone for zone in foreign if zone not in set(scheduled)]
+        scope = list(dict.fromkeys([*scheduled, *extra]))
+        retired = [zone for zone in scheduled if zone not in current_set]
+        note = "cycle used a different zone set than the one configured now"
+        if retired:
+            note += f" (scheduled only: {', '.join(retired)})"
+    elif foreign:
+        scope = [zone for zone in current if zone in cycle_results] + foreign
+        note = (
+            "recorded zones are not the current set "
+            f"({', '.join(foreign)}); reporting recorded zones only"
+        )
+    else:
+        scope = current
+        note = None
+
+    interrupted: list[str] = []
+    failed: list[str] = []
+    for zone_id in scope:
+        row = cycle_results.get(zone_id)
+        if not row:
+            continue
+        if _is_interrupted(row, now=now_utc, alive_workers=alive_workers):
+            interrupted.append(zone_id)
+        elif _is_failed(row):
+            failed.append(zone_id)
+
+    completed = [
+        zone_id
+        for zone_id in scope
+        if zone_id in cycle_results and not _is_running(cycle_results[zone_id])
+    ]
+    ok_zones = [zone_id for zone_id in completed if zone_id not in failed]
     timed_out: list[str] = []
-    for zone_id in ZONE_ORDER:
+    for zone_id in scope:
         row = cycle_results.get(zone_id) or {}
         if str(row.get("status") or "") != "timed_out":
             continue
         done = row.get("areas", 0)
-        total = row.get("areas_total", "?")
+        total_areas = row.get("areas_total", "?")
         timed_out.append(
-            f"{zone_id} {done}/{total} cities, {row.get('ingested', 0)} ingested"
+            f"{zone_id} {done}/{total_areas} cities, {row.get('ingested', 0)} ingested"
         )
-    total = len(ZONE_ORDER)
+    total = len(scope)
     city_errors = 0
     for row in cycle_results.values():
         failed_cities = row.get("cities_failed") or []
         if isinstance(failed_cities, list):
             city_errors += len(failed_cities)
 
-    family_stats: dict[str, dict[str, Any]] = {}
-    for zone_id in ZONE_ORDER:
-        family = zone_family(zone_id)
-        bucket = family_stats.setdefault(
-            family,
-            {"zones": [], "completed": 0, "ok": 0, "total": 0},
-        )
-        bucket["total"] += 1
-        bucket["zones"].append(zone_id)
-        if zone_id in cycle_results and not _is_running(cycle_results[zone_id]):
-            bucket["completed"] += 1
-            if zone_id not in failed:
-                bucket["ok"] += 1
+    large_families: list[dict[str, Any]] = []
+    if note is None:
+        family_stats: dict[str, dict[str, Any]] = {}
+        for zone_id in ZONE_ORDER:
+            family = zone_family(zone_id)
+            bucket = family_stats.setdefault(
+                family,
+                {"zones": [], "completed": 0, "ok": 0, "total": 0},
+            )
+            bucket["total"] += 1
+            bucket["zones"].append(zone_id)
+            if zone_id in cycle_results and not _is_running(cycle_results[zone_id]):
+                bucket["completed"] += 1
+                if zone_id not in failed:
+                    bucket["ok"] += 1
 
-    large_families = []
-    for family in LARGE_ZONE_FAMILIES:
-        bucket = family_stats.get(family)
-        if not bucket:
-            continue
-        large_families.append(
-            {
-                "family": family,
-                "label": ZONE_FAMILY_LABELS.get(family, family),
-                "pct_completed": _pct(bucket["completed"], bucket["total"]),
-                "completed": bucket["completed"],
-                "total": bucket["total"],
-                "zones": bucket["zones"],
-            }
-        )
+        for family in LARGE_ZONE_FAMILIES:
+            bucket = family_stats.get(family)
+            if not bucket:
+                continue
+            large_families.append(
+                {
+                    "family": family,
+                    "label": ZONE_FAMILY_LABELS.get(family, family),
+                    "pct_completed": _pct(bucket["completed"], bucket["total"]),
+                    "completed": bucket["completed"],
+                    "total": bucket["total"],
+                    "zones": bucket["zones"],
+                }
+            )
 
     return {
         "total_zones": total,
         "completed": len(completed),
         "ok": len(ok_zones),
         "failed": failed,
+        "interrupted": interrupted,
         "timed_out": timed_out,
-        "missing": [z for z in ZONE_ORDER if z not in cycle_results],
+        "missing": [zone_id for zone_id in scope if zone_id not in cycle_results],
         "pct_completed": _pct(len(completed), total),
         "pct_ok": _pct(len(ok_zones), total),
         "large_families": large_families,
         "city_errors": city_errors,
+        "zone_set_note": note,
     }
 
 
@@ -164,6 +288,10 @@ def _query_window_counts(engine: Engine, since: datetime) -> dict[str, int]:
                 {"since": since},
             ).scalar_one()
         )
+        # Re-scrape sets updated_at on every existing contact, including ones
+        # that already had an email. There is no column for when the email
+        # was first filled in, so the honest window count is contacts created
+        # in this cycle that have a non-empty email.
         new_email_rows = int(
             conn.execute(
                 text(
@@ -172,20 +300,6 @@ def _query_window_counts(engine: Engine, since: datetime) -> dict[str, int]:
                     WHERE email IS NOT NULL
                       AND BTRIM(email) <> ''
                       AND created_at >= :since
-                    """
-                ),
-                {"since": since},
-            ).scalar_one()
-        )
-        gained_email_rows = int(
-            conn.execute(
-                text(
-                    """
-                    SELECT COUNT(*) FROM marketing_contacts
-                    WHERE email IS NOT NULL
-                      AND BTRIM(email) <> ''
-                      AND created_at < :since
-                      AND updated_at >= :since
                     """
                 ),
                 {"since": since},
@@ -203,14 +317,33 @@ def _query_window_counts(engine: Engine, since: datetime) -> dict[str, int]:
                 )
             ).scalar_one()
         )
+        # Same inventory count as GET /api/v1/scrapers/metrics active_deals,
+        # which is the "N deals" figure in the public site header.
+        active_site = int(
+            conn.execute(
+                text(
+                    """
+                    SELECT COUNT(*) FROM deals
+                    WHERE is_active IS TRUE
+                    """
+                )
+            ).scalar_one()
+        )
     return {
         "new_deals": new_deals,
         "dropped_deals": dropped,
-        "net_new_emails": new_email_rows + gained_email_rows,
+        "net_new_emails": new_email_rows,
         "new_email_rows": new_email_rows,
-        "gained_email_rows": gained_email_rows,
         "active_scraped_deals": active_scraped,
+        "active_site_deals": active_site,
     }
+
+
+def _active_offers_on_site(api_active: int | None, db_active: int) -> int:
+    """Header deal total. Metrics when the API answered, otherwise the DB count."""
+    if api_active is None:
+        return db_active
+    return api_active
 
 
 def _category_breakdown(engine: Engine) -> list[tuple[str, int, float]]:
@@ -319,10 +452,14 @@ def format_digest_body(report: dict[str, Any]) -> str:
         f"({zones['completed']}/{zones['total_zones']}), "
         f"{zones['pct_ok']:.0f}% ok"
     )
+    if zones.get("zone_set_note"):
+        zone_line += f"\nZone set: {zones['zone_set_note']}"
     if zones["missing"]:
         zone_line += f"\nMissing: {', '.join(zones['missing'])}"
     if zones["failed"]:
         zone_line += f"\nFailed: {', '.join(zones['failed'])}"
+    if zones.get("interrupted"):
+        zone_line += f"\nInterrupted: {', '.join(zones['interrupted'])}"
     if zones.get("timed_out"):
         zone_line += "\nTimed out: " + "; ".join(zones["timed_out"])
     if zones.get("city_errors"):
@@ -361,9 +498,10 @@ def format_digest_body(report: dict[str, Any]) -> str:
             f"Cycle {report['cycle_id']} (since {report['since_label']} UTC)",
             zone_line,
             site_line,
+            f"Active offers on site: {report['active_offers']}",
             f"New deals: {report['new_deals']}",
             f"Dropped deals: {report['dropped_deals']}",
-            f"Net new merchant emails: {report['net_new_emails']}",
+            f"New merchant emails (new contacts): {report['net_new_emails']}",
             "Category mix (active on site):",
             *cat_lines,
         ]
@@ -375,6 +513,7 @@ def build_cycle_digest_report(now: datetime | None = None) -> dict[str, Any]:
     start = digest_cycle_start(current)
     cycle_id = cycle_id_for_start(start)
     cycle_results = load_cycle_zone_results(cycle_id)
+    scheduled_zones = load_cycle_zone_set(cycle_id)
 
     engine = _engine()
     window = _query_window_counts(engine, start)
@@ -382,7 +521,12 @@ def build_cycle_digest_report(now: datetime | None = None) -> dict[str, Any]:
 
     # Do not invent ok=True from partial marketing_contacts touches. A zone
     # that scraped a few cities and then crashed must stay failed or missing.
-    zones = _zone_health(cycle_results)
+    zones = _zone_health(
+        cycle_results,
+        now=current,
+        alive_workers=_alive_worker_hostnames(),
+        scheduled_zones=scheduled_zones,
+    )
     # Prefer Redis-accumulated drops when present; else DB proxy.
     redis_dropped = _sum_cycle_metric(cycle_results, "stale_deactivated")
     dropped = redis_dropped if redis_dropped > 0 else window["dropped_deals"]
@@ -390,6 +534,11 @@ def build_cycle_digest_report(now: datetime | None = None) -> dict[str, Any]:
     site = _site_transfer_health(
         cycle_results=cycle_results,
         db_active=window["active_scraped_deals"],
+    )
+    api_active = site.get("api_active_deals")
+    active_offers = _active_offers_on_site(
+        api_active if isinstance(api_active, int) else None,
+        window["active_site_deals"],
     )
 
     return {
@@ -401,6 +550,7 @@ def build_cycle_digest_report(now: datetime | None = None) -> dict[str, Any]:
         "new_deals": window["new_deals"],
         "dropped_deals": dropped,
         "net_new_emails": window["net_new_emails"],
+        "active_offers": active_offers,
         "categories": categories,
         "cycle_results": cycle_results,
     }

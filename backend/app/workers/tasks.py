@@ -171,7 +171,15 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
     """
     zone = zone_id.strip().lower()
     if zone not in SCRAPE_ZONES:
-        raise ValueError(f"Unknown scrape zone: {zone_id}")
+        # A rename leaves old messages on the queue. Ack them as a no-op so
+        # the worker does not record a crash for a zone it no longer runs.
+        logger.warning("Unknown scrape zone %r; skipping", zone_id)
+        return {
+            "zone": zone,
+            "ok": True,
+            "status": "skipped",
+            "skipped": "unknown_zone",
+        }
     cycle_id = _queued_cycle_id(self.request)
     if zone_already_succeeded(cycle_id, zone):
         logger.info(
@@ -187,21 +195,21 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
             "cycle_id": cycle_id,
         }
 
-    record_zone_result(
-        zone,
-        {
-            "ok": False,
-            "status": "running",
-            "areas": 0,
-            "discovered": 0,
-            "ingested": 0,
-            "stale_deactivated": 0,
-            "marketing_contacts": 0,
-            "revalidate_ok": 0,
-            "revalidate_fail": 0,
-        },
-        cycle_id=cycle_id,
-    )
+    running = {
+        "ok": False,
+        "status": "running",
+        "areas": 0,
+        "discovered": 0,
+        "ingested": 0,
+        "stale_deactivated": 0,
+        "marketing_contacts": 0,
+        "revalidate_ok": 0,
+        "revalidate_fail": 0,
+    }
+    hostname = getattr(self.request, "hostname", None)
+    if hostname:
+        running["worker_hostname"] = str(hostname)
+    record_zone_result(zone, running, cycle_id=cycle_id)
     try:
         result = scrape_and_ingest_zone(zone)
     except SoftTimeLimitExceeded as exc:
