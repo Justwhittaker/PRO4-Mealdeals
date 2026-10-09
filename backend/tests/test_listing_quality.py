@@ -60,7 +60,8 @@ def test_homepage_and_investor_titles_are_rewritten() -> None:
         original_price=Decimal("14.00"),
     )
     assert prepared["blocked"] is False
-    assert prepared["title"] == "Domino's Pizza Takeaway Takeaway Deal — Phoenix"
+    assert prepared["title"] == "Domino's Pizza Takeaway Deal — Phoenix"
+    assert "Takeaway Takeaway" not in str(prepared["title"])
     assert "Home Page" not in str(prepared["title"])
     assert "scraped" not in str(prepared["description"]).lower()
     assert prepared["original_price"] == Decimal("8.25")

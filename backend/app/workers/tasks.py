@@ -19,7 +19,10 @@ from app.scrapers.global_retail import TARGET_MARKETS, iter_market_areas
 from app.scrapers.markets import CURRENCY_RATES
 from app.services.deal_expiry import expire_past_due_deals
 from app.services.merchant_outreach import send_merchant_outreach_batch
-from app.services.newsletter import send_weekly_special_to_subscriber
+from app.services.newsletter import (
+    normalize_email,
+    send_weekly_special_to_subscriber,
+)
 from app.services.scrape_cycle_digest import (
     run_city_retry,
     run_scrape_cycle_digest,
@@ -339,13 +342,64 @@ def send_scrape_cycle_digest() -> dict[str, object]:
     }
 
 
+def _tally_weekly_result(
+    result: dict[str, object],
+    *,
+    sent: int,
+    skipped: int,
+    failed: int,
+) -> tuple[int, int, int]:
+    if result.get("skipped"):
+        return sent, skipped + 1, failed
+    if result.get("sent"):
+        return sent + 1, skipped, failed
+    return sent, skipped, failed + 1
+
+
 @celery_app.task(name="app.workers.tasks.send_weekly_specials")
-def send_weekly_specials() -> dict[str, int]:
-    """Friday job: email active newsletter subscribers current deals."""
+def send_weekly_specials(test_email: str | None = None) -> dict[str, int]:
+    """Friday job: email active newsletter subscribers current deals.
+
+    When ``test_email`` is set, send only to that subscriber row (even if
+    they have unsubscribed) and do not update ``last_emailed_at`` for anyone.
+    """
     sent = 0
     skipped = 0
     failed = 0
+    test_address = (test_email or "").strip()
     with SyncSessionLocal() as session:
+        if test_address:
+            email = normalize_email(test_address)
+            subscribers = list(
+                session.scalars(
+                    select(NewsletterSubscriber).where(
+                        NewsletterSubscriber.email == email
+                    )
+                ).all()
+            )
+            if not subscribers:
+                summary = {"sent": 0, "skipped": 0, "failed": 0, "matched": 0}
+                logger.info("Weekly specials test send found no subscriber for %s", email)
+                return summary
+            for subscriber in subscribers:
+                result = send_weekly_special_to_subscriber(
+                    session,
+                    subscriber,
+                    record_send=False,
+                    allow_unsubscribed=True,
+                )
+                sent, skipped, failed = _tally_weekly_result(
+                    result, sent=sent, skipped=skipped, failed=failed
+                )
+            summary = {
+                "sent": sent,
+                "skipped": skipped,
+                "failed": failed,
+                "matched": len(subscribers),
+            }
+            logger.info("Weekly specials test send complete: %s", summary)
+            return summary
+
         subscribers = list(
             session.scalars(
                 select(NewsletterSubscriber).where(
@@ -355,12 +409,9 @@ def send_weekly_specials() -> dict[str, int]:
         )
         for subscriber in subscribers:
             result = send_weekly_special_to_subscriber(session, subscriber)
-            if result.get("skipped"):
-                skipped += 1
-            elif result.get("sent"):
-                sent += 1
-            else:
-                failed += 1
+            sent, skipped, failed = _tally_weekly_result(
+                result, sent=sent, skipped=skipped, failed=failed
+            )
     summary = {"sent": sent, "skipped": skipped, "failed": failed}
     logger.info("Weekly specials complete: %s", summary)
     return summary

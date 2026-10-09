@@ -34,6 +34,17 @@ email. A short list is sent as-is. When nothing in the country survives
 the quality filter, the email is the "no new local deals this week"
 variant. Deals from other countries are not added.
 
+Variety
+-------
+Independents are listed first. A national chain (the shared name list
+in ``app.scrapers.source_filters``, including Apache Pizza and
+Supermac's) or a generated template title only fills a slot that is
+still empty. Each merchant appears once: the nearest deal, and a
+positive price ahead of a blank template when the distance is the
+same. Offer titles collapse a repeated kind word ("Takeaway
+Takeaway"). A blank price is shown as the offer ("Buy one, get one
+free", "Free kids ice cream"), not the single word Free.
+
 Signup stores country, city, and region. The form prefills from the
 site location cookie (IP city and state headers, or the homepage
 browser geolocation). Those structured fields are sent while the
@@ -80,11 +91,17 @@ from app.models.location import Location
 from app.models.merchant import Merchant
 from app.models.newsletter import NewsletterSubscriber
 from app.scrapers.markets import CURRENCY_RATES, DEFAULT_CURRENCY
+from app.scrapers.source_filters import is_chain_name
 from app.services.city_coords import merged_city_coords
 from app.services.deal_quality import (
+    blank_price_label,
     filter_kept_in_order,
     promotional_price_label,
     rejection_reason,
+)
+from app.services.listing_quality import (
+    collapse_repeated_kind_words,
+    is_generated_template_title,
 )
 from app.services.email import send_email
 from app.services.frontend_revalidate import frontend_country_slug, slugify_city
@@ -554,16 +571,26 @@ def _tier(place: SubscriberPlace, deal: WeeklyDeal) -> str:
     return "country"
 
 
-def _sort_key(place: SubscriberPlace, deal: WeeklyDeal) -> tuple[int, float, float]:
+def _merchant_key(name: str | None) -> str:
+    return re.sub(r"[^a-z0-9]+", "", (name or "").lower())
+
+
+def _is_backfill_deal(deal: WeeklyDeal) -> bool:
+    """Chain or generated template. These fill slots independents did not use."""
+    return is_chain_name(deal.merchant_name) or is_generated_template_title(deal.title)
+
+
+def _sort_key(place: SubscriberPlace, deal: WeeklyDeal) -> tuple[int, float, int, float]:
     tier = _tier(place, deal)
     rank = {"city": 0, "nearby": 1, "region": 2, "country": 3}[tier]
     distance = 0.0 if tier == "city" else _distance_km(place, deal)
     if distance is None:
         distance = 1_000_000.0
+    priced = 0 if deal.deal_price is not None and deal.deal_price > 0 else 1
     created = 0.0
     if deal.created_at is not None:
         created = deal.created_at.timestamp()
-    return (rank, distance, -created)
+    return (rank, distance, priced, -created)
 
 
 def _is_expired(deal: WeeklyDeal, now: datetime) -> bool:
@@ -670,9 +697,24 @@ def review_candidates(
             in_state.append(deal)
         kept = in_state
 
-    limited = kept[:limit]
-    limited_ids = {deal.id for deal in limited}
+    one_per_merchant: list[WeeklyDeal] = []
+    seen_merchants: set[str] = set()
     for deal in kept:
+        key = _merchant_key(deal.merchant_name)
+        if key and key in seen_merchants:
+            excluded.append((deal, "duplicate_merchant"))
+            continue
+        if key:
+            seen_merchants.add(key)
+        one_per_merchant.append(deal)
+
+    independents = [deal for deal in one_per_merchant if not _is_backfill_deal(deal)]
+    backfill = [deal for deal in one_per_merchant if _is_backfill_deal(deal)]
+    ordered = independents + backfill
+
+    limited = ordered[:limit]
+    limited_ids = {deal.id for deal in limited}
+    for deal in ordered:
         if deal.id not in limited_ids:
             excluded.append((deal, "over_limit"))
 
@@ -839,16 +881,16 @@ def format_money(amount: Decimal, currency: str) -> str:
 
 
 def display_price(deal: WeeklyDeal, local_currency: str) -> str:
-    """Local-currency price, or the percent / free label when price is unset."""
-    promo = promotional_price_label(deal.title, deal.description)
+    """Local-currency price, or the offer text when the amount is blank."""
     amount = deal.deal_price
     if amount is None or amount <= 0:
-        return promo or ""
+        return blank_price_label(deal.title, deal.description)
     source = (deal.currency_code or local_currency).upper()
     converted = _convert_amount(Decimal(amount), source, local_currency)
     if converted is None:
         return format_money(Decimal(amount), source)
     formatted = format_money(converted, local_currency)
+    promo = promotional_price_label(deal.title, deal.description)
     if promo and "%" in promo:
         return f"{formatted} ({promo})"
     return formatted
@@ -922,7 +964,7 @@ def build_weekly_email(
     lines = [f"Hi {first},", "", intro, ""]
     html_items: list[str] = []
     for deal in selection.deals:
-        title = _one_line(deal.title)
+        title = collapse_repeated_kind_words(_one_line(deal.title))
         merchant = _one_line(deal.merchant_name)
         city = _one_line(deal.city)
         price = display_price(deal, selection.local_currency)
@@ -1022,8 +1064,17 @@ def render_weekly_issue(
 def send_weekly_special_to_subscriber(
     session: Session,
     subscriber: NewsletterSubscriber,
+    *,
+    record_send: bool = True,
+    allow_unsubscribed: bool = False,
 ) -> dict[str, object]:
-    if not subscriber.is_subscribed:
+    """Email one subscriber.
+
+    ``record_send`` writes ``last_emailed_at``. A workflow test send passes
+    False so the Friday schedule is unchanged for everyone. ``allow_unsubscribed``
+    is only for that explicit test address.
+    """
+    if not subscriber.is_subscribed and not allow_unsubscribed:
         return {"email": subscriber.email, "skipped": True, "reason": "unsubscribed"}
 
     backfill_subscriber_location(subscriber)
@@ -1042,9 +1093,11 @@ def send_weekly_special_to_subscriber(
         text_body=text_body,
         html_body=html_body,
     )
-    if ok:
+    if ok and record_send:
         subscriber.last_emailed_at = datetime.now(timezone.utc)
         session.commit()
+    elif not record_send:
+        session.rollback()
     logger.info(
         "Weekly specials for %s place=%s scope=%s deals=%s excluded=%s",
         subscriber.email,

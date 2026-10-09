@@ -15,9 +15,21 @@ _CHAIN_NAME_RE = re.compile(
     r"tesco|sainsbury|aldi|lidl|walmart|carrefour|dunnes|supervalu|"
     r"centra|asda|morrisons|waitrose|chipotle|taco\s*bell|wendy|"
     r"hard\s*rock|olive\s*garden|applebee|ihop|pizza\s*express|"
-    r"five\s*guys|tim\s*horton|dunkin"
+    r"five\s*guys|tim\s*horton|dunkin|"
+    r"apache|supermac"
     r")\b"
 )
+
+
+def is_chain_name(merchant: str | None) -> bool:
+    """True when the venue name matches the shared national-chain list.
+
+    Newsletter ranking uses this list. Fishy Finger Sub (PR #22) adds OSM
+    brand, franchise-page, and multi-city signals on top of the same names;
+    a deal row does not carry those signals, so the name list is the check
+    that both can share.
+    """
+    return bool(_CHAIN_NAME_RE.search(merchant or ""))
 
 
 def source_host(url: str) -> str:
@@ -33,7 +45,7 @@ def is_national_chain(merchant: str, source: dict[str, str]) -> bool:
         return False
     if kind in {"local_chain", "national_chain"}:
         return True
-    return bool(_CHAIN_NAME_RE.search(merchant or ""))
+    return is_chain_name(merchant)
 
 
 def dedupe_chain_sources_for_hub(

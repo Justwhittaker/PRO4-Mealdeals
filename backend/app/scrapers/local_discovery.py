@@ -13,7 +13,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import re
 import time
 from pathlib import Path
 from typing import Any
@@ -32,7 +31,7 @@ from app.scrapers.hub_radius import (
     haversine_km,
     hub_default_locality,
 )
-from app.scrapers.source_filters import is_national_chain, source_host
+from app.scrapers.source_filters import is_chain_name, is_national_chain, source_host
 
 # Hub scrape: venues within 150 miles; cap per hub keeps zone jobs bite-sized.
 _MAX_PER_HUB = 48
@@ -45,19 +44,6 @@ _LOCALITY_VERSION = 5
 _HUB_SAMPLE_RADIUS_M = 12_000
 _TOWN_SAMPLE_RADIUS_M = 8_000
 _MAX_SATELLITE_SAMPLES = 8
-
-# Name tokens that usually indicate global/national chains (prefer independents).
-_CHAIN_NAME_RE = re.compile(
-    r"(?i)\b("
-    r"mcdonald|burger\s*king|kfc|subway|domino|pizza\s*hut|papa\s*john|"
-    r"starbucks|costa|nandos|nando.?s|pret|greggs|wetherspoon|"
-    r"marriott|hilton|holiday\s*inn|premier\s*inn|ibis|novotel|"
-    r"tesco|sainsbury|aldi|lidl|walmart|carrefour|dunnes|supervalu|"
-    r"centra|asda|morrisons|waitrose|chipotle|taco\s*bell|wendy|"
-    r"hard\s*rock|olive\s*garden|applebee|ihop|pizza\s*express|"
-    r"five\s*guys|tim\s*horton|dunkin"
-    r")\b"
-)
 
 _AMENITY_TO_CATEGORY: dict[str, str] = {
     "restaurant": "Restaurants, Cafe's & Bistro's",
@@ -132,7 +118,7 @@ def _category_from_tags(tags: dict[str, str]) -> str | None:
 
 
 def _is_likely_chain(name: str) -> bool:
-    return bool(_CHAIN_NAME_RE.search(name or ""))
+    return is_chain_name(name)
 
 
 def _overpass_query(lat: float, lon: float, radius_m: int, *, limit: int) -> str:
