@@ -506,6 +506,90 @@ async def discover_local_venues(
     return sources
 
 
+def _emails_from_tags(tags: dict[str, str]) -> tuple[str, ...]:
+    raw = (tags.get("contact:email") or tags.get("email") or "").strip()
+    raw = raw.replace("mailto:", "")
+    found: list[str] = []
+    seen: set[str] = set()
+    for part in re.split(r"[;,\s]+", raw):
+        email = part.strip().strip(".").lower()
+        if "@" not in email or email in seen:
+            continue
+        seen.add(email)
+        found.append(email)
+    return tuple(found)
+
+
+def osm_contact_from_element(element: dict[str, Any]) -> dict[str, Any] | None:
+    """Name, category, website, and contact tags from one Overpass element.
+
+    Category labels are the same parent buckets as deal discovery. Chain
+    filtering is left to the caller so deal selection and lead selection can
+    apply different rules.
+    """
+    tags = element.get("tags") or {}
+    if not isinstance(tags, dict):
+        return None
+    str_tags = {str(key): str(value) for key, value in tags.items()}
+    name = str(str_tags.get("name") or "").strip()
+    category = _category_from_tags(str_tags)
+    if not name or not category:
+        return None
+    website = _website_from_tags(str_tags)
+    phone = (str_tags.get("contact:phone") or str_tags.get("phone") or "").strip()
+    return {
+        "merchant": name[:120],
+        "url": (website or "")[:500],
+        "venue_category": category,
+        "emails": _emails_from_tags(str_tags),
+        "phone": phone[:64],
+        "brand": (str_tags.get("brand") or "").strip(),
+        "brand_wikidata": (str_tags.get("brand:wikidata") or "").strip(),
+        "operator": (str_tags.get("operator") or "").strip(),
+    }
+
+
+async def fetch_hub_osm_elements(country_code: str, city: str) -> list[dict[str, Any]]:
+    """Overpass elements for one hub, including the winery sample when configured.
+
+    Same sample as ``discover_local_venues``. Does not read or write the deal
+    venue cache. ``CITY_COORDS`` is imported inside the function because
+    ``ingest`` loads the deal scraper, which loads this module.
+    """
+    from app.services.ingest import CITY_COORDS
+
+    country = country_code.strip().upper()
+    city_name = (city or "").replace("-", " ").strip().title()
+    coords = CITY_COORDS.get((country, city_name))
+    if not coords:
+        coords = CITY_COORDS.get((country, (city or "").strip()))
+    if not coords:
+        logger.info("No CITY_COORDS for %s / %s — skip local discovery", country, city)
+        return []
+
+    lat, lon = coords
+    localities = await discover_hub_localities(
+        country, city_name, lat=lat, lon=lon
+    )
+    elements = await _fetch_overpass_for_hub(
+        country=country,
+        hub=city_name,
+        lat=lat,
+        lon=lon,
+        localities=localities,
+    )
+    profile = hub_catchment_profile(country, city_name)
+    if profile and profile.winery_boost:
+        winery_elements = await _fetch_winery_overpass(lat, lon)
+        seen_ids = {f"{element.get('type')}:{element.get('id')}" for element in elements}
+        for element in winery_elements:
+            eid = f"{element.get('type')}:{element.get('id')}"
+            if eid not in seen_ids:
+                seen_ids.add(eid)
+                elements.append(element)
+    return elements
+
+
 def merge_local_sources(
     pack_sources: list[dict[str, str]],
     local_sources: list[dict[str, str]],
