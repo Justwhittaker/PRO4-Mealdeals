@@ -6,6 +6,13 @@ on:
   schedule:
     - cron: "0 9 * * 5"
   workflow_dispatch:
+    inputs:
+      test_email:
+        description: >
+          Subscriber email. When set, send only to that address and do not
+          update last_emailed_at. Leave blank for the normal Friday send.
+        required: false
+        type: string
 
 jobs:
   send:
@@ -30,5 +37,12 @@ jobs:
           FRONTEND_BASE_URL: ${{ vars.FRONTEND_BASE_URL || 'https://dineadeal.com' }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-        run: python -c "from app.workers.tasks import send_weekly_specials; print(send_weekly_specials())"
+          # Empty on the Friday schedule. workflow_dispatch passes the input.
+          WEEKLY_TEST_EMAIL: ${{ github.event.inputs.test_email || '' }}
         working-directory: backend
+        run: |
+          if [ -n "$WEEKLY_TEST_EMAIL" ]; then
+            python scripts/send_weekly_specials.py --test-email "$WEEKLY_TEST_EMAIL"
+          else
+            python scripts/send_weekly_specials.py
+          fi

@@ -5,8 +5,16 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 
+from pathlib import Path
+
 from app.models.newsletter import NewsletterSubscriber
+from app.scrapers.source_filters import is_chain_name
 from app.services.click_referral import clean_utm
+from app.services.listing_quality import (
+    collapse_repeated_kind_words,
+    compose_offer_title,
+    is_generated_template_title,
+)
 from app.services.newsletter import assign_resolved_location
 from app.services.weekly_specials import (
     WeeklyDeal,
@@ -18,6 +26,7 @@ from app.services.weekly_specials import (
     render_weekly_issue,
     resolve_subscriber_place,
     review_candidates,
+    send_weekly_special_to_subscriber,
 )
 from app.services.weekly_specials_fixtures import galway_issue_fixtures
 
@@ -417,3 +426,203 @@ def test_click_referral_tags_reject_urls() -> None:
     assert clean_utm(" https://evil.example ") is None
     assert clean_utm("") is None
     assert clean_utm("a" * 65) is None
+
+
+def _ie_deal(
+    deal_id: str,
+    merchant: str,
+    city: str,
+    title: str,
+    *,
+    price: str = "14.00",
+    description: str = "Weekday lunch",
+    lat: float | None = None,
+    lon: float | None = None,
+    when: datetime | None = None,
+) -> WeeklyDeal:
+    return WeeklyDeal(
+        id=deal_id,
+        title=title,
+        description=description,
+        merchant_name=merchant,
+        venue_category="restaurants-cafes-bistros",
+        country_code="IE",
+        city=city,
+        latitude=lat,
+        longitude=lon,
+        deal_price=Decimal(price) if price else None,
+        currency_code="EUR",
+        created_at=when or datetime(2026, 10, 2, tzinfo=timezone.utc),
+        outbound_url="https://merchant.example/menu",
+    )
+
+
+def _galway_chain_issue() -> list[WeeklyDeal]:
+    """The live Galway pattern: four chain templates copied across nearby towns."""
+    chains = (
+        ("Subway Takeaway", "Subway Takeaway Takeaway Deal — {city}"),
+        ("Apache Pizza Takeaway", "Apache Pizza Takeaway Takeaway Deal — {city}"),
+        ("Supermac's Takeaway", "Supermac's Takeaway Takeaway Deal — {city}"),
+        ("Papa John's Takeaway", "Papa John's Takeaway Takeaway Deal — {city}"),
+    )
+    towns = (
+        ("Galway", 53.2707, -9.0568),
+        ("Westport", 53.8009, -9.5227),
+        ("Limerick", 52.6638, -8.6267),
+    )
+    rows: list[WeeklyDeal] = [
+        _ie_deal(
+            "40000000-0000-4000-8000-000000000001",
+            "Ard Bia",
+            "Galway",
+            "Early-bird set menu",
+            price="22.00",
+            lat=53.2707,
+            lon=-9.0568,
+            when=datetime(2026, 10, 3, tzinfo=timezone.utc),
+        ),
+        _ie_deal(
+            "40000000-0000-4000-8000-000000000002",
+            "Kai Cafe",
+            "Galway",
+            "Weekday lunch special",
+            price="14.50",
+            lat=53.2710,
+            lon=-9.0570,
+            when=datetime(2026, 10, 4, tzinfo=timezone.utc),
+        ),
+    ]
+    number = 10
+    for merchant, title_tmpl in chains:
+        for city, lat, lon in towns:
+            number += 1
+            rows.append(
+                _ie_deal(
+                    f"40000000-0000-4000-8000-{number:012d}",
+                    merchant,
+                    city,
+                    title_tmpl.format(city=city),
+                    price="0",
+                    description=(
+                        "Chain takeaway promotion — often buy-one-get-one-free, "
+                        "meal deals, or limited-time pizza offers."
+                    ),
+                    lat=lat,
+                    lon=lon,
+                    when=datetime(2026, 10, 5, tzinfo=timezone.utc),
+                )
+            )
+    return rows
+
+
+def test_independents_rank_above_chain_templates_and_merchants_are_unique() -> None:
+    place = resolve_subscriber_place("IE", "Galway", "Galway")
+    deals = _galway_chain_issue()
+    selection, excluded = review_candidates(deals, place)
+    names = [deal.merchant_name for deal in selection.deals]
+    assert names[:2] == ["Kai Cafe", "Ard Bia"]
+    assert all(not is_chain_name(name) for name in names[:2])
+    chain_names = names[2:]
+    assert chain_names == [
+        "Subway Takeaway",
+        "Apache Pizza Takeaway",
+        "Supermac's Takeaway",
+        "Papa John's Takeaway",
+    ]
+    assert all(deal.city == "Galway" for deal in selection.deals if is_chain_name(deal.merchant_name))
+    assert len(names) == len(set(names))
+    reasons = {(deal.merchant_name, deal.city): reason for deal, reason in excluded}
+    assert reasons[("Subway Takeaway", "Westport")] == "duplicate_merchant"
+    assert reasons[("Apache Pizza Takeaway", "Limerick")] == "duplicate_merchant"
+
+    short, short_excluded = review_candidates(deals, place, limit=2)
+    assert [deal.merchant_name for deal in short.deals] == ["Kai Cafe", "Ard Bia"]
+    assert any(
+        is_chain_name(deal.merchant_name) and reason == "over_limit"
+        for deal, reason in short_excluded
+    )
+
+
+def test_titles_drop_repeated_kind_words_and_blank_prices_are_offers() -> None:
+    assert compose_offer_title(
+        "Apache Pizza Takeaway", "Takeaway Deal", "Galway"
+    ) == "Apache Pizza Takeaway Deal — Galway"
+    assert compose_offer_title(
+        "Pizza Pizza Takeaway", "Takeaway Deal", "Toronto"
+    ) == "Pizza Pizza Takeaway Deal — Toronto"
+    assert (
+        collapse_repeated_kind_words("Apache Pizza Takeaway Takeaway Deal — Galway")
+        == "Apache Pizza Takeaway Deal — Galway"
+    )
+    assert is_generated_template_title("Apache Pizza Takeaway Deal — Galway")
+    assert is_generated_template_title("Happy hour pints") is False
+
+    place = resolve_subscriber_place("IE", "Galway", "Galway")
+    deals = _galway_chain_issue()
+    _subject, text, html, selection, _excluded = render_weekly_issue(_justin(), deals)
+    apache = next(deal for deal in selection.deals if "Apache" in deal.merchant_name)
+    assert "Takeaway Takeaway" not in text
+    assert "Takeaway Takeaway" not in html
+    assert "Apache Pizza Takeaway Deal — Galway" in text
+    assert display_price(apache, "EUR") == "Buy one, get one free"
+    assert "Buy one, get one free" in text
+    bare = _ie_deal(
+        "40000000-0000-4000-8000-000000000099",
+        "Murphy's Ice Cream",
+        "Galway",
+        "Free",
+        price="0",
+        description="",
+    )
+    assert display_price(bare, "EUR") == "Free with a purchase"
+
+
+def test_test_send_does_not_update_last_emailed_at(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.services.weekly_specials.send_email",
+        lambda **_kwargs: True,
+    )
+    monkeypatch.setattr(
+        "app.services.weekly_specials.fetch_weekly_deals",
+        lambda _session, _place: [],
+    )
+
+    class Session:
+        def __init__(self) -> None:
+            self.committed = False
+            self.rolled_back = False
+
+        def commit(self) -> None:
+            self.committed = True
+
+        def rollback(self) -> None:
+            self.rolled_back = True
+
+    session = Session()
+    subscriber = _justin()
+    subscriber.is_subscribed = False
+    subscriber.last_emailed_at = None
+    result = send_weekly_special_to_subscriber(
+        session,
+        subscriber,
+        record_send=False,
+        allow_unsubscribed=True,
+    )
+    assert result["sent"] is True
+    assert subscriber.last_emailed_at is None
+    assert session.committed is False
+    assert session.rolled_back is True
+
+
+def test_workflow_test_email_is_opt_in_and_the_schedule_is_unchanged() -> None:
+    workflow = Path(__file__).resolve().parents[2] / ".github/workflows/weekly-specials.yml"
+    text = workflow.read_text(encoding="utf-8")
+    assert "cron: \"0 9 * * 5\"" in text
+    assert "test_email:" in text
+    assert "WEEKLY_TEST_EMAIL" in text
+    assert 'python scripts/send_weekly_specials.py --test-email "$WEEKLY_TEST_EMAIL"' in text
+    assert "python scripts/send_weekly_specials.py\n" in text
+    script = Path(__file__).resolve().parents[1] / "scripts/send_weekly_specials.py"
+    script_text = script.read_text(encoding="utf-8")
+    assert "--test-email" in script_text
+    assert "last_emailed_at" in script_text

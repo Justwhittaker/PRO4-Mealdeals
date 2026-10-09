@@ -21,6 +21,8 @@ from app.scrapers.deal_placeholders import resolve_dish_placeholder
 from app.scrapers.local_discovery import discover_local_venues, merge_local_sources
 from app.scrapers.hub_radius import hub_default_locality
 from app.services.listing_quality import (
+    collapse_repeated_kind_words,
+    compose_offer_title,
     explicit_price_comparison,
     is_low_value_title,
     is_policy_violation,
@@ -203,6 +205,13 @@ _THRESHOLD_OFFER_RE = re.compile(
 )
 
 
+def _offer_suffix(template_title: str) -> str:
+    """'{merchant} Takeaway Deal — {city}' → 'Takeaway Deal'."""
+    text = template_title.replace("{merchant}", " ").replace("{city}", " ")
+    text = re.sub(r"[—–-]", " ", text)
+    return " ".join(text.split())
+
+
 def _templates_for_category(venue_category: str) -> list[dict[str, object]]:
     if venue_category == "Clubs, Bars & Pubs":
         return _BAR_PUB_TEMPLATES
@@ -340,12 +349,14 @@ class GlobalRetailScraper(BaseScraper):
             )
             return None
 
-        template_title = str(template["title"]).format(
-            merchant=source["merchant"], city=city_name
+        template_title = compose_offer_title(
+            str(source["merchant"]),
+            _offer_suffix(str(template["title"])),
+            city_name,
         )
         template_description = str(template["description"]).format(city=city_name)
         if live_title and not is_low_value_title(live_title, source["merchant"]):
-            title = live_title
+            title = collapse_repeated_kind_words(live_title)
             description = offer_snippet or live_description or template_description
         else:
             title = template_title

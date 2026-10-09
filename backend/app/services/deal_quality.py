@@ -153,7 +153,13 @@ _PERCENT_RE = re.compile(r"(\d+)\s*%")
 _FREE_RE = re.compile(
     r"(?i)\b(free|complimentary|on the house|bogo|buy one get one|2 for 1|two for one)\b"
 )
-_BOGO_RE = re.compile(r"(?i)\bbogo\b|buy one get one|2 for 1|two for one")
+_BOGO_RE = re.compile(
+    r"(?i)\bbogo\b|buy[\s-]*one[\s-]*get[\s-]*one(?:[\s-]*free)?|"
+    r"2[\s-]*for[\s-]*1|two[\s-]*for[\s-]*(?:the\s+price\s+of\s+)?one"
+)
+_FREE_ITEM_RE = re.compile(
+    r"(?i)\bfree\s+([a-z0-9][a-z0-9']*(?:\s+[a-z0-9][a-z0-9']*){0,5})"
+)
 
 
 def _norm(value: str | None) -> str:
@@ -184,11 +190,45 @@ def promotional_price_label(title: str | None, description: str | None) -> str |
     match = _PERCENT_RE.search(text)
     if match:
         return f"{match.group(1)}% off"
+    if _BOGO_RE.search(text):
+        return "Buy one, get one free"
     if _FREE_RE.search(text):
-        if _BOGO_RE.search(text):
-            return "Buy one, get one"
         return "Free"
     return None
+
+
+def free_offer_text(title: str | None, description: str | None) -> str:
+    """Offer line when the price is blank and the only signal is the word free.
+
+    A bare 'Free' is not enough to tell a reader what they get. A named item
+    ('Free kids ice cream') or a buy-one-get-one line is used instead.
+    """
+    if _BOGO_RE.search(" ".join(part for part in (title, description) if part)):
+        return "Buy one, get one free"
+    for source in (title, description):
+        match = _FREE_ITEM_RE.search(source or "")
+        if match is None:
+            continue
+        item = match.group(1)
+        item = re.split(
+            r"(?i)\s+\b(?:with|when|for|at|on|in|or|and|see|confirm|often)\b",
+            item,
+            maxsplit=1,
+        )[0]
+        item = " ".join(item.split()).strip(" .,")
+        if item:
+            return f"Free {item}"
+    return "Free with a purchase"
+
+
+def blank_price_label(title: str | None, description: str | None) -> str:
+    """Price stand-in for a percent, BOGO, or free offer with no amount."""
+    promo = promotional_price_label(title, description)
+    if promo is None:
+        return ""
+    if promo == "Free":
+        return free_offer_text(title, description)
+    return promo
 
 
 def _core_title(title: str, merchant: str) -> str:

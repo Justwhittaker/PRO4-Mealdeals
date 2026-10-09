@@ -99,36 +99,72 @@ def _category_id(value: str | None) -> str:
 
 _PUBLISHER_COPY: dict[str, tuple[str, str]] = {
     "restaurants-cafes-bistros": (
-        "{merchant} Lunch Meal Deal — {city}",
+        "Lunch Meal Deal",
         "Lunch offer at {merchant} in {city}: a set meal, early-bird, or weekday special. "
         "Confirm today's price and what is included with the venue before you visit.",
     ),
     "food-trucks-takeaways": (
-        "{merchant} Takeaway Deal — {city}",
+        "Takeaway Deal",
         "Takeaway offer at {merchant} in {city}, such as a meal deal or limited-time menu promotion. "
         "Confirm the current offer with the store before you order.",
     ),
     "wine-farms-entertainment": (
-        "{merchant} Tasting & Dining Offer — {city}",
+        "Tasting & Dining Offer",
         "Tasting or dining offer at {merchant} in {city}. "
         "Hours and inclusions change, so confirm the current promotion with the venue.",
     ),
     "delis-grocers": (
-        "{merchant} Spend & Save — {city}",
+        "Spend & Save",
         "Grocery offer at {merchant} in {city}, such as money off a shop when you spend a set amount. "
         "Confirm the current threshold on the store's offers page.",
     ),
     "clubs-bars-pubs": (
-        "{merchant} Happy Hour — {city}",
+        "Happy Hour",
         "Drink special at {merchant} in {city}. "
         "Happy-hour times and included drinks change, so confirm them with the venue before you go.",
     ),
     "hotels-resorts-bbs": (
-        "{merchant} Hotel Dining Offer — {city}",
+        "Hotel Dining Offer",
         "Hotel dining offer at {merchant} in {city}, such as a breakfast package or dinner menu. "
         "Confirm today's inclusions with the hotel before you book.",
     ),
 }
+
+# Words that name the offer type. Adjacent repeats of these are a template
+# glitch ("Takeaway Takeaway"), not a brand ("Pizza Pizza").
+_KIND_WORDS = frozenset(
+    {
+        "takeaway",
+        "deal",
+        "deals",
+        "lunch",
+        "meal",
+        "meals",
+        "hotel",
+        "dining",
+        "offer",
+        "offers",
+        "happy",
+        "hour",
+        "shop",
+        "discount",
+        "tasting",
+        "grocery",
+        "spend",
+        "save",
+        "breakfast",
+        "bundle",
+        "hot",
+    }
+)
+
+_TEMPLATE_TITLE_RE = re.compile(
+    r"(?i)(?:lunch meal deal|takeaway deal|hot meal offer|breakfast bundle|"
+    r"happy hour|evening drink specials|"
+    r"tasting\s*(?:&|and)\s*dining offer|"
+    r"spend\s*(?:&|and)\s*save|shop discount|hotel dining offer|"
+    r"bogo\s*/\s*meal offer)\s*[—–-]\s+\S"
+)
 
 
 def is_policy_violation(*parts: str | None) -> bool:
@@ -160,20 +196,71 @@ def is_low_value_title(title: str | None, merchant: str) -> bool:
     return bool(merchant_norm) and title_norm == merchant_norm
 
 
+def _word_key(word: str) -> str:
+    return re.sub(r"[^a-z0-9&]+", "", word.lower())
+
+
+def collapse_repeated_kind_words(title: str) -> str:
+    """Drop a repeated offer-type word: 'Takeaway Takeaway Deal' → 'Takeaway Deal'.
+
+    Brand repeats such as 'Pizza Pizza' stay. The city after an em dash is
+    left as written.
+    """
+    separator = re.search(r"\s+[—–-]\s+", title)
+    if separator:
+        head = title[: separator.start()]
+        tail = title[separator.start() :]
+    else:
+        head, tail = title, ""
+    kept: list[str] = []
+    previous = ""
+    for word in head.split():
+        key = _word_key(word)
+        if kept and key and key == previous and key in _KIND_WORDS:
+            continue
+        kept.append(word)
+        previous = key
+    return (" ".join(kept) + tail).strip()
+
+
+def compose_offer_title(merchant: str, offer: str, city: str | None) -> str:
+    """'{merchant} {offer} — {city}' without repeating a kind word the name already ends with."""
+    name = (merchant or "").strip() or "This venue"
+    offer_words = (offer or "").split()
+    name_words = name.split()
+    name_keys = [_word_key(word) for word in name_words]
+    offer_keys = [_word_key(word) for word in offer_words]
+    overlap = 0
+    limit = min(len(name_keys), len(offer_keys))
+    for size in range(limit, 0, -1):
+        if name_keys[-size:] == offer_keys[:size] and any(offer_keys[:size]):
+            overlap = size
+            break
+    rest = " ".join(offer_words[overlap:]).strip()
+    head = name if not rest else f"{name} {rest}"
+    place = (city or "").strip() or "your area"
+    return collapse_repeated_kind_words(f"{head} — {place}")[:255]
+
+
+def is_generated_template_title(title: str | None) -> bool:
+    """True for scraper fallback titles such as 'Apache Pizza Takeaway Deal — Galway'."""
+    return bool(_TEMPLATE_TITLE_RE.search(title or ""))
+
+
 def publisher_listing(
     merchant: str,
     city: str | None,
     venue_category: str | None,
 ) -> tuple[str, str]:
     category_id = _category_id(venue_category)
-    title_tmpl, body_tmpl = _PUBLISHER_COPY.get(
+    offer, body_tmpl = _PUBLISHER_COPY.get(
         category_id,
         _PUBLISHER_COPY["restaurants-cafes-bistros"],
     )
     place = (city or "").strip() or "your area"
     name = (merchant or "").strip() or "This venue"
     return (
-        title_tmpl.format(merchant=name, city=place)[:255],
+        compose_offer_title(name, offer, place),
         body_tmpl.format(merchant=name, city=place),
     )
 
