@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-"""Pick the current continental scrape zone (UTC) and run ingest + revalidate."""
+"""Pick the current continental scrape zone (Europe/Dublin) and run ingest + revalidate."""
 
 from __future__ import annotations
 
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 # Allow `python backend/scripts/pick_and_scrape_zone.py` from repo root.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.scrapers.zones import (  # noqa: E402
+    SCRAPE_TIMEZONE_NAME,
     ZONE_BEAT_SLOTS,
     ZONE_CYCLE_BASE_HOURS,
     ZONE_ORDER,
@@ -20,8 +22,8 @@ from app.services.scrape_runner import scrape_and_ingest_zone  # noqa: E402
 
 
 def zone_for_now() -> str | None:
-    """Return zone id when current UTC matches a Celery Beat slot, else None."""
-    now = datetime.now(timezone.utc)
+    """Return zone id when Dublin wall-clock matches a Celery Beat slot, else None."""
+    now = datetime.now(ZoneInfo(SCRAPE_TIMEZONE_NAME))
     for base_hour in ZONE_CYCLE_BASE_HOURS:
         for zone_id in ZONE_ORDER:
             minute, hour_offset = ZONE_BEAT_SLOTS[zone_id]
@@ -42,7 +44,7 @@ def main() -> int:
     else:
         zone = zone_for_now()
         if zone is None:
-            print("No scrape zone scheduled for this UTC slot — skipping.")
+            print("No scrape zone scheduled for this Dublin slot — skipping.")
             return 0
 
     print(f"Running scheduled zone scrape: {zone}")

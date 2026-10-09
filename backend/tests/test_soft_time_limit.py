@@ -125,6 +125,11 @@ def test_soft_time_limit_records_the_zone_as_timed_out(
     assert recorded[0]["payload"]["status"] == "running"
     assert recorded[-1]["payload"]["status"] == "timed_out"
     assert recorded[-1]["payload"]["ok"] is False
+    started_at = recorded[0]["payload"]["started_at"]
+    assert isinstance(started_at, str)
+    assert started_at.endswith("+00:00")
+    assert recorded[-1]["payload"]["started_at"] == started_at
+    assert result["started_at"] == started_at
 
 
 def test_timeout_records_partial_progress(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -185,6 +190,12 @@ class _Session:
 
     def __exit__(self, *_args: object) -> bool:
         return False
+
+    def rollback(self) -> None:
+        return None
+
+    def close(self) -> None:
+        return None
 
     def commit(self) -> None:
         raise AssertionError("session committed after a time limit")

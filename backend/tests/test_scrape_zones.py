@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
 import pytest
 
 from app.scrapers.zones import (
+    DIGEST_HOURS,
     LARGE_ZONE_FAMILIES,
     MAX_ZONE_AREAS,
     MAINTENANCE_QUEUE,
     REDIS_VISIBILITY_TIMEOUT_SECONDS,
     SCRAPE_QUEUE,
+    SCRAPE_TIMEZONE,
     SCRAPE_ZONES,
     ZONE_BEAT_SLOTS,
+    ZONE_CYCLE_BASE_HOURS,
     ZONE_ORDER,
     ZONE_TASK_SOFT_TIME_LIMIT_SECONDS,
     ZONE_TASK_TIME_LIMIT_SECONDS,
@@ -79,15 +85,63 @@ def test_zone_time_limit_is_inside_redis_visibility() -> None:
 def test_scrape_and_maintenance_use_separate_queues() -> None:
     routes = celery_app.conf.task_routes
     assert routes["app.workers.tasks.scrape_zone_retail"]["queue"] == SCRAPE_QUEUE
+    assert routes["app.workers.tasks.retry_failed_scrape_city"]["queue"] == SCRAPE_QUEUE
     assert routes["app.workers.tasks.send_scrape_cycle_digest"]["queue"] == MAINTENANCE_QUEUE
     assert routes["app.workers.tasks.expire_past_due_deals"]["queue"] == MAINTENANCE_QUEUE
     schedule = celery_app.conf.beat_schedule
     assert schedule["scrape-zone-se_asia"]["options"]["queue"] == SCRAPE_QUEUE
     assert schedule["scrape-cycle-digest"]["options"]["queue"] == MAINTENANCE_QUEUE
+    assert ZONE_CYCLE_BASE_HOURS == (7, 19)
+    assert DIGEST_HOURS == (6, 18)
+    first = schedule["scrape-zone-eastern_europe"]["schedule"]
+    assert set(first.hour) == {7, 19}
+    digest = schedule["scrape-cycle-digest"]["schedule"]
+    assert set(digest.hour) == {6, 18}
+    assert set(digest.minute) == {0}
     assert scrape_zone_retail.acks_late is True
     assert scrape_zone_retail.reject_on_worker_lost is True
     assert scrape_zone_retail.soft_time_limit == ZONE_TASK_SOFT_TIME_LIMIT_SECONDS
     assert scrape_zone_retail.time_limit == ZONE_TASK_TIME_LIMIT_SECONDS
+
+
+def _next_dublin_fire(schedule: object, last_run_at: datetime) -> datetime:
+    start, delta, _now = schedule.remaining_delta(last_run_at)  # type: ignore[attr-defined]
+    return start + delta
+
+
+def test_scrape_and_digest_follow_dublin_across_25_oct() -> None:
+    """07:00/19:00 and 06:00/18:00 stay on Dublin clocks on both sides of the fallback."""
+    schedule = celery_app.conf.beat_schedule
+    zone = schedule["scrape-zone-eastern_europe"]["schedule"]
+    digest = schedule["scrape-cycle-digest"]["schedule"]
+    dublin = ZoneInfo("Europe/Dublin")
+
+    summer_evening = datetime(2026, 10, 8, 19, 0, tzinfo=dublin)
+    summer_next = _next_dublin_fire(zone, summer_evening)
+    assert summer_next.astimezone(dublin) == datetime(2026, 10, 9, 7, 0, tzinfo=dublin)
+    assert summer_next.astimezone(timezone.utc) == datetime(2026, 10, 9, 6, 0, tzinfo=timezone.utc)
+
+    before_fallback = datetime(2026, 10, 24, 19, 0, tzinfo=dublin)
+    assert before_fallback.utcoffset() == timedelta(hours=1)
+    across = _next_dublin_fire(zone, before_fallback)
+    assert across.astimezone(dublin) == datetime(2026, 10, 25, 7, 0, tzinfo=dublin)
+    assert across.astimezone(dublin).utcoffset() == timedelta(0)
+    assert across.astimezone(timezone.utc) == datetime(2026, 10, 25, 7, 0, tzinfo=timezone.utc)
+
+    winter_evening = datetime(2026, 10, 26, 19, 0, tzinfo=dublin)
+    winter_next = _next_dublin_fire(zone, winter_evening)
+    assert winter_next.astimezone(dublin) == datetime(2026, 10, 27, 7, 0, tzinfo=dublin)
+    assert winter_next.astimezone(timezone.utc) == datetime(2026, 10, 27, 7, 0, tzinfo=timezone.utc)
+
+    digest_summer = _next_dublin_fire(digest, datetime(2026, 10, 8, 6, 0, tzinfo=dublin))
+    assert digest_summer.astimezone(dublin) == datetime(2026, 10, 8, 18, 0, tzinfo=dublin)
+    digest_across = _next_dublin_fire(digest, datetime(2026, 10, 24, 18, 0, tzinfo=dublin))
+    assert digest_across.astimezone(dublin) == datetime(2026, 10, 25, 6, 0, tzinfo=dublin)
+    assert digest_across.astimezone(timezone.utc) == datetime(2026, 10, 25, 6, 0, tzinfo=timezone.utc)
+    digest_winter = _next_dublin_fire(digest, datetime(2026, 10, 26, 6, 0, tzinfo=dublin))
+    assert digest_winter.astimezone(dublin) == datetime(2026, 10, 26, 18, 0, tzinfo=dublin)
+    assert digest_winter.astimezone(timezone.utc) == datetime(2026, 10, 26, 18, 0, tzinfo=timezone.utc)
+    assert SCRAPE_TIMEZONE.key == "Europe/Dublin"
 
 
 def test_every_zone_stays_under_the_soft_time_budget() -> None:

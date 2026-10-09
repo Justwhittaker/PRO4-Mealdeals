@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -11,6 +12,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import get_settings
+from app.core.task_errors import reraise_if_fatal
 from app.models.currency import Currency
 from app.models.newsletter import NewsletterSubscriber
 from app.scrapers.global_retail import TARGET_MARKETS, iter_market_areas
@@ -18,7 +20,10 @@ from app.scrapers.markets import CURRENCY_RATES
 from app.services.deal_expiry import expire_past_due_deals
 from app.services.merchant_outreach import send_merchant_outreach_batch
 from app.services.newsletter import send_weekly_special_to_subscriber
-from app.services.scrape_cycle_digest import run_scrape_cycle_digest
+from app.services.scrape_cycle_digest import (
+    run_city_retry,
+    run_scrape_cycle_digest,
+)
 from app.services.scrape_cycle_stats import (
     cycle_id_for_start,
     cycle_id_from_task_request,
@@ -33,6 +38,7 @@ from app.services.scrape_runner import (
     scrape_progress_of,
 )
 from app.scrapers.zones import (
+    SCRAPE_QUEUE,
     SCRAPE_ZONES,
     ZONE_TASK_SOFT_TIME_LIMIT_SECONDS,
     ZONE_TASK_TIME_LIMIT_SECONDS,
@@ -127,13 +133,19 @@ _PROGRESS_KEYS = (
 )
 
 
-def _zone_failure_payload(zone: str, error: str) -> dict[str, Any]:
+def _zone_failure_payload(
+    zone: str,
+    error: str,
+    *,
+    started_at: str,
+) -> dict[str, Any]:
     return {
         "zone": zone,
         "label": SCRAPE_ZONES[zone]["label"],
         "ok": False,
         "status": "failed",
         "error": error[:500],
+        "started_at": started_at,
         "areas": 0,
         "discovered": 0,
         "ingested": 0,
@@ -195,9 +207,11 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
             "cycle_id": cycle_id,
         }
 
+    started_at = datetime.now(timezone.utc).isoformat()
     running = {
         "ok": False,
         "status": "running",
+        "started_at": started_at,
         "areas": 0,
         "discovered": 0,
         "ingested": 0,
@@ -213,7 +227,11 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
     try:
         result = scrape_and_ingest_zone(zone)
     except SoftTimeLimitExceeded as exc:
-        summary = _zone_failure_payload(zone, "soft time limit exceeded")
+        summary = _zone_failure_payload(
+            zone,
+            "soft time limit exceeded",
+            started_at=started_at,
+        )
         summary["status"] = "timed_out"
         summary["ok"] = False
         progress = scrape_progress_of(exc)
@@ -233,7 +251,7 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
         )
         return summary
     except Exception as exc:
-        summary = _zone_failure_payload(zone, str(exc))
+        summary = _zone_failure_payload(zone, str(exc), started_at=started_at)
         record_zone_result(zone, summary, cycle_id=cycle_id)
         raise
     markets = markets_for_zone(zone)
@@ -256,6 +274,7 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
         "cities_failed": cities_failed,
         "ok": not every_city_failed,
         "status": "failed" if every_city_failed else "completed",
+        "started_at": started_at,
         "cycle_id": cycle_id,
     }
     if every_city_failed:
@@ -273,17 +292,50 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
     return summary
 
 
+def _enqueue_city_retry(cycle_id: str, country: str, city: str) -> None:
+    retry_failed_scrape_city.apply_async(
+        args=[cycle_id, country, city],
+        queue=SCRAPE_QUEUE,
+    )
+
+
+@celery_app.task(name="app.workers.tasks.retry_failed_scrape_city")
+def retry_failed_scrape_city(
+    cycle_id: str,
+    country_code: str,
+    city: str,
+) -> dict[str, Any]:
+    """One scrape of a city that failed earlier in this cycle. Never re-queues."""
+    return run_city_retry(
+        cycle_id,
+        country_code,
+        city,
+        scrape=scrape_and_ingest_area,
+    )
+
+
 @celery_app.task(name="app.workers.tasks.send_scrape_cycle_digest")
 def send_scrape_cycle_digest() -> dict[str, object]:
-    """Twice-daily ntfy: zone %, site transfer, deals, emails, categories."""
-    result = run_scrape_cycle_digest()
+    """ntfy at 06:00 and 18:00 Europe/Dublin for the cycle that started ~11h earlier.
+
+    Zones or city retries still in progress are listed. The message is sent
+    once per cycle and does not wait for them to finish.
+    """
+    try:
+        result = run_scrape_cycle_digest(enqueue=_enqueue_city_retry)
+    except Exception as exc:
+        reraise_if_fatal(exc)
+        logger.exception("Scrape cycle digest failed")
+        raise
+    report = result["report"]
     return {
-        "cycle_id": result["report"]["cycle_id"],
-        "zones_pct": result["report"]["zones"]["pct_completed"],
-        "new_deals": result["report"]["new_deals"],
-        "dropped_deals": result["report"]["dropped_deals"],
-        "net_new_emails": result["report"]["net_new_emails"],
+        "cycle_id": report["cycle_id"],
+        "zones_pct": report["zones"]["pct_completed"],
+        "new_deals": report["new_deals"],
+        "dropped_deals": report["dropped_deals"],
+        "net_new_emails": report["net_new_emails"],
         "ntfy": result["ntfy"],
+        "city_retries_queued": len(result.get("queued") or []),
     }
 
 

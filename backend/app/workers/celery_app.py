@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 
 from celery import Celery
 from celery.schedules import crontab
@@ -16,9 +17,11 @@ from celery.signals import (
 from app.core.config import get_settings
 from app.core.log_quiet import quiet_http_client_logs
 from app.scrapers.zones import (
+    DIGEST_HOURS,
     MAINTENANCE_QUEUE,
     REDIS_VISIBILITY_TIMEOUT_SECONDS,
     SCRAPE_QUEUE,
+    SCRAPE_TIMEZONE,
     SCRAPE_ZONES,
     ZONE_BEAT_SLOTS,
     ZONE_CYCLE_BASE_HOURS,
@@ -35,6 +38,31 @@ from app.services.scrape_cycle_stats import (
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
+
+class DublinCrontab(crontab):
+    """Crontab whose hour and minute are Europe/Dublin wall-clock, DST included.
+
+    Beat stores ``last_run_at`` in the app timezone (UTC). Comparing those
+    clock fields directly would schedule 07:00 UTC in winter. Convert the
+    last run into Dublin before the hour math, and read "now" in Dublin too.
+    """
+
+    def now(self) -> datetime:
+        return datetime.now(SCRAPE_TIMEZONE)
+
+    def remaining_delta(  # type: ignore[override]
+        self,
+        last_run_at: datetime,
+        tz: object = None,
+        ffwd: object = None,
+    ):
+        if last_run_at.tzinfo is None:
+            last_run_at = last_run_at.replace(tzinfo=timezone.utc)
+        dublin_last = last_run_at.astimezone(SCRAPE_TIMEZONE)
+        if ffwd is None:
+            return super().remaining_delta(dublin_last, tz=tz)
+        return super().remaining_delta(dublin_last, tz=tz, ffwd=ffwd)
+
 celery_app = Celery(
     "mealdeals",
     broker=settings.celery_broker_url,
@@ -44,11 +72,12 @@ celery_app = Celery(
 
 # Zone scrapes and short maintenance tasks must not share worker slots.
 # A 2–4h zone on the only concurrency slots delays the digest and hourly
-# expiry/currency jobs until a slot frees (often hours after 17:50 UTC).
+# expiry/currency jobs until a slot frees. The digest itself is 18:00 / 06:00 Dublin.
 _TASK_ROUTES = {
     "app.workers.tasks.scrape_zone_retail": {"queue": SCRAPE_QUEUE},
     "app.workers.tasks.scrape_global_retail": {"queue": SCRAPE_QUEUE},
     "app.workers.tasks.scrape_area": {"queue": SCRAPE_QUEUE},
+    "app.workers.tasks.retry_failed_scrape_city": {"queue": SCRAPE_QUEUE},
     "app.workers.tasks.send_scrape_cycle_digest": {"queue": MAINTENANCE_QUEUE},
     "app.workers.tasks.expire_past_due_deals": {"queue": MAINTENANCE_QUEUE},
     "app.workers.tasks.update_currency_rates": {"queue": MAINTENANCE_QUEUE},
@@ -86,10 +115,11 @@ celery_app.conf.update(
             "schedule": crontab(minute=15),
             "options": {"queue": MAINTENANCE_QUEUE},
         },
-        # After each twice-daily scrape window (almost 12h after 06:00 / 18:00 start).
+        # One hour before the next Dublin cycle. Covers the cycle ~11h earlier.
+        # Sent on the clock even when zones or city retries are still running.
         "scrape-cycle-digest": {
             "task": "app.workers.tasks.send_scrape_cycle_digest",
-            "schedule": crontab(minute=50, hour="5,17"),
+            "schedule": DublinCrontab(minute=0, hour=",".join(str(hour) for hour in DIGEST_HOURS)),
             "options": {"queue": MAINTENANCE_QUEUE},
         },
     },
@@ -134,7 +164,7 @@ else:
 
 # Zone scrapes twice daily, staggered (see ZONE_BEAT_STAGGER_MINUTES).
 # Smaller zones first, then the large-family splits (see ZONE_ORDER).
-# Cycle blocks start 06:00 / 18:00 UTC.
+# Cycle blocks start 07:00 / 19:00 Europe/Dublin.
 try:
     validate_zone_coverage()
 except RuntimeError as exc:
@@ -145,7 +175,7 @@ for zone_id in ZONE_ORDER:
     label = SCRAPE_ZONES[zone_id]["label"]
     celery_app.conf.beat_schedule[f"scrape-zone-{zone_id}"] = {
         "task": "app.workers.tasks.scrape_zone_retail",
-        "schedule": crontab(
+        "schedule": DublinCrontab(
             minute=minute,
             hour=[h + hour_offset for h in ZONE_CYCLE_BASE_HOURS],
         ),
@@ -156,7 +186,7 @@ for zone_id in ZONE_ORDER:
         },
     }
     logger.info(
-        "Registered beat scrape zone %s (%s) at +%sh%02sm each 12h cycle (%s UTC)",
+        "Registered beat scrape zone %s (%s) at +%sh%02sm each 12h cycle (%s Europe/Dublin)",
         zone_id,
         label,
         hour_offset,
