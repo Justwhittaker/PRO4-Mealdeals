@@ -119,10 +119,11 @@ export default async function DealOfTheCenturyPage({
               Priority subscription
             </h2>
             <p className="mt-1 text-sm text-charcoal-400">
-              First month free (card on file), then{" "}
-              {formatMoney(amounts.monthly, currency)}/month — or pay{" "}
-              {formatMoney(amounts.promoThreeMonths, currency)} now for 50% off
-              three months.
+              Start with a free month (card on file), then{" "}
+              {formatMoney(amounts.monthly, currency)}/month. Or pay{" "}
+              {formatMoney(amounts.promoThreeMonths, currency)} now — 3 months at
+              50% off (half of {formatMoney(amounts.monthly, currency)}×3), then{" "}
+              {formatMoney(amounts.monthly, currency)}/mo.
             </p>
           </div>
           <Badge variant="outline">No subscription yet</Badge>
