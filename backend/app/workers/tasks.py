@@ -17,7 +17,10 @@ from app.models.currency import Currency
 from app.models.newsletter import NewsletterSubscriber
 from app.scrapers.global_retail import TARGET_MARKETS, iter_market_areas
 from app.scrapers.markets import CURRENCY_RATES
-from app.services.deal_expiry import expire_past_due_deals
+from app.services.deal_expiry import (
+    expire_past_due_deals,
+    revalidate_kwargs_for_expired,
+)
 from app.services.merchant_outreach import send_merchant_outreach_batch
 from app.services.newsletter import (
     normalize_email,
@@ -73,12 +76,13 @@ def expire_past_due_deals_task() -> dict[str, int]:
     from app.services.frontend_revalidate import revalidate_after_scrape
 
     with SyncSessionLocal() as session:
-        count = expire_past_due_deals(session)
-    if count > 0:
-        # Hourly expiry is one cycle, not a per-city ingest. Bust the home
-        # page and the global deals tag once. Deal pages use city tags.
-        revalidate_after_scrape(areas=set(), include_global=True)
-    return {"expired": count}
+        expired = expire_past_due_deals(session)
+    if expired:
+        # One call for the whole hour: home/global tag, plus the city and
+        # deal tags of the rows that just went inactive. Deal pages are not
+        # on the global tag, so the city and deal tags are what drop them.
+        revalidate_after_scrape(**revalidate_kwargs_for_expired(expired))
+    return {"expired": len(expired)}
 
 
 @celery_app.task(name="app.workers.tasks.update_currency_rates")

@@ -16,11 +16,11 @@ from app.core.config import get_settings
 settings = get_settings()
 
 _connect_args: dict = {
-    # asyncpg default is 100. Passed through SQLAlchemy's asyncpg dialect
-    # (query string or connect arg — not a create_engine kwarg). A smaller
-    # cache limits server-side plans on each idle backend. Not zero:
-    # repeated reads on one connection can still reuse a plan.
-    "prepared_statement_cache_size": 16,
+    # asyncpg.connect kwarg (default 100). Not prepared_statement_cache_size:
+    # that name is SQLAlchemy's, and asyncpg 0.30 rejects it with TypeError.
+    # 16 caps server-side plans on each backend. Not zero, so a hot
+    # connection can still reuse a plan. PgBouncer is not in front.
+    "statement_cache_size": 16,
 }
 if settings.database_requires_ssl:
     # asyncpg uses a boolean SSL flag (Render external hostnames require TLS).

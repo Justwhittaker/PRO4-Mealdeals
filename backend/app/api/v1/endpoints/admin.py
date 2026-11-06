@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
@@ -26,6 +26,7 @@ from app.schemas.merchant import (
     MerchantUpdate,
 )
 from app.services.affiliate import build_affiliate_urls
+from app.services.public_deal_cache import queue_public_deal_revalidate
 from app.services.dashboard_metrics import build_dashboard_metrics
 from app.services.deal_copy import clean_deal_description
 from app.scrapers.categories import venue_category_id
@@ -388,6 +389,7 @@ async def admin_update_deal(
     payload: DealUpdate,
     _: AdminKey,
     db: DbSession,
+    background_tasks: BackgroundTasks,
 ) -> DealRead:
     loaded = await db.execute(
         select(Deal)
@@ -457,6 +459,7 @@ async def admin_update_deal(
             )
 
     await db.flush()
+    await queue_public_deal_revalidate(background_tasks, db, deal.id)
     loaded = await db.execute(
         select(Deal)
         .where(Deal.id == deal.id)
@@ -474,10 +477,12 @@ async def admin_delete_deal(
     deal_id: UUID,
     _: AdminKey,
     db: DbSession,
+    background_tasks: BackgroundTasks,
 ) -> Response:
     deal = await db.get(Deal, deal_id)
     if deal is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
+    await queue_public_deal_revalidate(background_tasks, db, deal.id)
     await db.delete(deal)
     await db.flush()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

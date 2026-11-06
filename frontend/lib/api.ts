@@ -404,7 +404,7 @@ export async function fetchDeal(
     outbound_url?: string | null;
     link_kind?: DealLinkKind | null;
     cta_label?: string | null;
-  }>(`/api/v1/deals/${id}`, {
+  }>(`/api/v1/deals/${id}?for_public=true`, {
     next: {
       tags: [
         dealTag(id),
@@ -476,10 +476,17 @@ export async function fetchDeal(
 
 export async function fetchValueCalculator(
   id: string,
+  opts?: { country?: string; city?: string },
 ): Promise<ApiResult<ValueCalculatorResult>> {
+  const tags = [
+    dealTag(id),
+    ...(opts?.country && opts?.city
+      ? [cityDealsTag(opts.country, opts.city)]
+      : []),
+  ];
   const result = await apiFetch<BackendValueCalculator>(
     `/api/v1/deals/${id}/value-calculator`,
-    { next: { revalidate: SERVER_FETCH_REVALIDATE_SECONDS, tags: [dealTag(id)] } },
+    { next: { revalidate: SERVER_FETCH_REVALIDATE_SECONDS, tags } },
   );
   if (!result.ok) return result;
   return { ok: true, data: mapValueCalculator(result.data) };

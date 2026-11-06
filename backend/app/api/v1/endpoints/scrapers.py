@@ -321,11 +321,16 @@ async def scrape_metrics_endpoint(response: Response) -> ScrapeMetrics:
     areas = sum(len(MARKET_CITIES.get(code, [])) for code in markets)
     async with AsyncSessionLocal() as db:
         try:
+            # Same predicate as ix_oom_deals_merchant_active_not_deleted so
+            # the count is an index-only scan, not a seq scan of deals.
             active_deals = int(
                 await db.scalar(
                     select(func.count())
                     .select_from(Deal)
-                    .where(Deal.is_active.is_(True))
+                    .where(
+                        Deal.is_active.is_(True),
+                        Deal.deleted_at.is_(None),
+                    )
                 )
                 or 0
             )

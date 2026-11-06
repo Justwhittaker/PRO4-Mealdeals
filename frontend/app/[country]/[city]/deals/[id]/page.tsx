@@ -104,7 +104,7 @@ export default async function DealDetailPage({ params }: PageProps) {
   }
 
   const badge = dealBadge(deal);
-  const value = await fetchValueCalculator(id);
+  const value = await fetchValueCalculator(id, { country, city });
   const websiteUrl =
     deal.outboundUrl || deal.cleanUrl || deal.affiliateUrl || null;
   const ctaLabel =

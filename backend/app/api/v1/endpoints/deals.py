@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Response, status
 from geoalchemy2.functions import ST_DistanceSphere, ST_MakePoint, ST_SetSRID
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import noload, selectinload
@@ -41,6 +41,8 @@ from app.schemas.deal import (
 )
 from app.services.affiliate import build_affiliate_urls
 from app.services.deal_copy import clean_deal_description
+from app.services.deal_expiry import is_publicly_listed
+from app.services.public_deal_cache import queue_public_deal_revalidate
 from app.services.deal_link import LinkKind, cta_label_for_link, outbound_link_meta
 from app.services.geo_names import (
     PLACEHOLDER_CITY_NAMES,
@@ -589,6 +591,7 @@ async def update_deal(
     deal_id: UUID,
     payload: DealUpdate,
     db: DbSession,
+    background_tasks: BackgroundTasks,
 ) -> Deal:
     """Toggle active / edit a deal. Deactivating frees a Priority slot but keeps history."""
     result = await db.execute(
@@ -607,6 +610,7 @@ async def update_deal(
         deal.deleted_at = datetime.now(timezone.utc)
         deal.is_active = False
         await db.flush()
+        await queue_public_deal_revalidate(background_tasks, db, deal.id)
         loaded = await db.execute(
             select(Deal)
             .where(Deal.id == deal.id)
@@ -741,6 +745,7 @@ async def update_deal(
             )
 
     await db.flush()
+    await queue_public_deal_revalidate(background_tasks, db, deal.id)
     loaded = await db.execute(
         select(Deal)
         .where(Deal.id == deal.id)
@@ -754,7 +759,11 @@ async def update_deal(
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
 )
-async def remove_deal_from_profile(deal_id: UUID, db: DbSession) -> Response:
+async def remove_deal_from_profile(
+    deal_id: UUID,
+    db: DbSession,
+    background_tasks: BackgroundTasks,
+) -> Response:
     """Soft-delete via POST (avoids DELETE 405 on some hosts). Keeps analytics row."""
     deal = await db.get(Deal, deal_id)
     if deal is None or deal.deleted_at is not None:
@@ -762,6 +771,7 @@ async def remove_deal_from_profile(deal_id: UUID, db: DbSession) -> Response:
     deal.deleted_at = datetime.now(timezone.utc)
     deal.is_active = False
     await db.flush()
+    await queue_public_deal_revalidate(background_tasks, db, deal.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -770,7 +780,11 @@ async def remove_deal_from_profile(deal_id: UUID, db: DbSession) -> Response:
     status_code=status.HTTP_204_NO_CONTENT,
     response_class=Response,
 )
-async def delete_deal(deal_id: UUID, db: DbSession) -> Response:
+async def delete_deal(
+    deal_id: UUID,
+    db: DbSession,
+    background_tasks: BackgroundTasks,
+) -> Response:
     """Soft-delete a deal: hide from profile/feed, keep the row for analytics."""
     deal = await db.get(Deal, deal_id)
     if deal is None or deal.deleted_at is not None:
@@ -778,11 +792,22 @@ async def delete_deal(deal_id: UUID, db: DbSession) -> Response:
     deal.deleted_at = datetime.now(timezone.utc)
     deal.is_active = False
     await db.flush()
+    await queue_public_deal_revalidate(background_tasks, db, deal.id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/{deal_id}", response_model=DealDetailRead)
-async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
+async def get_deal(
+    deal_id: UUID,
+    db: DbSession,
+    for_public: bool = Query(
+        default=False,
+        description=(
+            "When true, inactive, expired, and deleted deals are 404. "
+            "The merchant editor omits this flag so saved deals stay editable."
+        ),
+    ),
+) -> DealDetailRead:
     result = await db.execute(
         select(Deal, Merchant, Location)
         .join(Merchant, Deal.merchant_id == Merchant.id)
@@ -795,7 +820,13 @@ async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
 
     deal, merchant, location = row
-    if deal.deleted_at is not None:
+    hidden = not is_publicly_listed(
+        is_active=bool(deal.is_active),
+        deleted_at=deal.deleted_at,
+        expires_at=deal.expires_at,
+        now=datetime.now(timezone.utc),
+    )
+    if deal.deleted_at is not None or (for_public and hidden):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
     primary_translation = next(
         (item for item in deal.translations if item.language_code == "en"),

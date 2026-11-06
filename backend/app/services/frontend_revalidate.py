@@ -29,6 +29,7 @@ def revalidation_plan(
     areas: set[tuple[str, str]] | None = None,
     *,
     include_global: bool = False,
+    extra_tags: list[str] | None = None,
 ) -> dict[str, list[str]]:
     """
     Tags and paths for one revalidate call.
@@ -57,6 +58,13 @@ def revalidation_plan(
         tags.insert(0, "deals")
         paths.insert(0, "/")
 
+    seen = set(tags)
+    for tag in extra_tags or []:
+        cleaned = tag.strip()
+        if cleaned and cleaned not in seen:
+            tags.append(cleaned)
+            seen.add(cleaned)
+
     return {"tags": tags, "paths": paths}
 
 
@@ -64,6 +72,7 @@ def revalidate_after_scrape(
     *,
     areas: set[tuple[str, str]] | None = None,
     include_global: bool = False,
+    extra_tags: list[str] | None = None,
 ) -> dict[str, Any]:
     """
     Invalidate cached deal listings on the public site.
@@ -78,7 +87,11 @@ def revalidate_after_scrape(
         logger.debug("Skipping frontend revalidate (REVALIDATE_SECRET unset)")
         return {"skipped": True, "reason": "no_secret"}
 
-    plan = revalidation_plan(areas, include_global=include_global)
+    plan = revalidation_plan(
+        areas,
+        include_global=include_global,
+        extra_tags=extra_tags,
+    )
     tags = plan["tags"]
     paths = plan["paths"]
     if not tags and not paths:

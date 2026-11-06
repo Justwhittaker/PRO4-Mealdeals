@@ -17,6 +17,9 @@ from typing import Sequence, Union
 from alembic import op
 
 revision: str = "017_oom_feed_indexes"
+# Stays on 016_newsletter_region. PR #22 (016_fishy_finger) branches from
+# 015_marketing_outreach and must be rebased onto this revision before merge,
+# or Alembic will have two heads.
 down_revision: Union[str, None] = "016_newsletter_region"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
