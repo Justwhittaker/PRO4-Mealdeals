@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import DateTime, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -50,6 +50,18 @@ class MarketingContact(Base):
     city: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
     source_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     venue_category: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    # fishy_finger_sub for the weekly lead scrape. Null on deal-scrape contacts.
+    source_segment: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, index=True
+    )
+    lead_zone: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    email_quality_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # True when a probed page had an offer, false when every probe was empty,
+    # null when the check timed out or never ran.
+    has_site_specials: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    specials_checked_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     outreach_unsubscribe_token: Mapped[Optional[str]] = mapped_column(
         String(64), nullable=True, unique=True, index=True

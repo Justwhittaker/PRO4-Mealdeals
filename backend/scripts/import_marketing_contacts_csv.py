@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import csv
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Allow `python scripts/import_marketing_contacts_csv.py` from backend/ or Docker /app.
@@ -24,6 +25,28 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.config import get_settings
 from app.services.marketing_contacts import upsert_marketing_contact
+
+
+def _optional_bool(raw: str | None) -> bool | None:
+    text = (raw or "").strip().lower()
+    if text in {"true", "t", "1", "yes"}:
+        return True
+    if text in {"false", "f", "0", "no"}:
+        return False
+    return None
+
+
+def _optional_dt(raw: str | None) -> datetime | None:
+    text = (raw or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 def main() -> int:
@@ -62,6 +85,15 @@ def main() -> int:
                 city=row.get("city") or None,
                 source_url=row.get("source_url") or None,
                 venue_category=row.get("venue_category") or None,
+                source_segment=row.get("source_segment") or None,
+                lead_zone=row.get("lead_zone") or None,
+                email_quality_score=(
+                    int(row["email_quality_score"])
+                    if (row.get("email_quality_score") or "").strip()
+                    else None
+                ),
+                has_site_specials=_optional_bool(row.get("has_site_specials")),
+                specials_checked_at=_optional_dt(row.get("specials_checked_at")),
             )
             if result is None:
                 skipped += 1

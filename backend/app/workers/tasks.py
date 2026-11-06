@@ -21,6 +21,9 @@ from app.services.deal_expiry import (
     expire_past_due_deals,
     revalidate_kwargs_for_expired,
 )
+from app.services.fishy_finger.digest import run_fishy_finger_digest
+from app.services.fishy_finger.dry_run import run_fishy_dry_run
+from app.services.fishy_finger.leads import run_fishy_finger_zone
 from app.services.merchant_outreach import send_merchant_outreach_batch
 from app.services.newsletter import (
     normalize_email,
@@ -369,6 +372,62 @@ def _tally_weekly_result(
     if result.get("sent"):
         return sent + 1, skipped, failed
     return sent, skipped, failed + 1
+
+
+@celery_app.task(
+    bind=True,
+    name="app.workers.tasks.scrape_fishy_finger_zone",
+    acks_late=True,
+    reject_on_worker_lost=True,
+    acks_on_failure_or_timeout=True,
+    soft_time_limit=ZONE_TASK_SOFT_TIME_LIMIT_SECONDS,
+    time_limit=ZONE_TASK_TIME_LIMIT_SECONDS,
+)
+def scrape_fishy_finger_zone(
+    self: Any,
+    zone_id: str,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Weekly independent-lead scrape for one zone.
+
+    Separate from ``scrape_zone_retail``: it does not stamp or write the
+    twice-daily deal cycle in Redis. ``dry_run`` inserts lead rows only and
+    prints the digest instead of posting to ntfy.
+    """
+    del self
+    try:
+        if dry_run:
+            result = run_fishy_dry_run(zone_id)
+            summary = dict(result.get("summary") or {})
+            summary["digest_body"] = result.get("body")
+            summary["ntfy"] = None
+            summary["outreach_sends"] = 0
+            return summary
+        return run_fishy_finger_zone(zone_id)
+    except SoftTimeLimitExceeded:
+        logger.error("Fishy Finger zone %s hit the soft time limit", zone_id)
+        return {
+            "zone": zone_id.strip().lower(),
+            "ok": False,
+            "status": "timed_out",
+            "error": "soft time limit exceeded",
+        }
+
+
+@celery_app.task(name="app.workers.tasks.send_fishy_finger_digest")
+def send_fishy_finger_digest() -> dict[str, object]:
+    """Sunday ntfy: new Fishy Finger leads, queue, zone and category mix."""
+    result = run_fishy_finger_digest()
+    report = result["report"]
+    return {
+        "week_label": report["week_label"],
+        "net_new_lead_emails": report["net_new_lead_emails"],
+        "no_specials": report.get("no_specials", 0),
+        "no_specials_pct": report.get("no_specials_pct", 0),
+        "unsubscribed": report["unsubscribed"],
+        "still_to_email": report["still_to_email"],
+        "ntfy": result["ntfy"],
+    }
 
 
 @celery_app.task(name="app.workers.tasks.send_weekly_specials")

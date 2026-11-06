@@ -85,6 +85,14 @@ score = tier_weight + proximity + freshness - scrape_penalty + tier_priority_sco
 | 11 NUC zones (NA/WE large splits last), concurrency=2, 07:00 & 19:00 Europe/Dublin | `scrape_zone_retail` (`zones.py`) |
 | Scrape-cycle ntfy digest at 06:00 & 18:00 Europe/Dublin | `send_scrape_cycle_digest` |
 | Friday 09:00 UTC | `send_weekly_specials` |
+| Sunday 08:00 Europe/Dublin, EU zones first, then other zones every 10 minutes | `scrape_fishy_finger_zone` |
+| Sunday 21:00 Europe/Dublin | `send_fishy_finger_digest` |
+
+Dry-run one Fishy zone inside `mealdeals-celery-nuc` before the Sunday job. It writes lead rows only: it does not set outreach send timestamps, send email, or post to ntfy. Counts and the digest text are printed instead.
+
+```bash
+docker exec mealdeals-celery-nuc python /app/scripts/fishy_finger_dry_run.py --zone british_isles
+```
 
 Manual full worldwide scrape: `POST /api/v1/scrapers/scrape?wait=true`.
 

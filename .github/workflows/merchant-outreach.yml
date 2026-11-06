@@ -46,6 +46,8 @@ jobs:
           RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL || 'Dine A Deal <noreply@dineadeal.com>' }}
           MERCHANT_OUTREACH_REPLY_TO: ${{ vars.MERCHANT_OUTREACH_REPLY_TO || 'hello@dineadeal.com' }}
           MERCHANT_OUTREACH_ENABLED: ${{ github.event.inputs.dry_run == 'true' && 'false' || 'true' }}
+          # Fishy Finger leads stay out of this drip until explicitly enabled.
+          FISHY_OUTREACH_ENABLED: "false"
           MERCHANT_OUTREACH_MAX_PER_RUN: ${{ vars.MERCHANT_OUTREACH_MAX_PER_RUN || '95' }}
           MERCHANT_OUTREACH_MIN_DAYS: ${{ vars.MERCHANT_OUTREACH_MIN_DAYS || '28' }}
           MERCHANT_OUTREACH_SEND_DELAY_MS: ${{ vars.MERCHANT_OUTREACH_SEND_DELAY_MS || '200' }}

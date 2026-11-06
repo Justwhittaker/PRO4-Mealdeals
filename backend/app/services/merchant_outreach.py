@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.parse import quote, urlparse
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.config import get_settings
@@ -20,6 +20,9 @@ from app.models.marketing_contact import MarketingContact
 from app.models.merchant import Merchant
 from app.services.deal_link import normalize_outbound_url
 from app.services.email import is_email_configured, send_email
+from app.services.fishy_finger.email_quality import score_email
+from app.services.fishy_finger.ezine import build_fishy_ezine, load_live_active_deals
+from app.services.fishy_finger.schedule import EU_ZONE_ORDER, is_eu_zone
 from app.services.ingest import normalize_city, normalize_country
 from app.services.marketing_contacts import _clean_email
 
@@ -56,7 +59,8 @@ MERCHANT_OFFER_BULLETS: tuple[tuple[str, str], ...] = (
 
 _SKIP_EMAIL_RE = re.compile(
     r"^(noreply|no-reply|donotreply|mailer-daemon|postmaster|admin|webmaster|"
-    r"support|help|info@example|test@)",
+    r"support|help|privacy|legal|abuse|jobs|careers|career|recruitment|"
+    r"info@example|test@)",
     re.I,
 )
 
@@ -154,6 +158,170 @@ def is_outreach_eligible_email(email: str | None) -> bool:
     if _SKIP_EMAIL_RE.match(local):
         return False
     return True
+
+
+def is_fishy_sourced(contact: MarketingContact) -> bool:
+    """True for Fishy Finger lead rows (source_segment fishy*)."""
+    segment = (getattr(contact, "source_segment", None) or "").strip().lower()
+    return segment.startswith("fishy")
+
+
+def contact_email_sendable(contact: MarketingContact) -> bool:
+    """Fishy leads use the quality score rules. Other contacts keep the drip filter."""
+    if is_fishy_sourced(contact):
+        return score_email(contact.email).accepted
+    return is_outreach_eligible_email(contact.email)
+
+
+def outreach_drip_group(contact: MarketingContact) -> int:
+    """0..4 drip bucket. Lower is sent first. The 28-day filter is applied earlier.
+
+    0 EU Fishy leads with has_site_specials false.
+    1 other Fishy leads with has_site_specials false.
+    2 remaining Fishy leads.
+    3 existing contacts that have never been emailed.
+    4 contacts whose cooldown has ended.
+    """
+    fishy = is_fishy_sourced(contact)
+    if fishy:
+        no_specials = getattr(contact, "has_site_specials", None) is False
+        if no_specials and is_eu_zone(getattr(contact, "lead_zone", None)):
+            return 0
+        if no_specials:
+            return 1
+        return 2
+    if getattr(contact, "last_outreach_sent_at", None) is None:
+        return 3
+    return 4
+
+
+def _master_outreach_key(contact: MarketingContact) -> tuple[object, ...]:
+    """Pre-Fishy order: never emailed first, then oldest send, then newest scrape."""
+    sent = contact.last_outreach_sent_at or datetime.min.replace(tzinfo=timezone.utc)
+    scraped = contact.last_scraped_at
+    scraped_key = -scraped.timestamp() if scraped is not None else 0
+    return (sent, scraped_key)
+
+
+def outreach_priority_key(contact: MarketingContact) -> tuple[object, ...]:
+    """Sort key: drip group, then best email_quality_score, then the old order."""
+    sent = contact.last_outreach_sent_at or datetime.min.replace(tzinfo=timezone.utc)
+    scraped = contact.last_scraped_at
+    scraped_key = -scraped.timestamp() if scraped is not None else 0
+    quality = contact.email_quality_score
+    # None sorts after every real score. SQL uses NULLS LAST on the same column.
+    quality_key = -(quality if quality is not None else -1_000_000_000)
+    return (
+        outreach_drip_group(contact),
+        quality_key,
+        sent,
+        scraped_key,
+    )
+
+
+def rank_outreach_candidates(
+    rows: list[MarketingContact],
+    *,
+    now: datetime,
+    min_days: int,
+    max_rows: int,
+    merchant_emails: set[str] | None = None,
+    merchant_domains: set[str] | None = None,
+    fishy_enabled: bool | None = None,
+) -> list[MarketingContact]:
+    """Apply the 28-day gap, unsubscribes, the cap, and the drip order.
+
+    Fishy leads are omitted entirely while ``FISHY_OUTREACH_ENABLED`` is false.
+    The remaining contacts then use the pre-Fishy order: never emailed, then
+    cooldown ended. With the flag on, Fishy groups 1–3 come first.
+    """
+    if fishy_enabled is None:
+        fishy_enabled = get_settings().fishy_outreach_enabled
+    cutoff = now - timedelta(days=min_days)
+    emails = merchant_emails or set()
+    domains = merchant_domains or set()
+    eligible: list[MarketingContact] = []
+    for row in rows:
+        if not fishy_enabled and is_fishy_sourced(row):
+            continue
+        if row.outreach_unsubscribed_at is not None:
+            continue
+        if row.outreach_excluded_at is not None:
+            continue
+        if not contact_email_sendable(row):
+            continue
+        sent = row.last_outreach_sent_at
+        if sent is not None and sent >= cutoff:
+            continue
+        if is_existing_merchant_contact(
+            row,
+            merchant_emails=emails,
+            merchant_domains=domains,
+        ):
+            continue
+        eligible.append(row)
+    if fishy_enabled:
+        eligible.sort(key=outreach_priority_key)
+    else:
+        eligible.sort(key=_master_outreach_key)
+    return eligible[:max_rows]
+
+
+def outreach_batch_statement(
+    cutoff: datetime,
+    limit: int,
+    *,
+    fishy_enabled: bool = False,
+) -> Any:
+    """SQL window for the drip. Fishy rows are excluded unless the flag is on."""
+    stmt = (
+        select(MarketingContact)
+        .where(MarketingContact.email.is_not(None))
+        .where(MarketingContact.email != "")
+        .where(MarketingContact.outreach_unsubscribed_at.is_(None))
+        .where(MarketingContact.outreach_excluded_at.is_(None))
+        .where(
+            or_(
+                MarketingContact.last_outreach_sent_at.is_(None),
+                MarketingContact.last_outreach_sent_at < cutoff,
+            )
+        )
+    )
+    if not fishy_enabled:
+        return (
+            stmt.where(
+                or_(
+                    MarketingContact.source_segment.is_(None),
+                    func.lower(MarketingContact.source_segment).notlike("fishy%"),
+                )
+            )
+            .order_by(
+                MarketingContact.last_outreach_sent_at.asc().nullsfirst(),
+                MarketingContact.last_scraped_at.desc(),
+            )
+            .limit(limit)
+        )
+    fishy = func.lower(MarketingContact.source_segment).like("fishy%")
+    no_specials = MarketingContact.has_site_specials.is_(False)
+    eu_no_specials = and_(
+        fishy,
+        no_specials,
+        MarketingContact.lead_zone.in_(EU_ZONE_ORDER),
+    )
+    other_no_specials = and_(fishy, no_specials)
+    priority = case(
+        (eu_no_specials, 0),
+        (other_no_specials, 1),
+        (fishy, 2),
+        (MarketingContact.last_outreach_sent_at.is_(None), 3),
+        else_=4,
+    )
+    return stmt.order_by(
+        priority.asc(),
+        MarketingContact.email_quality_score.desc().nullslast(),
+        MarketingContact.last_outreach_sent_at.asc().nullsfirst(),
+        MarketingContact.last_scraped_at.desc(),
+    ).limit(limit)
 
 
 def _dineadeal_host(base: str) -> str:
@@ -423,23 +591,39 @@ def build_merchant_outreach_email(
 def send_outreach_to_contact(
     session: Session,
     contact: MarketingContact,
+    *,
+    active_deals: int | None = None,
 ) -> dict[str, Any]:
+    settings = get_settings()
+    if is_fishy_sourced(contact) and not settings.fishy_outreach_enabled:
+        return {
+            "email": contact.email,
+            "skipped": True,
+            "reason": "fishy_outreach_disabled",
+        }
     if contact.outreach_unsubscribed_at is not None:
         return {"email": contact.email, "skipped": True, "reason": "unsubscribed"}
-    if not is_outreach_eligible_email(contact.email):
+    if not contact_email_sendable(contact):
         return {"email": contact.email, "skipped": True, "reason": "no_valid_email"}
 
     token = ensure_outreach_token(contact)
-    listing_url = resolve_dineadeal_listing_url(session, contact)
     send_ref = secrets.token_urlsafe(8)
     unsub = outreach_unsubscribe_url(token)
-    subject, text_body, html_body = build_merchant_outreach_email(
-        contact,
-        unsubscribe_token=token,
-        listing_url=listing_url,
-        send_ref=send_ref,
-    )
-    settings = get_settings()
+    if is_fishy_sourced(contact):
+        subject, text_body, html_body = build_fishy_ezine(
+            contact,
+            unsubscribe_url=unsub,
+            dashboard_url=merchant_dashboard_url(),
+            active_deals=active_deals,
+        )
+    else:
+        listing_url = resolve_dineadeal_listing_url(session, contact)
+        subject, text_body, html_body = build_merchant_outreach_email(
+            contact,
+            unsubscribe_token=token,
+            listing_url=listing_url,
+            send_ref=send_ref,
+        )
     ok = send_email(
         to_email=contact.email,  # type: ignore[arg-type]
         subject=subject,
@@ -471,33 +655,19 @@ def fetch_outreach_batch(
     settings = get_settings()
     min_days = settings.merchant_outreach_min_days
     max_rows = settings.merchant_outreach_max_per_run
+    fishy_enabled = settings.fishy_outreach_enabled
     cutoff = _utcnow() - timedelta(days=min_days)
     merchant_emails = _load_registered_merchant_emails(session)
     merchant_domains = _load_registered_merchant_domains(session)
 
-    stmt = (
-        select(MarketingContact)
-        .where(MarketingContact.email.is_not(None))
-        .where(MarketingContact.email != "")
-        .where(MarketingContact.outreach_unsubscribed_at.is_(None))
-        .where(MarketingContact.outreach_excluded_at.is_(None))
-        .where(
-            or_(
-                MarketingContact.last_outreach_sent_at.is_(None),
-                MarketingContact.last_outreach_sent_at < cutoff,
-            )
-        )
-        .order_by(
-            MarketingContact.last_outreach_sent_at.asc().nullsfirst(),
-            MarketingContact.last_scraped_at.desc(),
-        )
-        .limit(max_rows * 5)
+    stmt = outreach_batch_statement(
+        cutoff,
+        max_rows * 5,
+        fishy_enabled=fishy_enabled,
     )
     rows = list(session.scalars(stmt).all())
-    eligible: list[MarketingContact] = []
+    kept: list[MarketingContact] = []
     for row in rows:
-        if not is_outreach_eligible_email(row.email):
-            continue
         if is_existing_merchant_contact(
             row,
             merchant_emails=merchant_emails,
@@ -506,10 +676,16 @@ def fetch_outreach_batch(
             if persist_exclusions:
                 exclude_existing_merchant_contact(session, row)
             continue
-        eligible.append(row)
-        if len(eligible) >= max_rows:
-            break
-    return eligible
+        kept.append(row)
+    return rank_outreach_candidates(
+        kept,
+        now=_utcnow(),
+        min_days=min_days,
+        max_rows=max_rows,
+        merchant_emails=merchant_emails,
+        merchant_domains=merchant_domains,
+        fishy_enabled=fishy_enabled,
+    )
 
 
 def outreach_queue_stats(session: Session) -> dict[str, int]:
@@ -578,11 +754,20 @@ def send_merchant_outreach_batch(session: Session) -> dict[str, int]:
     contacts = fetch_outreach_batch(session)
     stats_before = outreach_queue_stats(session)
     excluded = stats_before.get("excluded_existing_merchants", 0)
+    active_deals = (
+        load_live_active_deals(session)
+        if contacts and settings.fishy_outreach_enabled
+        else None
+    )
 
     for index, contact in enumerate(contacts):
         if index > 0 and delay_sec > 0:
             time.sleep(delay_sec)
-        result = send_outreach_to_contact(session, contact)
+        result = send_outreach_to_contact(
+            session,
+            contact,
+            active_deals=active_deals,
+        )
         if result.get("skipped"):
             skipped += 1
         elif result.get("sent"):

@@ -29,6 +29,14 @@ from app.scrapers.zones import (
     ZONE_TASK_EXPIRES_SECONDS,
     validate_zone_coverage,
 )
+from app.services.fishy_finger.schedule import (
+    FISHY_DIGEST_HOUR,
+    FISHY_DIGEST_MINUTE,
+    FISHY_TASK_EXPIRES_SECONDS,
+    EuropeDublinWeekly,
+    fishy_zone_clock,
+    fishy_zone_order,
+)
 from app.services.scrape_cycle_stats import (
     cycle_id_for_start,
     cycle_start_for_time,
@@ -75,10 +83,12 @@ celery_app = Celery(
 # expiry/currency jobs until a slot frees. The digest itself is 18:00 / 06:00 Dublin.
 _TASK_ROUTES = {
     "app.workers.tasks.scrape_zone_retail": {"queue": SCRAPE_QUEUE},
+    "app.workers.tasks.scrape_fishy_finger_zone": {"queue": SCRAPE_QUEUE},
     "app.workers.tasks.scrape_global_retail": {"queue": SCRAPE_QUEUE},
     "app.workers.tasks.scrape_area": {"queue": SCRAPE_QUEUE},
     "app.workers.tasks.retry_failed_scrape_city": {"queue": SCRAPE_QUEUE},
     "app.workers.tasks.send_scrape_cycle_digest": {"queue": MAINTENANCE_QUEUE},
+    "app.workers.tasks.send_fishy_finger_digest": {"queue": MAINTENANCE_QUEUE},
     "app.workers.tasks.expire_past_due_deals": {"queue": MAINTENANCE_QUEUE},
     "app.workers.tasks.update_currency_rates": {"queue": MAINTENANCE_QUEUE},
     "app.workers.tasks.send_weekly_specials": {"queue": MAINTENANCE_QUEUE},
@@ -193,3 +203,31 @@ for zone_id in ZONE_ORDER:
         minute,
         "/".join(f"{h:02d}:00" for h in ZONE_CYCLE_BASE_HOURS),
     )
+
+# Sunday lead scrape. EU zones first, then the rest of ZONE_ORDER, every
+# 10 minutes from 08:00 Europe/Dublin. Does not write deal-cycle Redis keys.
+for zone_id in fishy_zone_order():
+    fishy_hour, fishy_minute = fishy_zone_clock(zone_id)
+    label = SCRAPE_ZONES[zone_id]["label"]
+    celery_app.conf.beat_schedule[f"fishy-finger-{zone_id}"] = {
+        "task": "app.workers.tasks.scrape_fishy_finger_zone",
+        "schedule": EuropeDublinWeekly(hour=fishy_hour, minute=fishy_minute),
+        "kwargs": {"zone_id": zone_id},
+        "options": {
+            "expires": FISHY_TASK_EXPIRES_SECONDS,
+            "queue": SCRAPE_QUEUE,
+        },
+    }
+    logger.info(
+        "Registered fishy finger zone %s (%s) Sunday %02d:%02d Europe/Dublin",
+        zone_id,
+        label,
+        fishy_hour,
+        fishy_minute,
+    )
+
+celery_app.conf.beat_schedule["fishy-finger-digest"] = {
+    "task": "app.workers.tasks.send_fishy_finger_digest",
+    "schedule": EuropeDublinWeekly(hour=FISHY_DIGEST_HOUR, minute=FISHY_DIGEST_MINUTE),
+    "options": {"queue": MAINTENANCE_QUEUE},
+}
