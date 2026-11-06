@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import html
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy.dialects import postgresql
 
 from app.api.v1.endpoints.scrapers import PlanInfo
@@ -29,6 +33,7 @@ from app.services.fishy_finger.constants import FISHY_FINGER_SEGMENT
 from app.services.fishy_finger.digest import (
     category_digest_label,
     format_fishy_digest,
+    no_specials_breakdown,
     percentage_breakdown,
     zone_digest_label,
 )
@@ -46,14 +51,23 @@ from app.services.fishy_finger.leads import (
     lead_is_known,
     select_fishy_leads,
 )
+from app.services.fishy_finger.dry_run import run_fishy_dry_run
 from app.services.fishy_finger.schedule import (
     DUBLIN,
+    EU_ZONE_ORDER,
     FISHY_DIGEST_HOUR,
     FISHY_DIGEST_MINUTE,
     EuropeDublinWeekly,
     fishy_week_start,
     fishy_zone_clock,
+    fishy_zone_order,
+    lead_region,
     next_dublin_sunday_after,
+)
+from app.services.fishy_finger.specials import (
+    classify_site_specials,
+    fetch_specials_probes,
+    specials_probe_urls,
 )
 from app.services.fishy_finger.types import AcceptedLead, VenueCandidate
 from app.services.merchant_outreach import (
@@ -88,6 +102,8 @@ def _contact(**overrides: object) -> SimpleNamespace:
         "last_outreach_sent_at": None,
         "last_scraped_at": datetime(2026, 1, 1, tzinfo=timezone.utc),
         "email_quality_score": None,
+        "lead_zone": None,
+        "has_site_specials": None,
         "business_name": "Oak Cafe",
         "website": "https://oak.example",
     }
@@ -317,22 +333,118 @@ def test_outreach_fills_with_fishy_leads_then_existing_order() -> None:
     ]
 
 
-def test_fishy_quality_does_not_reorder_the_existing_queue() -> None:
-    now = datetime(2026, 10, 1, tzinfo=timezone.utc)
-    fishy_old = _contact(
+def test_drip_order_is_eu_no_specials_then_quality() -> None:
+    now = datetime(2026, 10, 9, tzinfo=timezone.utc)
+    eu_low = _contact(
         source_segment=FISHY_FINGER_SEGMENT,
-        email="owner@old.example",
-        email_quality_score=96,
-        last_outreach_sent_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        email="low@eu.example",
+        lead_zone="iberia",
+        has_site_specials=False,
+        email_quality_score=70,
+        last_scraped_at=datetime(2026, 10, 8, tzinfo=timezone.utc),
     )
-    regular = _contact(email="info@new.example", email_quality_score=1)
+    eu_high = _contact(
+        source_segment=FISHY_FINGER_SEGMENT,
+        email="high@eu.example",
+        lead_zone="british_isles",
+        has_site_specials=False,
+        email_quality_score=90,
+    )
+    eu_resent = _contact(
+        source_segment=FISHY_FINGER_SEGMENT,
+        email="again@eu.example",
+        lead_zone="france_benelux",
+        has_site_specials=False,
+        email_quality_score=60,
+        last_outreach_sent_at=now - timedelta(days=40),
+    )
+    other_false = _contact(
+        source_segment=FISHY_FINGER_SEGMENT,
+        email="none@us.example",
+        lead_zone="us_east",
+        has_site_specials=False,
+        email_quality_score=99,
+    )
+    remaining = _contact(
+        source_segment=FISHY_FINGER_SEGMENT,
+        email="listed@eu.example",
+        lead_zone="dach_nordics",
+        has_site_specials=True,
+        email_quality_score=100,
+    )
+    unknown = _contact(
+        source_segment=FISHY_FINGER_SEGMENT,
+        email="unknown@eu.example",
+        lead_zone="eastern_europe",
+        has_site_specials=None,
+        email_quality_score=95,
+    )
+    never = _contact(email="backlog@new.example", email_quality_score=100)
+    cooled = _contact(
+        email="backlog@old.example",
+        email_quality_score=100,
+        last_outreach_sent_at=now - timedelta(days=40),
+    )
+    too_soon = _contact(
+        source_segment=FISHY_FINGER_SEGMENT,
+        email="soon@eu.example",
+        lead_zone="british_isles",
+        has_site_specials=False,
+        email_quality_score=100,
+        last_outreach_sent_at=now - timedelta(days=3),
+    )
+    unsubscribed = _contact(
+        source_segment=FISHY_FINGER_SEGMENT,
+        email="unsub@eu.example",
+        lead_zone="british_isles",
+        has_site_specials=False,
+        email_quality_score=100,
+        outreach_unsubscribed_at=now,
+    )
     batch = rank_outreach_candidates(
-        [fishy_old, regular],
+        [
+            cooled,
+            never,
+            unknown,
+            remaining,
+            other_false,
+            eu_resent,
+            too_soon,
+            unsubscribed,
+            eu_low,
+            eu_high,
+        ],
         now=now,
         min_days=28,
         max_rows=95,
     )
-    assert [row.email for row in batch] == ["info@new.example", "owner@old.example"]
+    assert [row.email for row in batch] == [
+        "high@eu.example",
+        "low@eu.example",
+        "again@eu.example",
+        "none@us.example",
+        "listed@eu.example",
+        "unknown@eu.example",
+        "backlog@new.example",
+        "backlog@old.example",
+    ]
+
+
+def test_quality_does_not_jump_drip_groups() -> None:
+    now = datetime(2026, 10, 1, tzinfo=timezone.utc)
+    never = _contact(email="info@new.example", email_quality_score=1)
+    cooled = _contact(
+        email="hello@old.example",
+        email_quality_score=99,
+        last_outreach_sent_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+    )
+    batch = rank_outreach_candidates(
+        [cooled, never],
+        now=now,
+        min_days=28,
+        max_rows=95,
+    )
+    assert [row.email for row in batch] == ["info@new.example", "hello@old.example"]
 
 
 def test_outreach_keeps_gap_unsubscribe_merchant_and_cap() -> None:
@@ -395,6 +507,8 @@ def test_outreach_sql_orders_fishy_leads_first() -> None:
     )
     assert "fishy_finger_sub" in sql
     assert "email_quality_score" in sql
+    assert "has_site_specials" in sql
+    assert "british_isles" in sql
     assert "LIMIT 95" in sql
 
 
@@ -439,7 +553,7 @@ def test_week_window_follows_dublin_sunday_morning() -> None:
 
 
 def test_sunday_schedule_is_dst_aware_and_separate_from_deal_cycles() -> None:
-    assert ZONE_CYCLE_BASE_HOURS == (6, 18)
+    assert ZONE_CYCLE_BASE_HOURS == (7, 19)
     winter_slot = datetime(2026, 1, 4, 8, 0, tzinfo=DUBLIN)
     assert winter_slot.astimezone(timezone.utc) == datetime(
         2026, 1, 4, 8, 0, tzinfo=timezone.utc
@@ -461,12 +575,21 @@ def test_sunday_schedule_is_dst_aware_and_separate_from_deal_cycles() -> None:
     late = EuropeDublinWeekly(hour=8, minute=0, nowfun=lambda: monday_afternoon)
     assert late.is_due(datetime(2025, 12, 28, 8, 0, tzinfo=timezone.utc))[0] is False
 
-    clocks = [fishy_zone_clock(zone_id) for zone_id in ZONE_ORDER]
+    order = fishy_zone_order()
+    assert order[: len(EU_ZONE_ORDER)] == list(EU_ZONE_ORDER)
+    assert set(EU_ZONE_ORDER) == {
+        zone_id for zone_id in order if lead_region(zone_id) == "EU"
+    }
+    assert lead_region("us_east") == "NA"
+    assert lead_region("australia") == "Other"
+    clocks = [fishy_zone_clock(zone_id) for zone_id in order]
     assert clocks[0] == (8, 0)
     assert clocks[1] == (8, ZONE_BEAT_STAGGER_MINUTES)
     minutes = [hour * 60 + minute for hour, minute in clocks]
     assert minutes == sorted(minutes)
-    assert minutes[-1] - minutes[0] == (len(ZONE_ORDER) - 1) * ZONE_BEAT_STAGGER_MINUTES
+    assert minutes[-1] - minutes[0] == (len(order) - 1) * ZONE_BEAT_STAGGER_MINUTES
+    assert fishy_zone_clock("british_isles") == (8, 0)
+    assert fishy_zone_clock("mena") == (9, 0)
 
     for zone_id in ZONE_ORDER:
         fishy = celery_app.conf.beat_schedule[f"fishy-finger-{zone_id}"]
@@ -474,6 +597,9 @@ def test_sunday_schedule_is_dst_aware_and_separate_from_deal_cycles() -> None:
         assert fishy["task"] == "app.workers.tasks.scrape_fishy_finger_zone"
         assert fishy["kwargs"] == {"zone_id": zone_id}
         assert isinstance(fishy["schedule"], EuropeDublinWeekly)
+        assert (fishy["schedule"].hour, fishy["schedule"].minute) == fishy_zone_clock(
+            zone_id
+        )
         assert fishy["options"]["queue"] == SCRAPE_QUEUE
         assert deal["task"] == "app.workers.tasks.scrape_zone_retail"
         assert not isinstance(deal["schedule"], EuropeDublinWeekly)
@@ -530,6 +656,8 @@ def test_ezine_uses_live_count_plan_and_one_cta() -> None:
     )
     assert "1,234" not in quiet
     assert "Diners browse live deals on DineADeal." in quiet
+    assert "isn't promoting specials" not in text_body
+    assert "isn't promoting specials" not in quiet
 
 
 def test_osm_contacts_use_existing_categories() -> None:
@@ -582,6 +710,8 @@ def test_insert_stores_fishy_segment_zone_and_score() -> None:
         email_quality_score=96,
         website="https://oak.example",
         phone=None,
+        has_site_specials=False,
+        specials_checked_at=datetime(2026, 11, 8, 8, 0, tzinfo=timezone.utc),
     )
     session = _Session()
     row = insert_fishy_lead(session, lead)  # type: ignore[arg-type]
@@ -589,6 +719,9 @@ def test_insert_stores_fishy_segment_zone_and_score() -> None:
     assert row.source_segment == FISHY_FINGER_SEGMENT
     assert row.lead_zone == "british_isles"
     assert row.email_quality_score == 96
+    assert row.has_site_specials is False
+    assert row.specials_checked_at == datetime(2026, 11, 8, 8, 0, tzinfo=timezone.utc)
+    assert row.last_outreach_sent_at is None
     assert row.country_code == "IE"
     assert row.city == "Galway"
     assert lead_is_known(lead, {("email", "owner@oak.example")})
@@ -596,15 +729,244 @@ def test_insert_stores_fishy_segment_zone_and_score() -> None:
 
 
 def test_migration_adds_fishy_columns() -> None:
-    path = (
-        Path(__file__).resolve().parents[1]
-        / "alembic"
-        / "versions"
-        / "016_fishy_finger_sub.py"
-    )
+    backend = Path(__file__).resolve().parents[1]
+    path = backend / "alembic" / "versions" / "018_fishy_finger_sub.py"
     text = path.read_text(encoding="utf-8")
-    assert 'revision: str = "016_fishy_finger"' in text
-    assert 'down_revision: Union[str, None] = "015_marketing_outreach"' in text
+    assert 'revision: str = "018_fishy_finger_sub"' in text
+    assert 'down_revision: Union[str, None] = "017_oom_feed_indexes"' in text
+    assert "SET LOCAL statement_timeout = 0" in text
+    assert "server_default" not in text
+    assert "nullable=True" in text
     assert "source_segment" in text
     assert "lead_zone" in text
     assert "email_quality_score" in text
+    assert "has_site_specials" in text
+    assert "specials_checked_at" in text
+    assert not (backend / "alembic" / "versions" / "016_fishy_finger_sub.py").exists()
+    script = ScriptDirectory.from_config(Config(str(backend / "alembic.ini")))
+    assert script.get_heads() == ["018_fishy_finger_sub"]
+
+
+_OFFER_HTML = (
+    "<html><body><a href='/deals/lunch-special'>Lunch deal 20% off</a></body></html>"
+)
+_EMPTY_HTML = "<html><body>Welcome to our cafe. Open Tuesday.</body></html>"
+
+
+def _probe_get(status_for_path: dict[str, tuple[int | None, str, str | None]]):
+    calls: list[str] = []
+
+    def get(url: str) -> tuple[int | None, str | None, str | None]:
+        calls.append(url)
+        path = urlparse(url).path
+        status, html, error = status_for_path.get(path, (404, "", None))
+        return status, html, error
+
+    return calls, get
+
+
+def test_specials_probes_use_only_offers_specials_and_deals() -> None:
+    urls = specials_probe_urls("https://oak.example/en")
+    assert [urlparse(url).path for url in urls] == [
+        "/en/offers",
+        "/en/specials",
+        "/en/deals",
+    ]
+    plain = specials_probe_urls("https://oak.example")
+    assert [urlparse(url).path for url in plain] == ["/offers", "/specials", "/deals"]
+    joined = " ".join(plain)
+    assert "/menu" not in joined
+    assert "/promotions" not in joined
+    assert "/vouchers" not in joined
+
+
+def test_all_404_probes_flag_no_specials() -> None:
+    calls, get = _probe_get({})
+    probes = fetch_specials_probes("https://oak.example", get=get)
+    assert [urlparse(url).path for url in calls] == ["/offers", "/specials", "/deals"]
+    assert classify_site_specials(probes) is False
+    empty_calls, empty_get = _probe_get(
+        {
+            "/offers": (200, _EMPTY_HTML, None),
+            "/specials": (404, "", None),
+            "/deals": (200, _EMPTY_HTML, None),
+        }
+    )
+    empty = fetch_specials_probes("https://oak.example", get=empty_get)
+    assert len(empty_calls) == 3
+    assert classify_site_specials(empty) is False
+
+
+def test_any_offer_flags_specials_without_extra_paths() -> None:
+    calls, get = _probe_get(
+        {
+            "/offers": (404, "", None),
+            "/specials": (200, _OFFER_HTML, None),
+            "/deals": (500, "", None),
+        }
+    )
+    probes = fetch_specials_probes("https://oak.example", get=get)
+    assert len(calls) == 3
+    assert classify_site_specials(probes) is True
+    missed = fetch_specials_probes(
+        "https://oak.example",
+        get=_probe_get({})[1],
+    )
+    assert (
+        classify_site_specials(
+            missed,
+            crawled_pages=(("https://oak.example/menu", _OFFER_HTML),),
+        )
+        is True
+    )
+    snippet = "<html><body><p>Happy hour from five.</p></body></html>"
+    assert (
+        classify_site_specials(
+            missed,
+            crawled_pages=(("https://oak.example/", snippet),),
+        )
+        is True
+    )
+
+
+def test_probe_error_leaves_specials_unknown() -> None:
+    _calls, get = _probe_get(
+        {
+            "/offers": (404, "", None),
+            "/specials": (200, _EMPTY_HTML, None),
+            "/deals": (None, "", "timeout"),
+        }
+    )
+    probes = fetch_specials_probes("https://oak.example", get=get)
+    assert classify_site_specials(probes) is None
+    server = fetch_specials_probes(
+        "https://oak.example",
+        get=_probe_get({"/offers": (503, "", None), "/specials": (404, "", None)})[1],
+    )
+    assert classify_site_specials(server) is None
+
+
+def test_no_specials_pitch_opens_with_a_free_listing() -> None:
+    contact = SimpleNamespace(
+        business_name="Oak <Cafe>",
+        city="Galway",
+        has_site_specials=False,
+    )
+    _subject, text_body, html_body = build_fishy_ezine(
+        contact,  # type: ignore[arg-type]
+        unsubscribe_url="https://api.example/unsub?token=abc",
+        dashboard_url="https://dineadeal.com/dashboard",
+        active_deals=12,
+    )
+    opener = (
+        "We noticed Oak <Cafe> isn't promoting specials online yet. "
+        "DineADeal can list them for free."
+    )
+    assert text_body.index(opener) < text_body.index("DineADeal is where diners look")
+    assert "no commission" in text_body
+    assert html.escape(opener) in html_body
+    assert "DineADeal can list them for free." in html_body
+
+
+def test_no_specials_digest_breaks_down_zone_category_and_region() -> None:
+    rows = [
+        ("british_isles", "Restaurants, Cafe's & Bistro's", False),
+        ("british_isles", "Restaurants, Cafe's & Bistro's", False),
+        ("british_isles", "Clubs, Bars & Pubs", True),
+        ("us_east", "Restaurants, Cafe's & Bistro's", False),
+        ("us_east", "Hotels, Resorts & B&B's", None),
+        ("australia", "Restaurants, Cafe's & Bistro's", False),
+    ]
+    stats = no_specials_breakdown(rows)
+    assert stats["no_specials"] == 4
+    assert stats["no_specials_pct"] == 66.7
+    regions = {
+        label: (count, total)
+        for label, count, total, _pct in stats["no_specials_by_region"]
+    }
+    assert regions == {"EU": (2, 3), "NA": (1, 2), "Other": (1, 1)}
+    body = format_fishy_digest(
+        {
+            "week_label": "2026-11-08",
+            "net_new_lead_emails": 6,
+            "unsubscribed": 0,
+            "still_to_email": 4,
+            "by_zone": [],
+            "by_category": [],
+            **stats,
+        }
+    )
+    assert "No specials: 4 (67% of 6 new leads)" in body
+    assert "British Isles: 2 (67% of 3)" in body
+    assert "Restaurants: 4 (100% of 4)" in body
+    assert "No specials by region:" in body
+    assert "EU: 2 (67% of 3)" in body
+    assert "NA: 1 (50% of 2)" in body
+    assert "Other: 1 (100% of 1)" in body
+
+
+def test_dry_run_prints_counts_and_does_not_send(capsys, monkeypatch) -> None:
+    def boom(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("dry run must not send")
+
+    monkeypatch.setattr("app.services.email.send_email", boom)
+    monkeypatch.setattr("app.services.ntfy.send_ntfy", boom)
+
+    def fake_zone(zone_id: str, *, dry_run: bool = False) -> dict[str, object]:
+        assert zone_id == "british_isles"
+        assert dry_run is True
+        return {
+            "zone": zone_id,
+            "ok": True,
+            "dry_run": True,
+            "candidates": 10,
+            "leads_inserted": 4,
+            "no_specials": 3,
+            "has_specials": 1,
+            "specials_unknown": 0,
+            "skipped_known": 2,
+            "outreach_sends": 0,
+            "ntfy": None,
+        }
+
+    def fake_report() -> dict[str, object]:
+        return {
+            "week_label": "2026-11-08",
+            "net_new_lead_emails": 4,
+            "unsubscribed": 1,
+            "still_to_email": 4,
+            "no_specials": 3,
+            "no_specials_pct": 75.0,
+            "by_zone": [("British Isles", 4, 100.0)],
+            "by_category": [],
+            "no_specials_by_zone": [("British Isles", 3, 4, 75.0)],
+            "no_specials_by_category": [],
+            "no_specials_by_region": [
+                ("EU", 3, 4, 75.0),
+                ("NA", 0, 0, 0.0),
+                ("Other", 0, 0, 0.0),
+            ],
+        }
+
+    result = run_fishy_dry_run(
+        "british_isles",
+        run_zone=fake_zone,
+        build_report=fake_report,
+    )
+    printed = capsys.readouterr().out
+    assert result["ntfy"] is None
+    assert result["summary"]["outreach_sends"] == 0
+    assert "Sending is disabled" in printed
+    assert "lead rows only" in printed
+    assert "Leads inserted: 4" in printed
+    assert "No specials: 3" in printed
+    assert "Digest text (not posted):" in printed
+    assert "No specials: 3 (75% of 4 new leads)" in printed
+    assert "EU: 3 (75% of 4)" in printed
+    script = (
+        Path(__file__).resolve().parents[1] / "scripts" / "fishy_finger_dry_run.py"
+    ).read_text(encoding="utf-8")
+    assert (
+        "docker exec mealdeals-celery-nuc python /app/scripts/fishy_finger_dry_run.py "
+        "--zone british_isles"
+    ) in script

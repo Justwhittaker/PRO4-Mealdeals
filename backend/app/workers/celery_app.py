@@ -35,6 +35,7 @@ from app.services.fishy_finger.schedule import (
     FISHY_TASK_EXPIRES_SECONDS,
     EuropeDublinWeekly,
     fishy_zone_clock,
+    fishy_zone_order,
 )
 from app.services.scrape_cycle_stats import (
     cycle_id_for_start,
@@ -203,9 +204,9 @@ for zone_id in ZONE_ORDER:
         "/".join(f"{h:02d}:00" for h in ZONE_CYCLE_BASE_HOURS),
     )
 
-# Sunday lead scrape. Stagger matches the deal zones but the clock is
-# Europe/Dublin and the tasks do not write deal-cycle Redis keys.
-for zone_id in ZONE_ORDER:
+# Sunday lead scrape. EU zones first, then the rest of ZONE_ORDER, every
+# 10 minutes from 08:00 Europe/Dublin. Does not write deal-cycle Redis keys.
+for zone_id in fishy_zone_order():
     fishy_hour, fishy_minute = fishy_zone_clock(zone_id)
     label = SCRAPE_ZONES[zone_id]["label"]
     celery_app.conf.beat_schedule[f"fishy-finger-{zone_id}"] = {

@@ -25,11 +25,10 @@ from collections import defaultdict
 from dataclasses import replace
 from typing import Any, Callable
 
-from sqlalchemy import create_engine, select
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
 from app.core.task_errors import reraise_if_fatal
 from app.models.deal import Deal
 from app.models.location import Location
@@ -44,12 +43,14 @@ from app.services.fishy_finger.chains import (
     corporate_domain,
 )
 from app.services.fishy_finger.constants import FISHY_FINGER_SEGMENT
+from app.services.fishy_finger.db import open_session
 from app.services.fishy_finger.discover import (
     discover_fishy_candidates,
     emails_from_html,
     fetch_homepage,
 )
 from app.services.fishy_finger.email_quality import pick_best_email
+from app.services.fishy_finger.specials import annotate_leads_with_specials
 from app.services.fishy_finger.types import AcceptedLead, VenueCandidate
 from app.services.geo_names import normalize_city, normalize_country
 from app.services.marketing_contacts import _clean_phone, _clean_website
@@ -115,6 +116,8 @@ def enrich_candidates(
                 website=final_url or candidate.website,
                 emails=emails,
                 page_text=_page_text(html),
+                homepage_html=html,
+                homepage_url=final_url or candidate.website,
             )
         )
     return enriched
@@ -347,6 +350,8 @@ def insert_fishy_lead(session: Session, lead: AcceptedLead) -> MarketingContact:
         source_segment=FISHY_FINGER_SEGMENT,
         lead_zone=lead.zone_id[:64],
         email_quality_score=lead.email_quality_score,
+        has_site_specials=lead.has_site_specials,
+        specials_checked_at=lead.specials_checked_at,
     )
     session.add(row)
     session.flush()
@@ -363,12 +368,29 @@ def _remember(known: set[tuple[str, str]], lead: AcceptedLead) -> None:
     )
 
 
-def run_fishy_finger_zone(zone_id: str) -> dict[str, Any]:
-    """Discover and store leads for one scrape zone. Does not touch deal cycles."""
+def _empty_specials_counts() -> dict[str, int]:
+    return {"no_specials": 0, "has_specials": 0, "specials_unknown": 0, "outreach_sends": 0}
+
+
+def run_fishy_finger_zone(zone_id: str, *, dry_run: bool = False) -> dict[str, Any]:
+    """Discover and store leads for one scrape zone. Does not touch deal cycles.
+
+    ``dry_run`` still inserts lead rows. It does not set outreach send
+    timestamps, send email, or post to ntfy. Probes run outside the database
+    transaction so a slow site does not hold a Postgres connection.
+    """
     zone = zone_id.strip().lower()
     if zone not in SCRAPE_ZONES:
         logger.warning("Unknown fishy finger zone %r; skipping", zone_id)
-        return {"zone": zone, "ok": True, "status": "skipped", "skipped": "unknown_zone"}
+        return {
+            "zone": zone,
+            "ok": True,
+            "status": "skipped",
+            "skipped": "unknown_zone",
+            "dry_run": dry_run,
+            "ntfy": None,
+            **_empty_specials_counts(),
+        }
 
     areas = iter_zone_areas(zone)
     candidates: list[VenueCandidate] = []
@@ -385,50 +407,70 @@ def run_fishy_finger_zone(zone_id: str) -> dict[str, Any]:
 
     candidates = enrich_candidates(candidates)
 
-    settings = get_settings()
-    engine = create_engine(settings.database_url_sync, pool_pre_ping=True)
-    session_factory = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+    engine, session_factory = open_session()
     inserted = 0
     skipped_known = 0
-    with session_factory() as session:
-        extra_brands, extra_domains = load_stored_chain_signals(session)
+    inserted_flags: list[bool | None] = []
+    stats: dict[str, int] = {}
+    try:
+        with session_factory() as session:
+            extra_brands, extra_domains = load_stored_chain_signals(session)
+            known = load_known_identity_keys(session)
         accepted, stats = select_fishy_leads(
             candidates,
             extra_brand_cities=extra_brands,
             extra_domain_names=extra_domains,
         )
-        known = load_known_identity_keys(session)
-        for lead in accepted:
-            if lead_is_known(lead, known):
-                skipped_known += 1
-                continue
-            try:
-                with session.begin_nested():
-                    insert_fishy_lead(session, lead)
-                _remember(known, lead)
-                inserted += 1
-            except IntegrityError:
-                skipped_known += 1
-                continue
-        session.commit()
+        pending = [lead for lead in accepted if not lead_is_known(lead, known)]
+        skipped_known += len(accepted) - len(pending)
+        # HTTP probes happen with no database connection checked out.
+        pending = annotate_leads_with_specials(pending, candidates)
+        with session_factory() as session:
+            known = load_known_identity_keys(session)
+            for lead in pending:
+                if lead_is_known(lead, known):
+                    skipped_known += 1
+                    continue
+                try:
+                    with session.begin_nested():
+                        row = insert_fishy_lead(session, lead)
+                    if row.last_outreach_sent_at is not None:
+                        raise RuntimeError("Fishy insert must not stamp outreach send state")
+                    _remember(known, lead)
+                    inserted += 1
+                    inserted_flags.append(lead.has_site_specials)
+                except IntegrityError:
+                    skipped_known += 1
+                    continue
+            session.commit()
+    finally:
+        engine.dispose()
 
     summary = {
         "zone": zone,
         "label": SCRAPE_ZONES[zone]["label"],
         "ok": True,
         "status": "completed",
+        "dry_run": dry_run,
         "cities": len(areas),
         "candidates": len(candidates),
         "leads_inserted": inserted,
         "skipped_known": skipped_known,
         "cities_failed": cities_failed,
         "filter_stats": stats,
+        "no_specials": sum(flag is False for flag in inserted_flags),
+        "has_specials": sum(flag is True for flag in inserted_flags),
+        "specials_unknown": sum(flag is None for flag in inserted_flags),
+        "outreach_sends": 0,
+        "ntfy": None,
     }
     logger.info(
-        "Fishy Finger zone %s: candidates=%s inserted=%s known=%s",
+        "Fishy Finger zone %s dry_run=%s candidates=%s inserted=%s no_specials=%s known=%s",
         zone,
+        dry_run,
         len(candidates),
         inserted,
+        summary["no_specials"],
         skipped_known,
     )
     return summary

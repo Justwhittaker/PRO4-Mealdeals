@@ -119,11 +119,18 @@ def build_fishy_ezine(
     reach = active_deals_sentence(active_deals, business_name=business, city=city)
     offer = _subscription_paragraph()
     subject = f"List {business} on DineADeal"
+    no_specials_note = ""
+    if getattr(contact, "has_site_specials", None) is False:
+        no_specials_note = (
+            f"We noticed {business} isn't promoting specials online yet. "
+            "DineADeal can list them for free."
+        )
 
-    text_body = "\n".join(
+    text_lines = [f"Hello {greeting},", ""]
+    if no_specials_note:
+        text_lines.extend([no_specials_note, ""])
+    text_lines.extend(
         [
-            f"Hello {greeting},",
-            "",
             "DineADeal is where diners look for offers at restaurants, cafés, bars, "
             "pubs, wine farms and other places to eat and drink.",
             "",
@@ -143,11 +150,14 @@ def build_fishy_ezine(
             f"Unsubscribe: {unsubscribe_url}",
         ]
     )
+    text_body = "\n".join(text_lines)
 
     esc_greeting = html.escape(greeting)
     esc_business = html.escape(business)
     esc_reach = html.escape(reach)
     esc_offer = html.escape(offer)
+    esc_note = html.escape(no_specials_note)
+    note_html = f'<p style="margin:0 0 16px;">{esc_note}</p>' if no_specials_note else ""
     esc_unsub = html.escape(unsubscribe_url, quote=True)
     esc_dashboard = html.escape(dashboard_url, quote=True)
     esc_base = html.escape(base, quote=True)
@@ -178,6 +188,7 @@ def build_fishy_ezine(
                 </a>
               </p>
               <p style="margin:0 0 16px;">Hello {esc_greeting},</p>
+              {note_html}
               <p style="margin:0 0 16px;">DineADeal is where diners look for offers at restaurants, cafés, bars, pubs, wine farms and other places to eat and drink.</p>
               <p style="margin:0 0 16px;">{esc_reach}</p>
               <p style="margin:0 0 20px;">{esc_offer}</p>

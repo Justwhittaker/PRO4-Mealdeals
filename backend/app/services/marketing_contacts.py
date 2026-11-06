@@ -95,6 +95,8 @@ def upsert_marketing_contact(
     source_segment: str | None = None,
     lead_zone: str | None = None,
     email_quality_score: int | None = None,
+    has_site_specials: bool | None = None,
+    specials_checked_at: datetime | None = None,
 ) -> MarketingContact | None:
     """Insert a new contact, or fill in real changes on a duplicate.
 
@@ -174,6 +176,13 @@ def upsert_marketing_contact(
         ):
             existing.email_quality_score = int(email_quality_score)
             changed = True
+        # A deal re-scrape passes none of these, so it does not clear a check.
+        if has_site_specials is not None and existing.has_site_specials is None:
+            existing.has_site_specials = has_site_specials
+            changed = True
+        if specials_checked_at is not None and existing.specials_checked_at is None:
+            existing.specials_checked_at = specials_checked_at
+            changed = True
         if not changed:
             return existing
         existing.last_scraped_at = _utcnow()
@@ -196,6 +205,8 @@ def upsert_marketing_contact(
         email_quality_score=(
             int(email_quality_score) if email_quality_score is not None else None
         ),
+        has_site_specials=has_site_specials,
+        specials_checked_at=specials_checked_at,
         last_scraped_at=_utcnow(),
     )
     session.add(row)
@@ -267,6 +278,8 @@ def export_marketing_contacts_csv(
             "source_segment",
             "lead_zone",
             "email_quality_score",
+            "has_site_specials",
+            "specials_checked_at",
         ]
     )
     for row in rows:
@@ -285,6 +298,8 @@ def export_marketing_contacts_csv(
                 row.source_segment or "",
                 row.lead_zone or "",
                 "" if row.email_quality_score is None else row.email_quality_score,
+                "" if row.has_site_specials is None else str(row.has_site_specials).lower(),
+                row.specials_checked_at.isoformat() if row.specials_checked_at else "",
             ]
         )
     return buf.getvalue()

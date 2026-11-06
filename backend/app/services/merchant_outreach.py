@@ -23,6 +23,7 @@ from app.services.email import is_email_configured, send_email
 from app.services.fishy_finger.constants import FISHY_FINGER_SEGMENT
 from app.services.fishy_finger.email_quality import score_email
 from app.services.fishy_finger.ezine import build_fishy_ezine, load_live_active_deals
+from app.services.fishy_finger.schedule import EU_ZONE_ORDER, is_eu_zone
 from app.services.ingest import normalize_city, normalize_country
 from app.services.marketing_contacts import _clean_email
 
@@ -167,23 +168,39 @@ def contact_email_sendable(contact: MarketingContact) -> bool:
     return is_outreach_eligible_email(contact.email)
 
 
-def outreach_priority_key(contact: MarketingContact) -> tuple[object, ...]:
-    """Sort key: never-emailed fishy leads by quality, then the existing order.
+def outreach_drip_group(contact: MarketingContact) -> int:
+    """0..4 drip bucket. Lower is sent first. The 28-day filter is applied earlier.
 
-    Existing order is last send ascending (never emailed first), then most
-    recently scraped. Quality is not applied to that second group.
+    0 EU Fishy leads with has_site_specials false.
+    1 other Fishy leads with has_site_specials false.
+    2 remaining Fishy leads.
+    3 existing contacts that have never been emailed.
+    4 contacts whose cooldown has ended.
     """
-    fishy_fresh = (
-        (contact.source_segment or "") == FISHY_FINGER_SEGMENT
-        and contact.last_outreach_sent_at is None
-    )
+    fishy = (getattr(contact, "source_segment", None) or "") == FISHY_FINGER_SEGMENT
+    if fishy:
+        no_specials = getattr(contact, "has_site_specials", None) is False
+        if no_specials and is_eu_zone(getattr(contact, "lead_zone", None)):
+            return 0
+        if no_specials:
+            return 1
+        return 2
+    if getattr(contact, "last_outreach_sent_at", None) is None:
+        return 3
+    return 4
+
+
+def outreach_priority_key(contact: MarketingContact) -> tuple[object, ...]:
+    """Sort key: drip group, then best email_quality_score, then the old order."""
     sent = contact.last_outreach_sent_at or datetime.min.replace(tzinfo=timezone.utc)
     scraped = contact.last_scraped_at
     scraped_key = -scraped.timestamp() if scraped is not None else 0
-    quality = contact.email_quality_score or 0
+    quality = contact.email_quality_score
+    # None sorts after every real score. SQL uses NULLS LAST on the same column.
+    quality_key = -(quality if quality is not None else -1_000_000_000)
     return (
-        0 if fishy_fresh else 1,
-        -(quality if fishy_fresh else 0),
+        outreach_drip_group(contact),
+        quality_key,
         sent,
         scraped_key,
     )
@@ -198,7 +215,7 @@ def rank_outreach_candidates(
     merchant_emails: set[str] | None = None,
     merchant_domains: set[str] | None = None,
 ) -> list[MarketingContact]:
-    """Apply the 28-day gap, unsubscribes, the cap, and fishy-first ordering."""
+    """Apply the 28-day gap, unsubscribes, the cap, and the five drip groups."""
     cutoff = now - timedelta(days=min_days)
     emails = merchant_emails or set()
     domains = merchant_domains or set()
@@ -225,13 +242,22 @@ def rank_outreach_candidates(
 
 
 def outreach_batch_statement(cutoff: datetime, limit: int) -> Any:
-    """SQL window that surfaces fishy leads before the wider backlog."""
-    fishy_fresh = and_(
-        MarketingContact.source_segment == FISHY_FINGER_SEGMENT,
-        MarketingContact.last_outreach_sent_at.is_(None),
+    """SQL window in the same five-group order as ``outreach_drip_group``."""
+    fishy = MarketingContact.source_segment == FISHY_FINGER_SEGMENT
+    no_specials = MarketingContact.has_site_specials.is_(False)
+    eu_no_specials = and_(
+        fishy,
+        no_specials,
+        MarketingContact.lead_zone.in_(EU_ZONE_ORDER),
     )
-    priority = case((fishy_fresh, 0), else_=1)
-    quality = case((fishy_fresh, MarketingContact.email_quality_score), else_=None)
+    other_no_specials = and_(fishy, no_specials)
+    priority = case(
+        (eu_no_specials, 0),
+        (other_no_specials, 1),
+        (fishy, 2),
+        (MarketingContact.last_outreach_sent_at.is_(None), 3),
+        else_=4,
+    )
     return (
         select(MarketingContact)
         .where(MarketingContact.email.is_not(None))
@@ -246,7 +272,7 @@ def outreach_batch_statement(cutoff: datetime, limit: int) -> Any:
         )
         .order_by(
             priority.asc(),
-            quality.desc().nullslast(),
+            MarketingContact.email_quality_score.desc().nullslast(),
             MarketingContact.last_outreach_sent_at.asc().nullsfirst(),
             MarketingContact.last_scraped_at.desc(),
         )

@@ -1,12 +1,12 @@
 """Sunday Fishy Finger Sub schedule in Europe/Dublin, including DST.
 
-Deal scrapes stay on 06:00 and 18:00 UTC (07:00 and 19:00 Irish Summer Time).
-This schedule does not use those cycle hours or the deal-cycle Redis keys.
+Deal scrapes stay on 07:00 and 19:00 Europe/Dublin. This schedule does not
+use those cycle hours or the deal-cycle Redis keys.
 
-Each zone keeps the same 10-minute stagger as ``ZONE_BEAT_SLOTS``, counted
-from Sunday 08:00 Europe/Dublin. The first zone is 08:00. The digest is a
-separate Sunday beat at 21:00 Europe/Dublin, after the staggered zones have
-had the afternoon (the morning deal cycle also uses the scrape workers).
+EU zones run first (``EU_ZONE_ORDER``), then every other zone in
+``ZONE_ORDER``. Each step is the same 10-minute stagger as the deal beats,
+counted from Sunday 08:00 Europe/Dublin. The digest is a separate Sunday
+beat at 21:00 Europe/Dublin.
 
 Catch-up is limited to ``FISHY_CATCHUP_HOURS`` after the slot. A beat that
 was down all of Sunday does not start the scrape on Monday afternoon.
@@ -19,7 +19,12 @@ from zoneinfo import ZoneInfo
 
 from celery.schedules import BaseSchedule, schedstate
 
-from app.scrapers.zones import ZONE_BEAT_STAGGER_MINUTES, ZONE_ORDER
+from app.scrapers.zones import (
+    SCRAPE_ZONES,
+    ZONE_BEAT_STAGGER_MINUTES,
+    ZONE_ORDER,
+    zone_family,
+)
 
 DUBLIN = ZoneInfo("Europe/Dublin")
 
@@ -32,6 +37,20 @@ FISHY_DIGEST_MINUTE = 0
 # Aligned with the queued task expiry. After this, wait for next Sunday.
 FISHY_CATCHUP_HOURS = 18
 FISHY_TASK_EXPIRES_SECONDS = FISHY_CATCHUP_HOURS * 60 * 60
+
+# zones.py families. western_europe plus eastern_europe is the EU set Justin
+# named: british_isles, iberia, france_benelux, dach_nordics, italy_adriatic,
+# eastern_europe. north_america is the NA rollup. Everything else is Other.
+EU_ZONE_FAMILIES = frozenset({"western_europe", "eastern_europe"})
+NA_ZONE_FAMILIES = frozenset({"north_america"})
+EU_ZONE_ORDER: tuple[str, ...] = (
+    "british_isles",
+    "iberia",
+    "france_benelux",
+    "dach_nordics",
+    "italy_adriatic",
+    "eastern_europe",
+)
 
 
 def _as_utc(moment: datetime) -> datetime:
@@ -74,9 +93,30 @@ def last_dublin_sunday_at_or_before(
     return _dublin_wall(datetime.combine(previous_day, datetime.min.time()), hour, minute)
 
 
+def fishy_zone_order() -> list[str]:
+    """EU zones first, then the remaining deal-zone order."""
+    eu = [zone_id for zone_id in EU_ZONE_ORDER if zone_id in SCRAPE_ZONES]
+    seen = set(eu)
+    return eu + [zone_id for zone_id in ZONE_ORDER if zone_id not in seen]
+
+
+def lead_region(zone_id: str | None) -> str:
+    """``EU``, ``NA``, or ``Other`` from the zone family in zones.py."""
+    family = zone_family((zone_id or "").strip().lower())
+    if family in EU_ZONE_FAMILIES:
+        return "EU"
+    if family in NA_ZONE_FAMILIES:
+        return "NA"
+    return "Other"
+
+
+def is_eu_zone(zone_id: str | None) -> bool:
+    return lead_region(zone_id) == "EU"
+
+
 def fishy_zone_clock(zone_id: str) -> tuple[int, int]:
-    """Local Dublin hour and minute for one zone, staggered like the deal beats."""
-    index = ZONE_ORDER.index(zone_id)
+    """Local Dublin hour and minute for one zone, EU first, then 10-minute steps."""
+    index = fishy_zone_order().index(zone_id)
     total = (FISHY_START_HOUR * 60 + FISHY_START_MINUTE) + (
         index * ZONE_BEAT_STAGGER_MINUTES
     )
