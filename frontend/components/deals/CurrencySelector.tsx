@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import {
   currenciesAlphabetical,
+  isCurrencyCode,
   type CurrencyCode,
 } from "@/lib/currency";
 
@@ -24,7 +25,10 @@ export function CurrencySelector({ value }: CurrencySelectorProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const options = currenciesAlphabetical();
-  const current = value.toUpperCase();
+  const fromUrl = searchParams.get("currency");
+  const current = (
+    fromUrl && isCurrencyCode(fromUrl) ? fromUrl : value
+  ).toUpperCase();
 
   function onChange(next: string) {
     const params = new URLSearchParams(searchParams.toString());

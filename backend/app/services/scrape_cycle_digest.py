@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 import httpx
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
+from sqlalchemy.pool import NullPool
 
 from app.core.config import get_settings
 from app.core.task_errors import reraise_if_fatal
@@ -46,7 +47,12 @@ _DUBLIN = ZoneInfo("Europe/Dublin")
 
 
 def _engine() -> Engine:
-    return create_engine(get_settings().database_url_sync, pool_pre_ping=True)
+    # One-shot digest query. NullPool so it does not keep the default 5+10.
+    return create_engine(
+        get_settings().database_url_sync,
+        pool_pre_ping=True,
+        poolclass=NullPool,
+    )
 
 
 def _pct(part: int | float, whole: int | float) -> float:

@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { cookies } from "next/headers";
 import { LocationHeader } from "@/components/deals/LocationHeader";
+import { QueryAdjustedFeed } from "@/components/deals/QueryAdjustedFeed";
 import { CurrencySelector } from "@/components/deals/CurrencySelector";
 import { RadiusSelector } from "@/components/deals/RadiusSelector";
 import { AreaDealGrid } from "@/components/deals/AreaDealGrid";
@@ -10,23 +10,15 @@ import { FeedPagination } from "@/components/deals/FeedPagination";
 import { PublisherExplainer } from "@/components/landing/PublisherExplainer";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
-import { LocationDealsBar } from "@/components/geo/LocationDealsBar";
+import { CityLocationBanner } from "@/components/geo/CityLocationBanner";
 import { CitySearchBar } from "@/components/geo/CitySearchBar";
 import { fetchDealsFeed, fetchDealsFeedPage } from "@/lib/api";
+import { currencyForCountry, type CurrencyCode } from "@/lib/currency";
 import {
-  currencyForCountry,
-  isCurrencyCode,
-  type CurrencyCode,
-} from "@/lib/currency";
-import {
-  LOCATION_COOKIE,
-  LOCATION_SOURCE_COOKIE,
   cityDisplayLabel,
   countrySearchLabel,
   isPlaceholderCitySlug,
   lookupCityCoords,
-  parseLocationCookie,
-  type LocationSource,
 } from "@/lib/geo";
 import { parseCategoryParam } from "@/lib/categories";
 import {
@@ -41,31 +33,22 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import {
   breadcrumbJsonLd,
   cityListingMetadata,
-  hasFeedFilterParams,
   isIndexableCitySlug,
   isIndexableCountrySlug,
   itemListJsonLd,
   listingPath,
   withFeaturedDealDescription,
-  withFilterCanonical,
 } from "@/lib/seo";
 import { BRAND_NAME } from "@/lib/brand";
 
+/** City listings can be five minutes stale. A city ingest busts this page's tag. */
+export const revalidate = 300;
+
 interface PageProps {
   params: { country: string; city: string };
-  searchParams: {
-    currency?: string;
-    radius?: string;
-    sort?: string;
-    category?: string;
-    page?: string;
-  };
 }
 
-export async function generateMetadata({
-  params,
-  searchParams,
-}: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   if (
     isPlaceholderCitySlug(params.city) ||
     !isIndexableCitySlug(params.country, params.city)
@@ -82,17 +65,13 @@ export async function generateMetadata({
       page: 1,
     }),
   );
-  let meta = withFeaturedDealDescription(
+  return withFeaturedDealDescription(
     cityListingMetadata(params.country, params.city),
     feed.ok ? feed.data : [],
   );
-  if (hasFeedFilterParams(searchParams)) {
-    meta = withFilterCanonical(meta);
-  }
-  return meta;
 }
 
-export default async function CityPage({ params, searchParams }: PageProps) {
+export default async function CityPage({ params }: PageProps) {
   if (
     isPlaceholderCitySlug(params.city) &&
     isIndexableCountrySlug(params.country)
@@ -102,32 +81,15 @@ export default async function CityPage({ params, searchParams }: PageProps) {
   if (!isIndexableCitySlug(params.country, params.city)) notFound();
   const { country, city } = params;
   const localCurrency = currencyForCountry(country);
-  const currency: CurrencyCode = isCurrencyCode(searchParams.currency)
-    ? searchParams.currency.toUpperCase()
-    : localCurrency;
-  const radius = parseRadiusMiles(searchParams.radius);
-  const sort = parseFeedSort(searchParams.sort);
-  const category = parseCategoryParam(searchParams.category);
-  const page = parseFeedPage(searchParams.page);
+  const currency: CurrencyCode = localCurrency;
+  const radius = parseRadiusMiles(undefined);
+  const sort = parseFeedSort(undefined);
+  const category = parseCategoryParam(undefined);
+  const page = parseFeedPage(undefined);
   const countryLabel = countrySearchLabel(country);
   const cityLabel = cityDisplayLabel(country, city);
   const hasCentroid = Boolean(lookupCityCoords(country, city));
   const listingHref = listingPath(country, city);
-
-  const jar = cookies();
-  const pref = parseLocationCookie(jar.get(LOCATION_COOKIE)?.value);
-  const source = (jar.get(LOCATION_SOURCE_COOKIE)?.value as
-    | LocationSource
-    | undefined) ?? "geo";
-  const barTarget = pref?.citySlug === city
-    ? pref
-    : {
-        countryCode:
-          country.toLowerCase() === "gb" ? "uk" : country.toLowerCase(),
-        countryLabel,
-        citySlug: city,
-        cityLabel,
-      };
 
   const feed = await fetchDealsFeedPage(
     buildDealFeedParams({
@@ -144,16 +106,44 @@ export default async function CityPage({ params, searchParams }: PageProps) {
   const deals = feed.ok ? areaListingDeals(feed.data.deals) : [];
   const total = feed.ok ? feed.data.total : 0;
   const empty = feedEmptyMessage("city", cityLabel);
-  const preservedParams = {
-    currency: searchParams.currency,
-    sort: searchParams.sort,
-    category: searchParams.category,
-    radius: searchParams.radius,
-  };
+  const preservedParams = {};
+  const renderListing = () => (
+    <>
+      {!feed.ok ? (
+        <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          Couldn&apos;t load deals ({feed.error}). Start the API at{" "}
+          <code className="text-citrus-300">NEXT_PUBLIC_API_URL</code> to
+          populate this feed.
+        </div>
+      ) : null}
+
+      <AreaDealGrid
+        deals={deals}
+        cityLabel={cityLabel}
+        radiusMiles={hasCentroid ? radius : undefined}
+        category={category}
+        emptyMessage={empty.emptyMessage}
+        emptyHint={empty.emptyHint}
+      />
+
+      <FeedPagination
+        page={page}
+        pageSize={GEO_FEED_PAGE_SIZE}
+        total={total}
+        pathname={listingHref}
+        searchParams={preservedParams}
+      />
+    </>
+  );
 
   return (
     <div className="min-h-screen bg-white">
-      <LocationDealsBar target={barTarget} source={source} scope="city" />
+      <CityLocationBanner
+        country={country}
+        city={city}
+        countryLabel={countryLabel}
+        cityLabel={cityLabel}
+      />
       <main className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6">
         <div className="mb-6">
           <CitySearchBar />
@@ -195,30 +185,18 @@ export default async function CityPage({ params, searchParams }: PageProps) {
         />
 
         <NewsletterDealGate>
-          {!feed.ok ? (
-            <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-              Couldn&apos;t load deals ({feed.error}). Start the API at{" "}
-              <code className="text-citrus-300">NEXT_PUBLIC_API_URL</code> to
-              populate this feed.
-            </div>
-          ) : null}
-
-          <AreaDealGrid
-            deals={deals}
-            cityLabel={cityLabel}
-            radiusMiles={hasCentroid ? radius : undefined}
-            category={category}
-            emptyMessage={empty.emptyMessage}
-            emptyHint={empty.emptyHint}
-          />
-
-          <FeedPagination
-            page={page}
-            pageSize={GEO_FEED_PAGE_SIZE}
-            total={total}
-            pathname={listingHref}
-            searchParams={preservedParams}
-          />
+          <Suspense fallback={renderListing()}>
+            <QueryAdjustedFeed
+              scope="city"
+              country={country}
+              city={city}
+              placeLabel={cityLabel}
+              pathname={listingHref}
+              hasCentroid={hasCentroid}
+            >
+              {renderListing()}
+            </QueryAdjustedFeed>
+          </Suspense>
         </NewsletterDealGate>
       </main>
       <SiteFooter />

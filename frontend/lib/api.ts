@@ -220,6 +220,9 @@ function mapValueCalculator(
   };
 }
 
+/** Public deal and listing data may be up to five minutes stale. */
+const SERVER_FETCH_REVALIDATE_SECONDS = 300;
+
 async function apiFetch<T>(
   path: string,
   init?: RequestInit & {
@@ -232,14 +235,20 @@ async function apiFetch<T>(
     const isServer = typeof window === "undefined";
     // Never mix cache: 'no-store' with next.revalidate — Next.js warns and can
     // leave the client bundle in a bad state during HMR.
-    const cacheOpts =
-      cache !== undefined
+    // The browser fetch implementation does not understand `next`, so client
+    // calls always use the Cache API mode and drop the server options.
+    const cacheOpts = !isServer
+      ? { cache: cache ?? ("no-store" as RequestCache) }
+      : cache !== undefined
         ? { cache }
-        : next !== undefined
-          ? { next }
-          : isServer
-            ? { next: { revalidate: 30 as const } }
-            : { cache: "no-store" as RequestCache };
+        : {
+            next:
+              next === undefined
+                ? { revalidate: SERVER_FETCH_REVALIDATE_SECONDS }
+                : next.revalidate === undefined
+                  ? { ...next, revalidate: SERVER_FETCH_REVALIDATE_SECONDS }
+                  : next,
+          };
 
     const res = await fetch(url, {
       ...rest,
@@ -313,13 +322,18 @@ export async function fetchDealsFeedPage(
   }
   if (params.limit != null) qs.set("limit", String(params.limit));
   if (params.offset != null) qs.set("offset", String(params.offset));
-  qs.set("auto_scrape", params.autoScrape === false ? "false" : "true");
+  // Page renders must not start a scrape. Opt in only from a caller that
+  // is explicitly filling an empty city, never from a listing render.
+  qs.set("auto_scrape", params.autoScrape === true ? "true" : "false");
 
   const query = qs.toString();
-  const feedTags = [DEALS_TAG];
-  if (params.country && params.city) {
-    feedTags.push(cityDealsTag(params.country, params.city));
-  }
+  // City listings carry only the city tag, so one city's ingest does not
+  // drop every other city's cached feed. Home and country feeds keep the
+  // global tag, which is revalidated once per zone.
+  const feedTags =
+    params.country && params.city
+      ? [cityDealsTag(params.country, params.city)]
+      : [DEALS_TAG];
   const result = await apiFetch<
     | {
         results?: BackendDealFeedItem[];
@@ -391,7 +405,14 @@ export async function fetchDeal(
     link_kind?: DealLinkKind | null;
     cta_label?: string | null;
   }>(`/api/v1/deals/${id}`, {
-    next: { tags: [DEALS_TAG, dealTag(id)] },
+    next: {
+      tags: [
+        dealTag(id),
+        ...(opts?.country && opts?.city
+          ? [cityDealsTag(opts.country, opts.city)]
+          : []),
+      ],
+    },
   });
 
   if (!result.ok) return result;
@@ -458,7 +479,7 @@ export async function fetchValueCalculator(
 ): Promise<ApiResult<ValueCalculatorResult>> {
   const result = await apiFetch<BackendValueCalculator>(
     `/api/v1/deals/${id}/value-calculator`,
-    { cache: "no-store" },
+    { next: { revalidate: SERVER_FETCH_REVALIDATE_SECONDS, tags: [dealTag(id)] } },
   );
   if (!result.ok) return result;
   return { ok: true, data: mapValueCalculator(result.data) };
@@ -1099,11 +1120,14 @@ interface BackendScrapeMetrics {
   areas: number;
 }
 
-/** Live counters from scrape inventory (header / marketing). */
+/** Header counters. Server renders reuse a 5-minute cache; the API caches 60s. */
 export async function getScrapeMetrics(): Promise<ApiResult<ScrapeMetrics>> {
+  const isServer = typeof window === "undefined";
   const result = await apiFetch<BackendScrapeMetrics>(
     "/api/v1/scrapers/metrics",
-    { cache: "no-store" },
+    isServer
+      ? { next: { revalidate: SERVER_FETCH_REVALIDATE_SECONDS, tags: ["scrape-metrics"] } }
+      : { cache: "default" },
   );
   if (!result.ok) return result;
   return {

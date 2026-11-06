@@ -25,14 +25,52 @@ def frontend_country_slug(country: str) -> str:
     return cc.lower()
 
 
+def revalidation_plan(
+    areas: set[tuple[str, str]] | None = None,
+    *,
+    include_global: bool = False,
+) -> dict[str, list[str]]:
+    """
+    Tags and paths for one revalidate call.
+
+    A city ingest passes include_global=False so only that city's tag and
+    the city/country paths are busted. The home page (`/`) and the global
+    `deals` tag are reserved for one call at the end of a zone or cycle.
+    """
+    tags: list[str] = []
+    paths: list[str] = []
+    countries_seen: set[str] = set()
+
+    for country, city in sorted(areas or set()):
+        cc = frontend_country_slug(country)
+        slug = slugify_city(city)
+        if not cc or not slug:
+            continue
+        tags.append(f"deals-{cc}-{slug}")
+        countries_seen.add(cc)
+        paths.append(f"/{cc}/{slug}")
+
+    for cc in sorted(countries_seen):
+        paths.append(f"/{cc}")
+
+    if include_global:
+        tags.insert(0, "deals")
+        paths.insert(0, "/")
+
+    return {"tags": tags, "paths": paths}
+
+
 def revalidate_after_scrape(
     *,
     areas: set[tuple[str, str]] | None = None,
+    include_global: bool = False,
 ) -> dict[str, Any]:
     """
     Invalidate cached deal listings on the public site.
 
     Skips quietly when REVALIDATE_SECRET is unset (local dev).
+    City ingests must leave include_global false. Pass include_global once
+    per zone, expire job, or other cycle — not once per city.
     """
     settings = get_settings()
     secret = (settings.revalidate_secret or "").strip()
@@ -40,19 +78,11 @@ def revalidate_after_scrape(
         logger.debug("Skipping frontend revalidate (REVALIDATE_SECRET unset)")
         return {"skipped": True, "reason": "no_secret"}
 
-    tags: list[str] = ["deals"]
-    paths: list[str] = ["/"]
-    countries_seen: set[str] = set()
-
-    for country, city in sorted(areas or set()):
-        cc = frontend_country_slug(country)
-        slug = slugify_city(city)
-        tags.append(f"deals-{cc}-{slug}")
-        countries_seen.add(cc)
-        paths.append(f"/{cc}/{slug}")
-
-    for cc in sorted(countries_seen):
-        paths.append(f"/{cc}")
+    plan = revalidation_plan(areas, include_global=include_global)
+    tags = plan["tags"]
+    paths = plan["paths"]
+    if not tags and not paths:
+        return {"skipped": True, "reason": "nothing_to_revalidate"}
 
     base = settings.frontend_base_url.rstrip("/")
     url = f"{base}/api/revalidate"

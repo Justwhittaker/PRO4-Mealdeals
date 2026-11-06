@@ -36,7 +36,15 @@ from app.services.scrape_report import (
 logger = logging.getLogger(__name__)
 
 _settings = get_settings()
-_engine = create_engine(_settings.database_url_sync, pool_pre_ping=True)
+# Same worker process as tasks.py. Keep this pool tiny too: ingest, not
+# the currency task, is what holds connections during a scrape cycle.
+_engine = create_engine(
+    _settings.database_url_sync,
+    pool_pre_ping=True,
+    pool_size=1,
+    max_overflow=1,
+    pool_recycle=1800,
+)
 _Session = sessionmaker(bind=_engine, autocommit=False, autoflush=False)
 
 
@@ -304,6 +312,19 @@ def _scrape_areas(
     progress["marketing_contacts"] = contacts
     progress["revalidate_ok"] = revalidate_ok
     progress["revalidate_fail"] = revalidate_fail
+
+    # One home-page / global `deals` bust per zone or market cycle.
+    # Per-city calls above stay scoped to that city.
+    if ingested > 0 or stale_total > 0:
+        global_rev = revalidate_after_scrape(areas=set(), include_global=True)
+        if not global_rev.get("skipped"):
+            revalidate_runs += 1
+            if global_rev.get("ok") is True:
+                revalidate_ok += 1
+            elif global_rev.get("ok") is False:
+                revalidate_fail += 1
+        progress["revalidate_ok"] = revalidate_ok
+        progress["revalidate_fail"] = revalidate_fail
 
     runtime_seconds = round(time.perf_counter() - started, 1)
     report = _in_session(

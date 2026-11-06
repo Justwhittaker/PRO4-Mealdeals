@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DealHeroMedia } from "@/components/deals/DealHeroMedia";
 import { LocationHeader } from "@/components/deals/LocationHeader";
-import { DealGoCta } from "@/components/deals/DealGoCta";
+import {
+  DealOutboundActions,
+  DealOutboundActionsFallback,
+} from "@/components/deals/DealOutboundActions";
 import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { fetchDeal, fetchValueCalculator } from "@/lib/api";
 import { dealCtaLabel, dealLinkHint } from "@/lib/deal-link";
@@ -28,24 +32,12 @@ import {
   offerJsonLd,
 } from "@/lib/seo";
 import { BRAND_NAME } from "@/lib/brand";
-import { utmQueryString } from "@/lib/newsletter-storage";
+
+/** Deal HTML can be five minutes stale. City ingest busts this page via its city tag. */
+export const revalidate = 300;
 
 interface PageProps {
   params: { country: string; city: string; id: string };
-  searchParams?: {
-    utm_source?: string;
-    utm_medium?: string;
-    utm_campaign?: string;
-  };
-}
-
-function referralSearch(searchParams: PageProps["searchParams"]): string {
-  const params = new URLSearchParams();
-  for (const key of ["utm_source", "utm_medium", "utm_campaign"] as const) {
-    const value = searchParams?.[key];
-    if (value) params.set(key, value);
-  }
-  return utmQueryString(params.toString());
 }
 
 export async function generateMetadata({
@@ -69,12 +61,8 @@ export async function generateMetadata({
   return dealListingMetadata(result.data, params.country, params.city);
 }
 
-export default async function DealDetailPage({
-  params,
-  searchParams,
-}: PageProps) {
+export default async function DealDetailPage({ params }: PageProps) {
   const { country, city, id } = params;
-  const referral = referralSearch(searchParams);
   if (
     isReservedGeoSlug(country) ||
     isReservedGeoSlug(city) ||
@@ -191,17 +179,31 @@ export default async function DealDetailPage({
             </p>
           ) : null}
 
-          {websiteUrl ? (
-            <p className="text-sm text-charcoal-300">
-              Website:{" "}
-              <DealGoCta
+          <Suspense
+            fallback={
+              <DealOutboundActionsFallback
+                part="website"
                 dealId={deal.id}
-                label={websiteLabel ?? "Venue website"}
-                variant="link"
-                referralSearch={referral}
+                country={country}
+                city={city}
+                ctaLabel={ctaLabel}
+                linkHint={linkHint}
+                websiteUrl={websiteUrl}
+                websiteLabel={websiteLabel}
               />
-            </p>
-          ) : null}
+            }
+          >
+            <DealOutboundActions
+              part="website"
+              dealId={deal.id}
+              country={country}
+              city={city}
+              ctaLabel={ctaLabel}
+              linkHint={linkHint}
+              websiteUrl={websiteUrl}
+              websiteLabel={websiteLabel}
+            />
+          </Suspense>
 
           {deal.aboutBlurb ? (
             <p className="max-w-2xl text-sm leading-relaxed text-charcoal-200">
@@ -240,23 +242,31 @@ export default async function DealDetailPage({
             </Card>
           ) : null}
 
-          <div className="space-y-2 pt-2">
-            <div className="flex flex-wrap gap-3">
-              <DealGoCta
+          <Suspense
+            fallback={
+              <DealOutboundActionsFallback
+                part="actions"
                 dealId={deal.id}
-                label={ctaLabel}
-                referralSearch={referral}
+                country={country}
+                city={city}
+                ctaLabel={ctaLabel}
+                linkHint={linkHint}
+                websiteUrl={websiteUrl}
+                websiteLabel={websiteLabel}
               />
-              <Button asChild size="lg" variant="outline">
-                <Link href={`/${country}/${city}`}>
-                  More in {cityDisplayLabel(country, city)}
-                </Link>
-              </Button>
-            </div>
-            {linkHint ? (
-              <p className="text-sm text-charcoal-400">{linkHint}</p>
-            ) : null}
-          </div>
+            }
+          >
+            <DealOutboundActions
+              part="actions"
+              dealId={deal.id}
+              country={country}
+              city={city}
+              ctaLabel={ctaLabel}
+              linkHint={linkHint}
+              websiteUrl={websiteUrl}
+              websiteLabel={websiteLabel}
+            />
+          </Suspense>
         </article>
       </NewsletterDealGate>
     </main>

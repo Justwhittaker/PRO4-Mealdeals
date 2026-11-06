@@ -52,7 +52,16 @@ from app.workers.celery_app import celery_app
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-_sync_engine = create_engine(settings.database_url_sync, pool_pre_ping=True)
+# One connection plus one overflow per worker process. The default pool
+# (5+10) times several Celery processes is enough to crowd out the API
+# on a 256 MB Postgres. Recycle so idle backends do not keep growing.
+_sync_engine = create_engine(
+    settings.database_url_sync,
+    pool_pre_ping=True,
+    pool_size=1,
+    max_overflow=1,
+    pool_recycle=1800,
+)
 SyncSessionLocal = sessionmaker(bind=_sync_engine, autocommit=False, autoflush=False)
 
 _STUB_RATES: dict[str, tuple[str, str]] = CURRENCY_RATES
@@ -66,7 +75,9 @@ def expire_past_due_deals_task() -> dict[str, int]:
     with SyncSessionLocal() as session:
         count = expire_past_due_deals(session)
     if count > 0:
-        revalidate_after_scrape(areas=set())
+        # Hourly expiry is one cycle, not a per-city ingest. Bust the home
+        # page and the global deals tag once. Deal pages use city tags.
+        revalidate_after_scrape(areas=set(), include_global=True)
     return {"expired": count}
 
 

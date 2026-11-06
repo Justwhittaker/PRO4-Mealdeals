@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Crimson_Text, Oswald } from "next/font/google";
-import { headers } from "next/headers";
 import { AdSenseScript } from "@/components/ads/AdSenseScript";
 import { VercelAnalytics } from "@/components/analytics/VercelAnalytics";
 import { CookieConsentProvider } from "@/components/cookie/CookieConsentProvider";
@@ -10,7 +9,6 @@ import { SiteHeader } from "@/components/landing/SiteHeader";
 import { NewsletterPopup } from "@/components/newsletter/NewsletterPopup";
 import { getAdSenseClientId, isAdSenseConfigured } from "@/lib/adsense";
 import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/brand";
-import { isAdCrawler } from "@/lib/crawlers";
 import { HOME_DESCRIPTION } from "@/lib/seo";
 import "./globals.css";
 
@@ -77,8 +75,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const crawler = isAdCrawler(headers().get("user-agent"));
-
   return (
     <html lang="en-GB" className={`${oswald.variable} ${crimson.variable}`}>
       <body className="min-h-screen max-w-[100vw] overflow-x-clip font-sans">
@@ -88,7 +84,9 @@ export default function RootLayout({
           {/* Deal counter + public chrome — always visible, including merchant login */}
           <SiteHeader />
           <ConditionalSiteHeader>
-            {crawler ? null : <NewsletterPopup />}
+            {/* NewsletterPopup skips crawlers itself. Reading headers() here
+                would opt every page out of the cache. */}
+            <NewsletterPopup />
             <ScrollToTopButton />
           </ConditionalSiteHeader>
           {children}

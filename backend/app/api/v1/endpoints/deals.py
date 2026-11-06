@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
+import logging
 from datetime import datetime, timezone
 from decimal import Decimal
 from uuid import UUID
@@ -13,6 +13,8 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import noload, selectinload
 
 from app.api.dependencies import CurrencySvc, DbSession
+from app.core.database import AsyncSessionLocal
+from app.core.ttl_cache import TtlCache
 from app.core.feed_limits import (
     MAX_FEED_CANDIDATES,
     MAX_FEED_LIMIT,
@@ -29,6 +31,7 @@ from app.schemas.deal import (
     DealDetailRead,
     DealFeedItem,
     DealFeedResponse,
+    DealItemRead,
     DealRead,
     DealSitemapEntry,
     DealTranslationRead,
@@ -48,6 +51,8 @@ from app.services.geo_names import (
 from app.services.listing_quality import is_policy_violation, prepare_public_listing
 from app.services.ranking import compute_feed_score
 from app.scrapers.categories import venue_category_id
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/deals", tags=["deals"])
 
@@ -231,8 +236,11 @@ async def deals_feed(
     limit: int = Query(default=50, ge=1, le=MAX_FEED_LIMIT),
     offset: int = Query(default=0, ge=0),
     auto_scrape: bool = Query(
-        default=True,
-        description="When the area feed is empty, skim the net and ingest deals.",
+        default=False,
+        description=(
+            "Ignored. Page renders and crawlers must not start a scrape. "
+            "Ingest runs on the Celery worker or POST /scrapers/area."
+        ),
     ),
 ) -> DealFeedResponse:
     """
@@ -405,35 +413,15 @@ async def deals_feed(
     score_by_id = {deal_id: score for deal_id, score, _distance in page}
     distance_by_id = {deal_id: distance for deal_id, _score, distance in page}
 
-    # Auto-skim the net for this area when visitors hit an empty city feed
-    if (
-        auto_scrape
-        and total == 0
-        and country_code
-        and city
-        and not is_placeholder_city(city)
-    ):
-        # Scraper and Celery stay out of the process until a city is empty.
-        from app.services.scrape_runner import scrape_and_ingest_area
-
-        await asyncio.to_thread(scrape_and_ingest_area, country_code, city)
-        release_heap_to_os()
-        return await deals_feed(
-            db=db,
-            currency_svc=currency_svc,
-            country_code=country_code,
-            city=city,
-            lat=lat,
-            lon=lon,
-            radius_km=effective_radius_km,
-            radius_miles=None,
-            sort=sort_mode,
-            currency_override=currency_override,
-            language_code=language_code,
-            category=category_filter,
-            limit=limit,
-            offset=offset,
-            auto_scrape=False,
+    # auto_scrape used to run a full city ingest inside this request when the
+    # feed was empty. Crawlers and ISR regenerations hit that path and pinned
+    # a DB transaction for the whole scrape. The flag is accepted so old URLs
+    # still parse. Ingest stays on the worker and POST /scrapers/area.
+    if auto_scrape:
+        logger.debug(
+            "Ignoring auto_scrape on the public feed (%s / %s)",
+            country_code,
+            city,
         )
 
     feed_items: list[DealFeedItem] = []
@@ -904,31 +892,73 @@ async def get_deal(deal_id: UUID, db: DbSession) -> DealDetailRead:
     )
 
 
+# Deal pages call this on every regeneration. 60s is enough to collapse a
+# burst; the Next.js fetch cache holds a copy for longer.
+_VALUE_CACHE: TtlCache[ValueCalculatorResponse] = TtlCache(60)
+_VALUE_CACHE_HEADER = "public, max-age=60"
+
+
 @router.get("/{deal_id}/value-calculator", response_model=ValueCalculatorResponse)
-async def value_calculator(deal_id: UUID, db: DbSession) -> ValueCalculatorResponse:
+async def value_calculator(
+    deal_id: UUID,
+    response: Response,
+) -> ValueCalculatorResponse:
     """SUM(individual_price) - deal_price and savings percentage."""
-    result = await db.execute(
-        select(Deal)
-        .where(Deal.id == deal_id)
-        .options(selectinload(Deal.items))
-    )
-    deal = result.scalar_one_or_none()
-    if deal is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deal not found")
+    cache_key = str(deal_id)
+    cached = _VALUE_CACHE.get(cache_key)
+    if cached is not None:
+        response.headers["Cache-Control"] = _VALUE_CACHE_HEADER
+        return cached
 
-    items_total = sum((item.individual_price for item in deal.items), Decimal("0.00"))
-    savings_amount = items_total - deal.deal_price
-    if items_total > 0:
-        savings_percent = float((savings_amount / items_total) * Decimal("100"))
-    else:
-        savings_percent = 0.0
+    async with AsyncSessionLocal() as db:
+        try:
+            result = await db.execute(
+                select(Deal)
+                .where(Deal.id == deal_id)
+                .options(selectinload(Deal.items))
+            )
+            deal = result.scalar_one_or_none()
+            if deal is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Deal not found",
+                )
 
-    return ValueCalculatorResponse(
-        deal_id=deal.id,
-        deal_price=deal.deal_price,
-        items_total=items_total,
-        savings_amount=savings_amount,
-        savings_percent=round(savings_percent, 2),
-        currency_code=deal.currency_code,
-        items=deal.items,
-    )
+            items_total = sum(
+                (item.individual_price for item in deal.items),
+                Decimal("0.00"),
+            )
+            savings_amount = items_total - deal.deal_price
+            if items_total > 0:
+                savings_percent = float(
+                    (savings_amount / items_total) * Decimal("100")
+                )
+            else:
+                savings_percent = 0.0
+
+            # Copy items while the session is open. A cached ORM graph
+            # expires after the session closes.
+            payload = ValueCalculatorResponse(
+                deal_id=deal.id,
+                deal_price=deal.deal_price,
+                items_total=items_total,
+                savings_amount=savings_amount,
+                savings_percent=round(savings_percent, 2),
+                currency_code=deal.currency_code,
+                items=[
+                    DealItemRead.model_validate(item, from_attributes=True)
+                    for item in deal.items
+                ],
+            )
+            await db.commit()
+        except HTTPException:
+            await db.rollback()
+            raise
+        except Exception:
+            await db.rollback()
+            raise
+
+    stored = payload.model_copy(deep=True)
+    _VALUE_CACHE.set(cache_key, stored)
+    response.headers["Cache-Control"] = _VALUE_CACHE_HEADER
+    return stored

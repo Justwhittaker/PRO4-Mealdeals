@@ -60,6 +60,14 @@ def run_migrations_online() -> None:
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
         connection.commit()
 
+        # dineadeal_db_user has statement_timeout=20s on prod. SET LOCAL would
+        # end with this transaction, so CREATE INDEX CONCURRENTLY (autocommit)
+        # and any later migration statement would inherit the 20s cap again.
+        # Session-level SET lasts for this connection, including upgrade of
+        # every revision that is still pending.
+        connection.execute(text("SET statement_timeout = 0"))
+        connection.commit()
+
         context.configure(
             connection=connection,
             target_metadata=target_metadata,

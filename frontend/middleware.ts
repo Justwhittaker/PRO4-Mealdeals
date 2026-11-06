@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { shouldCheapRejectBot } from "@/lib/bot-guard";
 import {
   LOCATION_COOKIE,
   LOCATION_REGION_COOKIE,
@@ -17,6 +18,17 @@ import {
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (shouldCheapRejectBot(pathname, request.headers.get("user-agent"))) {
+    return new NextResponse("Forbidden", {
+      status: 403,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "public, max-age=300",
+        "X-Robots-Tag": "noindex",
+      },
+    });
+  }
+
   const canonicalPath = canonicalizePublicPathname(pathname);
   if (canonicalPath && canonicalPath !== pathname) {
     const url = request.nextUrl.clone();

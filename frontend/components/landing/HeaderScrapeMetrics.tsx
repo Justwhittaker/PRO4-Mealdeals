@@ -32,16 +32,18 @@ export function HeaderScrapeMetrics({
       setMarkets(result.data.markets);
     }
 
-    void load();
+    // The server header already fetched this. Don't repeat it on hydration.
+    const hasInitial = initialActiveDeals != null && initialMarkets != null;
+    if (!hasInitial) void load();
     const timer = window.setInterval(() => {
       void load();
-    }, 60_000);
+    }, 300_000);
 
     return () => {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [initialActiveDeals, initialMarkets]);
 
   const dealsLabel =
     activeDeals == null ? "…" : formatCount(activeDeals);

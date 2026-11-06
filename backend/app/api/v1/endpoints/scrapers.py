@@ -5,13 +5,15 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Query, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
 from app.api.dependencies import DbSession
 from app.core.config import get_settings
+from app.core.database import AsyncSessionLocal
 from app.core.memory import release_heap_to_os
+from app.core.ttl_cache import TtlCache
 from app.models.deal import Deal
 
 _settings = get_settings()
@@ -295,28 +297,49 @@ async def scrape_report_endpoint(db: DbSession) -> ScrapeReport:
     return ScrapeReport.model_validate(report)
 
 
+_METRICS_CACHE: TtlCache[ScrapeMetrics] = TtlCache(60)
+_METRICS_CACHE_KEY = "scrapers-metrics"
+
+
 @router.get("/metrics", response_model=ScrapeMetrics)
-async def scrape_metrics_endpoint(db: DbSession) -> ScrapeMetrics:
+async def scrape_metrics_endpoint(response: Response) -> ScrapeMetrics:
     """
-    Live active-deal + market counters for the public site header.
+    Active-deal + market counters for the public site header.
 
     Same inventory sources as GET /report summary, without the heavy breakdown.
+    Cached in-process for 60s so a page burst does not seq-scan `deals`.
+    A cache hit does not check out a pool connection.
     """
+    response.headers["Cache-Control"] = "public, max-age=60"
+    cached = _METRICS_CACHE.get(_METRICS_CACHE_KEY)
+    if cached is not None:
+        return cached
+
     from app.scrapers.markets import MARKET_CITIES, TARGET_MARKETS
 
     markets = list(TARGET_MARKETS)
     areas = sum(len(MARKET_CITIES.get(code, [])) for code in markets)
-    active_deals = int(
-        await db.scalar(
-            select(func.count()).select_from(Deal).where(Deal.is_active.is_(True))
-        )
-        or 0
-    )
-    return ScrapeMetrics(
+    async with AsyncSessionLocal() as db:
+        try:
+            active_deals = int(
+                await db.scalar(
+                    select(func.count())
+                    .select_from(Deal)
+                    .where(Deal.is_active.is_(True))
+                )
+                or 0
+            )
+            await db.commit()
+        except Exception:
+            await db.rollback()
+            raise
+    payload = ScrapeMetrics(
         active_deals=active_deals,
         markets=len(markets),
         areas=areas,
     )
+    _METRICS_CACHE.set(_METRICS_CACHE_KEY, payload)
+    return payload
 
 
 class PlanInfo(BaseModel):

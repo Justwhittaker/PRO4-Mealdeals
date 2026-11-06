@@ -15,7 +15,13 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-_connect_args: dict = {}
+_connect_args: dict = {
+    # asyncpg default is 100. Passed through SQLAlchemy's asyncpg dialect
+    # (query string or connect arg — not a create_engine kwarg). A smaller
+    # cache limits server-side plans on each idle backend. Not zero:
+    # repeated reads on one connection can still reuse a plan.
+    "prepared_statement_cache_size": 16,
+}
 if settings.database_requires_ssl:
     # asyncpg uses a boolean SSL flag (Render external hostnames require TLS).
     _connect_args["ssl"] = True
@@ -24,9 +30,13 @@ engine = create_async_engine(
     settings.database_url,
     echo=settings.debug,
     pool_pre_ping=True,
-    # Free-tier Postgres connection limits are tight.
-    pool_size=5 if settings.is_production else 10,
-    max_overflow=5 if settings.is_production else 20,
+    # 256 MB Postgres: keep the resident pool small. Do not raise these.
+    # Production was 5+5. Dev stays larger so local tests are not starved.
+    pool_size=3 if settings.is_production else 10,
+    max_overflow=2 if settings.is_production else 20,
+    # Recycle backends so asyncpg's server-side plans do not live all day.
+    pool_recycle=1800,
+    pool_timeout=10,
     connect_args=_connect_args,
 )
 
