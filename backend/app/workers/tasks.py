@@ -17,7 +17,10 @@ from app.models.currency import Currency
 from app.models.newsletter import NewsletterSubscriber
 from app.scrapers.global_retail import TARGET_MARKETS, iter_market_areas
 from app.scrapers.markets import CURRENCY_RATES
-from app.services.deal_expiry import expire_past_due_deals
+from app.services.deal_expiry import (
+    expire_past_due_deals,
+    revalidate_kwargs_for_expired,
+)
 from app.services.merchant_outreach import send_merchant_outreach_batch
 from app.services.newsletter import (
     normalize_email,
@@ -52,7 +55,16 @@ from app.workers.celery_app import celery_app
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-_sync_engine = create_engine(settings.database_url_sync, pool_pre_ping=True)
+# One connection plus one overflow per worker process. The default pool
+# (5+10) times several Celery processes is enough to crowd out the API
+# on a 256 MB Postgres. Recycle so idle backends do not keep growing.
+_sync_engine = create_engine(
+    settings.database_url_sync,
+    pool_pre_ping=True,
+    pool_size=1,
+    max_overflow=1,
+    pool_recycle=1800,
+)
 SyncSessionLocal = sessionmaker(bind=_sync_engine, autocommit=False, autoflush=False)
 
 _STUB_RATES: dict[str, tuple[str, str]] = CURRENCY_RATES
@@ -64,10 +76,13 @@ def expire_past_due_deals_task() -> dict[str, int]:
     from app.services.frontend_revalidate import revalidate_after_scrape
 
     with SyncSessionLocal() as session:
-        count = expire_past_due_deals(session)
-    if count > 0:
-        revalidate_after_scrape(areas=set())
-    return {"expired": count}
+        expired = expire_past_due_deals(session)
+    if expired:
+        # One call for the whole hour: home/global tag, plus the city and
+        # deal tags of the rows that just went inactive. Deal pages are not
+        # on the global tag, so the city and deal tags are what drop them.
+        revalidate_after_scrape(**revalidate_kwargs_for_expired(expired))
+    return {"expired": len(expired)}
 
 
 @celery_app.task(name="app.workers.tasks.update_currency_rates")

@@ -9,9 +9,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CategorySelector } from "@/components/deals/CategorySelector";
-import type { ParentCategoryId } from "@/lib/categories";
+import { parseCategoryParam, type ParentCategoryId } from "@/lib/categories";
 import {
   RADIUS_OPTIONS,
+  parseFeedSort,
+  parseRadiusMiles,
   type FeedSort,
   type RadiusMiles,
 } from "@/lib/radius";
@@ -37,6 +39,15 @@ export function RadiusSelector({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const sortValue = searchParams.has("sort")
+    ? parseFeedSort(searchParams.get("sort"))
+    : sort;
+  const radiusValue = searchParams.has("radius")
+    ? parseRadiusMiles(searchParams.get("radius"))
+    : radius;
+  const categoryValue = searchParams.has("category")
+    ? parseCategoryParam(searchParams.get("category"))
+    : category;
 
   function pushParams(patch: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -50,7 +61,7 @@ export function RadiusSelector({
   const sortSelect = showSort ? (
     <div className="w-[160px]">
       <Select
-        value={sort}
+        value={sortValue}
         onValueChange={(next) => pushParams({ sort: next })}
       >
         <SelectTrigger aria-label="Sort deals">
@@ -67,7 +78,7 @@ export function RadiusSelector({
   const radiusSelect = showRadius ? (
     <div className="w-[150px]">
       <Select
-        value={String(radius)}
+        value={String(radiusValue)}
         onValueChange={(next) => pushParams({ radius: next })}
       >
         <SelectTrigger aria-label="Search radius">
@@ -94,7 +105,7 @@ export function RadiusSelector({
           : "flex w-full max-w-md flex-col items-stretch gap-2 sm:max-w-none sm:items-center"
       }
     >
-      {showCategory ? <CategorySelector category={category} /> : null}
+      {showCategory ? <CategorySelector category={categoryValue} /> : null}
       {radiusSelect || sortSelect ? (
         <div className="flex flex-wrap items-center justify-center gap-2">
           {radiusSelect}
