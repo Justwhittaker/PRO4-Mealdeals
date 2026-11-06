@@ -5,12 +5,14 @@ Revises: 017_oom_feed_indexes
 Create Date: 2026-11-06
 
 Nullable columns only. PostgreSQL 11+ adds a nullable column with no default
-without rewriting the table. The source_segment index is a normal CREATE
-INDEX in this transaction (not CONCURRENTLY) so SET LOCAL covers it.
+without rewriting the table. Those adds stay in this migration's transaction.
 
-Prod's API role has statement_timeout=20s. SET LOCAL disables that for this
-transaction only. 017 uses a session-level SET because CREATE INDEX
-CONCURRENTLY cannot run inside a transaction.
+The source_segment index uses CREATE INDEX CONCURRENTLY, same as
+017_oom_feed_indexes. CONCURRENTLY cannot run inside a transaction, so it
+sits in autocommit_block(). That commits the column adds first, then builds
+the index without locking writes. SET statement_timeout = 0 inside the block
+covers the API role's 20 second timeout. SET LOCAL still covers the column
+adds, and ends when that transaction commits.
 """
 
 from __future__ import annotations
@@ -24,7 +26,6 @@ revision: str = "018_fishy_finger_sub"
 down_revision: Union[str, None] = "017_oom_feed_indexes"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-
 
 def upgrade() -> None:
     op.execute("SET LOCAL statement_timeout = 0")
@@ -48,16 +49,25 @@ def upgrade() -> None:
         "marketing_contacts",
         sa.Column("specials_checked_at", sa.DateTime(timezone=True), nullable=True),
     )
-    op.create_index(
-        "ix_marketing_contacts_source_segment",
-        "marketing_contacts",
-        ["source_segment"],
-    )
+    with op.get_context().autocommit_block():
+        # Belt and braces if this file is run without env.py's session SET.
+        # CREATE INDEX CONCURRENTLY cannot run inside a transaction.
+        op.execute("SET statement_timeout = 0")
+        op.execute(
+            """
+            CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_marketing_contacts_source_segment
+            ON marketing_contacts (source_segment)
+            """
+        )
 
 
 def downgrade() -> None:
+    with op.get_context().autocommit_block():
+        op.execute("SET statement_timeout = 0")
+        op.execute(
+            "DROP INDEX CONCURRENTLY IF EXISTS ix_marketing_contacts_source_segment"
+        )
     op.execute("SET LOCAL statement_timeout = 0")
-    op.drop_index("ix_marketing_contacts_source_segment", table_name="marketing_contacts")
     op.drop_column("marketing_contacts", "specials_checked_at")
     op.drop_column("marketing_contacts", "has_site_specials")
     op.drop_column("marketing_contacts", "email_quality_score")

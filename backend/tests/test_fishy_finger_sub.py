@@ -735,6 +735,17 @@ def test_migration_adds_fishy_columns() -> None:
     assert 'revision: str = "018_fishy_finger_sub"' in text
     assert 'down_revision: Union[str, None] = "017_oom_feed_indexes"' in text
     assert "SET LOCAL statement_timeout = 0" in text
+    assert "SET statement_timeout = 0" in text
+    assert "autocommit_block" in text
+    assert (
+        "CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_marketing_contacts_source_segment"
+        in text
+    )
+    assert (
+        "DROP INDEX CONCURRENTLY IF EXISTS ix_marketing_contacts_source_segment"
+        in text
+    )
+    assert "op.create_index" not in text
     assert "server_default" not in text
     assert "nullable=True" in text
     assert "source_segment" in text
