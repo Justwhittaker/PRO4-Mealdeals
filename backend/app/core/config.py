@@ -120,6 +120,9 @@ class Settings(BaseSettings):
 
     # Monthly email to scraped marketing_contacts (merchant acquisition).
     merchant_outreach_enabled: bool = Field(default=True)
+    # Fishy Finger leads are stored by the Sunday scrape. They are not emailed
+    # until this is turned on. The daily drip skips source_segment fishy*.
+    fishy_outreach_enabled: bool = Field(default=False)
     # Resend free tier: 100 emails/day — default 95 leaves headroom for contact form etc.
     merchant_outreach_max_per_run: int = Field(default=95, ge=1, le=500)
     merchant_outreach_min_days: int = Field(default=28, ge=7, le=90)

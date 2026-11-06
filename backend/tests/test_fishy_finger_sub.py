@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import inspect
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
@@ -70,10 +71,13 @@ from app.services.fishy_finger.specials import (
     specials_probe_urls,
 )
 from app.services.fishy_finger.types import AcceptedLead, VenueCandidate
+from app.core.config import Settings
 from app.services.merchant_outreach import (
     outreach_batch_statement,
     rank_outreach_candidates,
+    send_outreach_to_contact,
 )
+from app.workers.tasks import scrape_fishy_finger_zone, send_fishy_finger_digest
 from app.workers.celery_app import celery_app
 
 _RESTAURANTS = "Restaurants, Cafe's & Bistro's"
@@ -323,6 +327,7 @@ def test_outreach_fills_with_fishy_leads_then_existing_order() -> None:
         now=now,
         min_days=28,
         max_rows=95,
+        fishy_enabled=True,
     )
     assert [row.email for row in batch] == [
         "owner@a.example",
@@ -417,6 +422,7 @@ def test_drip_order_is_eu_no_specials_then_quality() -> None:
         now=now,
         min_days=28,
         max_rows=95,
+        fishy_enabled=True,
     )
     assert [row.email for row in batch] == [
         "high@eu.example",
@@ -489,7 +495,13 @@ def test_outreach_keeps_gap_unsubscribe_merchant_and_cap() -> None:
         )
         for index in range(10)
     ]
-    capped = rank_outreach_candidates(rows, now=now, min_days=28, max_rows=3)
+    capped = rank_outreach_candidates(
+        rows,
+        now=now,
+        min_days=28,
+        max_rows=3,
+        fishy_enabled=True,
+    )
     assert [row.email for row in capped] == [
         "owner0@venue0.example",
         "owner1@venue1.example",
@@ -498,18 +510,130 @@ def test_outreach_keeps_gap_unsubscribe_merchant_and_cap() -> None:
 
 
 def test_outreach_sql_orders_fishy_leads_first() -> None:
-    stmt = outreach_batch_statement(datetime(2026, 1, 1, tzinfo=timezone.utc), 95)
+    stmt = outreach_batch_statement(
+        datetime(2026, 1, 1, tzinfo=timezone.utc),
+        95,
+        fishy_enabled=True,
+    )
     sql = str(
         stmt.compile(
             dialect=postgresql.dialect(),
             compile_kwargs={"literal_binds": True},
         )
     )
-    assert "fishy_finger_sub" in sql
+    assert "fishy%" in sql
     assert "email_quality_score" in sql
     assert "has_site_specials" in sql
     assert "british_isles" in sql
     assert "LIMIT 95" in sql
+
+
+def test_fishy_outreach_defaults_off_and_excludes_leads() -> None:
+    assert Settings.model_fields["fishy_outreach_enabled"].default is False
+    now = datetime(2026, 10, 9, tzinfo=timezone.utc)
+    fishy = _contact(
+        source_segment=FISHY_FINGER_SEGMENT,
+        email="owner@fishy.example",
+        lead_zone="british_isles",
+        has_site_specials=False,
+        email_quality_score=100,
+    )
+    plain_fishy = _contact(
+        source_segment="fishy",
+        email="owner@plain.example",
+        email_quality_score=100,
+    )
+    newer = _contact(
+        email="new@cafe.example",
+        email_quality_score=1,
+        last_scraped_at=datetime(2026, 10, 1, tzinfo=timezone.utc),
+    )
+    older = _contact(
+        email="old@cafe.example",
+        email_quality_score=99,
+        last_scraped_at=datetime(2026, 2, 1, tzinfo=timezone.utc),
+    )
+    cooled = _contact(
+        email="cooled@cafe.example",
+        email_quality_score=100,
+        last_outreach_sent_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+    )
+    batch = rank_outreach_candidates(
+        [fishy, plain_fishy, cooled, older, newer],
+        now=now,
+        min_days=28,
+        max_rows=95,
+        fishy_enabled=False,
+    )
+    assert [row.email for row in batch] == [
+        "new@cafe.example",
+        "old@cafe.example",
+        "cooled@cafe.example",
+    ]
+    stmt = outreach_batch_statement(now, 95, fishy_enabled=False)
+    sql = str(
+        stmt.compile(
+            dialect=postgresql.dialect(),
+            compile_kwargs={"literal_binds": True},
+        )
+    )
+    folded = sql.upper()
+    assert "NOT LIKE" in folded or "NOT ILIKE" in folded
+    assert "fishy%" in sql
+    where_and_order = folded.split("WHERE", 1)[1]
+    assert "HAS_SITE_SPECIALS" not in where_and_order
+    assert "EMAIL_QUALITY_SCORE" not in where_and_order
+    assert "LAST_OUTREACH_SENT_AT" in where_and_order
+
+
+def test_disabled_fishy_send_does_not_email(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.services.merchant_outreach.get_settings",
+        lambda: SimpleNamespace(
+            fishy_outreach_enabled=False,
+            merchant_outreach_reply_to="hello@dineadeal.com",
+        ),
+    )
+
+    def boom(*_args: object, **_kwargs: object) -> bool:
+        raise AssertionError("Fishy lead was emailed")
+
+    monkeypatch.setattr("app.services.merchant_outreach.send_email", boom)
+    result = send_outreach_to_contact(
+        None,  # type: ignore[arg-type]
+        _contact(  # type: ignore[arg-type]
+            source_segment=FISHY_FINGER_SEGMENT,
+            email="owner@fishy.example",
+            has_site_specials=False,
+            lead_zone="british_isles",
+        ),
+    )
+    assert result["skipped"] is True
+    assert result["reason"] == "fishy_outreach_disabled"
+
+
+def test_fishy_beat_and_dry_run_cannot_send_email() -> None:
+    for key, entry in celery_app.conf.beat_schedule.items():
+        if "fishy" not in key:
+            continue
+        assert entry["task"] in {
+            "app.workers.tasks.scrape_fishy_finger_zone",
+            "app.workers.tasks.send_fishy_finger_digest",
+        }
+    for fn in (scrape_fishy_finger_zone, send_fishy_finger_digest):
+        source = inspect.getsource(fn)
+        assert "send_email" not in source
+        assert "send_merchant_outreach" not in source
+        assert "send_outreach_to_contact" not in source
+    backend = Path(__file__).resolve().parents[1]
+    for relative in (
+        "app/services/fishy_finger/dry_run.py",
+        "app/services/fishy_finger/leads.py",
+        "scripts/fishy_finger_dry_run.py",
+    ):
+        text = (backend / relative).read_text(encoding="utf-8")
+        assert "send_email" not in text
+        assert "send_merchant_outreach" not in text
 
 
 def test_digest_breakdown_percentages() -> None:
@@ -533,6 +657,7 @@ def test_digest_breakdown_percentages() -> None:
             "by_category": by_category,
         }
     )
+    assert "Fishy outreach: disabled" in body
     assert "Net new lead emails: 100" in body
     assert "Unsubscribed: 7" in body
     assert "Still to email: 420" in body

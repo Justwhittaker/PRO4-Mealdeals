@@ -17,6 +17,7 @@ from typing import Any
 
 from sqlalchemy import text
 
+from app.core.config import get_settings
 from app.scrapers.zones import SCRAPE_ZONES
 from app.services.fishy_finger.constants import FISHY_FINGER_SEGMENT
 from app.services.fishy_finger.db import open_session
@@ -166,8 +167,14 @@ def format_fishy_digest(report: dict[str, Any]) -> str:
     pct = report.get("no_specials_pct")
     if pct is None:
         pct = _share(no_specials, new_leads)
+    outreach_line = (
+        "Fishy outreach: enabled"
+        if report.get("fishy_outreach_enabled")
+        else "Fishy outreach: disabled"
+    )
     lines = [
         f"Fishy Finger Sub — week of {report['week_label']}",
+        outreach_line,
         f"Net new lead emails: {new_leads}",
         f"No specials: {no_specials} ({float(pct):.0f}% of {new_leads} new leads)",
         f"Unsubscribed: {report['unsubscribed']}",
@@ -222,6 +229,7 @@ def build_fishy_digest_report(now: datetime | None = None) -> dict[str, Any]:
         "week_start": start.isoformat(),
         "week_label": week_label,
         "net_new_lead_emails": len(lead_rows),
+        "fishy_outreach_enabled": get_settings().fishy_outreach_enabled,
         "unsubscribed": unsubscribed,
         "still_to_email": pending,
         "by_zone": percentage_breakdown(zone_counts),
