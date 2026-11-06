@@ -42,11 +42,18 @@ def test_api_pool_is_smaller_and_recycles() -> None:
     assert pool._recycle == 1800
     assert pool._timeout == 10
     assert _connect_args["statement_cache_size"] == 16
-    assert "prepared_statement_cache_size" not in _connect_args
+    assert _connect_args["prepared_statement_cache_size"] == 16
 
 
 def test_asyncpg_accepts_statement_cache_size() -> None:
-    """asyncpg 0.30 has no **kwargs. The old key raises TypeError on connect."""
+    """Both caches are 16, and asyncpg.connect never sees SQLAlchemy's key.
+
+    SQLAlchemy 2.0.36 pops prepared_statement_cache_size inside
+    AsyncAdapt_asyncpg_dbapi.connect and stores it on the adapter LRU.
+    asyncpg 0.30 has no **kwargs, so that name must not be forwarded.
+    """
+    import sqlalchemy.dialects.postgresql.asyncpg as sa_asyncpg
+
     signature = inspect.signature(asyncpg.connect)
     assert "statement_cache_size" in signature.parameters
     assert "prepared_statement_cache_size" not in signature.parameters
@@ -55,31 +62,56 @@ def test_asyncpg_accepts_statement_cache_size() -> None:
         signature.bind(prepared_statement_cache_size=16)
 
     captured: dict[str, object] = {}
+    adapters: list[sa_asyncpg.AsyncAdapt_asyncpg_connection] = []
+    original_init = sa_asyncpg.AsyncAdapt_asyncpg_connection.__init__
 
-    async def _capture(*_args: object, **kwargs: object) -> None:
+    def _init(
+        self: sa_asyncpg.AsyncAdapt_asyncpg_connection,
+        dbapi: object,
+        connection: object,
+        prepared_statement_cache_size: int = 100,
+        prepared_statement_name_func: object = None,
+    ) -> None:
+        adapters.append(self)
+        original_init(
+            self,
+            dbapi,
+            connection,
+            prepared_statement_cache_size,
+            prepared_statement_name_func,
+        )
+
+    async def _capture(*_args: object, **kwargs: object) -> object:
         captured["kwargs"] = kwargs
-        raise ConnectionError("stop")
+        return object()
 
-    original = asyncpg.connect
+    original_connect = asyncpg.connect
     asyncpg.connect = _capture  # type: ignore[method-assign]
+    sa_asyncpg.AsyncAdapt_asyncpg_connection.__init__ = _init  # type: ignore[method-assign]
 
     async def _open() -> None:
         try:
             async with engine.connect() as _conn:
                 pass
-        except ConnectionError:
+        except Exception:
             return
 
     try:
         asyncio.run(_open())
     finally:
-        asyncpg.connect = original  # type: ignore[method-assign]
+        asyncpg.connect = original_connect  # type: ignore[method-assign]
+        sa_asyncpg.AsyncAdapt_asyncpg_connection.__init__ = original_init  # type: ignore[method-assign]
 
     kwargs = captured["kwargs"]
     assert isinstance(kwargs, dict)
     assert kwargs["statement_cache_size"] == 16
     assert "prepared_statement_cache_size" not in kwargs
     signature.bind(**kwargs)
+
+    assert adapters, "SQLAlchemy did not build an asyncpg adapter"
+    cache = adapters[0]._prepared_statement_cache
+    assert cache is not None
+    assert cache.capacity == 16
 
 
 def test_worker_pools_stay_tiny() -> None:

@@ -16,10 +16,14 @@ from app.core.config import get_settings
 settings = get_settings()
 
 _connect_args: dict = {
-    # asyncpg.connect kwarg (default 100). Not prepared_statement_cache_size:
-    # that name is SQLAlchemy's, and asyncpg 0.30 rejects it with TypeError.
-    # 16 caps server-side plans on each backend. Not zero, so a hot
-    # connection can still reuse a plan. PgBouncer is not in front.
+    # Two caches, both default 100. SQLAlchemy 2.0.36's asyncpg dialect
+    # (AsyncAdapt_asyncpg_dbapi.connect) pops prepared_statement_cache_size
+    # from these kwargs and keeps that many named prepare() plans on the
+    # adapter. Whatever remains is passed to asyncpg.connect, which only
+    # accepts statement_cache_size. Passing the SQLAlchemy name through
+    # raises TypeError on asyncpg 0.30. Not zero: a hot connection can
+    # still reuse a plan. PgBouncer is not in front.
+    "prepared_statement_cache_size": 16,
     "statement_cache_size": 16,
 }
 if settings.database_requires_ssl:
