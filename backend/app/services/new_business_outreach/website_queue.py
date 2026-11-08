@@ -15,6 +15,7 @@ from app.services.new_business_outreach.discover import (
     fetch_homepage,
 )
 from app.services.new_business_outreach.email_quality import pick_best_email
+from app.services.new_business_outreach.leads import _page_text
 from app.services.new_business_outreach.types import VenueCandidate
 
 QUEUE_BATCH = 20
@@ -52,6 +53,7 @@ def attempt_website(
     emails = list(candidate.emails)
     html = candidate.homepage_html
     final = candidate.website
+    texts = [candidate.page_text] if candidate.page_text else []
     started = False
     for url in pages:
         if not url:
@@ -60,19 +62,24 @@ def attempt_website(
             break
         if allow is not None and not allow():
             status = "yielded" if started else "yielded"
-            return _with_pages(candidate, emails, html, final), status
+            return _with_pages(candidate, emails, html, final, texts), status
         if budget.remaining <= 0:
-            return _with_pages(candidate, emails, html, final), "partial" if started else "skipped"
+            return _with_pages(candidate, emails, html, final, texts), (
+                "partial" if started else "skipped"
+            )
         budget.remaining -= 1
         started = True
         fetched = fetch(url)
         if not fetched:
             continue
         final, html = fetched
+        piece = _page_text(html)
+        if piece:
+            texts.append(piece)
         emails.extend(emails_from_html(html))
     if not started:
         return candidate, "skipped"
-    return _with_pages(candidate, emails, html, final), "done"
+    return _with_pages(candidate, emails, html, final, texts), "done"
 
 
 def _with_pages(
@@ -80,13 +87,21 @@ def _with_pages(
     emails: list[str],
     html: str | None,
     final: str | None,
+    texts: list[str] | None = None,
 ) -> VenueCandidate:
     accepted = pick_best_email(emails).accepted
     source = "website" if accepted else candidate.lead_source
+    parts = list(texts or [])
+    if html:
+        piece = _page_text(html)
+        if piece and piece not in " ".join(parts):
+            parts.append(piece)
+    page_text = " ".join(part for part in parts if part).strip()
     return replace(
         candidate,
         emails=tuple(dict.fromkeys(emails)),
         website=final or candidate.website,
+        page_text=page_text or None,
         homepage_html=html,
         homepage_url=final or candidate.website,
         lead_source=source,

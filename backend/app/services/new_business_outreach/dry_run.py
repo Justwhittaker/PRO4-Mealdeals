@@ -25,6 +25,7 @@ def _counts_text(summary: dict[str, Any]) -> str:
         f"Tiles: {summary.get('tiles_run', 0)}",
         f"Found: {summary.get('found', 0)}",
         f"With email: {summary.get('with_email', 0)}",
+        f"Website fetches: {summary.get('website_fetches', 0)}",
         f"Excluded already on site: {summary.get('excluded_on_site', 0)}",
         f"Failed tiles: {summary.get('failed', 0)}",
         f"Outreach sends: {summary.get('outreach_sends', 0)}",

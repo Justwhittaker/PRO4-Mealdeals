@@ -1,9 +1,10 @@
 """Worldwide Overpass tiles. Europe first, then the rest of the planet.
 
 Each static tile is a country or a slice of one. A weekly run walks that list
-from a checkpoint. When a query returns a full page or times out, the tile is
-split into four sub-tiles and the checkpoint stores those, so a later week
-resumes mid-country. Europe stays first.
+from a checkpoint. When a query returns a full page, the tile is split into
+four sub-tiles and the checkpoint stores those, so a later week resumes
+mid-country. A timeout or any other failed query stays on the checkpoint and
+is tried again next run. Europe stays first.
 
 Default pace (see ``TILES_PER_RUN_DEFAULT``): 60 Overpass queries a week. The
 static tile count is ``len(TILES)``. Runtime splits add more queries on dense cells.
@@ -16,10 +17,11 @@ from dataclasses import dataclass
 
 # Static grid. About 2.5 degrees keeps a query polite. Countries larger than
 # MAX_TILES_PER_COUNTRY cells are coarser and then split at runtime when a
-# query fills the place cap or times out.
+# query fills the place cap. Timeouts are retried, not split.
 MAX_SPAN_DEGREES = 2.5
 # Prefer this many cells, but do not coarsen a cell past MAX_CELL_DEGREES.
 # A 40-cell cap left the US and Russia as multi-degree blocks that time out.
+# A timeout is retried next run. Only a full result page splits the tile.
 MAX_TILES_PER_COUNTRY = 80
 MAX_CELL_DEGREES = 4.0
 # Do not recurse forever on a dense city block.
@@ -391,15 +393,17 @@ def should_subdivide(
     timed_out: bool,
     max_places: int,
 ) -> bool:
-    """Split when the bbox is still large and the query saturated or timed out.
+    """Split only when a successful query filled the place cap.
 
     A full ``out tags N`` page means Overpass truncated the country. Those
-    elements are not kept; the four children are queried instead.
+    elements are not kept; the four children are queried instead. A timeout
+    or any other failure is not an overflow: the caller retries that same
+    tile next run and does not mark it done.
     """
+    if timed_out:
+        return False
     if tile.depth >= MAX_SPLIT_DEPTH or tile.span <= MIN_SUBTILE_SPAN:
         return False
-    if timed_out:
-        return True
     return result_count >= max(int(max_places), 1)
 
 

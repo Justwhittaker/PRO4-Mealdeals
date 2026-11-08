@@ -36,6 +36,7 @@ from app.services.geo_names import normalize_city
 from app.services.marketing_contacts import _clean_website as clean_site
 from app.services.new_business_outreach.leads import (
     _city_key,
+    _page_text,
     _remember,
     insert_fishy_lead,
     lead_is_known,
@@ -170,12 +171,18 @@ def _prepare(
     flagged: list[tuple[VenueCandidate, bool | None]] = []
     for candidate in candidates:
         flag = None
+        text = (candidate.page_text or "").strip()
         if candidate.homepage_html:
             flag = offer_found_in_html(
                 candidate.homepage_html,
                 candidate.homepage_url or candidate.website or "",
             )
-        flagged.append((replace(candidate, homepage_html=None), flag))
+            extracted = _page_text(candidate.homepage_html)
+            if extracted and extracted not in text:
+                text = f"{text} {extracted}".strip()
+        flagged.append(
+            (replace(candidate, homepage_html=None, page_text=text or None), flag)
+        )
     accepted, filter_stats = select_fishy_leads(
         [item for item, _flag in flagged],
         extra_brand_cities=extra_brand_cities,
@@ -286,6 +293,32 @@ def _flush(
     return inserted
 
 
+def _fetch_unemailed(
+    candidates: list[VenueCandidate],
+    budget: FetchBudget,
+) -> list[VenueCandidate]:
+    """Fetch websites that still need an email, inside the run's fetch budget.
+
+    A place is started only when the homepage plus contact and about pages
+    still fit, matching the weekly run. Nothing here is written or sent.
+    """
+    needs = [
+        index
+        for index, candidate in enumerate(candidates)
+        if candidate.website and not pick_best_email(candidate.emails).accepted
+    ]
+    start_count, _deferred = venues_for_fetch(len(needs), budget.remaining)
+    fetch_at = set(needs[:start_count])
+    looked: list[VenueCandidate] = []
+    for index, candidate in enumerate(candidates):
+        if index not in fetch_at:
+            looked.append(candidate)
+            continue
+        updated, _status = attempt_website(candidate, budget)
+        looked.append(updated)
+    return looked
+
+
 def _process_tile(
     tile: OutreachTile,
     stats: _RunStats,
@@ -294,6 +327,7 @@ def _process_tile(
     indexes: _Indexes,
     guard: LeadSizeGuard | None,
     found_at: datetime,
+    budget: FetchBudget | None = None,
 ) -> None:
     try:
         candidates, outcome = _discover_tile(
@@ -313,6 +347,9 @@ def _process_tile(
         )
         stats.failed.append(tile.tile_id)
         return
+
+    if budget is not None:
+        candidates = _fetch_unemailed(candidates, budget)
 
     stats.tiles_run += 1
     stats.found += len(candidates)
@@ -683,10 +720,16 @@ def _persist_leaf(
 
 
 def run_zone_dry(zone_id: str) -> dict[str, Any]:
-    """Discover one zone. No writes, no email, no ntfy, no sheet."""
+    """Discover one zone and fetch websites inside the weekly budget.
+
+    No writes, no email, no ntfy, no sheet. Fetches stop when
+    ``new_business_website_fetches_per_run`` is used up, so the counts show
+    which emails a real run would find.
+    """
     key = zone_id.strip().lower()
     tiles = _tiles_for(key)
-    cap_mb = int(get_settings().new_business_leads_max_mb)
+    settings = get_settings()
+    cap_mb = int(settings.new_business_leads_max_mb)
     if not tiles:
         summary = _summary(
             _RunStats(),
@@ -704,6 +747,7 @@ def run_zone_dry(zone_id: str) -> dict[str, Any]:
     clear_robots_cache()
     stats = _RunStats()
     found_at = datetime.now(timezone.utc)
+    budget = FetchBudget(int(settings.new_business_website_fetches_per_run))
     for tile in tiles:
         try:
             _process_tile(
@@ -713,11 +757,13 @@ def run_zone_dry(zone_id: str) -> dict[str, Any]:
                 indexes=_Indexes(),
                 guard=None,
                 found_at=found_at,
+                budget=budget,
             )
         except Exception as exc:  # noqa: BLE001 — dry run still prints what it could
             reraise_if_fatal(exc)
             logger.exception("Dry run tile %s failed", tile.tile_id)
             stats.failed.append(tile.tile_id)
+    stats.website_fetches = int(settings.new_business_website_fetches_per_run) - budget.remaining
     return _summary(
         stats,
         cycle=0,
@@ -813,37 +859,10 @@ def run_new_business_outreach(now: datetime | None = None) -> dict[str, Any]:
             logger.exception("New Business Outreach tile %s failed", tile.tile_id)
             outcome = None
             candidates = []
-        raw_count = len(outcome.elements) if outcome is not None and outcome.ok else 0
-        timed_out = bool(outcome is not None and outcome.timed_out)
         blocks_static = from_static or tile.tile_id == TILES[next_index].tile_id
-        if outcome is not None and should_subdivide(
-            tile,
-            result_count=raw_count,
-            timed_out=timed_out,
-            max_places=max_places,
-        ):
-            children = quadrants(tile)
-            pending = children + pending
-            logger.info(
-                "New Business Outreach split %s into %s sub-tiles",
-                tile.tile_id,
-                len(children),
-            )
-            progress = record_tile_outcome(
-                index=next_index,
-                pending=pending,
-                cycle=cycle,
-                tile=tile,
-                blocks_static=blocks_static,
-                success=True,
-                tile_count=len(TILES),
-            )
-            next_index = progress.index
-            cycle = progress.cycle
-            pending = list(progress.pending)
-            wrapped = progress.advanced and next_index == 0 and not pending
-            _save_progress(next_index, cycle, pending)
-            continue
+        # A timeout or dead mirror is not a full page. Leave the tile on the
+        # checkpoint and try it again next run. Splitting here would move the
+        # cursor and skip the area.
         if outcome is None or not outcome.ok:
             progress = record_tile_outcome(
                 index=next_index,
@@ -877,6 +896,35 @@ def run_new_business_outreach(now: datetime | None = None) -> dict[str, Any]:
             _save_progress(next_index, cycle, pending)
             if progress.retrying:
                 break
+            continue
+        raw_count = len(outcome.elements)
+        if should_subdivide(
+            tile,
+            result_count=raw_count,
+            timed_out=False,
+            max_places=max_places,
+        ):
+            children = quadrants(tile)
+            pending = children + pending
+            logger.info(
+                "New Business Outreach split %s into %s sub-tiles",
+                tile.tile_id,
+                len(children),
+            )
+            progress = record_tile_outcome(
+                index=next_index,
+                pending=pending,
+                cycle=cycle,
+                tile=tile,
+                blocks_static=blocks_static,
+                success=True,
+                tile_count=len(TILES),
+            )
+            next_index = progress.index
+            cycle = progress.cycle
+            pending = list(progress.pending)
+            wrapped = progress.advanced and next_index == 0 and not pending
+            _save_progress(next_index, cycle, pending)
             continue
         _persist_leaf(
             candidates,
