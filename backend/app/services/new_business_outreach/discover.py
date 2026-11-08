@@ -115,6 +115,9 @@ def _safe_get(url: str, *, limit: int, check_robots: bool) -> tuple[int, str, st
                         if not location:
                             return None
                         current = redirect_target(current, location)
+                        # Every hop is checked again, including each resolved address.
+                        if not url_is_safe(current):
+                            return None
                         continue
                     chunks: list[bytes] = []
                     total = 0

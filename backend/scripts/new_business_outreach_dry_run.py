@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Dry-run one New Business Outreach zone. Nothing is stored or sent.
+"""Dry-run one New Business Outreach zone.
+
+Fetches public websites within the weekly fetch budget so the counts show
+which emails would be found. Nothing is stored or sent.
 
 Example:
     docker exec mealdeals-celery-nuc python /app/scripts/new_business_outreach_dry_run.py --zone british_isles

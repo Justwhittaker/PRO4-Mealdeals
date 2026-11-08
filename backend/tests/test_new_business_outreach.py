@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import socket
 from types import SimpleNamespace
 
 import httpx
+import pytest
 
 from app.core.config import Settings
 from app.services.new_business_outreach.constants import TAKEAWAYS, WINE_FARMS
@@ -14,7 +16,14 @@ from app.services.new_business_outreach.discover import (
     robots_allows_lines,
 )
 from app.services.new_business_outreach.exclusion import ExclusionIndex, exclusion_reason
-from app.services.new_business_outreach.overpass_query import query_overpass
+from app.services.new_business_outreach.discover import _safe_get
+from app.services.new_business_outreach.dry_run import run_new_business_dry_run
+from app.services.new_business_outreach.overpass_query import OverpassOutcome, query_overpass
+from app.services.new_business_outreach.run import (
+    _prepare,
+    run_new_business_outreach,
+    run_zone_dry,
+)
 from app.services.new_business_outreach.search import is_public_wine, overpass_query, venue_category
 from app.services.new_business_outreach.sheets import export_new_leads, sheet_values
 from app.services.new_business_outreach.storage import LeadSizeGuard, lead_storage_bytes
@@ -31,7 +40,11 @@ from app.services.new_business_outreach.tiles import (
     slice_tiles,
     venues_for_fetch,
 )
-from app.services.new_business_outreach.url_safety import redirect_target, url_is_safe
+from app.services.new_business_outreach.url_safety import (
+    PublicOnlyTransport,
+    redirect_target,
+    url_is_safe,
+)
 from app.services.new_business_outreach.types import AcceptedLead, VenueCandidate
 from app.services.new_business_outreach.website_queue import FetchBudget, attempt_website
 
@@ -204,6 +217,8 @@ def test_tiles_are_europe_first_and_checkpoint_wraps() -> None:
     assert all(child.span < parent.span for child in children)
     assert children[0].lead_zone == parent.lead_zone
     assert should_subdivide(parent, result_count=400, timed_out=False, max_places=400)
+    assert should_subdivide(parent, result_count=400, timed_out=True, max_places=400) is False
+    assert should_subdivide(parent, result_count=12, timed_out=False, max_places=400) is False
     tiny = OutreachTile(
         tile_id="tiny",
         country_code="FR",
@@ -529,3 +544,307 @@ def test_sheet_export_writes_lean_columns_only(monkeypatch) -> None:
         "found date",
     ]
     assert "secret page" not in values[1]
+
+
+def test_overpass_timeout_does_not_advance_the_checkpoint(monkeypatch) -> None:
+    """A timed-out tile stays put. It is not split and the cursor does not move."""
+    start = 4
+    saved: list[tuple[int, int, str]] = []
+    queried: list[str] = []
+
+    class _Session:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args: object) -> bool:
+            return False
+
+    def fake_open_session():
+        return SimpleNamespace(dispose=lambda: None), _Session
+
+    def fake_save(_session, *, next_tile_index: int, cycle: int, pending_subtiles: str | None = None):
+        saved.append((next_tile_index, cycle, pending_subtiles or ""))
+
+    def fake_discover(tile, *, limit: int):
+        del limit
+        queried.append(tile.tile_id)
+        return [], OverpassOutcome(False, [], "timed out", None, 2, True)
+
+    monkeypatch.setattr("app.services.new_business_outreach.run.open_session", fake_open_session)
+    monkeypatch.setattr("app.services.new_business_outreach.run.load_checkpoint", lambda _session: (start, 2, ""))
+    monkeypatch.setattr("app.services.new_business_outreach.run.save_checkpoint", fake_save)
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.run.load_stored_chain_signals",
+        lambda _session: ({}, {}),
+    )
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.run.LeadSizeGuard.refresh",
+        lambda self, _session: None,
+    )
+    monkeypatch.setattr("app.services.new_business_outreach.run._discover_tile", fake_discover)
+    monkeypatch.setattr("app.services.new_business_outreach.run.should_yield", lambda *_a, **_k: False)
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.run.export_new_leads",
+        lambda *_a, **_k: {"skipped": True, "reason": "test"},
+    )
+    def _no_notify(*_args: object, **_kwargs: object) -> dict[str, bool]:
+        raise AssertionError("outreach tried to notify")
+
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.run.send_outreach_digest",
+        lambda *_a, **_k: {"skipped": True},
+    )
+    monkeypatch.setattr("app.services.new_business_outreach.storage.send_ntfy", _no_notify)
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.run.get_settings",
+        lambda: SimpleNamespace(
+            new_business_outreach_enabled=False,
+            new_business_outreach_weekday="sunday",
+            new_business_skip_own_ads=False,
+            new_business_tiles_per_run=5,
+            new_business_max_places_per_tile=400,
+            new_business_website_fetches_per_run=0,
+            new_business_leads_max_mb=100,
+        ),
+    )
+
+    summary = run_new_business_outreach()
+    tile_id = TILES[start].tile_id
+    assert queried == [tile_id]
+    assert summary["next_tile_index"] == start
+    assert summary["outreach_sends"] == 0
+    assert summary["outreach_enabled"] is False
+    assert saved
+    index, cycle, pending_raw = saved[-1]
+    assert index == start
+    assert cycle == 2
+    pending = decode_pending(pending_raw)
+    assert [item.tile_id for item in pending] == [tile_id]
+    assert pending[0].retries == 1
+    assert all(not item.tile_id.startswith(f"{tile_id}-") for item in pending)
+
+
+def test_ipv4_mapped_loopback_and_private_are_blocked(monkeypatch) -> None:
+    assert url_is_safe("http://[::ffff:127.0.0.1]/latest") is False
+    assert url_is_safe("http://[::ffff:10.0.0.1]/") is False
+    assert url_is_safe("http://[::ffff:169.254.169.254]/latest/meta-data") is False
+    assert url_is_safe("http://[::ffff:0:127.0.0.1]/") is False
+    assert url_is_safe("http://[::ffff:0:10.0.0.1]/") is False
+    assert url_is_safe("https://[2002:7f00:1::]/") is False
+    assert url_is_safe("https://[2002:a00:1::]/") is False
+    assert url_is_safe("http://[64:ff9b::7f00:1]/") is False
+    assert url_is_safe("http://[64:ff9b::a00:1]/") is False
+    assert url_is_safe("http://[::7f00:1]/") is False
+    assert url_is_safe("http://[::a00:1]/") is False
+    assert url_is_safe("https://cafe.example/", resolve=lambda _host: ["::ffff:127.0.0.1"]) is False
+    assert url_is_safe("https://cafe.example/", resolve=lambda _host: ["::ffff:10.0.0.1"]) is False
+    assert (
+        url_is_safe(
+            "https://cafe.example/",
+            resolve=lambda _host: ["1.1.1.1", "::ffff:10.0.0.1"],
+        )
+        is False
+    )
+    assert url_is_safe("https://cafe.example/menu", resolve=lambda _host: ["1.1.1.1"]) is True
+    hopped = redirect_target("https://cafe.example/menu", "http://[::ffff:127.0.0.1]/latest")
+    assert url_is_safe(hopped) is False
+
+    class _Boom(httpx.BaseTransport):
+        def handle_request(self, request: httpx.Request) -> httpx.Response:
+            raise AssertionError(f"connected to {request.url}")
+
+    transport = PublicOnlyTransport(resolve=lambda _host: ["::ffff:10.0.0.1", "1.1.1.1"])
+    transport._inner = _Boom()
+    with pytest.raises(httpx.ConnectError):
+        transport.handle_request(httpx.Request("GET", "http://cafe.example/"))
+
+    requested: list[str] = []
+
+    class _Response:
+        def __init__(self, status: int, headers: dict[str, str] | None = None, body: bytes = b"secret") -> None:
+            self.status_code = status
+            self.headers = headers or {}
+            self.encoding = "utf-8"
+            self._body = body
+
+        def iter_bytes(self):
+            yield self._body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args: object) -> bool:
+            return False
+
+    class _Client:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args: object) -> bool:
+            return False
+
+        def stream(self, method: str, url: str, headers: dict | None = None):
+            del method, headers
+            requested.append(str(url))
+            return _Response(302, {"location": "http://[::ffff:127.0.0.1]/latest"})
+
+    monkeypatch.setattr("app.services.new_business_outreach.discover.httpx.Client", _Client)
+    monkeypatch.setattr("app.services.new_business_outreach.discover.pace_host_sync", lambda _url: None)
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.url_safety.socket.getaddrinfo",
+        lambda *_args, **_kwargs: [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("1.1.1.1", 0))],
+    )
+    assert _safe_get("https://cafe.example/menu", limit=1000, check_robots=False) is None
+    assert requested == ["https://cafe.example/menu"]
+
+
+def test_chain_filter_reads_homepage_text() -> None:
+    homepage = "<html><body>Own a franchise opportunities in every city</body></html>"
+    stored = VenueCandidate(
+        business_name="Oak Cafe",
+        country_code="IE",
+        city="Galway",
+        venue_category=_RESTAURANTS,
+        zone_id="british_isles",
+        website="https://oak.example",
+        emails=("owner@oak.example",),
+        homepage_html=homepage,
+    )
+    prepared, stats = _prepare([stored])
+    assert prepared == []
+    assert stats["franchise_page"] == 1
+
+    pages = {
+        "https://oak.example": homepage,
+        "https://oak.example/contact": "Write to owner@oak.example",
+        "https://oak.example/about": "About the cafe",
+    }
+
+    def fetch(url: str):
+        return url, pages[url]
+
+    candidate = VenueCandidate(
+        business_name="Oak Cafe",
+        country_code="IE",
+        city="Galway",
+        venue_category=_RESTAURANTS,
+        zone_id="british_isles",
+        website="https://oak.example",
+    )
+    updated, status = attempt_website(candidate, FetchBudget(5), fetch=fetch)
+    assert status == "done"
+    assert updated.page_text is not None
+    assert "franchise opportunit" in updated.page_text.lower()
+    prepared, stats = _prepare([updated])
+    assert prepared == []
+    assert stats["franchise_page"] == 1
+
+
+def test_zone_dry_run_fetches_websites_inside_the_budget(monkeypatch, capsys) -> None:
+    calls: list[str] = []
+
+    def fake_getaddrinfo(*_args, **_kwargs):
+        return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("1.1.1.1", 0))]
+
+    def fake_get(url: str, *, limit: int, check_robots: bool):
+        del limit, check_robots
+        calls.append(url)
+        if url.endswith("/robots.txt"):
+            return 200, url, "User-agent: *\nAllow: /\n"
+        if url.startswith("https://oak.example"):
+            return 200, url, "<html>owner@oak.example</html>"
+        return 200, url, "<html>no email here</html>"
+
+    def fake_discover(tile, *, limit: int):
+        del limit
+        outcome = OverpassOutcome(True, [{"type": "node", "id": 1}], None, "mock", 1, False)
+        shared = dict(
+            country_code="IE",
+            city="Galway",
+            venue_category=_RESTAURANTS,
+            zone_id=tile.lead_zone,
+            tile_id=tile.tile_id,
+        )
+        return [
+            VenueCandidate(business_name="Oak Cafe", website="https://oak.example", **shared),
+            VenueCandidate(business_name="Pear Cafe", website="https://pear.example", **shared),
+        ], outcome
+
+    class _Session:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args: object) -> bool:
+            return False
+
+        def add(self, *_args: object, **_kwargs: object) -> None:
+            raise AssertionError("dry run wrote a row")
+
+        def add_all(self, *_args: object, **_kwargs: object) -> None:
+            raise AssertionError("dry run wrote a row")
+
+        def delete(self, *_args: object, **_kwargs: object) -> None:
+            raise AssertionError("dry run deleted a row")
+
+        def commit(self) -> None:
+            raise AssertionError("dry run committed")
+
+        def flush(self) -> None:
+            raise AssertionError("dry run flushed")
+
+        def execute(self, *_args: object, **_kwargs: object):
+            raise AssertionError("dry run queried the database")
+
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.url_safety.socket.getaddrinfo",
+        fake_getaddrinfo,
+    )
+    monkeypatch.setattr("app.services.new_business_outreach.discover._safe_get", fake_get)
+    monkeypatch.setattr("app.services.new_business_outreach.run._discover_tile", fake_discover)
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.run.open_session",
+        lambda: (SimpleNamespace(dispose=lambda: None), _Session),
+    )
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.run.load_blocked_emails",
+        lambda _session: (set(), set()),
+    )
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.run.load_country_index",
+        lambda _session, _country, **_kwargs: ExclusionIndex(),
+    )
+    def _no_notify(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("dry run tried to notify")
+
+    monkeypatch.setattr("app.services.new_business_outreach.storage.send_ntfy", _no_notify)
+    monkeypatch.setattr("app.services.new_business_outreach.digest.send_ntfy", _no_notify)
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.run.get_settings",
+        lambda: SimpleNamespace(
+            new_business_outreach_enabled=False,
+            new_business_skip_own_ads=False,
+            new_business_max_places_per_tile=400,
+            new_business_website_fetches_per_run=3,
+            new_business_leads_max_mb=100,
+        ),
+    )
+
+    result = run_new_business_dry_run("ie-0")
+    printed = capsys.readouterr().out
+    assert result["ok"] is True
+    assert result["summary"]["outreach_sends"] == 0
+    assert result["summary"]["dry_run"] is True
+    assert result["summary"]["with_email"] == 1
+    assert result["summary"]["website_fetches"] == 1
+    assert any(url.startswith("https://oak.example") and not url.endswith("/robots.txt") for url in calls)
+    assert not any("pear.example" in url for url in calls)
+    assert "With email: 1" in printed
+    assert "Website fetches: 1" in printed
+    assert "No database writes" in printed
+    assert "No emails" in printed
+    direct = run_zone_dry("ie-0")
+    assert direct["with_email"] == 1
+    assert direct["website_fetches"] == 1
