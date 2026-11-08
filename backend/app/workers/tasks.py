@@ -9,6 +9,7 @@ from typing import Any
 
 from celery.exceptions import SoftTimeLimitExceeded
 from sqlalchemy import create_engine, select
+from sqlalchemy.exc import DBAPIError, InterfaceError, OperationalError
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import get_settings
@@ -372,6 +373,117 @@ def _tally_weekly_result(
     return sent, skipped, failed + 1
 
 
+# A run of exceptions before any success is a broken config or query, not a
+# handful of bad addresses. Resend rejections (sent=False, no exception) do
+# not count toward this streak.
+_WEEKLY_CONSECUTIVE_EXCEPTION_ABORT = 5
+
+
+def _is_systemic_db_error(exc: BaseException) -> bool:
+    """Connection and operational database failures must fail the whole run."""
+    if isinstance(exc, (OperationalError, InterfaceError)):
+        return True
+    return isinstance(exc, DBAPIError) and bool(
+        getattr(exc, "connection_invalidated", False)
+    )
+
+
+def _rollback_weekly_session(session: Any) -> None:
+    try:
+        session.rollback()
+    except Exception as exc:
+        reraise_if_fatal(exc)
+        if _is_systemic_db_error(exc):
+            raise
+        logger.exception("Weekly specials rollback failed")
+        raise
+
+
+def _deliver_one_weekly_special(
+    session: Any,
+    subscriber: NewsletterSubscriber,
+    *,
+    record_send: bool,
+    allow_unsubscribed: bool,
+) -> dict[str, object]:
+    """Send to one subscriber. Isolate a bad recipient; re-raise a DB outage.
+
+    Rollback drops an uncommitted ``last_emailed_at`` when render, the deal
+    query, or the send raises.
+    """
+    try:
+        return send_weekly_special_to_subscriber(
+            session,
+            subscriber,
+            record_send=record_send,
+            allow_unsubscribed=allow_unsubscribed,
+        )
+    except Exception as exc:
+        reraise_if_fatal(exc)
+        if _is_systemic_db_error(exc):
+            raise
+        logger.exception(
+            "Weekly specials failed for %s; continuing with the next subscriber",
+            subscriber.email,
+        )
+        _rollback_weekly_session(session)
+        return {
+            "email": subscriber.email,
+            "sent": False,
+            "isolated_error": True,
+            "error": exc,
+        }
+
+
+def _send_weekly_batch(
+    session: Any,
+    subscribers: list[NewsletterSubscriber],
+    *,
+    record_send: bool,
+    allow_unsubscribed: bool,
+) -> tuple[int, int, int]:
+    sent = 0
+    skipped = 0
+    failed = 0
+    consecutive_exceptions = 0
+    any_sent = False
+    last_exc: BaseException | None = None
+    for subscriber in subscribers:
+        result = _deliver_one_weekly_special(
+            session,
+            subscriber,
+            record_send=record_send,
+            allow_unsubscribed=allow_unsubscribed,
+        )
+        if result.get("isolated_error"):
+            consecutive_exceptions += 1
+            error = result.get("error")
+            if isinstance(error, BaseException):
+                last_exc = error
+            if (
+                not any_sent
+                and consecutive_exceptions >= _WEEKLY_CONSECUTIVE_EXCEPTION_ABORT
+            ):
+                logger.error(
+                    "Weekly specials aborted after %s consecutive subscriber "
+                    "errors with no successful delivery",
+                    consecutive_exceptions,
+                )
+                raise RuntimeError(
+                    "Weekly specials aborted: first "
+                    f"{consecutive_exceptions} subscribers raised before any "
+                    "delivery succeeded"
+                ) from last_exc
+        else:
+            consecutive_exceptions = 0
+            if result.get("sent"):
+                any_sent = True
+        sent, skipped, failed = _tally_weekly_result(
+            result, sent=sent, skipped=skipped, failed=failed
+        )
+    return sent, skipped, failed
+
+
 @celery_app.task(
     bind=True,
     name="app.workers.tasks.run_new_business_outreach",
@@ -418,10 +530,12 @@ def send_weekly_specials(test_email: str | None = None) -> dict[str, int]:
 
     When ``test_email`` is set, send only to that subscriber row (even if
     they have unsubscribed) and do not update ``last_emailed_at`` for anyone.
+
+    One subscriber's render, query, or send error is counted as failed and
+    the loop continues. Database connection failures, and a streak of
+    exceptions before any successful delivery, abort the run. Failed
+    recipients do not get ``last_emailed_at`` written.
     """
-    sent = 0
-    skipped = 0
-    failed = 0
     test_address = (test_email or "").strip()
     with SyncSessionLocal() as session:
         if test_address:
@@ -437,16 +551,12 @@ def send_weekly_specials(test_email: str | None = None) -> dict[str, int]:
                 summary = {"sent": 0, "skipped": 0, "failed": 0, "matched": 0}
                 logger.info("Weekly specials test send found no subscriber for %s", email)
                 return summary
-            for subscriber in subscribers:
-                result = send_weekly_special_to_subscriber(
-                    session,
-                    subscriber,
-                    record_send=False,
-                    allow_unsubscribed=True,
-                )
-                sent, skipped, failed = _tally_weekly_result(
-                    result, sent=sent, skipped=skipped, failed=failed
-                )
+            sent, skipped, failed = _send_weekly_batch(
+                session,
+                subscribers,
+                record_send=False,
+                allow_unsubscribed=True,
+            )
             summary = {
                 "sent": sent,
                 "skipped": skipped,
@@ -463,11 +573,12 @@ def send_weekly_specials(test_email: str | None = None) -> dict[str, int]:
                 )
             ).all()
         )
-        for subscriber in subscribers:
-            result = send_weekly_special_to_subscriber(session, subscriber)
-            sent, skipped, failed = _tally_weekly_result(
-                result, sent=sent, skipped=skipped, failed=failed
-            )
+        sent, skipped, failed = _send_weekly_batch(
+            session,
+            subscribers,
+            record_send=True,
+            allow_unsubscribed=False,
+        )
     summary = {"sent": sent, "skipped": skipped, "failed": failed}
     logger.info("Weekly specials complete: %s", summary)
     return summary

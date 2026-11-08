@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DealHeroMedia } from "@/components/deals/DealHeroMedia";
 import { LocationHeader } from "@/components/deals/LocationHeader";
@@ -13,6 +11,7 @@ import {
 } from "@/components/deals/DealOutboundActions";
 import { NewsletterDealGate } from "@/components/newsletter/NewsletterDealGate";
 import { fetchDeal, fetchValueCalculator } from "@/lib/api";
+import { missingDealOrThrow } from "@/lib/deal-fetch-outcome";
 import { dealCtaLabel, dealLinkHint } from "@/lib/deal-link";
 import { formatMoney } from "@/lib/currency";
 import {
@@ -55,7 +54,12 @@ export async function generateMetadata({
     country: params.country,
     city: params.city,
   });
-  if (!result.ok || isPlaceholderCitySlug(result.data.city)) {
+  if (!result.ok) {
+    // 404 is not indexable. Any other failure throws so a blip is not noindex.
+    missingDealOrThrow(result, "metadata");
+    return { robots: { index: false, follow: false } };
+  }
+  if (isPlaceholderCitySlug(result.data.city)) {
     return { robots: { index: false, follow: false } };
   }
   return dealListingMetadata(result.data, params.country, params.city);
@@ -73,23 +77,8 @@ export default async function DealDetailPage({ params }: PageProps) {
   const result = await fetchDeal(id, { country, city });
 
   if (!result.ok) {
-    if (result.status === 404) notFound();
-    return (
-      <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-        <LocationHeader country={country} city={city} title="Deal unavailable" />
-        <Card>
-          <CardContent className="space-y-3 p-6">
-            <p className="text-charcoal-200">
-              We couldn&apos;t load this deal from the API.
-            </p>
-            <p className="text-sm text-charcoal-500">{result.error}</p>
-            <Button asChild variant="outline">
-              <Link href={`/${country}/${city}`}>Back to city feed</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-    );
+    missingDealOrThrow(result, "page");
+    notFound();
   }
 
   const deal = result.data;

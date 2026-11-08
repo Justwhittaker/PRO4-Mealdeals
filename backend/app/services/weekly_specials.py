@@ -1096,7 +1096,9 @@ def send_weekly_special_to_subscriber(
     if ok and record_send:
         subscriber.last_emailed_at = datetime.now(timezone.utc)
         session.commit()
-    elif not record_send:
+    else:
+        # A rejected recipient (and a test send) must not flush
+        # last_emailed_at on a later subscriber's commit.
         session.rollback()
     logger.info(
         "Weekly specials for %s place=%s scope=%s deals=%s excluded=%s",
