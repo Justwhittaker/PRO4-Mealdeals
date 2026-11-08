@@ -24,7 +24,7 @@ _CHAIN_NAME_RE = re.compile(
 def is_chain_name(merchant: str | None) -> bool:
     """True when the venue name matches the shared national-chain list.
 
-    Newsletter ranking uses this list. Fishy Finger Sub (PR #22) adds OSM
+    Newsletter ranking uses this list. New Business Outreach adds OSM
     brand, franchise-page, and multi-city signals on top of the same names;
     a deal row does not carry those signals, so the name list is the check
     that both can share.

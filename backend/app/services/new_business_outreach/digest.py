@@ -12,16 +12,16 @@ has_site_specials false, by zone, category, and EU / NA / other.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import text
 
 from app.core.config import get_settings
 from app.scrapers.zones import SCRAPE_ZONES
-from app.services.fishy_finger.constants import FISHY_FINGER_SEGMENT
-from app.services.fishy_finger.db import open_session
-from app.services.fishy_finger.schedule import DUBLIN, fishy_week_start, lead_region
+from app.services.new_business_outreach.constants import FISHY_FINGER_SEGMENT
+from app.services.new_business_outreach.db import open_session
+from app.services.new_business_outreach.schedule import DUBLIN, last_weekly_slot, lead_region
 from app.services.merchant_outreach import outreach_queue_stats
 from app.services.ntfy import send_ntfy
 
@@ -203,7 +203,9 @@ def format_fishy_digest(report: dict[str, Any]) -> str:
 def build_fishy_digest_report(now: datetime | None = None) -> dict[str, Any]:
     """Load this week's lead mix plus the live outreach queue."""
     current = now or datetime.now(DUBLIN)
-    start = fishy_week_start(current)
+    start = last_weekly_slot(
+        current, weekday=6, hour=0, minute=0
+    ).astimezone(timezone.utc)
     week_label = start.astimezone(DUBLIN).strftime("%Y-%m-%d")
     engine, session_factory = open_session()
     try:
@@ -256,3 +258,86 @@ def run_fishy_finger_digest(now: datetime | None = None) -> dict[str, Any]:
         notify,
     )
     return {"report": report, "body": body, "ntfy": notify}
+
+
+def format_outreach_digest(report: dict[str, Any]) -> str:
+    """Short ntfy body for one weekly New Business Outreach run."""
+    outreach = (
+        "Outreach: enabled"
+        if report.get("outreach_enabled")
+        else "Outreach: disabled"
+    )
+    resume = (
+        "Planet pass finished. Next week starts at the first European tile."
+        if report.get("wrapped")
+        else f"Resumes at tile {report.get('next_tile_index', 0)} next week."
+    )
+    lines = [
+        f"New Business Outreach — week of {report.get('week_label', '')}",
+        outreach,
+        (
+            f"Tiles this run: {report.get('tiles_run', 0)} of "
+            f"{report.get('tiles_total', 0)} (cycle {report.get('cycle', 1)})"
+        ),
+        resume,
+        f"Found: {report.get('found', 0)}",
+        f"With email: {report.get('with_email', 0)}",
+        f"Excluded already on site: {report.get('excluded_on_site', 0)}",
+        f"Failed tiles: {report.get('failed', 0)}",
+        (
+            f"Lead storage: {report.get('storage_mb', 0)} MB / "
+            f"{report.get('storage_cap_mb', 100)} MB"
+        ),
+        "By zone:",
+    ]
+    zones = report.get("by_zone") or {}
+    if not zones:
+        lines.append("• none")
+    for label, counts in sorted(zones.items()):
+        lines.append(
+            f"• {zone_digest_label(label)}: found {counts.get('found', 0)}, "
+            f"email {counts.get('with_email', 0)}, excluded {counts.get('excluded', 0)}"
+        )
+    lines.append("By type:")
+    types = report.get("by_type") or {}
+    if not types:
+        lines.append("• none")
+    for label, counts in sorted(types.items()):
+        lines.append(
+            f"• {category_digest_label(label)}: found {counts.get('found', 0)}, "
+            f"email {counts.get('with_email', 0)}, excluded {counts.get('excluded', 0)}"
+        )
+    reasons = report.get("reasons") or {}
+    if reasons:
+        lines.append("Excluded because:")
+        for reason, count in sorted(reasons.items()):
+            lines.append(f"• {reason}: {count}")
+    failed = report.get("failed_tiles") or []
+    if failed:
+        lines.append("Failed: " + ", ".join(str(item) for item in failed[:12]))
+    if report.get("yielded"):
+        lines.append("Stopped before 07:00 Europe/Dublin so zone scrapes keep priority.")
+    if report.get("storage_stopped"):
+        lines.append("Stopped inserting because lead storage reached the cap.")
+    own_ads = "on" if report.get("skip_own_ads") else "off"
+    lines.append(f"Own-ads filter: {own_ads}")
+    sheet = report.get("sheet") or {}
+    if sheet.get("skipped"):
+        lines.append(f"Sheet: skipped ({sheet.get('reason', 'unconfigured')})")
+    elif sheet.get("ok"):
+        lines.append(f"Sheet: {sheet.get('rows', 0)} rows ({sheet.get('mode', 'tab')})")
+    else:
+        lines.append("Sheet: failed")
+    return "\n".join(lines)
+
+
+def send_outreach_digest(body: str) -> dict[str, Any]:
+    """Post the weekly summary. Does not send email."""
+    notify = send_ntfy(
+        "New Business Outreach",
+        body,
+        priority="default",
+        tags="newspaper",
+    )
+    logger.info("New Business Outreach digest ntfy=%s", notify)
+    return notify

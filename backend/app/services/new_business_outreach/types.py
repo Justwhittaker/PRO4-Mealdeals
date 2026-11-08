@@ -25,6 +25,9 @@ class VenueCandidate:
     # Homepage or menu HTML already fetched while looking for an email.
     homepage_html: str | None = None
     homepage_url: str | None = None
+    address: str | None = None
+    tile_id: str | None = None
+    lead_source: str | None = None
 
 
 @dataclass(frozen=True)
@@ -42,3 +45,6 @@ class AcceptedLead:
     phone: str | None = None
     has_site_specials: bool | None = None
     specials_checked_at: datetime | None = None
+    address: str | None = None
+    tile_id: str | None = None
+    lead_source: str | None = None

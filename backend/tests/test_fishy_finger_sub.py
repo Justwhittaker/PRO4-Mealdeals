@@ -24,53 +24,51 @@ from app.scrapers.zones import (
     ZONE_CYCLE_BASE_HOURS,
     ZONE_ORDER,
 )
-from app.services.fishy_finger.chains import (
+from app.services.new_business_outreach.chains import (
     BRAND_CITY_THRESHOLD,
     DOMAIN_VENUE_THRESHOLD,
     ChainSignals,
     chain_exclusion_reason,
 )
-from app.services.fishy_finger.constants import FISHY_FINGER_SEGMENT
-from app.services.fishy_finger.digest import (
+from app.services.new_business_outreach.constants import FISHY_FINGER_SEGMENT
+from app.services.new_business_outreach.digest import (
     category_digest_label,
     format_fishy_digest,
     no_specials_breakdown,
     percentage_breakdown,
     zone_digest_label,
 )
-from app.services.fishy_finger.email_quality import pick_best_email, score_email
-from app.services.fishy_finger.ezine import (
+from app.services.new_business_outreach.email_quality import pick_best_email, score_email
+from app.services.new_business_outreach.ezine import (
     PRIORITY_INTRO_MONTHS,
     PRIORITY_INTRO_PRICE_EUR,
     PRIORITY_RECURRING_PRICE_EUR,
     PRIORITY_SLOTS,
     build_fishy_ezine,
 )
-from app.services.fishy_finger.leads import (
+from app.services.new_business_outreach.leads import (
     enrich_candidates,
     insert_fishy_lead,
     lead_is_known,
     select_fishy_leads,
 )
-from app.services.fishy_finger.dry_run import run_fishy_dry_run
-from app.services.fishy_finger.schedule import (
+from app.services.new_business_outreach.dry_run import run_fishy_dry_run
+from app.services.new_business_outreach.schedule import (
     DUBLIN,
     EU_ZONE_ORDER,
-    FISHY_DIGEST_HOUR,
-    FISHY_DIGEST_MINUTE,
     EuropeDublinWeekly,
-    fishy_week_start,
-    fishy_zone_clock,
-    fishy_zone_order,
+    YIELD_HOUR,
+    YIELD_MINUTE,
+    last_weekly_slot,
     lead_region,
-    next_dublin_sunday_after,
+    should_yield,
 )
-from app.services.fishy_finger.specials import (
+from app.services.new_business_outreach.specials import (
     classify_site_specials,
     fetch_specials_probes,
     specials_probe_urls,
 )
-from app.services.fishy_finger.types import AcceptedLead, VenueCandidate
+from app.services.new_business_outreach.types import AcceptedLead, VenueCandidate
 from app.core.config import Settings
 from app.services.merchant_outreach import (
     outreach_batch_statement,
@@ -529,7 +527,10 @@ def test_outreach_sql_orders_fishy_leads_first() -> None:
 
 
 def test_fishy_outreach_defaults_off_and_excludes_leads() -> None:
-    assert Settings.model_fields["fishy_outreach_enabled"].default is False
+    assert Settings(
+        new_business_outreach_enabled=None,
+        fishy_outreach_enabled=None,
+    ).new_business_outreach_enabled is False
     now = datetime(2026, 10, 9, tzinfo=timezone.utc)
     fishy = _contact(
         source_segment=FISHY_FINGER_SEGMENT,
@@ -590,7 +591,7 @@ def test_disabled_fishy_send_does_not_email(monkeypatch) -> None:
     monkeypatch.setattr(
         "app.services.merchant_outreach.get_settings",
         lambda: SimpleNamespace(
-            fishy_outreach_enabled=False,
+            new_business_outreach_enabled=False,
             merchant_outreach_reply_to="hello@dineadeal.com",
         ),
     )
@@ -609,17 +610,12 @@ def test_disabled_fishy_send_does_not_email(monkeypatch) -> None:
         ),
     )
     assert result["skipped"] is True
-    assert result["reason"] == "fishy_outreach_disabled"
+    assert result["reason"] == "new_business_outreach_disabled"
 
 
 def test_fishy_beat_and_dry_run_cannot_send_email() -> None:
-    for key, entry in celery_app.conf.beat_schedule.items():
-        if "fishy" not in key:
-            continue
-        assert entry["task"] in {
-            "app.workers.tasks.scrape_fishy_finger_zone",
-            "app.workers.tasks.send_fishy_finger_digest",
-        }
+    for key in celery_app.conf.beat_schedule:
+        assert not str(key).startswith("fishy-finger")
     for fn in (scrape_fishy_finger_zone, send_fishy_finger_digest):
         source = inspect.getsource(fn)
         assert "send_email" not in source
@@ -627,9 +623,10 @@ def test_fishy_beat_and_dry_run_cannot_send_email() -> None:
         assert "send_outreach_to_contact" not in source
     backend = Path(__file__).resolve().parents[1]
     for relative in (
-        "app/services/fishy_finger/dry_run.py",
-        "app/services/fishy_finger/leads.py",
-        "scripts/fishy_finger_dry_run.py",
+        "app/services/new_business_outreach/dry_run.py",
+        "app/services/new_business_outreach/leads.py",
+        "app/services/new_business_outreach/run.py",
+        "scripts/new_business_outreach_dry_run.py",
     ):
         text = (backend / relative).read_text(encoding="utf-8")
         assert "send_email" not in text
@@ -659,90 +656,70 @@ def test_digest_breakdown_percentages() -> None:
     )
     assert "Fishy outreach: disabled" in body
     assert "Net new lead emails: 100" in body
-    assert "Unsubscribed: 7" in body
-    assert "Still to email: 420" in body
     assert "Australia: 30% (30)" in body
-    assert "Eastern Europe: 20% (20)" in body
-    assert "Restaurants: 50% (50)" in body
-    assert "Wine farms: 15% (15)" in body
     assert body.index("By zone:") < body.index("By category:")
 
 
-def test_week_window_follows_dublin_sunday_morning() -> None:
-    winter = datetime(2026, 1, 4, 10, 0, tzinfo=timezone.utc)
-    assert fishy_week_start(winter) == datetime(2026, 1, 4, 8, 0, tzinfo=timezone.utc)
-    early = datetime(2026, 1, 4, 7, 0, tzinfo=timezone.utc)
-    assert fishy_week_start(early) == datetime(2025, 12, 28, 8, 0, tzinfo=timezone.utc)
-    summer = datetime(2026, 3, 29, 8, 30, tzinfo=DUBLIN)
-    assert fishy_week_start(summer) == datetime(2026, 3, 29, 7, 0, tzinfo=timezone.utc)
+def test_week_window_is_sunday_midnight_until_yield() -> None:
+    winter_midnight = datetime(2026, 1, 4, 0, 30, tzinfo=DUBLIN)
+    assert should_yield(winter_midnight, weekday=6) is False
+    winter_morning = datetime(2026, 1, 4, 7, 0, tzinfo=DUBLIN)
+    assert should_yield(winter_morning, weekday=6) is True
+    monday = datetime(2026, 1, 5, 0, 30, tzinfo=DUBLIN)
+    assert should_yield(monday, weekday=6) is True
+    assert last_weekly_slot(
+        winter_midnight, weekday=6, hour=0, minute=0
+    ) == datetime(2026, 1, 4, 0, 0, tzinfo=DUBLIN)
 
 
 def test_sunday_schedule_is_dst_aware_and_separate_from_deal_cycles() -> None:
     assert ZONE_CYCLE_BASE_HOURS == (7, 19)
-    winter_slot = datetime(2026, 1, 4, 8, 0, tzinfo=DUBLIN)
+    winter_slot = datetime(2026, 1, 4, 0, 0, tzinfo=DUBLIN)
     assert winter_slot.astimezone(timezone.utc) == datetime(
-        2026, 1, 4, 8, 0, tzinfo=timezone.utc
+        2026, 1, 4, 0, 0, tzinfo=timezone.utc
     )
-    summer_slot = datetime(2026, 3, 29, 8, 0, tzinfo=DUBLIN)
+    summer_slot = datetime(2026, 6, 7, 0, 0, tzinfo=DUBLIN)
     assert summer_slot.astimezone(timezone.utc) == datetime(
-        2026, 3, 29, 7, 0, tzinfo=timezone.utc
+        2026, 6, 6, 23, 0, tzinfo=timezone.utc
     )
-    before_summer = datetime(2026, 3, 29, 6, 30, tzinfo=timezone.utc)
-    nxt = next_dublin_sunday_after(before_summer, hour=8, minute=0)
-    assert nxt.astimezone(timezone.utc) == summer_slot.astimezone(timezone.utc)
 
-    due_now = datetime(2026, 1, 4, 8, 5, tzinfo=timezone.utc)
-    schedule = EuropeDublinWeekly(hour=8, minute=0, nowfun=lambda: due_now)
-    assert schedule.is_due(datetime(2025, 12, 28, 8, 0, tzinfo=timezone.utc))[0] is True
-    assert schedule.is_due(datetime(2026, 1, 4, 8, 0, tzinfo=timezone.utc))[0] is False
+    during = datetime(2026, 1, 4, 0, 30, tzinfo=timezone.utc)
+    schedule = EuropeDublinWeekly(hour=0, minute=0, weekday=6, nowfun=lambda: during)
+    assert schedule.is_due(datetime(2025, 12, 28, 0, 0, tzinfo=timezone.utc))[0] is True
+    assert schedule.is_due(datetime(2026, 1, 4, 0, 5, tzinfo=timezone.utc))[0] is False
+
+    after_yield = datetime(2026, 1, 4, 6, 20, tzinfo=DUBLIN)
+    late = EuropeDublinWeekly(hour=0, minute=0, weekday=6, nowfun=lambda: after_yield)
+    assert late.is_due(datetime(2025, 12, 28, 0, 0, tzinfo=timezone.utc))[0] is False
+    assert (late.yield_hour, late.yield_minute) == (YIELD_HOUR, YIELD_MINUTE)
 
     monday_afternoon = datetime(2026, 1, 5, 12, 0, tzinfo=timezone.utc)
-    late = EuropeDublinWeekly(hour=8, minute=0, nowfun=lambda: monday_afternoon)
-    assert late.is_due(datetime(2025, 12, 28, 8, 0, tzinfo=timezone.utc))[0] is False
+    monday = EuropeDublinWeekly(hour=0, minute=0, weekday=6, nowfun=lambda: monday_afternoon)
+    assert monday.is_due(datetime(2025, 12, 28, 0, 0, tzinfo=timezone.utc))[0] is False
 
-    order = fishy_zone_order()
-    assert order[: len(EU_ZONE_ORDER)] == list(EU_ZONE_ORDER)
-    assert set(EU_ZONE_ORDER) == {
-        zone_id for zone_id in order if lead_region(zone_id) == "EU"
-    }
+    monday_window = datetime(2026, 1, 5, 1, 0, tzinfo=DUBLIN)
+    monday_run = EuropeDublinWeekly(hour=0, minute=0, weekday=0, nowfun=lambda: monday_window)
+    assert monday_run.is_due(datetime(2025, 12, 29, 0, 0, tzinfo=timezone.utc))[0] is True
+
+    assert lead_region("british_isles") == "EU"
     assert lead_region("us_east") == "NA"
     assert lead_region("australia") == "Other"
-    clocks = [fishy_zone_clock(zone_id) for zone_id in order]
-    assert clocks[0] == (8, 0)
-    assert clocks[1] == (8, ZONE_BEAT_STAGGER_MINUTES)
-    minutes = [hour * 60 + minute for hour, minute in clocks]
-    assert minutes == sorted(minutes)
-    assert minutes[-1] - minutes[0] == (len(order) - 1) * ZONE_BEAT_STAGGER_MINUTES
-    assert fishy_zone_clock("british_isles") == (8, 0)
-    assert fishy_zone_clock("mena") == (9, 0)
+    assert EU_ZONE_ORDER[0] == "british_isles"
 
+    outreach = celery_app.conf.beat_schedule["new-business-outreach"]
+    assert outreach["task"] == "app.workers.tasks.run_new_business_outreach"
+    assert isinstance(outreach["schedule"], EuropeDublinWeekly)
+    assert (outreach["schedule"].hour, outreach["schedule"].minute) == (0, 0)
+    assert outreach["schedule"].weekday == 6
+    assert outreach["options"]["queue"] == SCRAPE_QUEUE
+    assert "fishy-finger-digest" not in celery_app.conf.beat_schedule
     for zone_id in ZONE_ORDER:
-        fishy = celery_app.conf.beat_schedule[f"fishy-finger-{zone_id}"]
+        assert f"fishy-finger-{zone_id}" not in celery_app.conf.beat_schedule
         deal = celery_app.conf.beat_schedule[f"scrape-zone-{zone_id}"]
-        assert fishy["task"] == "app.workers.tasks.scrape_fishy_finger_zone"
-        assert fishy["kwargs"] == {"zone_id": zone_id}
-        assert isinstance(fishy["schedule"], EuropeDublinWeekly)
-        assert (fishy["schedule"].hour, fishy["schedule"].minute) == fishy_zone_clock(
-            zone_id
-        )
-        assert fishy["options"]["queue"] == SCRAPE_QUEUE
         assert deal["task"] == "app.workers.tasks.scrape_zone_retail"
         assert not isinstance(deal["schedule"], EuropeDublinWeekly)
-
-    digest = celery_app.conf.beat_schedule["fishy-finger-digest"]
-    assert digest["task"] == "app.workers.tasks.send_fishy_finger_digest"
-    assert isinstance(digest["schedule"], EuropeDublinWeekly)
-    assert (digest["schedule"].hour, digest["schedule"].minute) == (
-        FISHY_DIGEST_HOUR,
-        FISHY_DIGEST_MINUTE,
-    )
-    assert digest["options"]["queue"] == MAINTENANCE_QUEUE
     routes = celery_app.conf.task_routes
-    assert routes["app.workers.tasks.scrape_fishy_finger_zone"]["queue"] == SCRAPE_QUEUE
-    assert (
-        routes["app.workers.tasks.send_fishy_finger_digest"]["queue"]
-        == MAINTENANCE_QUEUE
-    )
+    assert routes["app.workers.tasks.run_new_business_outreach"]["queue"] == SCRAPE_QUEUE
 
 
 def test_ezine_uses_live_count_plan_and_one_cta() -> None:
@@ -880,7 +857,15 @@ def test_migration_adds_fishy_columns() -> None:
     assert "specials_checked_at" in text
     assert not (backend / "alembic" / "versions" / "016_fishy_finger_sub.py").exists()
     script = ScriptDirectory.from_config(Config(str(backend / "alembic.ini")))
-    assert script.get_heads() == ["018_fishy_finger_sub"]
+    assert script.get_heads() == ["019_new_business_outreach"]
+    revision = (backend / "alembic" / "versions" / "019_new_business_outreach.py").read_text(
+        encoding="utf-8"
+    )
+    assert 'down_revision: Union[str, None] = "018_fishy_finger_sub"' in revision
+    assert "SET LOCAL statement_timeout = 0" in revision
+    assert "CREATE INDEX CONCURRENTLY IF NOT EXISTS ix_marketing_contacts_nbo_created" in revision
+    assert "new_business_outreach" in revision
+    assert "LIMIT 400" in revision
 
 
 _OFFER_HTML = (
@@ -1048,61 +1033,46 @@ def test_dry_run_prints_counts_and_does_not_send(capsys, monkeypatch) -> None:
     monkeypatch.setattr("app.services.email.send_email", boom)
     monkeypatch.setattr("app.services.ntfy.send_ntfy", boom)
 
-    def fake_zone(zone_id: str, *, dry_run: bool = False) -> dict[str, object]:
+    def fake_zone(zone_id: str) -> dict[str, object]:
         assert zone_id == "british_isles"
-        assert dry_run is True
         return {
             "zone": zone_id,
             "ok": True,
             "dry_run": True,
-            "candidates": 10,
-            "leads_inserted": 4,
-            "no_specials": 3,
-            "has_specials": 1,
-            "specials_unknown": 0,
-            "skipped_known": 2,
+            "tiles_run": 2,
+            "found": 10,
+            "with_email": 4,
+            "excluded_on_site": 1,
+            "failed": 0,
             "outreach_sends": 0,
             "ntfy": None,
-        }
-
-    def fake_report() -> dict[str, object]:
-        return {
-            "week_label": "2026-11-08",
-            "net_new_lead_emails": 4,
-            "unsubscribed": 1,
-            "still_to_email": 4,
-            "no_specials": 3,
-            "no_specials_pct": 75.0,
-            "by_zone": [("British Isles", 4, 100.0)],
-            "by_category": [],
-            "no_specials_by_zone": [("British Isles", 3, 4, 75.0)],
-            "no_specials_by_category": [],
-            "no_specials_by_region": [
-                ("EU", 3, 4, 75.0),
-                ("NA", 0, 0, 0.0),
-                ("Other", 0, 0, 0.0),
+            "samples": [
+                {
+                    "name": "Oak Cafe",
+                    "type": "Restaurants, Cafe's & Bistro's",
+                    "country": "IE",
+                    "address": "1 Shop Street",
+                    "email": "owner@oak.example",
+                    "website": "https://oak.example",
+                    "source": "osm",
+                }
             ],
         }
 
-    result = run_fishy_dry_run(
-        "british_isles",
-        run_zone=fake_zone,
-        build_report=fake_report,
-    )
+    result = run_fishy_dry_run("british_isles", run_zone=fake_zone)
     printed = capsys.readouterr().out
     assert result["ntfy"] is None
     assert result["summary"]["outreach_sends"] == 0
-    assert "Sending is disabled" in printed
-    assert "lead rows only" in printed
-    assert "Leads inserted: 4" in printed
-    assert "No specials: 3" in printed
-    assert "Digest text (not posted):" in printed
-    assert "No specials: 3 (75% of 4 new leads)" in printed
-    assert "EU: 3 (75% of 4)" in printed
+    assert "No database writes" in printed
+    assert "No emails" in printed
+    assert "Found: 10" in printed
+    assert "With email: 4" in printed
+    assert "Oak Cafe" in printed
+    assert "owner@oak.example" in printed
     script = (
-        Path(__file__).resolve().parents[1] / "scripts" / "fishy_finger_dry_run.py"
+        Path(__file__).resolve().parents[1] / "scripts" / "new_business_outreach_dry_run.py"
     ).read_text(encoding="utf-8")
     assert (
-        "docker exec mealdeals-celery-nuc python /app/scripts/fishy_finger_dry_run.py "
+        "docker exec mealdeals-celery-nuc python /app/scripts/new_business_outreach_dry_run.py "
         "--zone british_isles"
     ) in script

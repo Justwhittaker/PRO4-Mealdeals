@@ -10,6 +10,8 @@ from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
 
+from app.core.weekdays import weekday_name
+
 _DEFAULT_SYNC_URL = "postgresql://mealdeals:mealdeals@localhost:5432/mealdeals"
 _DEFAULT_ASYNC_URL = "postgresql+asyncpg://mealdeals:mealdeals@localhost:5432/mealdeals"
 
@@ -120,9 +122,26 @@ class Settings(BaseSettings):
 
     # Monthly email to scraped marketing_contacts (merchant acquisition).
     merchant_outreach_enabled: bool = Field(default=True)
-    # Fishy Finger leads are stored by the Sunday scrape. They are not emailed
-    # until this is turned on. The daily drip skips source_segment fishy*.
-    fishy_outreach_enabled: bool = Field(default=False)
+    # Legacy env. Used only when NEW_BUSINESS_OUTREACH_ENABLED is unset.
+    fishy_outreach_enabled: bool | None = Field(default=None)
+    # New Business Outreach leads are stored by the weekly scrape. They are not
+    # emailed until this is turned on. Default false.
+    new_business_outreach_enabled: bool | None = Field(default=None)
+    # monday..sunday, or 0..6. The run starts at 00:00 Europe/Dublin that day.
+    new_business_outreach_weekday: str = Field(default="sunday")
+    # When true, skip venues whose own site already advertises deals.
+    # Default false: a website used only to find an email is still a lead.
+    # "Already on DineADeal" is always excluded.
+    new_business_skip_own_ads: bool = Field(default=False)
+    new_business_tiles_per_run: int = Field(default=60, ge=1, le=400)
+    # Stop inserting when estimated lead storage in marketing_contacts reaches this.
+    new_business_leads_max_mb: int = Field(default=100, ge=1, le=10_000)
+    # Service-account JSON (one line) or a path to the file. Never commit it.
+    google_service_account_json: str = Field(default="")
+    # Weekly tab on this spreadsheet. Wins over the folder id when both are set.
+    new_business_outreach_sheet_id: str = Field(default="")
+    # New spreadsheet each week in this Drive folder when no sheet id is set.
+    new_business_outreach_drive_folder_id: str = Field(default="")
     # Resend free tier: 100 emails/day — default 95 leaves headroom for contact form etc.
     merchant_outreach_max_per_run: int = Field(default=95, ge=1, le=500)
     merchant_outreach_min_days: int = Field(default=28, ge=7, le=90)
@@ -171,6 +190,19 @@ class Settings(BaseSettings):
         self.database_url_sync = _with_sslmode(sync_url)
         # asyncpg SSL is handled via connect_args — keep query params out of the URL.
         self.database_url = async_base.split("?", 1)[0]
+        return self
+
+    @model_validator(mode="after")
+    def resolve_new_business_outreach_flag(self) -> Self:
+        """NEW_BUSINESS_OUTREACH_ENABLED wins. FISHY_OUTREACH_ENABLED fills in when it is unset."""
+        if self.new_business_outreach_enabled is None:
+            legacy = self.fishy_outreach_enabled
+            resolved = bool(legacy) if legacy is not None else False
+        else:
+            resolved = bool(self.new_business_outreach_enabled)
+        self.new_business_outreach_enabled = resolved
+        self.fishy_outreach_enabled = resolved
+        self.new_business_outreach_weekday = weekday_name(self.new_business_outreach_weekday)
         return self
 
     @property
