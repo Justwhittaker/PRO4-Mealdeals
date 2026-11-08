@@ -39,7 +39,7 @@ from app.services.new_business_outreach.leads import (
     lead_is_known,
     select_fishy_leads,
 )
-from app.services.new_business_outreach.overpass_query import query_overpass
+from app.services.new_business_outreach.overpass_query import OverpassOutcome, query_overpass
 from app.services.new_business_outreach.schedule import DUBLIN, should_yield, weekday_index
 from app.services.new_business_outreach.search import candidates_from_elements, overpass_query
 from app.services.new_business_outreach.sheets import export_new_leads
@@ -48,11 +48,23 @@ from app.services.new_business_outreach.storage import LeadSizeGuard
 from app.services.new_business_outreach.tiles import (
     TILES,
     OutreachTile,
+    decode_pending,
+    encode_pending,
+    quadrants,
+    should_subdivide,
     slice_tiles,
     tile_by_id,
     tiles_for_zone,
+    venues_for_fetch,
 )
 from app.services.new_business_outreach.types import AcceptedLead, VenueCandidate
+from app.services.new_business_outreach.website_queue import (
+    FetchBudget,
+    attempt_website,
+    enqueue_candidates,
+    next_queue_rows,
+    row_to_candidate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +95,8 @@ class _RunStats:
     tiles_run: int = 0
     yielded: bool = False
     storage_stopped: bool = False
+    website_deferred: int = 0
+    website_fetches: int = 0
 
     def zone(self, key: str) -> _Bucket:
         bucket = self.by_zone.get(key)
@@ -125,13 +139,16 @@ def _sheet_row(lead: AcceptedLead, found_at: datetime) -> dict[str, str]:
     }
 
 
-def _discover_tile(tile: OutreachTile) -> tuple[list[VenueCandidate], bool, str | None]:
+def _discover_tile(tile: OutreachTile, *, limit: int) -> tuple[list[VenueCandidate], OverpassOutcome]:
     outcome = _run_coro(
-        query_overpass(overpass_query(tile), start=abs(hash(tile.tile_id)) % 4)
+        query_overpass(
+            overpass_query(tile, limit=limit),
+            start=abs(hash(tile.tile_id)) % 4,
+        )
     )
     if not outcome.ok:
-        return [], False, outcome.error
-    return candidates_from_elements(outcome.elements, tile), True, None
+        return [], outcome
+    return candidates_from_elements(outcome.elements, tile), outcome
 
 
 def _prepare(
@@ -249,17 +266,20 @@ def _process_tile(
     found_at: datetime,
 ) -> None:
     try:
-        candidates, ok, error = _discover_tile(tile)
+        candidates, outcome = _discover_tile(
+            tile,
+            limit=int(get_settings().new_business_max_places_per_tile),
+        )
     except Exception as exc:  # noqa: BLE001
         reraise_if_fatal(exc)
         logger.exception("New Business Outreach tile %s failed", tile.tile_id)
         stats.failed.append(tile.tile_id)
         return
-    if not ok:
+    if not outcome.ok:
         logger.warning(
             "New Business Outreach skipped tile %s; Overpass mirrors failed: %s",
             tile.tile_id,
-            error,
+            outcome.error,
         )
         stats.failed.append(tile.tile_id)
         return
@@ -389,6 +409,8 @@ def _summary(
         "samples": list(stats.samples),
         "sheet": sheet or {"skipped": True, "reason": "not_run"},
         "skip_own_ads": bool(settings.new_business_skip_own_ads),
+        "website_deferred": stats.website_deferred,
+        "website_fetches": stats.website_fetches,
     }
 
 
@@ -401,6 +423,214 @@ def _tiles_for(zone_id: str) -> list[OutreachTile]:
     if one is not None:
         return [one]
     return []
+
+
+def _save_progress(
+    next_index: int,
+    cycle: int,
+    pending: list[OutreachTile],
+) -> None:
+    engine, session_factory = open_session()
+    try:
+        with session_factory() as session:
+            save_checkpoint(
+                session,
+                next_tile_index=next_index,
+                cycle=cycle,
+                pending_subtiles=encode_pending(pending),
+            )
+    finally:
+        engine.dispose()
+
+
+def _advance_static(index: int, pending: list[OutreachTile], cycle: int) -> tuple[int, int, bool]:
+    nxt = (index + 1) % len(TILES)
+    wrapped = nxt == 0 and not pending
+    if wrapped:
+        cycle += 1
+    return nxt, cycle, wrapped
+
+
+def _queue_needs(
+    session: Any,
+    needs: list[VenueCandidate],
+    stats: _RunStats,
+) -> None:
+    queued = enqueue_candidates(session, needs)
+    stats.website_deferred += queued
+
+
+def _insert_ready(
+    session: Any,
+    candidates: list[VenueCandidate],
+    stats: _RunStats,
+    *,
+    indexes: _Indexes,
+    guard: LeadSizeGuard | None,
+    found_at: datetime,
+    write: bool,
+) -> None:
+    if not candidates:
+        return
+    prepared, filter_stats = _prepare(candidates)
+    for reason, count in filter_stats.items():
+        if reason == "kept":
+            continue
+        stats.add_reason(reason, int(count))
+        if reason == "email":
+            stats.no_email += int(count)
+    skip_own_ads = bool(get_settings().new_business_skip_own_ads)
+    pending: list[AcceptedLead] = []
+    for lead, flag in prepared:
+        if skip_own_ads and flag is True:
+            stats.add_reason("own_ads")
+            continue
+        pending.append(lead)
+    if not write:
+        for lead in pending:
+            _note_kept(stats, lead, found_at, store_sheet=False)
+        return
+    if guard is not None:
+        guard.refresh(session)
+        if guard.stopped:
+            stats.storage_stopped = True
+            guard.warn_once()
+            return
+    known: set[tuple[str, str]] = set()
+    kept: list[AcceptedLead] = []
+    for lead in pending:
+        reason = exclusion_reason(lead, indexes.for_country(session, lead.country_code))
+        if reason:
+            stats.add_reason(reason)
+            if reason in ON_SITE_REASONS:
+                stats.excluded_on_site += 1
+                stats.zone(lead.zone_id).excluded += 1
+                stats.kind(lead.venue_category).excluded += 1
+            continue
+        kept.append(lead)
+    for offset in range(0, len(kept), INSERT_BATCH):
+        if guard is not None and guard.stopped:
+            stats.storage_stopped = True
+            guard.warn_once()
+            break
+        inserted = _flush(
+            session,
+            kept[offset : offset + INSERT_BATCH],
+            known,
+            stats,
+            found_at,
+        )
+        if guard is not None:
+            guard.note_inserts(inserted)
+            if guard.stopped:
+                stats.storage_stopped = True
+                guard.warn_once()
+                break
+
+
+def _drain_website_queue(
+    stats: _RunStats,
+    budget: FetchBudget,
+    *,
+    indexes: _Indexes,
+    guard: LeadSizeGuard | None,
+    found_at: datetime,
+    weekday: int,
+) -> None:
+    """Spend this week's fetch budget on places carried over from earlier runs."""
+    if budget.remaining <= 0 or stats.storage_stopped:
+        return
+    engine, session_factory = open_session()
+    try:
+        with session_factory() as session:
+            rows = next_queue_rows(session, budget.remaining)
+            for row in rows:
+                if budget.remaining <= 0 or should_yield(datetime.now(timezone.utc), weekday=weekday):
+                    stats.yielded = should_yield(datetime.now(timezone.utc), weekday=weekday)
+                    break
+                if guard is not None and guard.stopped:
+                    break
+                updated, status = attempt_website(row_to_candidate(row), budget)
+                if status == "skipped":
+                    break
+                if status == "partial":
+                    continue
+                session.delete(row)
+                session.commit()
+                _insert_ready(
+                    session,
+                    [updated],
+                    stats,
+                    indexes=indexes,
+                    guard=guard,
+                    found_at=found_at,
+                    write=True,
+                )
+    finally:
+        engine.dispose()
+
+
+def _persist_leaf(
+    candidates: list[VenueCandidate],
+    tile: OutreachTile,
+    stats: _RunStats,
+    budget: FetchBudget,
+    *,
+    indexes: _Indexes,
+    guard: LeadSizeGuard | None,
+    found_at: datetime,
+) -> None:
+    stats.tiles_run += 1
+    stats.found += len(candidates)
+    for candidate in candidates:
+        stats.zone(tile.lead_zone).found += 1
+        stats.kind(candidate.venue_category).found += 1
+        if not candidate.website:
+            stats.no_website += 1
+    ready: list[VenueCandidate] = []
+    needs: list[VenueCandidate] = []
+    for candidate in candidates:
+        if pick_best_email(candidate.emails).accepted or not candidate.website:
+            ready.append(candidate)
+        else:
+            needs.append(candidate)
+    engine, session_factory = open_session()
+    try:
+        with session_factory() as session:
+            _insert_ready(
+                session,
+                ready,
+                stats,
+                indexes=indexes,
+                guard=guard,
+                found_at=found_at,
+                write=True,
+            )
+            if stats.storage_stopped:
+                _queue_needs(session, needs, stats)
+                return
+            start_count, _deferred = venues_for_fetch(len(needs), budget.remaining)
+            still_waiting: list[VenueCandidate] = []
+            for index, candidate in enumerate(needs):
+                if stats.storage_stopped or index >= start_count:
+                    still_waiting.extend(needs[index:])
+                    break
+                updated, status = attempt_website(candidate, budget)
+                if status in {"skipped", "partial"}:
+                    still_waiting.extend(needs[index:])
+                    break
+                _insert_ready(
+                    session,
+                    [updated],
+                    stats,
+                    indexes=indexes,
+                    guard=guard,
+                    found_at=found_at,
+                    write=True,
+                )
+            _queue_needs(session, still_waiting, stats)
+    finally:
+        engine.dispose()
 
 
 def run_zone_dry(zone_id: str) -> dict[str, Any]:
@@ -477,7 +707,7 @@ def run_new_business_outreach(now: datetime | None = None) -> dict[str, Any]:
     engine, session_factory = open_session()
     try:
         with session_factory() as session:
-            start, cycle = load_checkpoint(session)
+            start, cycle, pending_raw = load_checkpoint(session)
             guard = LeadSizeGuard(cap_mb * 1024 * 1024)
             guard.refresh(session)
             storage_bytes = guard.bytes
@@ -486,45 +716,101 @@ def run_new_business_outreach(now: datetime | None = None) -> dict[str, Any]:
 
     stats = _RunStats()
     indexes = _Indexes()
+    settings = get_settings()
+    budget = FetchBudget(int(settings.new_business_website_fetches_per_run))
+    max_places = int(settings.new_business_max_places_per_tile)
+    pending = decode_pending(pending_raw)
+    found_at = datetime.now(timezone.utc)
     if guard.stopped:
         stats.storage_stopped = True
         guard.warn_once()
-        planned: list[OutreachTile] = []
     else:
-        planned, _, _ = slice_tiles(start, int(get_settings().new_business_tiles_per_run))
+        _drain_website_queue(
+            stats,
+            budget,
+            indexes=indexes,
+            guard=guard,
+            found_at=found_at,
+            weekday=weekday,
+        )
 
-    next_index = start % len(TILES)
+    next_index = start % len(TILES) if TILES else 0
     wrapped = False
-    found_at = datetime.now(timezone.utc)
-    for tile in planned:
+    queries = 0
+    query_limit = int(settings.new_business_tiles_per_run)
+    while (
+        queries < query_limit
+        and not stats.yielded
+        and not stats.storage_stopped
+        and not wrapped
+        and TILES
+    ):
         if should_yield(datetime.now(timezone.utc), weekday=weekday):
             stats.yielded = True
             logger.info("New Business Outreach yielding before 07:00 Europe/Dublin")
             break
-        stopped_before = stats.storage_stopped
-        _process_tile(
+        from_static = False
+        if pending:
+            tile = pending.pop(0)
+        else:
+            tile = TILES[next_index]
+            from_static = True
+        queries += 1
+        try:
+            candidates, outcome = _discover_tile(tile, limit=max_places)
+        except Exception as exc:  # noqa: BLE001
+            reraise_if_fatal(exc)
+            logger.exception("New Business Outreach tile %s failed", tile.tile_id)
+            stats.failed.append(tile.tile_id)
+            outcome = None
+            candidates = []
+        raw_count = len(outcome.elements) if outcome is not None and outcome.ok else 0
+        timed_out = bool(outcome is not None and outcome.timed_out)
+        if outcome is not None and should_subdivide(
+            tile,
+            result_count=raw_count,
+            timed_out=timed_out,
+            max_places=max_places,
+        ):
+            children = quadrants(tile)
+            pending = children + pending
+            logger.info(
+                "New Business Outreach split %s into %s sub-tiles",
+                tile.tile_id,
+                len(children),
+            )
+            if from_static:
+                next_index, cycle, wrapped = _advance_static(next_index, pending, cycle)
+            _save_progress(next_index, cycle, pending)
+            continue
+        if outcome is None or not outcome.ok:
+            if tile.tile_id not in stats.failed:
+                stats.failed.append(tile.tile_id)
+                logger.warning(
+                    "New Business Outreach skipped tile %s; Overpass mirrors failed: %s",
+                    tile.tile_id,
+                    None if outcome is None else outcome.error,
+                )
+            if from_static:
+                next_index, cycle, wrapped = _advance_static(next_index, pending, cycle)
+            _save_progress(next_index, cycle, pending)
+            continue
+        _persist_leaf(
+            candidates,
             tile,
             stats,
-            write=True,
+            budget,
             indexes=indexes,
             guard=guard,
             found_at=found_at,
         )
-        if stats.storage_stopped and not stopped_before:
+        if from_static:
+            next_index, cycle, wrapped = _advance_static(next_index, pending, cycle)
+        _save_progress(next_index, cycle, pending)
+        if stats.storage_stopped:
             break
-        position = TILES.index(tile)
-        next_index = (position + 1) % len(TILES)
-        if next_index == 0:
-            wrapped = True
-            cycle += 1
-        engine, session_factory = open_session()
-        try:
-            with session_factory() as session:
-                save_checkpoint(session, next_tile_index=next_index, cycle=cycle)
-        finally:
-            engine.dispose()
-        if wrapped:
-            break
+
+    stats.website_fetches = int(settings.new_business_website_fetches_per_run) - budget.remaining
 
     week_label = found_at.astimezone(DUBLIN).date().isoformat()
     sheet = export_new_leads(stats.sheet_rows, week_label=week_label)

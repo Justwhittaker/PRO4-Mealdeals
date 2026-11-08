@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, Integer, SmallInteger
+from sqlalchemy import DateTime, Integer, SmallInteger, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -22,3 +22,5 @@ class NewBusinessOutreachState(Base):
     updated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Sub-tiles still to query, one per line. Empty once the parent tile is done.
+    pending_subtiles: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

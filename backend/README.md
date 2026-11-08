@@ -93,7 +93,7 @@ Dry-run one zone inside `mealdeals-celery-nuc`. It does not write lead rows, sen
 docker exec mealdeals-celery-nuc python /app/scripts/new_business_outreach_dry_run.py --zone british_isles
 ```
 
-The weekly run stores lean rows on `marketing_contacts` (`source_segment = new_business_outreach`). It stops inserting if that lead storage passes `NEW_BUSINESS_LEADS_MAX_MB` (default 100). A Google Sheet export runs afterwards when `GOOGLE_SERVICE_ACCOUNT_JSON` and either `NEW_BUSINESS_OUTREACH_SHEET_ID` (a new tab each week) or `NEW_BUSINESS_OUTREACH_DRIVE_FOLDER_ID` (a new spreadsheet each week) is set. Leave both ids empty to skip the export. Share the sheet or folder with the service account email, and do not commit the JSON key.
+The weekly run stores lean rows on `marketing_contacts` (`source_segment = new_business_outreach`). It stops inserting if that lead storage passes `NEW_BUSINESS_LEADS_MAX_MB` (default 100). Each Overpass query allows `NEW_BUSINESS_MAX_PLACES_PER_TILE` places (default 400); a full page or a timeout splits that cell into four sub-tiles and the checkpoint resumes there next week. Website lookups are capped by `NEW_BUSINESS_WEBSITE_FETCHES_PER_RUN` (default 150). Places that still need a lookup wait on `new_business_website_queue` instead of being dropped. A Google Sheet export runs afterwards when `GOOGLE_SERVICE_ACCOUNT_JSON` and either `NEW_BUSINESS_OUTREACH_SHEET_ID` (a new tab each week) or `NEW_BUSINESS_OUTREACH_DRIVE_FOLDER_ID` (a new spreadsheet each week) is set. Leave both ids empty to skip the export. Share the sheet or folder with the service account email, and do not commit the JSON key.
 
 Manual full worldwide scrape: `POST /api/v1/scrapers/scrape?wait=true`.
 

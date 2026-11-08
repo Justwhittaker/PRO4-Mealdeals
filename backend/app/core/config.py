@@ -134,6 +134,10 @@ class Settings(BaseSettings):
     # "Already on DineADeal" is always excluded.
     new_business_skip_own_ads: bool = Field(default=False)
     new_business_tiles_per_run: int = Field(default=60, ge=1, le=400)
+    # Overpass page size. A full page splits the tile instead of truncating the country.
+    new_business_max_places_per_tile: int = Field(default=400, ge=50, le=2000)
+    # Homepage and contact-page GETs per weekly run. The rest wait on the queue.
+    new_business_website_fetches_per_run: int = Field(default=150, ge=0, le=5000)
     # Stop inserting when estimated lead storage in marketing_contacts reaches this.
     new_business_leads_max_mb: int = Field(default=100, ge=1, le=10_000)
     # Service-account JSON (one line) or a path to the file. Never commit it.

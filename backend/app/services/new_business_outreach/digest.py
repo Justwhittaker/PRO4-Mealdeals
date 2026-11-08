@@ -319,6 +319,10 @@ def format_outreach_digest(report: dict[str, Any]) -> str:
         lines.append("Stopped before 07:00 Europe/Dublin so zone scrapes keep priority.")
     if report.get("storage_stopped"):
         lines.append("Stopped inserting because lead storage reached the cap.")
+    fetches = report.get("website_fetches")
+    deferred = report.get("website_deferred")
+    if fetches is not None:
+        lines.append(f"Website fetches: {fetches} (deferred {deferred or 0})")
     own_ads = "on" if report.get("skip_own_ads") else "off"
     lines.append(f"Own-ads filter: {own_ads}")
     sheet = report.get("sheet") or {}

@@ -1,12 +1,12 @@
 """Worldwide Overpass tiles. Europe first, then the rest of the planet.
 
-Each tile is a country or a slice of a large country. A weekly run walks the
-list from a checkpoint and stops at the yield clock, so a full pass takes
-several Sundays. The element cap inside each query is what keeps memory and
-Overpass load bounded; this is a sample of named venues, not a census.
+Each static tile is a country or a slice of one. A weekly run walks that list
+from a checkpoint. When a query returns a full page or times out, the tile is
+split into four sub-tiles and the checkpoint stores those, so a later week
+resumes mid-country. Europe stays first.
 
-Default pace (see ``TILES_PER_RUN_DEFAULT``): 60 tiles a week. The tile count
-is ``len(TILES)`` after the grid split below.
+Default pace (see ``TILES_PER_RUN_DEFAULT``): 60 Overpass queries a week. The
+static tile count is ``len(TILES)``. Runtime splits add more queries on dense cells.
 """
 
 from __future__ import annotations
@@ -14,12 +14,19 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-# One Overpass query per tile. Wider than this and public mirrors time out.
-MAX_SPAN_DEGREES = 12.0
-MAX_TILES_PER_COUNTRY = 4
+# Static grid. About 2.5 degrees keeps a query polite. Countries larger than
+# MAX_TILES_PER_COUNTRY cells are coarser and then split at runtime when a
+# query fills the place cap or times out.
+MAX_SPAN_DEGREES = 2.5
+MAX_TILES_PER_COUNTRY = 40
+# Do not recurse forever on a dense city block.
+MIN_SUBTILE_SPAN = 0.5
+MAX_SPLIT_DEPTH = 6
 # Stop the week here even when the yield clock is still open, so Sunday
 # morning zone scrapes are not walking into a hot Overpass.
 TILES_PER_RUN_DEFAULT = 60
+# Homepage plus one contact page and one about page.
+FETCHES_PER_PLACE = 3
 
 # code, name, south, west, north, east, europe, zone
 # zone "" means pick from the country (US east/west uses the tile centre).
@@ -207,10 +214,15 @@ class OutreachTile:
     east: float
     europe: bool
     lead_zone: str
+    depth: int = 0
 
     @property
     def label(self) -> str:
         return self.name
+
+    @property
+    def span(self) -> float:
+        return max(self.north - self.south, self.east - self.west)
 
 
 def _zone_for(country: str, fallback: str, west: float, east: float) -> str:
@@ -324,6 +336,124 @@ def slice_tiles(
             wrapped = True
             break
     return batch, index, wrapped
+
+
+def quadrants(tile: OutreachTile) -> list[OutreachTile]:
+    """Four child bboxes. Empty when the tile cannot get smaller."""
+    mid_lat = (tile.south + tile.north) / 2.0
+    mid_lon = (tile.west + tile.east) / 2.0
+    boxes = (
+        (tile.south, tile.west, mid_lat, mid_lon, "sw"),
+        (tile.south, mid_lon, mid_lat, tile.east, "se"),
+        (mid_lat, tile.west, tile.north, mid_lon, "nw"),
+        (mid_lat, mid_lon, tile.north, tile.east, "ne"),
+    )
+    children: list[OutreachTile] = []
+    for south, west, north, east, suffix in boxes:
+        if south >= north or west >= east:
+            continue
+        child_span = max(north - south, east - west)
+        if child_span <= 0:
+            continue
+        children.append(
+            OutreachTile(
+                tile_id=f"{tile.tile_id}-{suffix}",
+                country_code=tile.country_code,
+                name=f"{tile.name} {suffix}",
+                south=round(south, 4),
+                west=round(west, 4),
+                north=round(north, 4),
+                east=round(east, 4),
+                europe=tile.europe,
+                lead_zone=tile.lead_zone,
+                depth=tile.depth + 1,
+            )
+        )
+    return children
+
+
+def should_subdivide(
+    tile: OutreachTile,
+    *,
+    result_count: int,
+    timed_out: bool,
+    max_places: int,
+) -> bool:
+    """Split when the bbox is still large and the query saturated or timed out.
+
+    A full ``out tags N`` page means Overpass truncated the country. Those
+    elements are not kept; the four children are queried instead.
+    """
+    if tile.depth >= MAX_SPLIT_DEPTH or tile.span <= MIN_SUBTILE_SPAN:
+        return False
+    if timed_out:
+        return True
+    return result_count >= max(int(max_places), 1)
+
+
+def encode_pending(tiles: list[OutreachTile]) -> str:
+    """One sub-tile per line. Small enough for the single checkpoint row."""
+    lines: list[str] = []
+    for tile in tiles:
+        name = tile.name.replace("|", "/")
+        lines.append(
+            "|".join(
+                (
+                    tile.tile_id,
+                    tile.country_code,
+                    name,
+                    f"{tile.south:.4f}",
+                    f"{tile.west:.4f}",
+                    f"{tile.north:.4f}",
+                    f"{tile.east:.4f}",
+                    "1" if tile.europe else "0",
+                    tile.lead_zone,
+                    str(tile.depth),
+                )
+            )
+        )
+    return "\n".join(lines)
+
+
+def decode_pending(raw: str | None) -> list[OutreachTile]:
+    tiles: list[OutreachTile] = []
+    for line in (raw or "").splitlines():
+        parts = line.split("|")
+        if len(parts) != 10:
+            continue
+        tile_id, country, name, south, west, north, east, europe, zone, depth = parts
+        tiles.append(
+            OutreachTile(
+                tile_id=tile_id,
+                country_code=country,
+                name=name,
+                south=float(south),
+                west=float(west),
+                north=float(north),
+                east=float(east),
+                europe=europe == "1",
+                lead_zone=zone,
+                depth=int(depth),
+            )
+        )
+    return tiles
+
+
+def venues_for_fetch(
+    pending: int,
+    remaining_fetches: int,
+    *,
+    fetches_per_place: int = FETCHES_PER_PLACE,
+) -> tuple[int, int]:
+    """How many website lookups to start, and how many wait for a later week.
+
+    A place is started only when the whole homepage plus contact/about budget
+    is still available, so a partial crawl is not thrown away.
+    """
+    cost = max(int(fetches_per_place), 1)
+    slots = max(int(remaining_fetches), 0) // cost
+    start = min(max(int(pending), 0), slots)
+    return start, max(int(pending), 0) - start
 
 
 def europe_prefix_length(tiles: tuple[OutreachTile, ...] | None = None) -> int:

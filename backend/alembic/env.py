@@ -24,6 +24,7 @@ from app.models import (  # noqa: E402, F401
     Location,
     Merchant,
     NewBusinessOutreachState,
+    NewBusinessWebsiteQueue,
 )
 
 config = context.config

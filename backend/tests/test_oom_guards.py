@@ -160,7 +160,7 @@ def test_single_alembic_head() -> None:
     cfg = Config(str(_BACKEND / "alembic.ini"))
     script = ScriptDirectory.from_config(cfg)
     heads = script.get_heads()
-    assert heads == ["019_new_business_outreach"]
+    assert heads == ["020_outreach_coverage"]
 
 
 def test_expiry_revalidates_city_and_deal_tags() -> None:

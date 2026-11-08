@@ -11,11 +11,22 @@ from app.services.new_business_outreach.constants import TAKEAWAYS, WINE_FARMS
 from app.services.new_business_outreach.discover import emails_from_html, robots_allows_lines
 from app.services.new_business_outreach.exclusion import ExclusionIndex, exclusion_reason
 from app.services.new_business_outreach.overpass_query import query_overpass
-from app.services.new_business_outreach.search import is_public_wine, venue_category
+from app.services.new_business_outreach.search import is_public_wine, overpass_query, venue_category
 from app.services.new_business_outreach.sheets import export_new_leads, sheet_values
 from app.services.new_business_outreach.storage import LeadSizeGuard, lead_storage_bytes
-from app.services.new_business_outreach.tiles import TILES, europe_prefix_length, slice_tiles
-from app.services.new_business_outreach.types import AcceptedLead
+from app.services.new_business_outreach.tiles import (
+    TILES,
+    OutreachTile,
+    decode_pending,
+    encode_pending,
+    europe_prefix_length,
+    quadrants,
+    should_subdivide,
+    slice_tiles,
+    venues_for_fetch,
+)
+from app.services.new_business_outreach.types import AcceptedLead, VenueCandidate
+from app.services.new_business_outreach.website_queue import FetchBudget, attempt_website
 
 _RESTAURANTS = "Restaurants, Cafe's & Bistro's"
 
@@ -53,6 +64,8 @@ def test_legacy_outreach_flag_and_explicit_new_flag() -> None:
     assert Settings(new_business_outreach_weekday="monday").new_business_outreach_weekday == "monday"
     assert Settings().new_business_leads_max_mb == 100
     assert Settings().new_business_skip_own_ads is False
+    assert Settings().new_business_max_places_per_tile == 400
+    assert Settings().new_business_website_fetches_per_run == 150
 
 
 def test_exclusion_name_domain_unsubscribe_and_dedupe() -> None:
@@ -175,6 +188,64 @@ def test_tiles_are_europe_first_and_checkpoint_wraps() -> None:
     assert nxt == 0
     assert len(batch) == 1
     assert all(tile.south < tile.north and tile.west < tile.east for tile in TILES)
+    france = [tile for tile in TILES if tile.country_code == "FR" and tile.name.startswith("France")]
+    assert len(france) >= 12
+    parent = france[0]
+    children = quadrants(parent)
+    assert len(children) == 4
+    assert all(child.depth == parent.depth + 1 for child in children)
+    assert all(child.span < parent.span for child in children)
+    assert children[0].lead_zone == parent.lead_zone
+    assert should_subdivide(parent, result_count=400, timed_out=False, max_places=400)
+    tiny = OutreachTile(
+        tile_id="tiny",
+        country_code="FR",
+        name="tiny",
+        south=48.0,
+        west=2.0,
+        north=48.2,
+        east=2.2,
+        europe=True,
+        lead_zone="france_benelux",
+        depth=3,
+    )
+    assert tiny.span <= 0.5
+    assert should_subdivide(tiny, result_count=400, timed_out=True, max_places=400) is False
+    encoded = encode_pending(children)
+    assert decode_pending(encoded) == children
+    assert "out center tags 50" not in overpass_query(parent, limit=400)
+    assert "out center tags 400" in overpass_query(parent, limit=400)
+
+
+def test_website_budget_keeps_places_for_the_next_run() -> None:
+    start, deferred = venues_for_fetch(10, 7)
+    assert start == 2
+    assert deferred == 8
+    budget = FetchBudget(1)
+    calls: list[str] = []
+
+    def fetch(url: str):
+        calls.append(url)
+        return url, "owner@oak.example"
+
+    candidate = VenueCandidate(
+        business_name="Oak Cafe",
+        country_code="IE",
+        city="Galway",
+        venue_category=_RESTAURANTS,
+        zone_id="british_isles",
+        website="https://oak.example",
+        tile_id="ie-0",
+    )
+    skipped, status = attempt_website(candidate, FetchBudget(0), fetch=fetch)
+    assert status == "skipped"
+    assert skipped.website == "https://oak.example"
+    assert calls == []
+    updated, done = attempt_website(candidate, budget, fetch=fetch)
+    assert done == "done"
+    assert updated.emails[0] == "owner@oak.example"
+    assert budget.remaining == 0
+    assert calls == ["https://oak.example"]
 
 
 def test_lead_storage_share_and_guard() -> None:
@@ -214,7 +285,24 @@ async def test_overpass_uses_the_next_mirror_after_a_failure() -> None:
     ]
 
 
-async def test_overpass_failure_does_not_raise_when_every_mirror_fails() -> None:
+async def test_overpass_timeout_is_flagged_separately_from_a_dead_mirror() -> None:
+    async def post(endpoint: str, query: str, timeout: float) -> list[dict]:
+        del endpoint, query, timeout
+        raise httpx.TimeoutException("timed out")
+
+    async def pause(_seconds: float) -> None:
+        return None
+
+    outcome = await query_overpass(
+        "[out:json];",
+        mirrors=("https://slow.example/interpreter",),
+        post=post,
+        sleep=pause,
+        rounds=1,
+    )
+    assert outcome.ok is False
+    assert outcome.timed_out is True
+    assert outcome.elements == []
     async def post(endpoint: str, query: str, timeout: float) -> list[dict]:
         del endpoint, query, timeout
         raise httpx.ConnectError("down")
@@ -232,6 +320,7 @@ async def test_overpass_failure_does_not_raise_when_every_mirror_fails() -> None
     assert outcome.ok is False
     assert outcome.elements == []
     assert outcome.attempts == 2
+    assert outcome.timed_out is False
 
 
 def test_sheet_export_is_a_noop_without_credentials(monkeypatch) -> None:

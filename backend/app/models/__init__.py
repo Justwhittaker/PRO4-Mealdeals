@@ -10,6 +10,7 @@ from app.models.marketing_contact import MarketingContact
 from app.models.merchant import Merchant, MerchantCategory, TierLevel
 from app.models.newsletter import NewsletterSubscriber
 from app.models.outreach_state import NewBusinessOutreachState
+from app.models.website_queue import NewBusinessWebsiteQueue
 from app.models.terms_acceptance import TermsAcceptance
 from app.models.translation import DealTranslation
 from app.models.trial_claim import TrialClaim
@@ -27,6 +28,7 @@ __all__ = [
     "Merchant",
     "MerchantCategory",
     "NewBusinessOutreachState",
+    "NewBusinessWebsiteQueue",
     "NewsletterSubscriber",
     "TermsAcceptance",
     "TierLevel",

@@ -857,7 +857,7 @@ def test_migration_adds_fishy_columns() -> None:
     assert "specials_checked_at" in text
     assert not (backend / "alembic" / "versions" / "016_fishy_finger_sub.py").exists()
     script = ScriptDirectory.from_config(Config(str(backend / "alembic.ini")))
-    assert script.get_heads() == ["019_new_business_outreach"]
+    assert script.get_heads() == ["020_outreach_coverage"]
     revision = (backend / "alembic" / "versions" / "019_new_business_outreach.py").read_text(
         encoding="utf-8"
     )

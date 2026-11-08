@@ -46,6 +46,7 @@ class OverpassOutcome:
     error: str | None
     endpoint: str | None
     attempts: int
+    timed_out: bool = False
 
 
 async def _post(endpoint: str, query: str, timeout: float) -> list[dict[str, Any]]:
@@ -93,9 +94,10 @@ async def query_overpass(
     pause = sleep or asyncio.sleep
     order = _rotated(mirrors, start)
     if not order:
-        return OverpassOutcome(False, [], "no mirrors", None, 0)
+        return OverpassOutcome(False, [], "no mirrors", None, 0, False)
 
     attempts = 0
+    timeout_failures = 0
     last_error = "unavailable"
     planned: list[str] = []
     for _round in range(max(rounds, 1)):
@@ -108,6 +110,8 @@ async def query_overpass(
         except Exception as exc:  # noqa: BLE001 — one mirror must not abort the tile
             reraise_if_fatal(exc)
             last_error = str(exc)
+            if isinstance(exc, httpx.TimeoutException) or "timeout" in last_error.lower():
+                timeout_failures += 1
             logger.warning(
                 "New Business Outreach Overpass failed via %s (attempt %s): %s",
                 endpoint,
@@ -125,4 +129,11 @@ async def query_overpass(
         attempts,
         last_error,
     )
-    return OverpassOutcome(False, [], last_error, None, attempts)
+    return OverpassOutcome(
+        False,
+        [],
+        last_error,
+        None,
+        attempts,
+        timed_out=timeout_failures > 0 and timeout_failures == attempts,
+    )

@@ -12,7 +12,8 @@ from app.services.new_business_outreach.constants import (
 from app.services.new_business_outreach.tiles import OutreachTile
 from app.services.new_business_outreach.types import VenueCandidate
 
-ELEMENT_CAP = 50
+# Fallback only. The weekly run passes NEW_BUSINESS_MAX_PLACES_PER_TILE.
+DEFAULT_MAX_PLACES = 400
 
 _CHIPPER_NAME = re.compile(
     r"(?i)\b(?:chipper|chippy|fish\s*(?:and|&|\+)\s*chips?|chip\s*shop)\b"
@@ -20,9 +21,14 @@ _CHIPPER_NAME = re.compile(
 _WINE_PUBLIC = re.compile(r"(?i)\b(?:cellar|tasting|vineyard|winery|wine\s*farm)\b")
 
 
-def overpass_query(tile: OutreachTile) -> str:
-    """One bounded query: restaurants, fast food, chippers, and wine venues."""
+def overpass_query(tile: OutreachTile, *, limit: int = DEFAULT_MAX_PLACES) -> str:
+    """One bounded query: restaurants, fast food, chippers, and wine venues.
+
+    ``limit`` is a page size, not the country's coverage. Hitting it means the
+    caller should split the bbox and query the children.
+    """
     bbox = f"{tile.south},{tile.west},{tile.north},{tile.east}"
+    page = max(int(limit), 1)
     return f"""
 [out:json][timeout:25];
 (
@@ -35,7 +41,7 @@ def overpass_query(tile: OutreachTile) -> str:
   nwr["name"]["amenity"="winery"]({bbox});
   nwr["name"]["shop"="wine"]({bbox});
 );
-out center tags {ELEMENT_CAP};
+out center tags {page};
 """.strip()
 
 
