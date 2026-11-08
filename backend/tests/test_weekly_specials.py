@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import importlib.util
+import logging
+import sys
 from datetime import datetime, timezone
 from decimal import Decimal
-
 from pathlib import Path
+
+import pytest
+from celery.exceptions import SoftTimeLimitExceeded
+from sqlalchemy.exc import OperationalError
 
 from app.models.newsletter import NewsletterSubscriber
 from app.scrapers.source_filters import is_chain_name
@@ -29,6 +35,7 @@ from app.services.weekly_specials import (
     send_weekly_special_to_subscriber,
 )
 from app.services.weekly_specials_fixtures import galway_issue_fixtures
+from app.workers.tasks import send_weekly_specials
 
 _UTM = "utm_source=newsletter&utm_medium=email&utm_campaign=weekly_specials"
 
@@ -612,6 +619,291 @@ def test_test_send_does_not_update_last_emailed_at(monkeypatch) -> None:
     assert subscriber.last_emailed_at is None
     assert session.committed is False
     assert session.rolled_back is True
+
+
+def test_rejected_delivery_does_not_record_last_emailed_at(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.services.weekly_specials.send_email",
+        lambda **_kwargs: False,
+    )
+    monkeypatch.setattr(
+        "app.services.weekly_specials.fetch_weekly_deals",
+        lambda _session, _place: [],
+    )
+
+    class Session:
+        def __init__(self) -> None:
+            self.committed = False
+            self.rolled_back = False
+
+        def commit(self) -> None:
+            self.committed = True
+
+        def rollback(self) -> None:
+            self.rolled_back = True
+
+    session = Session()
+    subscriber = _justin()
+    subscriber.last_emailed_at = None
+    result = send_weekly_special_to_subscriber(session, subscriber)
+    assert result["sent"] is False
+    assert subscriber.last_emailed_at is None
+    assert session.committed is False
+    assert session.rolled_back is True
+
+
+class _ScalarRows:
+    def __init__(self, rows: list[NewsletterSubscriber]) -> None:
+        self._rows = rows
+
+    def all(self) -> list[NewsletterSubscriber]:
+        return list(self._rows)
+
+
+class _WeeklySession:
+    """Stand-in for the sync session. Rollback drops uncommitted send stamps."""
+
+    def __init__(self, rows: list[NewsletterSubscriber]) -> None:
+        self.rows = rows
+        self.rollbacks = 0
+
+    def __enter__(self) -> "_WeeklySession":
+        return self
+
+    def __exit__(self, *_args: object) -> bool:
+        return False
+
+    def scalars(self, _statement: object) -> _ScalarRows:
+        return _ScalarRows(self.rows)
+
+    def rollback(self) -> None:
+        self.rollbacks += 1
+        for row in self.rows:
+            row.last_emailed_at = None
+
+
+def _addressed(email: str) -> NewsletterSubscriber:
+    row = _justin()
+    row.email = email
+    row.last_emailed_at = None
+    return row
+
+
+def test_per_recipient_exception_is_isolated(monkeypatch) -> None:
+    bad = _addressed("bad@example.com")
+    good = _addressed("good@example.com")
+    session = _WeeklySession([bad, good])
+    attempted: list[str] = []
+
+    def send(session, subscriber, record_send=True, allow_unsubscribed=False):
+        del session
+        assert record_send is True
+        assert allow_unsubscribed is False
+        attempted.append(subscriber.email)
+        if subscriber.email == "bad@example.com":
+            subscriber.last_emailed_at = datetime.now(timezone.utc)
+            raise RuntimeError("render failed")
+        subscriber.last_emailed_at = datetime.now(timezone.utc)
+        return {"sent": True, "email": subscriber.email}
+
+    monkeypatch.setattr("app.workers.tasks.SyncSessionLocal", lambda: session)
+    monkeypatch.setattr(
+        "app.workers.tasks.send_weekly_special_to_subscriber",
+        send,
+    )
+    summary = send_weekly_specials()
+    assert summary == {"sent": 1, "skipped": 0, "failed": 1}
+    assert attempted == ["bad@example.com", "good@example.com"]
+    assert session.rollbacks == 1
+    assert bad.last_emailed_at is None
+    assert good.last_emailed_at is not None
+
+
+def test_celery_time_limit_is_not_counted_as_one_recipient(monkeypatch) -> None:
+    session = _WeeklySession([_addressed("one@example.com"), _addressed("two@example.com")])
+    attempted: list[str] = []
+
+    def send(session, subscriber, record_send=True, allow_unsubscribed=False):
+        del session, record_send, allow_unsubscribed
+        attempted.append(subscriber.email)
+        raise SoftTimeLimitExceeded()
+
+    monkeypatch.setattr("app.workers.tasks.SyncSessionLocal", lambda: session)
+    monkeypatch.setattr(
+        "app.workers.tasks.send_weekly_special_to_subscriber",
+        send,
+    )
+    with pytest.raises(SoftTimeLimitExceeded):
+        send_weekly_specials()
+    assert attempted == ["one@example.com"]
+
+
+def test_database_outage_aborts_the_weekly_run(monkeypatch) -> None:
+    first = _addressed("first@example.com")
+    second = _addressed("second@example.com")
+    session = _WeeklySession([first, second])
+    attempted: list[str] = []
+
+    def send(session, subscriber, record_send=True, allow_unsubscribed=False):
+        del session, record_send, allow_unsubscribed
+        attempted.append(subscriber.email)
+        raise OperationalError("SELECT 1", {}, Exception("connection refused"))
+
+    monkeypatch.setattr("app.workers.tasks.SyncSessionLocal", lambda: session)
+    monkeypatch.setattr(
+        "app.workers.tasks.send_weekly_special_to_subscriber",
+        send,
+    )
+    with pytest.raises(OperationalError):
+        send_weekly_specials()
+    assert attempted == ["first@example.com"]
+    assert session.rollbacks == 0
+
+
+def test_delivery_rejections_do_not_abort_the_run(monkeypatch) -> None:
+    rows = [_addressed(f"user{index}@example.com") for index in range(6)]
+    session = _WeeklySession(rows)
+    monkeypatch.setattr(
+        "app.workers.tasks._WEEKLY_CONSECUTIVE_EXCEPTION_ABORT",
+        2,
+    )
+
+    def send(session, subscriber, record_send=True, allow_unsubscribed=False):
+        del session, record_send, allow_unsubscribed
+        if subscriber.email == "user5@example.com":
+            subscriber.last_emailed_at = datetime.now(timezone.utc)
+            return {"sent": True, "email": subscriber.email}
+        return {"sent": False, "email": subscriber.email}
+
+    monkeypatch.setattr("app.workers.tasks.SyncSessionLocal", lambda: session)
+    monkeypatch.setattr(
+        "app.workers.tasks.send_weekly_special_to_subscriber",
+        send,
+    )
+    summary = send_weekly_specials()
+    assert summary == {"sent": 1, "skipped": 0, "failed": 5}
+    assert rows[-1].last_emailed_at is not None
+    assert all(row.last_emailed_at is None for row in rows[:-1])
+
+
+def test_consecutive_subscriber_exceptions_abort(monkeypatch) -> None:
+    rows = [_addressed(f"boom{index}@example.com") for index in range(3)]
+    session = _WeeklySession(rows)
+    attempted: list[str] = []
+    monkeypatch.setattr(
+        "app.workers.tasks._WEEKLY_CONSECUTIVE_EXCEPTION_ABORT",
+        2,
+    )
+
+    def send(session, subscriber, record_send=True, allow_unsubscribed=False):
+        del session, record_send, allow_unsubscribed
+        attempted.append(subscriber.email)
+        raise RuntimeError("template missing")
+
+    monkeypatch.setattr("app.workers.tasks.SyncSessionLocal", lambda: session)
+    monkeypatch.setattr(
+        "app.workers.tasks.send_weekly_special_to_subscriber",
+        send,
+    )
+    with pytest.raises(RuntimeError, match="aborted"):
+        send_weekly_specials()
+    assert attempted == ["boom0@example.com", "boom1@example.com"]
+
+
+def _weekly_script():
+    name = "send_weekly_specials_script"
+    cached = sys.modules.get(name)
+    if cached is not None:
+        return cached
+    path = Path(__file__).resolve().parents[1] / "scripts" / "send_weekly_specials.py"
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_clean_send_exits_zero(monkeypatch, caplog) -> None:
+    script = _weekly_script()
+    monkeypatch.setattr(
+        script,
+        "send_weekly_specials",
+        lambda test_email=None: {"sent": 2, "skipped": 0, "failed": 0},
+    )
+    with caplog.at_level(logging.INFO):
+        code = script.main([])
+    assert code == 0
+    assert "partial failure" not in caplog.text
+    assert "every attempted delivery failed" not in caplog.text
+
+
+def test_partial_failure_exits_zero(monkeypatch, caplog) -> None:
+    script = _weekly_script()
+    monkeypatch.setattr(
+        script,
+        "send_weekly_specials",
+        lambda test_email=None: {"sent": 3, "skipped": 1, "failed": 1},
+    )
+    with caplog.at_level(logging.WARNING):
+        code = script.main([])
+    assert code == 0
+    assert "partial failure" in caplog.text
+    assert "failed=1" in caplog.text
+
+
+def test_all_failed_deliveries_exit_one(monkeypatch, caplog) -> None:
+    script = _weekly_script()
+    monkeypatch.setattr(
+        script,
+        "send_weekly_specials",
+        lambda test_email=None: {"sent": 0, "skipped": 2, "failed": 4},
+    )
+    with caplog.at_level(logging.ERROR):
+        code = script.main([])
+    assert code == 1
+    assert "every attempted delivery failed" in caplog.text
+    assert "failed=4" in caplog.text
+
+
+def test_no_recipients_and_skipped_only_exit_zero(monkeypatch, caplog) -> None:
+    script = _weekly_script()
+    monkeypatch.setattr(
+        script,
+        "send_weekly_specials",
+        lambda test_email=None: {"sent": 0, "skipped": 2, "failed": 0},
+    )
+    with caplog.at_level(logging.INFO):
+        code = script.main([])
+    assert code == 0
+    assert "no deliveries" in caplog.text
+    assert "skipped=2" in caplog.text
+
+
+def test_missing_test_recipient_still_exits_one(monkeypatch, caplog) -> None:
+    script = _weekly_script()
+
+    def fake(test_email=None):
+        assert test_email == "missing@example.com"
+        return {"sent": 0, "skipped": 0, "failed": 0, "matched": 0}
+
+    monkeypatch.setattr(script, "send_weekly_specials", fake)
+    with caplog.at_level(logging.ERROR):
+        code = script.main(["--test-email", "missing@example.com"])
+    assert code == 1
+    assert "test recipient was not found" in caplog.text
+
+
+def test_systemic_send_error_is_not_swallowed(monkeypatch) -> None:
+    script = _weekly_script()
+
+    def fake(test_email=None):
+        del test_email
+        raise OperationalError("SELECT 1", {}, Exception("connection refused"))
+
+    monkeypatch.setattr(script, "send_weekly_specials", fake)
+    with pytest.raises(OperationalError):
+        script.main([])
 
 
 def test_workflow_test_email_is_opt_in_and_the_schedule_is_unchanged() -> None:
