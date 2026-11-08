@@ -18,10 +18,15 @@ from dataclasses import dataclass
 # MAX_TILES_PER_COUNTRY cells are coarser and then split at runtime when a
 # query fills the place cap or times out.
 MAX_SPAN_DEGREES = 2.5
-MAX_TILES_PER_COUNTRY = 40
+# Prefer this many cells, but do not coarsen a cell past MAX_CELL_DEGREES.
+# A 40-cell cap left the US and Russia as multi-degree blocks that time out.
+MAX_TILES_PER_COUNTRY = 80
+MAX_CELL_DEGREES = 4.0
 # Do not recurse forever on a dense city block.
 MIN_SUBTILE_SPAN = 0.5
 MAX_SPLIT_DEPTH = 6
+# Give a dead mirror a few Sundays, then move on so one bbox cannot stall the planet.
+MAX_TILE_RETRIES = 3
 # Stop the week here even when the yield clock is still open, so Sunday
 # morning zone scrapes are not walking into a hot Overpass.
 TILES_PER_RUN_DEFAULT = 60
@@ -215,6 +220,7 @@ class OutreachTile:
     europe: bool
     lead_zone: str
     depth: int = 0
+    retries: int = 0
 
     @property
     def label(self) -> str:
@@ -246,11 +252,17 @@ def _split_bbox(
     lon_n = max(1, math.ceil(lon_span / MAX_SPAN_DEGREES - 1e-9))
     while lat_n * lon_n > MAX_TILES_PER_COUNTRY:
         if lon_n >= lat_n and lon_n > 1:
-            lon_n -= 1
+            trial_lat, trial_lon = lat_n, lon_n - 1
         elif lat_n > 1:
-            lat_n -= 1
+            trial_lat, trial_lon = lat_n - 1, lon_n
         else:
             break
+        if (
+            lat_span / trial_lat > MAX_CELL_DEGREES
+            or lon_span / trial_lon > MAX_CELL_DEGREES
+        ):
+            break
+        lat_n, lon_n = trial_lat, trial_lon
     lat_step = lat_span / lat_n
     lon_step = lon_span / lon_n
     boxes: list[tuple[float, float, float, float]] = []
@@ -409,6 +421,7 @@ def encode_pending(tiles: list[OutreachTile]) -> str:
                     "1" if tile.europe else "0",
                     tile.lead_zone,
                     str(tile.depth),
+                    str(tile.retries),
                 )
             )
         )
@@ -419,9 +432,13 @@ def decode_pending(raw: str | None) -> list[OutreachTile]:
     tiles: list[OutreachTile] = []
     for line in (raw or "").splitlines():
         parts = line.split("|")
-        if len(parts) != 10:
+        if len(parts) == 10:
+            tile_id, country, name, south, west, north, east, europe, zone, depth = parts
+            retries = "0"
+        elif len(parts) == 11:
+            tile_id, country, name, south, west, north, east, europe, zone, depth, retries = parts
+        else:
             continue
-        tile_id, country, name, south, west, north, east, europe, zone, depth = parts
         tiles.append(
             OutreachTile(
                 tile_id=tile_id,
@@ -434,9 +451,87 @@ def decode_pending(raw: str | None) -> list[OutreachTile]:
                 europe=europe == "1",
                 lead_zone=zone,
                 depth=int(depth),
+                retries=int(retries),
             )
         )
     return tiles
+
+
+@dataclass(frozen=True)
+class TileProgress:
+    index: int
+    pending: tuple[OutreachTile, ...]
+    cycle: int
+    advanced: bool
+    retrying: bool
+    dropped: bool
+
+
+def record_tile_outcome(
+    *,
+    index: int,
+    pending: list[OutreachTile],
+    cycle: int,
+    tile: OutreachTile,
+    blocks_static: bool,
+    success: bool,
+    tile_count: int,
+) -> TileProgress:
+    """Move the checkpoint only past a tile that was queried successfully.
+
+    A failure stays at the front of ``pending`` and does not move ``index``,
+    so the next run retries it first. After ``MAX_TILE_RETRIES`` the tile is
+    dropped and, if it was blocking the static cursor, the cursor moves on.
+    """
+    if success:
+        if blocks_static and tile_count:
+            nxt = (index + 1) % tile_count
+            wrapped = nxt == 0 and not pending
+            return TileProgress(
+                nxt,
+                tuple(pending),
+                cycle + 1 if wrapped else cycle,
+                True,
+                False,
+                False,
+            )
+        return TileProgress(index, tuple(pending), cycle, False, False, False)
+
+    retries = tile.retries + 1
+    if retries > MAX_TILE_RETRIES:
+        rest = [item for item in pending if item.tile_id != tile.tile_id]
+        if blocks_static and tile_count:
+            nxt = (index + 1) % tile_count
+            wrapped = nxt == 0 and not rest
+            return TileProgress(
+                nxt,
+                tuple(rest),
+                cycle + 1 if wrapped else cycle,
+                True,
+                False,
+                True,
+            )
+        return TileProgress(index, tuple(rest), cycle, False, False, True)
+
+    retried = replace_tile_retries(tile, retries)
+    rest = [item for item in pending if item.tile_id != tile.tile_id]
+    return TileProgress(index, (retried, *rest), cycle, False, True, False)
+
+
+def replace_tile_retries(tile: OutreachTile, retries: int) -> OutreachTile:
+    return OutreachTile(
+        tile_id=tile.tile_id,
+        country_code=tile.country_code,
+        name=tile.name,
+        south=tile.south,
+        west=tile.west,
+        north=tile.north,
+        east=tile.east,
+        europe=tile.europe,
+        lead_zone=tile.lead_zone,
+        depth=tile.depth,
+        retries=retries,
+    )
 
 
 def venues_for_fetch(

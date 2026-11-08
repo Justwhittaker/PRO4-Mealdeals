@@ -19,6 +19,11 @@ from app.core.task_errors import reraise_if_fatal
 from app.scrapers.local_discovery import fetch_hub_osm_elements, osm_contact_from_element
 from app.scrapers.politeness import pace_host_sync
 from app.services.new_business_outreach.types import VenueCandidate
+from app.services.new_business_outreach.url_safety import (
+    PublicOnlyTransport,
+    redirect_target,
+    url_is_safe,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,26 +61,12 @@ def robots_allows_lines(lines: list[str], url: str) -> bool:
 
 
 def _public_http_url(url: str) -> bool:
-    try:
-        parsed = urlparse(url.strip())
-    except ValueError:
-        return False
-    if parsed.scheme not in {"http", "https"}:
-        return False
-    host = (parsed.hostname or "").lower()
-    if not host or host in {"localhost", "metadata.google.internal"} or host.endswith(".local"):
-        return False
-    try:
-        ip = ipaddress.ip_address(host)
-    except ValueError:
-        return "." in host
-    return not (
-        ip.is_private
-        or ip.is_loopback
-        or ip.is_link_local
-        or ip.is_reserved
-        or ip.is_multicast
-    )
+    """http(s) on port 80/443 whose host does not resolve to a private address."""
+    return url_is_safe(url)
+
+
+_MAX_REDIRECTS = 4
+_REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 
 
 def _robots_allows(url: str) -> bool:
@@ -86,18 +77,11 @@ def _robots_allows(url: str) -> bool:
     if host not in _robots_cache:
         robots_url = f"{parsed.scheme}://{host}/robots.txt"
         parser: RobotFileParser | None = None
-        if _public_http_url(robots_url):
-            pace_host_sync(robots_url)
-            try:
-                with httpx.Client(timeout=5.0, follow_redirects=True) as client:
-                    response = client.get(robots_url, headers={"User-Agent": _USER_AGENT})
-                if response.status_code < 400 and _public_http_url(str(response.url)):
-                    parser = RobotFileParser()
-                    parser.parse(response.text.splitlines())
-            except Exception as exc:  # noqa: BLE001 — a missing robots.txt must not skip the venue
-                reraise_if_fatal(exc)
-                logger.info("Robots.txt skipped for %s: %s", host, exc)
-                parser = None
+        if url_is_safe(robots_url):
+            fetched = _safe_get(robots_url, limit=100_000, check_robots=False)
+            if fetched is not None and fetched[0] < 400:
+                parser = RobotFileParser()
+                parser.parse(fetched[2].splitlines())
         _robots_cache[host] = parser
     parser = _robots_cache[host]
     if parser is None:
@@ -105,27 +89,72 @@ def _robots_allows(url: str) -> bool:
     return parser.can_fetch(_USER_AGENT, url)
 
 
+def _safe_get(url: str, *, limit: int, check_robots: bool) -> tuple[int, str, str] | None:
+    """GET one URL. Follows a few redirects, re-checking each hop. Caps the body."""
+    current = url
+    try:
+        with httpx.Client(
+            timeout=8.0,
+            follow_redirects=False,
+            transport=PublicOnlyTransport(),
+        ) as client:
+            for _hop in range(_MAX_REDIRECTS + 1):
+                if not url_is_safe(current):
+                    return None
+                if check_robots and not _robots_allows(current):
+                    logger.info("Robots.txt disallows %s", current)
+                    return None
+                pace_host_sync(current)
+                with client.stream(
+                    "GET",
+                    current,
+                    headers={"User-Agent": _USER_AGENT},
+                ) as response:
+                    if response.status_code in _REDIRECT_STATUSES:
+                        location = response.headers.get("location")
+                        if not location:
+                            return None
+                        current = redirect_target(current, location)
+                        continue
+                    chunks: list[bytes] = []
+                    total = 0
+                    for chunk in response.iter_bytes():
+                        total += len(chunk)
+                        if total > limit:
+                            chunks.append(chunk[: limit - (total - len(chunk))])
+                            break
+                        chunks.append(chunk)
+                    text = b"".join(chunks).decode(response.encoding or "utf-8", errors="replace")
+                    final = current
+                    if not url_is_safe(final):
+                        return None
+                    return response.status_code, final, text
+    except Exception as exc:  # noqa: BLE001 — one dead site must not abort the run
+        reraise_if_fatal(exc)
+        logger.info("Page skipped for %s: %s", url, exc)
+        return None
+    return None
+
+
 def fetch_homepage(url: str) -> tuple[str, str] | None:
     """GET a public page. None when the URL is unsafe, disallowed, or the request fails."""
-    if not _public_http_url(url):
+    fetched = _safe_get(url, limit=_HOMEPAGE_BYTES, check_robots=True)
+    if fetched is None or fetched[0] >= 400:
         return None
-    if not _robots_allows(url):
-        logger.info("Robots.txt disallows %s", url)
-        return None
-    pace_host_sync(url)
-    try:
-        with httpx.Client(timeout=8.0, follow_redirects=True) as client:
-            response = client.get(url, headers={"User-Agent": _USER_AGENT})
-    except Exception as exc:  # noqa: BLE001 — one dead site must not abort the zone
-        reraise_if_fatal(exc)
-        logger.info("Homepage skipped for %s: %s", url, exc)
-        return None
-    if response.status_code >= 400:
-        return None
-    final = str(response.url)
-    if not _public_http_url(final):
-        return None
-    return final, response.text[:_HOMEPAGE_BYTES]
+    _status, final, text = fetched
+    return final, text
+
+
+def email_lookup_pages(website: str) -> list[str]:
+    """Homepage, then one contact page and one about page."""
+    parsed = urlparse(website)
+    if not parsed.scheme or not parsed.netloc:
+        return []
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+    pages = [website]
+    for path in ("/contact", "/about"):
+        pages.append(urljoin(origin + "/", path.lstrip("/")))
+    return pages
 
 
 def contact_page_urls(website: str) -> list[str]:

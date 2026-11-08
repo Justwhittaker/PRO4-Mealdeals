@@ -26,6 +26,7 @@ from app.services.new_business_outreach.discover import (
     _HOMEPAGE_BYTES,
     _USER_AGENT,
     _public_http_url,
+    _safe_get,
 )
 from app.services.new_business_outreach.types import AcceptedLead, VenueCandidate
 
@@ -142,19 +143,13 @@ def classify_site_specials(
 
 def _http_get(url: str) -> tuple[int | None, str | None, str | None]:
     """GET one probe URL. ``error`` is set on timeout or transport failure."""
-    if not _public_http_url(url):
-        return None, None, "unsafe_url"
-    pace_host_sync(url)
-    try:
-        with httpx.Client(timeout=8.0, follow_redirects=True) as client:
-            response = client.get(url, headers={"User-Agent": _USER_AGENT})
-    except httpx.TimeoutException:
-        return None, None, "timeout"
-    except Exception as exc:  # noqa: BLE001 — one dead host must not abort the zone
-        reraise_if_fatal(exc)
-        logger.info("Fishy specials probe failed for %s: %s", url, exc)
+    fetched = _safe_get(url, limit=_HOMEPAGE_BYTES, check_robots=True)
+    if fetched is None:
         return None, None, "transport"
-    return response.status_code, response.text[:_HOMEPAGE_BYTES], None
+    status, _final, text = fetched
+    if status >= 400 and status not in {403, 404, 410, 451}:
+        return status, text, None
+    return status, text, None
 
 
 def fetch_specials_probes(website: str, *, get: HttpGet | None = None) -> list[ProbeResult]:
