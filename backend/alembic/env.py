@@ -23,6 +23,8 @@ from app.models import (  # noqa: E402, F401
     DealTranslation,
     Location,
     Merchant,
+    NewBusinessOutreachState,
+    NewBusinessWebsiteQueue,
 )
 
 config = context.config

@@ -50,7 +50,7 @@ class MarketingContact(Base):
     city: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
     source_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     venue_category: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
-    # fishy_finger_sub for the weekly lead scrape. Null on deal-scrape contacts.
+    # new_business_outreach for the weekly lead scrape. Null on deal-scrape contacts.
     source_segment: Mapped[Optional[str]] = mapped_column(
         String(64), nullable=True, index=True
     )
@@ -62,6 +62,9 @@ class MarketingContact(Base):
     specials_checked_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    lead_address: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    lead_tile: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    lead_source: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
 
     outreach_unsubscribe_token: Mapped[Optional[str]] = mapped_column(
         String(64), nullable=True, unique=True, index=True

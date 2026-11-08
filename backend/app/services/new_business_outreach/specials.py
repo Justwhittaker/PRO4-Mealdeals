@@ -22,12 +22,12 @@ from app.core.task_errors import reraise_if_fatal
 from app.scrapers.global_retail import _OFFER_SNIPPET_RE
 from app.scrapers.offer_links import extract_offer_url_from_soup, listing_urls_for
 from app.scrapers.politeness import pace_host_sync
-from app.services.fishy_finger.discover import (
+from app.services.new_business_outreach.discover import (
     _HOMEPAGE_BYTES,
     _USER_AGENT,
     _public_http_url,
 )
-from app.services.fishy_finger.types import AcceptedLead, VenueCandidate
+from app.services.new_business_outreach.types import AcceptedLead, VenueCandidate
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,8 @@
-"""Select, dedupe, and store Fishy Finger Sub leads.
+"""Select, dedupe, and store New Business Outreach leads.
+
+Rows stay lean: name, type, address, website, email, source, and the
+existing marketing-contact columns. Homepage HTML is used in memory to find
+an email and is not written to Postgres.
 
 A lead is stored only when all of the following hold:
 
@@ -16,56 +20,36 @@ as a shared corporate domain; see ``chains.py``.
 
 from __future__ import annotations
 
-import asyncio
-import concurrent.futures
-import logging
 import re
 import uuid
 from collections import defaultdict
 from dataclasses import replace
-from typing import Any, Callable
+from typing import Callable
 
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.task_errors import reraise_if_fatal
 from app.models.deal import Deal
 from app.models.location import Location
 from app.models.marketing_contact import MarketingContact
 from app.models.merchant import Merchant
 from app.scrapers.categories import CATEGORY_ORDER
-from app.scrapers.zones import SCRAPE_ZONES, iter_zone_areas
-from app.services.fishy_finger.chains import (
+from app.services.new_business_outreach.chains import (
     ChainSignals,
     brand_key,
     chain_exclusion_reason,
     corporate_domain,
 )
-from app.services.fishy_finger.constants import FISHY_FINGER_SEGMENT
-from app.services.fishy_finger.db import open_session
-from app.services.fishy_finger.discover import (
-    discover_fishy_candidates,
+from app.services.new_business_outreach.constants import NEW_BUSINESS_SEGMENT
+from app.services.new_business_outreach.discover import (
+    contact_page_urls,
     emails_from_html,
     fetch_homepage,
 )
-from app.services.fishy_finger.email_quality import pick_best_email
-from app.services.fishy_finger.specials import annotate_leads_with_specials
-from app.services.fishy_finger.types import AcceptedLead, VenueCandidate
+from app.services.new_business_outreach.email_quality import pick_best_email
+from app.services.new_business_outreach.types import AcceptedLead, VenueCandidate
 from app.services.geo_names import normalize_city, normalize_country
 from app.services.marketing_contacts import _clean_phone, _clean_website
-
-logger = logging.getLogger(__name__)
-
-
-def _run_coro(coro: Any) -> Any:
-    """Run discovery from the sync Celery worker. Same approach as scrape_runner."""
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(coro)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-        return pool.submit(asyncio.run, coro).result()
 
 # Venues with no OSM email: at most this many homepage reads per city.
 HOMEPAGE_FETCHES_PER_CITY = 8
@@ -118,6 +102,51 @@ def enrich_candidates(
                 page_text=_page_text(html),
                 homepage_html=html,
                 homepage_url=final_url or candidate.website,
+            )
+        )
+    return enriched
+
+
+def enrich_contact_pages(
+    candidates: list[VenueCandidate],
+    *,
+    fetch: HomepageFetch | None = None,
+    per_city_limit: int = 4,
+) -> list[VenueCandidate]:
+    """One contact page and one about page when the homepage had no usable email."""
+    getter = fetch or fetch_homepage
+    used: dict[tuple[str, str], int] = defaultdict(int)
+    enriched: list[VenueCandidate] = []
+    for candidate in candidates:
+        if pick_best_email(candidate.emails).accepted or not candidate.website:
+            enriched.append(candidate)
+            continue
+        key = _city_key(candidate.country_code, candidate.city)
+        emails = list(candidate.emails)
+        extra_text = ""
+        found = False
+        for url in contact_page_urls(candidate.website)[:2]:
+            if used[key] >= per_city_limit:
+                break
+            used[key] += 1
+            fetched = getter(url)
+            if not fetched:
+                continue
+            _final, html = fetched
+            extra_text = f"{extra_text} {_page_text(html)}".strip()
+            emails.extend(emails_from_html(html))
+            if pick_best_email(emails).accepted:
+                found = True
+                break
+        if not found and not extra_text:
+            enriched.append(candidate)
+            continue
+        enriched.append(
+            replace(
+                candidate,
+                emails=tuple(dict.fromkeys(emails)),
+                page_text=_page_text(f"{candidate.page_text or ''} {extra_text}"),
+                lead_source="website" if pick_best_email(emails).accepted else candidate.lead_source,
             )
         )
     return enriched
@@ -204,6 +233,9 @@ def select_fishy_leads(
                 email_quality_score=verdict.score,
                 website=_clean_website(candidate.website),
                 phone=_clean_phone(candidate.phone),
+                address=candidate.address,
+                tile_id=candidate.tile_id,
+                lead_source=candidate.lead_source,
             )
         )
     stats["kept"] = len(accepted)
@@ -347,11 +379,14 @@ def insert_fishy_lead(session: Session, lead: AcceptedLead) -> MarketingContact:
         city=lead.city,
         source_url=lead.website,
         venue_category=lead.venue_category[:120],
-        source_segment=FISHY_FINGER_SEGMENT,
+        source_segment=NEW_BUSINESS_SEGMENT,
         lead_zone=lead.zone_id[:64],
         email_quality_score=lead.email_quality_score,
         has_site_specials=lead.has_site_specials,
         specials_checked_at=lead.specials_checked_at,
+        lead_address=(lead.address[:255] if lead.address else None),
+        lead_tile=(lead.tile_id[:64] if lead.tile_id else None),
+        lead_source=(lead.lead_source[:32] if lead.lead_source else None),
     )
     session.add(row)
     session.flush()
@@ -366,111 +401,3 @@ def _remember(known: set[tuple[str, str]], lead: AcceptedLead) -> None:
         country_code=lead.country_code,
         city=lead.city,
     )
-
-
-def _empty_specials_counts() -> dict[str, int]:
-    return {"no_specials": 0, "has_specials": 0, "specials_unknown": 0, "outreach_sends": 0}
-
-
-def run_fishy_finger_zone(zone_id: str, *, dry_run: bool = False) -> dict[str, Any]:
-    """Discover and store leads for one scrape zone. Does not touch deal cycles.
-
-    ``dry_run`` still inserts lead rows. It does not set outreach send
-    timestamps, send email, or post to ntfy. Probes run outside the database
-    transaction so a slow site does not hold a Postgres connection.
-    """
-    zone = zone_id.strip().lower()
-    if zone not in SCRAPE_ZONES:
-        logger.warning("Unknown fishy finger zone %r; skipping", zone_id)
-        return {
-            "zone": zone,
-            "ok": True,
-            "status": "skipped",
-            "skipped": "unknown_zone",
-            "dry_run": dry_run,
-            "ntfy": None,
-            **_empty_specials_counts(),
-        }
-
-    areas = iter_zone_areas(zone)
-    candidates: list[VenueCandidate] = []
-    cities_failed: list[str] = []
-    for country, city in areas:
-        try:
-            batch = _run_coro(discover_fishy_candidates(country, city, zone))
-        except Exception as exc:  # noqa: BLE001
-            reraise_if_fatal(exc)
-            logger.exception("Fishy discovery failed for %s / %s", country, city)
-            cities_failed.append(f"{country}:{city}")
-            continue
-        candidates.extend(batch)
-
-    candidates = enrich_candidates(candidates)
-
-    engine, session_factory = open_session()
-    inserted = 0
-    skipped_known = 0
-    inserted_flags: list[bool | None] = []
-    stats: dict[str, int] = {}
-    try:
-        with session_factory() as session:
-            extra_brands, extra_domains = load_stored_chain_signals(session)
-            known = load_known_identity_keys(session)
-        accepted, stats = select_fishy_leads(
-            candidates,
-            extra_brand_cities=extra_brands,
-            extra_domain_names=extra_domains,
-        )
-        pending = [lead for lead in accepted if not lead_is_known(lead, known)]
-        skipped_known += len(accepted) - len(pending)
-        # HTTP probes happen with no database connection checked out.
-        pending = annotate_leads_with_specials(pending, candidates)
-        with session_factory() as session:
-            known = load_known_identity_keys(session)
-            for lead in pending:
-                if lead_is_known(lead, known):
-                    skipped_known += 1
-                    continue
-                try:
-                    with session.begin_nested():
-                        row = insert_fishy_lead(session, lead)
-                    if row.last_outreach_sent_at is not None:
-                        raise RuntimeError("Fishy insert must not stamp outreach send state")
-                    _remember(known, lead)
-                    inserted += 1
-                    inserted_flags.append(lead.has_site_specials)
-                except IntegrityError:
-                    skipped_known += 1
-                    continue
-            session.commit()
-    finally:
-        engine.dispose()
-
-    summary = {
-        "zone": zone,
-        "label": SCRAPE_ZONES[zone]["label"],
-        "ok": True,
-        "status": "completed",
-        "dry_run": dry_run,
-        "cities": len(areas),
-        "candidates": len(candidates),
-        "leads_inserted": inserted,
-        "skipped_known": skipped_known,
-        "cities_failed": cities_failed,
-        "filter_stats": stats,
-        "no_specials": sum(flag is False for flag in inserted_flags),
-        "has_specials": sum(flag is True for flag in inserted_flags),
-        "specials_unknown": sum(flag is None for flag in inserted_flags),
-        "outreach_sends": 0,
-        "ntfy": None,
-    }
-    logger.info(
-        "Fishy Finger zone %s dry_run=%s candidates=%s inserted=%s no_specials=%s known=%s",
-        zone,
-        dry_run,
-        len(candidates),
-        inserted,
-        summary["no_specials"],
-        skipped_known,
-    )
-    return summary

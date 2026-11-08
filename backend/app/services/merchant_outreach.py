@@ -20,9 +20,13 @@ from app.models.marketing_contact import MarketingContact
 from app.models.merchant import Merchant
 from app.services.deal_link import normalize_outbound_url
 from app.services.email import is_email_configured, send_email
-from app.services.fishy_finger.email_quality import score_email
-from app.services.fishy_finger.ezine import build_fishy_ezine, load_live_active_deals
-from app.services.fishy_finger.schedule import EU_ZONE_ORDER, is_eu_zone
+from app.services.new_business_outreach.constants import (
+    LEGACY_SEGMENT_PREFIX,
+    NEW_BUSINESS_SEGMENT,
+)
+from app.services.new_business_outreach.email_quality import score_email
+from app.services.new_business_outreach.ezine import build_fishy_ezine, load_live_active_deals
+from app.services.new_business_outreach.schedule import EU_ZONE_ORDER, is_eu_zone
 from app.services.ingest import normalize_city, normalize_country
 from app.services.marketing_contacts import _clean_email
 
@@ -160,10 +164,15 @@ def is_outreach_eligible_email(email: str | None) -> bool:
     return True
 
 
-def is_fishy_sourced(contact: MarketingContact) -> bool:
-    """True for Fishy Finger lead rows (source_segment fishy*)."""
+def is_new_business_sourced(contact: MarketingContact) -> bool:
+    """True for New Business Outreach rows, including legacy fishy segment values."""
     segment = (getattr(contact, "source_segment", None) or "").strip().lower()
-    return segment.startswith("fishy")
+    return segment == NEW_BUSINESS_SEGMENT or segment.startswith(LEGACY_SEGMENT_PREFIX)
+
+
+def is_fishy_sourced(contact: MarketingContact) -> bool:
+    """Backward-compatible name for :func:`is_new_business_sourced`."""
+    return is_new_business_sourced(contact)
 
 
 def contact_email_sendable(contact: MarketingContact) -> bool:
@@ -219,6 +228,14 @@ def outreach_priority_key(contact: MarketingContact) -> tuple[object, ...]:
     )
 
 
+def _lead_segment():
+    """New Business Outreach rows, plus legacy fishy segment values."""
+    return or_(
+        func.lower(MarketingContact.source_segment) == NEW_BUSINESS_SEGMENT,
+        func.lower(MarketingContact.source_segment).like("fishy%"),
+    )
+
+
 def rank_outreach_candidates(
     rows: list[MarketingContact],
     *,
@@ -231,12 +248,12 @@ def rank_outreach_candidates(
 ) -> list[MarketingContact]:
     """Apply the 28-day gap, unsubscribes, the cap, and the drip order.
 
-    Fishy leads are omitted entirely while ``FISHY_OUTREACH_ENABLED`` is false.
-    The remaining contacts then use the pre-Fishy order: never emailed, then
-    cooldown ended. With the flag on, Fishy groups 1–3 come first.
+    New Business Outreach leads are omitted entirely while the flag is false.
+    The remaining contacts then use the pre-lead order: never emailed, then
+    cooldown ended. With the flag on, lead groups come first.
     """
     if fishy_enabled is None:
-        fishy_enabled = get_settings().fishy_outreach_enabled
+        fishy_enabled = get_settings().new_business_outreach_enabled
     cutoff = now - timedelta(days=min_days)
     emails = merchant_emails or set()
     domains = merchant_domains or set()
@@ -292,7 +309,10 @@ def outreach_batch_statement(
             stmt.where(
                 or_(
                     MarketingContact.source_segment.is_(None),
-                    func.lower(MarketingContact.source_segment).notlike("fishy%"),
+                    and_(
+                        func.lower(MarketingContact.source_segment) != NEW_BUSINESS_SEGMENT,
+                        func.lower(MarketingContact.source_segment).notlike("fishy%"),
+                    ),
                 )
             )
             .order_by(
@@ -301,7 +321,7 @@ def outreach_batch_statement(
             )
             .limit(limit)
         )
-    fishy = func.lower(MarketingContact.source_segment).like("fishy%")
+    fishy = _lead_segment()
     no_specials = MarketingContact.has_site_specials.is_(False)
     eu_no_specials = and_(
         fishy,
@@ -595,11 +615,11 @@ def send_outreach_to_contact(
     active_deals: int | None = None,
 ) -> dict[str, Any]:
     settings = get_settings()
-    if is_fishy_sourced(contact) and not settings.fishy_outreach_enabled:
+    if is_new_business_sourced(contact) and not settings.new_business_outreach_enabled:
         return {
             "email": contact.email,
             "skipped": True,
-            "reason": "fishy_outreach_disabled",
+            "reason": "new_business_outreach_disabled",
         }
     if contact.outreach_unsubscribed_at is not None:
         return {"email": contact.email, "skipped": True, "reason": "unsubscribed"}
@@ -609,7 +629,7 @@ def send_outreach_to_contact(
     token = ensure_outreach_token(contact)
     send_ref = secrets.token_urlsafe(8)
     unsub = outreach_unsubscribe_url(token)
-    if is_fishy_sourced(contact):
+    if is_new_business_sourced(contact):
         subject, text_body, html_body = build_fishy_ezine(
             contact,
             unsubscribe_url=unsub,
@@ -655,7 +675,7 @@ def fetch_outreach_batch(
     settings = get_settings()
     min_days = settings.merchant_outreach_min_days
     max_rows = settings.merchant_outreach_max_per_run
-    fishy_enabled = settings.fishy_outreach_enabled
+    fishy_enabled = settings.new_business_outreach_enabled
     cutoff = _utcnow() - timedelta(days=min_days)
     merchant_emails = _load_registered_merchant_emails(session)
     merchant_domains = _load_registered_merchant_domains(session)
@@ -756,7 +776,7 @@ def send_merchant_outreach_batch(session: Session) -> dict[str, int]:
     excluded = stats_before.get("excluded_existing_merchants", 0)
     active_deals = (
         load_live_active_deals(session)
-        if contacts and settings.fishy_outreach_enabled
+        if contacts and settings.new_business_outreach_enabled
         else None
     )
 
