@@ -8,23 +8,30 @@ import httpx
 
 from app.core.config import Settings
 from app.services.new_business_outreach.constants import TAKEAWAYS, WINE_FARMS
-from app.services.new_business_outreach.discover import emails_from_html, robots_allows_lines
+from app.services.new_business_outreach.discover import (
+    email_lookup_pages,
+    emails_from_html,
+    robots_allows_lines,
+)
 from app.services.new_business_outreach.exclusion import ExclusionIndex, exclusion_reason
 from app.services.new_business_outreach.overpass_query import query_overpass
 from app.services.new_business_outreach.search import is_public_wine, overpass_query, venue_category
 from app.services.new_business_outreach.sheets import export_new_leads, sheet_values
 from app.services.new_business_outreach.storage import LeadSizeGuard, lead_storage_bytes
 from app.services.new_business_outreach.tiles import (
+    MAX_TILE_RETRIES,
     TILES,
     OutreachTile,
     decode_pending,
     encode_pending,
     europe_prefix_length,
     quadrants,
+    record_tile_outcome,
     should_subdivide,
     slice_tiles,
     venues_for_fetch,
 )
+from app.services.new_business_outreach.url_safety import redirect_target, url_is_safe
 from app.services.new_business_outreach.types import AcceptedLead, VenueCandidate
 from app.services.new_business_outreach.website_queue import FetchBudget, attempt_website
 
@@ -248,6 +255,117 @@ def test_website_budget_keeps_places_for_the_next_run() -> None:
     assert calls == ["https://oak.example"]
 
 
+def test_failed_overpass_tile_is_retried_before_the_cursor_moves() -> None:
+    tile = TILES[0]
+    failed = record_tile_outcome(
+        index=0,
+        pending=[],
+        cycle=1,
+        tile=tile,
+        blocks_static=True,
+        success=False,
+        tile_count=len(TILES),
+    )
+    assert failed.index == 0
+    assert failed.advanced is False
+    assert failed.retrying is True
+    assert failed.pending[0].tile_id == tile.tile_id
+    assert failed.pending[0].retries == 1
+
+    succeeded = record_tile_outcome(
+        index=failed.index,
+        pending=[],
+        cycle=failed.cycle,
+        tile=failed.pending[0],
+        blocks_static=True,
+        success=True,
+        tile_count=len(TILES),
+    )
+    assert succeeded.advanced is True
+    assert succeeded.index == 1
+    assert succeeded.pending == ()
+
+
+def test_overpass_outage_does_not_drop_tiles() -> None:
+    tile = TILES[0]
+    progress_index = 0
+    pending = [tile]
+    cycle = 1
+    for _attempt in range(MAX_TILE_RETRIES):
+        progress = record_tile_outcome(
+            index=progress_index,
+            pending=[],
+            cycle=cycle,
+            tile=pending[0],
+            blocks_static=True,
+            success=False,
+            tile_count=len(TILES),
+        )
+        assert progress.index == 0
+        assert progress.advanced is False
+        assert progress.retrying is True
+        pending = list(progress.pending)
+        cycle = progress.cycle
+    dropped = record_tile_outcome(
+        index=0,
+        pending=[],
+        cycle=cycle,
+        tile=pending[0],
+        blocks_static=True,
+        success=False,
+        tile_count=len(TILES),
+    )
+    assert dropped.dropped is True
+    assert dropped.index == 1
+
+
+def test_website_urls_cannot_reach_private_hosts() -> None:
+    public = lambda _host: ["1.1.1.1"]
+    assert url_is_safe("http://127.0.0.1/latest") is False
+    assert url_is_safe("http://127.1/") is False
+    assert url_is_safe("http://2130706433/") is False
+    assert url_is_safe("http://10.1.2.3/") is False
+    assert url_is_safe("http://169.254.169.254/latest") is False
+    assert url_is_safe("http://localhost/") is False
+    assert url_is_safe("http://example.com:8080/", resolve=public) is False
+    assert url_is_safe("ftp://example.com/", resolve=public) is False
+    assert url_is_safe("https://rebind.example/", resolve=lambda _host: ["127.0.0.1"]) is False
+    assert url_is_safe("https://example.com/menu", resolve=public) is True
+    assert url_is_safe(redirect_target("https://example.com/a", "http://127.0.0.1/secret")) is False
+
+
+def test_about_page_is_fetched_until_the_clock_stops() -> None:
+    pages = email_lookup_pages("https://oak.example/menu")
+    assert pages[0] == "https://oak.example/menu"
+    assert "https://oak.example/contact" in pages
+    assert "https://oak.example/about" in pages
+    calls: list[str] = []
+
+    def fetch(url: str):
+        calls.append(url)
+        return url, "no email here"
+
+    def allow() -> bool:
+        return len(calls) == 0
+
+    candidate = VenueCandidate(
+        business_name="Oak Cafe",
+        country_code="IE",
+        city="Galway",
+        venue_category=_RESTAURANTS,
+        zone_id="british_isles",
+        website="https://oak.example/menu",
+    )
+    _updated, status = attempt_website(
+        candidate,
+        FetchBudget(5),
+        fetch=fetch,
+        allow=allow,
+    )
+    assert status == "yielded"
+    assert calls == ["https://oak.example/menu"]
+
+
 def test_lead_storage_share_and_guard() -> None:
     assert lead_storage_bytes(1_000, 10, 4) == 400
     assert lead_storage_bytes(1_000, 0, 4) == 0
@@ -255,6 +373,26 @@ def test_lead_storage_share_and_guard() -> None:
     guard.bytes = 900
     guard.note_inserts(1)
     assert guard.stopped is True
+
+
+async def test_weekly_overpass_uses_the_configured_proxy_first(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.overpass_query.get_settings",
+        lambda: SimpleNamespace(overpass_proxy_url="https://proxy.example/overpass"),
+    )
+
+    async def proxy(query: str, *, timeout: float, log_label: str) -> list[dict]:
+        del query, timeout, log_label
+        return [{"type": "node", "id": 7}]
+
+    monkeypatch.setattr(
+        "app.services.new_business_outreach.overpass_query._post_via_render_proxy",
+        proxy,
+    )
+    outcome = await query_overpass("[out:json];")
+    assert outcome.ok is True
+    assert outcome.elements == [{"type": "node", "id": 7}]
+    assert outcome.endpoint == "https://proxy.example/overpass"
 
 
 async def test_overpass_uses_the_next_mirror_after_a_failure() -> None:

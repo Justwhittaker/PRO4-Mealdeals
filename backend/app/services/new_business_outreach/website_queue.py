@@ -10,12 +10,11 @@ from sqlalchemy.orm import Session
 
 from app.models.website_queue import NewBusinessWebsiteQueue
 from app.services.new_business_outreach.discover import (
-    contact_page_urls,
+    email_lookup_pages,
     emails_from_html,
     fetch_homepage,
 )
 from app.services.new_business_outreach.email_quality import pick_best_email
-from app.services.new_business_outreach.tiles import FETCHES_PER_PLACE
 from app.services.new_business_outreach.types import VenueCandidate
 
 QUEUE_BATCH = 20
@@ -34,18 +33,22 @@ def attempt_website(
     budget: FetchBudget,
     *,
     fetch=fetch_homepage,
+    allow=None,
 ) -> tuple[VenueCandidate, str]:
-    """Look up an email. Returns ``skipped``, ``partial``, or ``done``.
+    """Look up an email. Returns ``skipped``, ``partial``, ``yielded``, or ``done``.
 
-    ``skipped`` means the budget was already empty, so the place stays queued.
-    ``partial`` means the budget ran out before the contact pages, so it is
-    queued again. ``done`` means every allowed page was tried or an email
-    was found.
+    ``skipped`` means the budget was already empty or the clock said stop, so
+    the place stays queued. ``partial`` means the budget ran out before the
+    contact and about pages. ``yielded`` means the 06:15 stop fired mid-lookup.
+    ``done`` means every allowed page was tried or an email was found.
     """
+    if allow is not None and not allow():
+        return candidate, "yielded"
     if budget.remaining <= 0:
         return candidate, "skipped"
-    pages = [candidate.website or ""]
-    pages.extend(contact_page_urls(candidate.website or "")[: FETCHES_PER_PLACE - 1])
+    pages = email_lookup_pages(candidate.website or "")
+    if not pages:
+        pages = [candidate.website or ""]
     emails = list(candidate.emails)
     html = candidate.homepage_html
     final = candidate.website
@@ -55,8 +58,11 @@ def attempt_website(
             continue
         if pick_best_email(emails).accepted:
             break
+        if allow is not None and not allow():
+            status = "yielded" if started else "yielded"
+            return _with_pages(candidate, emails, html, final), status
         if budget.remaining <= 0:
-            return _with_pages(candidate, emails, html, final), "partial"
+            return _with_pages(candidate, emails, html, final), "partial" if started else "skipped"
         budget.remaining -= 1
         started = True
         fetched = fetch(url)

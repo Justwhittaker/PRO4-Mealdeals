@@ -97,6 +97,10 @@ celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
+    # UTC on purpose. Jobs that must follow Dublin already use DublinCrontab
+    # or EuropeDublinWeekly. A global Europe/Dublin timezone would also shift
+    # plain crontabs (hourly maintenance and Friday 09:00 UTC weekly specials)
+    # by an hour during Irish summer time.
     timezone="UTC",
     enable_utc=True,
     task_track_started=True,

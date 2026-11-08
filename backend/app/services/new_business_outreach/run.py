@@ -19,6 +19,7 @@ from sqlalchemy.exc import IntegrityError
 from app.core.config import get_settings
 from app.core.task_errors import reraise_if_fatal
 from app.scrapers.zones import SCRAPE_ZONES
+from app.services.new_business_outreach.chains import brand_key, corporate_domain
 from app.services.new_business_outreach.checkpoint import load_checkpoint, save_checkpoint
 from app.services.new_business_outreach.constants import ON_SITE_REASONS
 from app.services.new_business_outreach.db import open_session
@@ -31,12 +32,14 @@ from app.services.new_business_outreach.exclusion import (
     load_blocked_emails,
     load_country_index,
 )
+from app.services.geo_names import normalize_city
+from app.services.marketing_contacts import _clean_website as clean_site
 from app.services.new_business_outreach.leads import (
+    _city_key,
     _remember,
-    enrich_candidates,
-    enrich_contact_pages,
     insert_fishy_lead,
     lead_is_known,
+    load_stored_chain_signals,
     select_fishy_leads,
 )
 from app.services.new_business_outreach.overpass_query import OverpassOutcome, query_overpass
@@ -46,11 +49,13 @@ from app.services.new_business_outreach.sheets import export_new_leads
 from app.services.new_business_outreach.specials import offer_found_in_html
 from app.services.new_business_outreach.storage import LeadSizeGuard
 from app.services.new_business_outreach.tiles import (
+    MAX_TILE_RETRIES,
     TILES,
     OutreachTile,
     decode_pending,
     encode_pending,
     quadrants,
+    record_tile_outcome,
     should_subdivide,
     slice_tiles,
     tile_by_id,
@@ -151,17 +156,19 @@ def _discover_tile(tile: OutreachTile, *, limit: int) -> tuple[list[VenueCandida
     return candidates_from_elements(outcome.elements, tile), outcome
 
 
+def _specials_key(name: str, city: str, website: str | None) -> tuple[str, str, str]:
+    return (name.strip(), normalize_city(city), clean_site(website) or "")
+
+
 def _prepare(
     candidates: list[VenueCandidate],
+    *,
+    extra_brand_cities: dict[str, set[tuple[str, str]]] | None = None,
+    extra_domain_names: dict[str, set[str]] | None = None,
 ) -> tuple[list[tuple[AcceptedLead, bool | None]], dict[str, int]]:
-    original = list(candidates)
-    enriched = enrich_contact_pages(enrich_candidates(candidates))
-    enriched = [
-        _stamp_source(before, after)
-        for before, after in zip(original, enriched, strict=True)
-    ]
+    """Score leads from HTML already fetched. This does not request websites."""
     flagged: list[tuple[VenueCandidate, bool | None]] = []
-    for candidate in enriched:
+    for candidate in candidates:
         flag = None
         if candidate.homepage_html:
             flag = offer_found_in_html(
@@ -169,29 +176,28 @@ def _prepare(
                 candidate.homepage_url or candidate.website or "",
             )
         flagged.append((replace(candidate, homepage_html=None), flag))
-    accepted, filter_stats = select_fishy_leads([item for item, _flag in flagged])
+    accepted, filter_stats = select_fishy_leads(
+        [item for item, _flag in flagged],
+        extra_brand_cities=extra_brand_cities,
+        extra_domain_names=extra_domain_names,
+    )
     flags = {
-        (item.business_name, item.city, item.website): flag for item, flag in flagged
+        _specials_key(item.business_name, item.city, item.website): flag
+        for item, flag in flagged
     }
     prepared = [
         (
             replace(
                 lead,
-                has_site_specials=flags.get((lead.business_name, lead.city, lead.website)),
+                has_site_specials=flags.get(
+                    _specials_key(lead.business_name, lead.city, lead.website)
+                ),
             ),
-            flags.get((lead.business_name, lead.city, lead.website)),
+            flags.get(_specials_key(lead.business_name, lead.city, lead.website)),
         )
         for lead in accepted
     ]
     return prepared, filter_stats
-
-
-def _stamp_source(before: VenueCandidate, after: VenueCandidate) -> VenueCandidate:
-    if pick_best_email(before.emails).accepted:
-        return replace(after, lead_source="osm")
-    if pick_best_email(after.emails).accepted:
-        return replace(after, lead_source="website")
-    return after
 
 
 class _Indexes:
@@ -199,6 +205,8 @@ class _Indexes:
         self.by_country: dict[str, ExclusionIndex] = {}
         self.unsubscribed: set[str] | None = None
         self.suppressed: set[str] | None = None
+        self.brand_cities: dict[str, set[tuple[str, str]]] = {}
+        self.domain_names: dict[str, set[str]] = {}
 
     def for_country(self, session: Any, country: str) -> ExclusionIndex:
         key = (country or "").strip().upper()
@@ -215,6 +223,28 @@ class _Indexes:
         )
         self.by_country[key] = loaded
         return loaded
+
+    def remember_lead(self, lead: AcceptedLead) -> None:
+        """Keep a lead inserted earlier in this run visible to later tiles."""
+        key = (lead.country_code or "").strip().upper()
+        cached = self.by_country.get(key)
+        if cached is None:
+            return
+        cached.add_contact(
+            name=lead.business_name,
+            country=lead.country_code,
+            city=lead.city,
+            website=lead.website,
+            email=lead.email,
+        )
+        key_name = brand_key(lead.business_name)
+        if key_name and lead.country_code and lead.city:
+            self.brand_cities.setdefault(key_name, set()).add(
+                _city_key(lead.country_code, lead.city)
+            )
+        domain = corporate_domain(lead.website)
+        if domain and key_name:
+            self.domain_names.setdefault(domain, set()).add(key_name)
 
 
 def _note_kept(stats: _RunStats, lead: AcceptedLead, found_at: datetime, *, store_sheet: bool) -> None:
@@ -291,7 +321,11 @@ def _process_tile(
         stats.kind(candidate.venue_category).found += 1
         if not candidate.website:
             stats.no_website += 1
-    prepared, filter_stats = _prepare(candidates)
+    prepared, filter_stats = _prepare(
+        candidates,
+        extra_brand_cities=indexes.brand_cities,
+        extra_domain_names=indexes.domain_names,
+    )
     for reason, count in filter_stats.items():
         if reason == "kept":
             continue
@@ -443,14 +477,6 @@ def _save_progress(
         engine.dispose()
 
 
-def _advance_static(index: int, pending: list[OutreachTile], cycle: int) -> tuple[int, int, bool]:
-    nxt = (index + 1) % len(TILES)
-    wrapped = nxt == 0 and not pending
-    if wrapped:
-        cycle += 1
-    return nxt, cycle, wrapped
-
-
 def _queue_needs(
     session: Any,
     needs: list[VenueCandidate],
@@ -472,7 +498,11 @@ def _insert_ready(
 ) -> None:
     if not candidates:
         return
-    prepared, filter_stats = _prepare(candidates)
+    prepared, filter_stats = _prepare(
+        candidates,
+        extra_brand_cities=indexes.brand_cities,
+        extra_domain_names=indexes.domain_names,
+    )
     for reason, count in filter_stats.items():
         if reason == "kept":
             continue
@@ -513,19 +543,29 @@ def _insert_ready(
             stats.storage_stopped = True
             guard.warn_once()
             break
+        batch = kept[offset : offset + INSERT_BATCH]
         inserted = _flush(
             session,
-            kept[offset : offset + INSERT_BATCH],
+            batch,
             known,
             stats,
             found_at,
         )
+        for lead in batch:
+            indexes.remember_lead(lead)
         if guard is not None:
             guard.note_inserts(inserted)
             if guard.stopped:
                 stats.storage_stopped = True
                 guard.warn_once()
                 break
+
+
+def _fetch_allowed(stats: _RunStats, budget: FetchBudget, weekday: int) -> bool:
+    if should_yield(datetime.now(timezone.utc), weekday=weekday):
+        stats.yielded = True
+        return False
+    return budget.remaining > 0
 
 
 def _drain_website_queue(
@@ -550,8 +590,12 @@ def _drain_website_queue(
                     break
                 if guard is not None and guard.stopped:
                     break
-                updated, status = attempt_website(row_to_candidate(row), budget)
-                if status == "skipped":
+                updated, status = attempt_website(
+                    row_to_candidate(row),
+                    budget,
+                    allow=lambda: _fetch_allowed(stats, budget, weekday),
+                )
+                if status in {"skipped", "yielded"}:
                     break
                 if status == "partial":
                     continue
@@ -579,6 +623,7 @@ def _persist_leaf(
     indexes: _Indexes,
     guard: LeadSizeGuard | None,
     found_at: datetime,
+    weekday: int,
 ) -> None:
     stats.tiles_run += 1
     stats.found += len(candidates)
@@ -615,8 +660,12 @@ def _persist_leaf(
                 if stats.storage_stopped or index >= start_count:
                     still_waiting.extend(needs[index:])
                     break
-                updated, status = attempt_website(candidate, budget)
-                if status in {"skipped", "partial"}:
+                updated, status = attempt_website(
+                    candidate,
+                    budget,
+                    allow=lambda: _fetch_allowed(stats, budget, weekday),
+                )
+                if status in {"skipped", "partial", "yielded"}:
                     still_waiting.extend(needs[index:])
                     break
                 _insert_ready(
@@ -704,18 +753,19 @@ def run_new_business_outreach(now: datetime | None = None) -> dict[str, Any]:
         )
 
     clear_robots_cache()
+    stats = _RunStats()
+    indexes = _Indexes()
     engine, session_factory = open_session()
     try:
         with session_factory() as session:
             start, cycle, pending_raw = load_checkpoint(session)
+            indexes.brand_cities, indexes.domain_names = load_stored_chain_signals(session)
             guard = LeadSizeGuard(cap_mb * 1024 * 1024)
             guard.refresh(session)
             storage_bytes = guard.bytes
     finally:
         engine.dispose()
 
-    stats = _RunStats()
-    indexes = _Indexes()
     settings = get_settings()
     budget = FetchBudget(int(settings.new_business_website_fetches_per_run))
     max_places = int(settings.new_business_max_places_per_tile)
@@ -761,11 +811,11 @@ def run_new_business_outreach(now: datetime | None = None) -> dict[str, Any]:
         except Exception as exc:  # noqa: BLE001
             reraise_if_fatal(exc)
             logger.exception("New Business Outreach tile %s failed", tile.tile_id)
-            stats.failed.append(tile.tile_id)
             outcome = None
             candidates = []
         raw_count = len(outcome.elements) if outcome is not None and outcome.ok else 0
         timed_out = bool(outcome is not None and outcome.timed_out)
+        blocks_static = from_static or tile.tile_id == TILES[next_index].tile_id
         if outcome is not None and should_subdivide(
             tile,
             result_count=raw_count,
@@ -779,21 +829,54 @@ def run_new_business_outreach(now: datetime | None = None) -> dict[str, Any]:
                 tile.tile_id,
                 len(children),
             )
-            if from_static:
-                next_index, cycle, wrapped = _advance_static(next_index, pending, cycle)
+            progress = record_tile_outcome(
+                index=next_index,
+                pending=pending,
+                cycle=cycle,
+                tile=tile,
+                blocks_static=blocks_static,
+                success=True,
+                tile_count=len(TILES),
+            )
+            next_index = progress.index
+            cycle = progress.cycle
+            pending = list(progress.pending)
+            wrapped = progress.advanced and next_index == 0 and not pending
             _save_progress(next_index, cycle, pending)
             continue
         if outcome is None or not outcome.ok:
-            if tile.tile_id not in stats.failed:
+            progress = record_tile_outcome(
+                index=next_index,
+                pending=pending,
+                cycle=cycle,
+                tile=tile,
+                blocks_static=blocks_static,
+                success=False,
+                tile_count=len(TILES),
+            )
+            next_index = progress.index
+            cycle = progress.cycle
+            pending = list(progress.pending)
+            wrapped = progress.advanced and next_index == 0 and not pending
+            if progress.dropped:
                 stats.failed.append(tile.tile_id)
                 logger.warning(
-                    "New Business Outreach skipped tile %s; Overpass mirrors failed: %s",
+                    "New Business Outreach gave up on tile %s after %s tries: %s",
                     tile.tile_id,
+                    tile.retries + 1,
                     None if outcome is None else outcome.error,
                 )
-            if from_static:
-                next_index, cycle, wrapped = _advance_static(next_index, pending, cycle)
+            else:
+                logger.warning(
+                    "New Business Outreach will retry tile %s next run (%s/%s): %s",
+                    tile.tile_id,
+                    tile.retries + 1,
+                    MAX_TILE_RETRIES,
+                    None if outcome is None else outcome.error,
+                )
             _save_progress(next_index, cycle, pending)
+            if progress.retrying:
+                break
             continue
         _persist_leaf(
             candidates,
@@ -803,12 +886,26 @@ def run_new_business_outreach(now: datetime | None = None) -> dict[str, Any]:
             indexes=indexes,
             guard=guard,
             found_at=found_at,
+            weekday=weekday,
         )
-        if from_static:
-            next_index, cycle, wrapped = _advance_static(next_index, pending, cycle)
-        _save_progress(next_index, cycle, pending)
         if stats.storage_stopped:
+            pending.insert(0, tile)
+            _save_progress(next_index, cycle, pending)
             break
+        progress = record_tile_outcome(
+            index=next_index,
+            pending=pending,
+            cycle=cycle,
+            tile=tile,
+            blocks_static=blocks_static,
+            success=True,
+            tile_count=len(TILES),
+        )
+        next_index = progress.index
+        cycle = progress.cycle
+        pending = list(progress.pending)
+        wrapped = progress.advanced and next_index == 0 and not pending
+        _save_progress(next_index, cycle, pending)
 
     stats.website_fetches = int(settings.new_business_website_fetches_per_run) - budget.remaining
 
