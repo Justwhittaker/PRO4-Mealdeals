@@ -6,8 +6,10 @@ import fnmatch
 import json
 import logging
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
+import httpx
 import pytest
 
 from app.scrapers.zones import ZONE_ORDER, ZONE_TASK_TIME_LIMIT_SECONDS
@@ -15,7 +17,9 @@ from app.services.scrape_cycle_digest import (
     _RUNNING_GRACE_SECONDS,
     _active_offers_on_site,
     _cycle_duration_line,
+    _digest_priority,
     _query_window_counts,
+    _site_transfer_health,
     _zone_health,
     build_cycle_digest_report,
     format_city_retry_line,
@@ -1058,3 +1062,391 @@ def test_digest_cycle_matches_across_the_october_dst_change() -> None:
     assert winter_digest.utcoffset() == timedelta(0)
     assert cycle_id_for_start(digest_cycle_start(winter_digest)) == winter_id
     assert winter_id == "2026-10-26T19"
+
+
+_CHECKPOINT_HTML = (
+    "<!DOCTYPE html><html><head><title>Vercel Security Checkpoint</title></head>"
+    "<body>" + ("checkpoint " * 400) + "</body></html>"
+)
+_PROBE_SETTINGS = SimpleNamespace(
+    public_api_base_url="https://api.example",
+    frontend_base_url="https://dineadeal.com",
+)
+
+
+def _metrics_response(active: int = 100) -> httpx.Response:
+    return httpx.Response(200, json={"active_deals": active})
+
+
+def _challenge_response(*, header: bool = True, title: bool = True) -> httpx.Response:
+    headers = {"x-vercel-mitigated": "Challenge"} if header else {}
+    text = _CHECKPOINT_HTML if title else "attention required"
+    return httpx.Response(429, headers=headers, text=text)
+
+
+def _install_site_probe(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    api: httpx.Response | Exception,
+    web: httpx.Response | Exception,
+) -> None:
+    class _Client:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            return None
+
+        def __enter__(self) -> _Client:
+            return self
+
+        def __exit__(self, *_args: object) -> bool:
+            return False
+
+        def get(self, url: str) -> httpx.Response:
+            outcome = api if url.endswith("/api/v1/scrapers/metrics") else web
+            if isinstance(outcome, Exception):
+                raise outcome
+            return outcome
+
+    monkeypatch.setattr("app.services.scrape_cycle_digest.httpx.Client", _Client)
+    monkeypatch.setattr(
+        "app.services.scrape_cycle_digest.get_settings",
+        lambda: _PROBE_SETTINGS,
+    )
+
+
+def _complete_zones() -> dict:
+    return {
+        "total_zones": 2,
+        "completed": 2,
+        "ok": 2,
+        "failed": [],
+        "missing": [],
+        "pct_completed": 100.0,
+        "pct_ok": 100.0,
+    }
+
+
+def _report_with_site(site: dict, *, pct_completed: float = 100.0) -> dict:
+    zones = _complete_zones()
+    zones["pct_completed"] = pct_completed
+    zones["completed"] = 2 if pct_completed == 100.0 else 1
+    return {
+        "cycle_id": "2026-11-09T07",
+        "since_label": "2026-11-09 07:00",
+        "zones": zones,
+        "site": site,
+        "new_deals": 0,
+        "dropped_deals": 0,
+        "net_new_emails": 0,
+        "active_offers": 100,
+        "categories": [],
+    }
+
+
+def test_vercel_challenge_429_counts_as_the_site_being_up(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_site_probe(
+        monkeypatch,
+        api=_metrics_response(),
+        web=_challenge_response(),
+    )
+    health = _site_transfer_health(
+        cycle_results={
+            "west_eu": {"revalidate_challenge": 300},
+            "se_asia": {"revalidate_challenge": 221},
+        },
+        db_active=100,
+    )
+    assert health["api_ok"] is True
+    assert health["frontend_ok"] is True
+    assert health["frontend_challenge"] is True
+    assert health["healthy"] is True
+    assert health["revalidate_ok"] == 0
+    assert health["revalidate_fail"] == 0
+    assert health["revalidate_challenge"] == 521
+    assert health["revalidate_pct"] is None
+    assert health["detail"] == "ok"
+    assert "429" not in health["detail"]
+
+
+def test_checkpoint_title_alone_counts_as_up(monkeypatch: pytest.MonkeyPatch) -> None:
+    _install_site_probe(
+        monkeypatch,
+        api=_metrics_response(),
+        web=_challenge_response(header=False, title=True),
+    )
+    health = _site_transfer_health(cycle_results={}, db_active=100)
+    assert health["frontend_ok"] is True
+    assert health["frontend_challenge"] is True
+    assert health["healthy"] is True
+
+
+def test_plain_429_without_checkpoint_markers_is_down(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_site_probe(
+        monkeypatch,
+        api=_metrics_response(),
+        web=httpx.Response(429, text="Too Many Requests"),
+    )
+    health = _site_transfer_health(cycle_results={}, db_active=100)
+    assert health["frontend_ok"] is False
+    assert health["frontend_challenge"] is False
+    assert health["healthy"] is False
+    assert health["detail"] == "site HTTP 429"
+
+
+@pytest.mark.parametrize(
+    "web",
+    [
+        httpx.Response(500, text="<html><title>Bad gateway</title></html>"),
+        httpx.Response(
+            403,
+            headers={"x-vercel-mitigated": "challenge"},
+            text=_CHECKPOINT_HTML,
+        ),
+        httpx.Response(401, text="Unauthorized"),
+        httpx.ConnectError("connection refused"),
+        httpx.TimeoutException("timed out"),
+    ],
+)
+def test_real_site_failures_stay_down(
+    web: httpx.Response | Exception,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_site_probe(monkeypatch, api=_metrics_response(), web=web)
+    health = _site_transfer_health(cycle_results={}, db_active=100)
+    assert health["frontend_ok"] is False
+    assert health["frontend_challenge"] is False
+    assert health["healthy"] is False
+    assert health["api_ok"] is True
+    body = format_digest_body(_report_with_site(health))
+    assert "web=down" in body
+    assert "Vercel bot check" not in body
+    priority, tags = _digest_priority(_report_with_site(health))
+    assert priority == "high"
+    assert tags == "warning,newspaper"
+
+
+def test_api_and_web_both_down_stays_urgent(monkeypatch: pytest.MonkeyPatch) -> None:
+    _install_site_probe(
+        monkeypatch,
+        api=httpx.ConnectError("api down"),
+        web=httpx.Response(503, text="unavailable"),
+    )
+    health = _site_transfer_health(cycle_results={}, db_active=100)
+    assert health["api_ok"] is False
+    assert health["frontend_ok"] is False
+    report = _report_with_site(health)
+    priority, tags = _digest_priority(report)
+    assert priority == "urgent"
+    assert tags == "rotating_light,newspaper"
+    body = format_digest_body(report)
+    assert "api=down" in body
+    assert "web=down" in body
+    assert "site HTTP 503" in body
+
+
+def test_november_9_challenge_digest_is_not_a_warning(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """18:00 Dublin on 9 Nov 2026: every revalidate and the homepage were challenged."""
+    _install_site_probe(
+        monkeypatch,
+        api=_metrics_response(2464),
+        web=_challenge_response(),
+    )
+    health = _site_transfer_health(
+        cycle_results={
+            "west_eu": {"revalidate_ok": 0, "revalidate_fail": 0, "revalidate_challenge": 521},
+        },
+        db_active=2464,
+    )
+    report = _report_with_site(health)
+    body = format_digest_body(report)
+    assert (
+        "Site transfer: OK — Page refresh blocked by Vercel bot check (521 calls); "
+        "pages update on their normal cache timer"
+    ) in body
+    assert "Live: api=up, web=up (Vercel bot check)" in body
+    assert "CHECK" not in body
+    assert "revalidate 0%" not in body
+    assert "web=down" not in body
+    assert "site HTTP 429" not in body
+    assert "redis://" not in body
+    priority, tags = _digest_priority(report)
+    assert priority == "default"
+    assert tags == "newspaper"
+
+    fake = _FakeRedis()
+    monkeypatch.setattr("app.services.scrape_cycle_stats._client", lambda: fake)
+    sent: list[dict[str, object]] = []
+
+    def _send(
+        _title: str,
+        message: str,
+        *,
+        priority: str = "default",
+        tags: str | None = None,
+    ) -> dict[str, bool]:
+        sent.append({"body": message, "priority": priority, "tags": tags})
+        return {"ok": True}
+
+    monkeypatch.setattr("app.services.scrape_cycle_digest.send_ntfy", _send)
+    published = publish_cycle_digest(report)
+    assert published["ntfy"] == {"ok": True}
+    assert sent[0]["priority"] == "default"
+    assert sent[0]["tags"] == "newspaper"
+    assert sent[0]["body"] == body
+
+
+def test_challenge_revalidates_mixed_with_real_failures_still_warn() -> None:
+    site = {
+        "healthy": False,
+        "api_ok": True,
+        "frontend_ok": True,
+        "frontend_challenge": True,
+        "revalidate_ok": 0,
+        "revalidate_fail": 4,
+        "revalidate_challenge": 521,
+        "revalidate_pct": 0.0,
+        "detail": "ok",
+    }
+    report = _report_with_site(site)
+    body = format_digest_body(report)
+    assert "Site transfer: CHECK — revalidate 0% (0 ok / 4 fail)" in body
+    assert (
+        "Page refresh blocked by Vercel bot check (521 calls); "
+        "pages update on their normal cache timer"
+    ) in body
+    assert "web=up (Vercel bot check)" in body
+    assert "web=down" not in body
+    priority, tags = _digest_priority(report)
+    assert priority == "high"
+    assert tags == "warning,newspaper"
+
+
+def test_mostly_successful_revalidate_stays_quiet_with_a_few_challenges() -> None:
+    site = {
+        "healthy": True,
+        "api_ok": True,
+        "frontend_ok": True,
+        "frontend_challenge": False,
+        "revalidate_ok": 95,
+        "revalidate_fail": 5,
+        "revalidate_challenge": 1,
+        "revalidate_pct": 95.0,
+        "detail": "ok",
+    }
+    report = _report_with_site(site)
+    body = format_digest_body(report)
+    assert "Site transfer: OK — revalidate 95% (95 ok / 5 fail)" in body
+    assert (
+        "Page refresh blocked by Vercel bot check (1 call); "
+        "pages update on their normal cache timer"
+    ) in body
+    priority, tags = _digest_priority(report)
+    assert priority == "default"
+    assert tags == "newspaper"
+
+
+def test_auth_and_server_revalidate_failures_keep_the_warning() -> None:
+    site = {
+        "healthy": False,
+        "api_ok": True,
+        "frontend_ok": True,
+        "frontend_challenge": False,
+        "revalidate_ok": 0,
+        "revalidate_fail": 3,
+        "revalidate_challenge": 0,
+        "revalidate_pct": 0.0,
+        "detail": "ok",
+    }
+    report = _report_with_site(site)
+    body = format_digest_body(report)
+    assert "Site transfer: CHECK — revalidate 0% (0 ok / 3 fail)" in body
+    assert "Page refresh blocked" not in body
+    assert "web=up" in body
+    priority, tags = _digest_priority(report)
+    assert priority == "high"
+    assert tags == "warning,newspaper"
+
+
+def test_incomplete_zones_still_escalate_when_the_site_is_only_challenged() -> None:
+    site = {
+        "healthy": True,
+        "api_ok": True,
+        "frontend_ok": True,
+        "frontend_challenge": True,
+        "revalidate_ok": 0,
+        "revalidate_fail": 0,
+        "revalidate_challenge": 521,
+        "revalidate_pct": None,
+        "detail": "ok",
+    }
+    high = _report_with_site(site, pct_completed=80.0)
+    priority, tags = _digest_priority(high)
+    assert priority == "high"
+    assert tags == "warning,newspaper"
+    urgent = _report_with_site(site, pct_completed=40.0)
+    priority, tags = _digest_priority(urgent)
+    assert priority == "urgent"
+    assert tags == "rotating_light,newspaper"
+
+
+def test_active_count_mismatch_still_warns_when_the_homepage_is_challenged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _install_site_probe(
+        monkeypatch,
+        api=_metrics_response(10_000),
+        web=_challenge_response(header=True, title=False),
+    )
+    health = _site_transfer_health(
+        cycle_results={"west_eu": {"revalidate_challenge": 10}},
+        db_active=100,
+    )
+    assert health["frontend_challenge"] is True
+    assert health["healthy"] is False
+    assert "active delta" in health["detail"]
+    report = _report_with_site(health)
+    priority, _tags = _digest_priority(report)
+    assert priority == "high"
+    body = format_digest_body(report)
+    assert "web=up (Vercel bot check)" in body
+    assert "CHECK" in body
+
+
+def test_zone_summary_keeps_challenge_revalidates_apart_from_failures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    recorded: list[dict[str, object]] = []
+
+    def _record(zone: str, payload: dict[str, object], cycle_id: str | None = None) -> str:
+        recorded.append(payload)
+        return cycle_id or ""
+
+    monkeypatch.setattr("app.workers.tasks.zone_already_succeeded", lambda *_a, **_k: False)
+    monkeypatch.setattr("app.workers.tasks.record_zone_result", _record)
+    monkeypatch.setattr(
+        "app.workers.tasks.scrape_and_ingest_zone",
+        lambda _zone: {
+            "areas": 3,
+            "discovered": 3,
+            "ingested": 3,
+            "stale_deactivated": 0,
+            "marketing_contacts": 0,
+            "revalidate_ok": 1,
+            "revalidate_fail": 2,
+            "revalidate_challenge": 521,
+            "cities_failed": [],
+        },
+    )
+
+    result = scrape_zone_retail.run("se_asia")
+
+    assert result["revalidate_ok"] == 1
+    assert result["revalidate_fail"] == 2
+    assert result["revalidate_challenge"] == 521
+    assert recorded[-1]["revalidate_challenge"] == 521
+    assert recorded[-1]["revalidate_fail"] == 2

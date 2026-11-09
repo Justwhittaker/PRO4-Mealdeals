@@ -147,6 +147,7 @@ _PROGRESS_KEYS = (
     "marketing_contacts",
     "revalidate_ok",
     "revalidate_fail",
+    "revalidate_challenge",
     "cities_failed",
     "cities_completed",
     "cities_not_reached",
@@ -173,6 +174,7 @@ def _zone_failure_payload(
         "marketing_contacts": 0,
         "revalidate_ok": 0,
         "revalidate_fail": 0,
+        "revalidate_challenge": 0,
         "cities_failed": [],
     }
 
@@ -239,6 +241,7 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
         "marketing_contacts": 0,
         "revalidate_ok": 0,
         "revalidate_fail": 0,
+        "revalidate_challenge": 0,
     }
     hostname = getattr(self.request, "hostname", None)
     if hostname:
@@ -290,6 +293,7 @@ def scrape_zone_retail(self: Any, zone_id: str) -> dict[str, Any]:
         "marketing_contacts": int(result.get("marketing_contacts") or 0),
         "revalidate_ok": int(result.get("revalidate_ok") or 0),
         "revalidate_fail": int(result.get("revalidate_fail") or 0),
+        "revalidate_challenge": int(result.get("revalidate_challenge") or 0),
         "markets": len(markets),
         "cities_failed": cities_failed,
         "ok": not every_city_failed,
