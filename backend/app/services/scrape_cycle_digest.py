@@ -23,6 +23,7 @@ from app.scrapers.zones import (
     ZONE_TASK_TIME_LIMIT_SECONDS,
     zone_family,
 )
+from app.services.frontend_revalidate import is_vercel_security_checkpoint
 from app.services.ntfy import send_ntfy
 from app.services.scrape_cycle_stats import (
     begin_city_retry,
@@ -405,8 +406,12 @@ def _site_transfer_health(
 ) -> dict[str, Any]:
     revalidate_ok = _sum_cycle_metric(cycle_results, "revalidate_ok")
     revalidate_fail = _sum_cycle_metric(cycle_results, "revalidate_fail")
-    revalidate_attempts = revalidate_ok + revalidate_fail
-    revalidate_pct = _pct(revalidate_ok, revalidate_attempts) if revalidate_attempts else None
+    # Bot-protection challenges are stored apart from failures. They did not
+    # refresh the page, and they are not an outage: public pages still expire
+    # on their own cache timer.
+    revalidate_challenge = _sum_cycle_metric(cycle_results, "revalidate_challenge")
+    real_attempts = revalidate_ok + revalidate_fail
+    revalidate_pct = _pct(revalidate_ok, real_attempts) if real_attempts else None
 
     settings = get_settings()
     api_base = (settings.public_api_base_url or "").rstrip("/")
@@ -414,6 +419,7 @@ def _site_transfer_health(
     api_active: int | None = None
     api_ok = False
     frontend_ok = False
+    frontend_challenge = False
     detail_parts: list[str] = []
 
     if api_base:
@@ -426,22 +432,33 @@ def _site_transfer_health(
             else:
                 detail_parts.append(f"metrics HTTP {resp.status_code}")
         except Exception as exc:
+            reraise_if_fatal(exc)
             detail_parts.append(f"metrics error: {exc}")
 
     if frontend:
         try:
             with httpx.Client(timeout=20.0, follow_redirects=True) as client:
                 resp = client.get(frontend)
-            frontend_ok = resp.status_code == 200
-            if not frontend_ok:
+            if resp.status_code == 200:
+                frontend_ok = True
+            elif is_vercel_security_checkpoint(resp):
+                # dineadeal.com challenges the NUC. HTTP 429 here means the
+                # checkpoint page, not that the public site is down.
+                frontend_ok = True
+                frontend_challenge = True
+            else:
                 detail_parts.append(f"site HTTP {resp.status_code}")
         except Exception as exc:
+            reraise_if_fatal(exc)
             detail_parts.append(f"site error: {exc}")
 
     delta = None if api_active is None else abs(api_active - db_active)
     in_sync = delta is not None and delta <= max(25, int(db_active * 0.02))
 
-    healthy = bool(api_ok and frontend_ok and (revalidate_fail == 0 or revalidate_pct is None or revalidate_pct >= 90))
+    revalidate_ok_enough = (
+        revalidate_fail == 0 or revalidate_pct is None or revalidate_pct >= 90
+    )
+    healthy = bool(api_ok and frontend_ok and revalidate_ok_enough)
     if api_active is not None and not in_sync:
         healthy = False
         detail_parts.append(f"active delta {delta} (db={db_active} api={api_active})")
@@ -450,11 +467,13 @@ def _site_transfer_health(
         "healthy": healthy,
         "api_ok": api_ok,
         "frontend_ok": frontend_ok,
+        "frontend_challenge": frontend_challenge,
         "api_active_deals": api_active,
         "db_active_deals": db_active,
         "in_sync": in_sync,
         "revalidate_ok": revalidate_ok,
         "revalidate_fail": revalidate_fail,
+        "revalidate_challenge": revalidate_challenge,
         "revalidate_pct": revalidate_pct,
         "detail": "; ".join(detail_parts) if detail_parts else "ok",
     }
@@ -612,6 +631,51 @@ def format_city_retry_line(retries: object) -> str | None:
     return line
 
 
+def _blocked_refresh_line(calls: int) -> str:
+    noun = "call" if calls == 1 else "calls"
+    return (
+        f"Page refresh blocked by Vercel bot check ({calls} {noun}); "
+        "pages update on their normal cache timer"
+    )
+
+
+def _revalidate_clause(site: dict[str, Any]) -> str:
+    """The site-transfer clause. A challenge-only cycle replaces the percentage.
+
+    Real failures keep ``revalidate N% (ok / fail)``. When every recorded
+    call was a Vercel checkpoint, that percentage would read as a total
+    failure (``revalidate 0%``) even though the site is up.
+    """
+    challenge = int(site.get("revalidate_challenge") or 0)
+    ok = int(site.get("revalidate_ok") or 0)
+    fail = int(site.get("revalidate_fail") or 0)
+    pct = site.get("revalidate_pct")
+    if challenge and ok + fail == 0:
+        return _blocked_refresh_line(challenge)
+    if pct is None:
+        return "no revalidate attempts recorded"
+    return f"revalidate {float(pct):.0f}% ({ok} ok / {fail} fail)"
+
+
+def _site_lines(site: dict[str, Any]) -> str:
+    challenge = int(site.get("revalidate_challenge") or 0)
+    ok = int(site.get("revalidate_ok") or 0)
+    fail = int(site.get("revalidate_fail") or 0)
+    status = "OK" if site["healthy"] else "CHECK"
+    lines = [f"Site transfer: {status} — {_revalidate_clause(site)}"]
+    if challenge and ok + fail > 0:
+        lines.append(_blocked_refresh_line(challenge))
+    web = "up" if site.get("frontend_ok") else "down"
+    if site.get("frontend_challenge"):
+        web = "up (Vercel bot check)"
+    api = "up" if site.get("api_ok") else "down"
+    lines.append(f"Live: api={api}, web={web}")
+    detail = site.get("detail")
+    if detail and detail != "ok":
+        lines.append(f"({detail})")
+    return "\n".join(lines)
+
+
 def format_digest_body(report: dict[str, Any]) -> str:
     zones = report["zones"]
     site = report["site"]
@@ -645,20 +709,7 @@ def format_digest_body(report: dict[str, Any]) -> str:
             f"({family['completed']}/{family['total']})"
         )
 
-    if site["revalidate_pct"] is None:
-        rev = "no revalidate attempts recorded"
-    else:
-        rev = (
-            f"revalidate {site['revalidate_pct']:.0f}% "
-            f"({site['revalidate_ok']} ok / {site['revalidate_fail']} fail)"
-        )
-    site_line = (
-        f"Site transfer: {'OK' if site['healthy'] else 'CHECK'} — {rev}"
-        f"\nLive: api={'up' if site['api_ok'] else 'down'}, "
-        f"web={'up' if site['frontend_ok'] else 'down'}"
-    )
-    if site["detail"] and site["detail"] != "ok":
-        site_line += f"\n({site['detail']})"
+    site_line = _site_lines(site)
 
     cat_lines = []
     for label, count, pct in cats:
@@ -740,6 +791,27 @@ def build_cycle_digest_report(now: datetime | None = None) -> dict[str, Any]:
     }
 
 
+def _digest_priority(report: dict[str, Any]) -> tuple[str, str]:
+    """ntfy priority and tags for one digest.
+
+    A Vercel bot check is not a problem: the live probe counts as up, and
+    challenge-only page refreshes leave ``site['healthy']`` true. Incomplete
+    zones, a genuinely down API or site, a count mismatch, and non-challenge
+    revalidate failures still escalate exactly as before.
+    """
+    zones = report["zones"]
+    site = report["site"]
+    priority = "default"
+    tags = "newspaper"
+    if zones["pct_completed"] < 100 or not site["healthy"]:
+        priority = "high"
+        tags = "warning,newspaper"
+    if zones["pct_completed"] < 50 or (not site["api_ok"] and not site["frontend_ok"]):
+        priority = "urgent"
+        tags = "rotating_light,newspaper"
+    return priority, tags
+
+
 def publish_cycle_digest(report: dict[str, Any]) -> dict[str, Any]:
     """Send one ntfy digest for this cycle. A second claim does not send."""
     body = format_digest_body(report)
@@ -752,15 +824,7 @@ def publish_cycle_digest(report: dict[str, Any]) -> dict[str, Any]:
             "ntfy": {"skipped": True, "reason": "already_sent"},
         }
     zones = report["zones"]
-    site = report["site"]
-    priority = "default"
-    tags = "newspaper"
-    if zones["pct_completed"] < 100 or not site["healthy"]:
-        priority = "high"
-        tags = "warning,newspaper"
-    if zones["pct_completed"] < 50 or (not site["api_ok"] and not site["frontend_ok"]):
-        priority = "urgent"
-        tags = "rotating_light,newspaper"
+    priority, tags = _digest_priority(report)
 
     notify = send_ntfy(
         "MealDeals scrape cycle digest",

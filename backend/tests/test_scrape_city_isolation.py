@@ -199,3 +199,86 @@ async def test_one_bad_source_does_not_drop_the_rest_of_the_city(
     scraper = GlobalRetailScraper()
     deals = await scraper.scrape("MY", "Kuala Lumpur")
     assert [deal.merchant_name for deal in deals] == ["Good Bistro"]
+
+
+def _patch_one_market(monkeypatch: pytest.MonkeyPatch, cities: list[str]) -> None:
+    class FakeScraper:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            return None
+
+        async def scrape(self, _country: str, _city: str) -> list:
+            return [{"title": "Lunch"}]
+
+    monkeypatch.setattr(
+        "app.services.scrape_runner.iter_market_areas",
+        lambda _markets: [("IE", city) for city in cities],
+    )
+    monkeypatch.setattr("app.services.scrape_runner.GlobalRetailScraper", FakeScraper)
+    monkeypatch.setattr("app.services.scrape_runner._Session", lambda: _Session())
+    monkeypatch.setattr(
+        "app.services.scrape_runner.ingest_hub_scrape",
+        lambda *_args, **_kwargs: {"ingested": 1, "stale_deactivated": 0},
+    )
+    monkeypatch.setattr(
+        "app.services.scrape_runner.ingest_marketing_contacts_from_deals",
+        lambda *_args, **_kwargs: 0,
+    )
+    monkeypatch.setattr(
+        "app.services.scrape_runner.breakdown_from_scraped_deals",
+        lambda _deals: [],
+    )
+    monkeypatch.setattr(
+        "app.services.scrape_runner.build_scrape_report",
+        lambda *_args, **_kwargs: {
+            "summary": {"marketing_contacts_unique": 0},
+            "breakdown": [],
+            "category_tally": [],
+        },
+    )
+
+
+def test_vercel_challenge_revalidate_is_not_counted_as_a_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _rev(**_kwargs: object) -> dict[str, object]:
+        return {
+            "ok": False,
+            "status": 429,
+            "challenge": True,
+            "detail": "Vercel challenge (429)",
+        }
+
+    _patch_one_market(monkeypatch, ["Dublin", "Cork"])
+    monkeypatch.setattr("app.services.scrape_runner.revalidate_after_scrape", _rev)
+
+    result = scrape_and_ingest_markets(["IE"])
+
+    # Two city calls plus the zone-end global call.
+    assert result["frontend_revalidate_runs"] == 3
+    assert result["revalidate_ok"] == 0
+    assert result["revalidate_fail"] == 0
+    assert result["revalidate_challenge"] == 3
+
+
+def test_revalidate_mix_keeps_real_failures_beside_challenges(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _rev(*, areas: set | None = None, include_global: bool = False, **_kwargs: object) -> dict:
+        if include_global:
+            return {"ok": False, "status": 401, "detail": "Unauthorized"}
+        city = next(iter(areas or {("", "")}))[1]
+        if city == "Cork":
+            return {"ok": False, "status": 503, "detail": "unavailable"}
+        if city == "Galway":
+            return {"ok": True, "revalidated": True}
+        return {"ok": False, "status": 429, "challenge": True, "detail": "Vercel challenge (429)"}
+
+    _patch_one_market(monkeypatch, ["Dublin", "Cork", "Galway"])
+    monkeypatch.setattr("app.services.scrape_runner.revalidate_after_scrape", _rev)
+
+    result = scrape_and_ingest_markets(["IE"])
+
+    assert result["frontend_revalidate_runs"] == 4
+    assert result["revalidate_ok"] == 1
+    assert result["revalidate_fail"] == 2
+    assert result["revalidate_challenge"] == 1

@@ -59,6 +59,50 @@ def _run_coro(coro: Any) -> Any:
         return pool.submit(asyncio.run, coro).result()
 
 
+def _revalidate_log_summary(result: dict[str, Any]) -> str:
+    """One token for the city log. Never the response body or a secret."""
+    if result.get("skipped"):
+        return f"skipped:{result.get('reason') or 'unknown'}"
+    if result.get("ok") is True:
+        return "ok"
+    if result.get("challenge") is True:
+        return "Vercel challenge (429)"
+    status = result.get("status")
+    if status:
+        return f"failed:{status}"
+    return "failed"
+
+
+def _tally_revalidate(result: dict[str, Any]) -> tuple[int, int, int, int]:
+    """(runs, ok, fail, challenge) for one revalidate call.
+
+    A Vercel bot-protection challenge did not refresh the page, but it is
+    not an outage. It is counted on its own so the digest can say so without
+    raising the alert. Timeouts, 5xx, and other 4xx stay failures.
+    """
+    if result.get("skipped"):
+        return (0, 0, 0, 0)
+    if result.get("ok") is True:
+        return (1, 1, 0, 0)
+    if result.get("challenge") is True:
+        return (1, 0, 0, 1)
+    if result.get("ok") is False:
+        return (1, 0, 1, 0)
+    return (1, 0, 0, 0)
+
+
+def _remember_revalidate(
+    progress: dict[str, Any],
+    *,
+    ok: int,
+    fail: int,
+    challenge: int,
+) -> None:
+    progress["revalidate_ok"] = ok
+    progress["revalidate_fail"] = fail
+    progress["revalidate_challenge"] = challenge
+
+
 def _live_revalidate(country: str, city: str, *, ingested: int, stale: int) -> dict[str, Any]:
     """Bust site cache after each hub so new deals appear while the zone still runs."""
     if ingested <= 0 and stale <= 0:
@@ -70,7 +114,7 @@ def _live_revalidate(country: str, city: str, *, ingested: int, stale: int) -> d
         city,
         ingested,
         stale,
-        result,
+        _revalidate_log_summary(result),
     )
     return result
 
@@ -178,6 +222,7 @@ def scrape_and_ingest_areas(
         "marketing_contacts": 0,
         "revalidate_ok": 0,
         "revalidate_fail": 0,
+        "revalidate_challenge": 0,
         "cities_failed": [],
         "cities_completed": [],
         "cities_not_reached": [_city_ref(country, city) for country, city in areas],
@@ -206,6 +251,7 @@ def _scrape_areas(
     revalidate_runs = 0
     revalidate_ok = 0
     revalidate_fail = 0
+    revalidate_challenge = 0
     cities_failed: list[dict[str, str]] = []
     cities_completed: list[dict[str, str]] = []
 
@@ -229,8 +275,12 @@ def _scrape_areas(
         progress["ingested"] = ingested
         progress["stale_deactivated"] = stale_total
         progress["marketing_contacts"] = contacts
-        progress["revalidate_ok"] = revalidate_ok
-        progress["revalidate_fail"] = revalidate_fail
+        _remember_revalidate(
+            progress,
+            ok=revalidate_ok,
+            fail=revalidate_fail,
+            challenge=revalidate_challenge,
+        )
         try:
             async def _run(c: str = country, t: str = city) -> list:
                 return await scraper.scrape(c, t)
@@ -267,14 +317,17 @@ def _scrape_areas(
             revalidate = _live_revalidate(
                 country, city, ingested=count, stale=stale
             )
-            if not revalidate.get("skipped"):
-                revalidate_runs += 1
-                if revalidate.get("ok") is True:
-                    revalidate_ok += 1
-                elif revalidate.get("ok") is False:
-                    revalidate_fail += 1
-            progress["revalidate_ok"] = revalidate_ok
-            progress["revalidate_fail"] = revalidate_fail
+            runs, ok_inc, fail_inc, challenge_inc = _tally_revalidate(revalidate)
+            revalidate_runs += runs
+            revalidate_ok += ok_inc
+            revalidate_fail += fail_inc
+            revalidate_challenge += challenge_inc
+            _remember_revalidate(
+                progress,
+                ok=revalidate_ok,
+                fail=revalidate_fail,
+                challenge=revalidate_challenge,
+            )
 
             logger.info(
                 "%s/%s: discovered=%s ingested=%s stale=%s contacts=%s",
@@ -310,21 +363,28 @@ def _scrape_areas(
     progress["ingested"] = ingested
     progress["stale_deactivated"] = stale_total
     progress["marketing_contacts"] = contacts
-    progress["revalidate_ok"] = revalidate_ok
-    progress["revalidate_fail"] = revalidate_fail
+    _remember_revalidate(
+        progress,
+        ok=revalidate_ok,
+        fail=revalidate_fail,
+        challenge=revalidate_challenge,
+    )
 
     # One home-page / global `deals` bust per zone or market cycle.
     # Per-city calls above stay scoped to that city.
     if ingested > 0 or stale_total > 0:
         global_rev = revalidate_after_scrape(areas=set(), include_global=True)
-        if not global_rev.get("skipped"):
-            revalidate_runs += 1
-            if global_rev.get("ok") is True:
-                revalidate_ok += 1
-            elif global_rev.get("ok") is False:
-                revalidate_fail += 1
-        progress["revalidate_ok"] = revalidate_ok
-        progress["revalidate_fail"] = revalidate_fail
+        runs, ok_inc, fail_inc, challenge_inc = _tally_revalidate(global_rev)
+        revalidate_runs += runs
+        revalidate_ok += ok_inc
+        revalidate_fail += fail_inc
+        revalidate_challenge += challenge_inc
+        _remember_revalidate(
+            progress,
+            ok=revalidate_ok,
+            fail=revalidate_fail,
+            challenge=revalidate_challenge,
+        )
 
     runtime_seconds = round(time.perf_counter() - started, 1)
     report = _in_session(
@@ -356,6 +416,7 @@ def _scrape_areas(
         "frontend_revalidate_runs": revalidate_runs,
         "revalidate_ok": revalidate_ok,
         "revalidate_fail": revalidate_fail,
+        "revalidate_challenge": revalidate_challenge,
         "cities_failed": cities_failed,
         "cities_completed": cities_completed,
         "cities_not_reached": [],
